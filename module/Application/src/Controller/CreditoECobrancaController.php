@@ -484,6 +484,8 @@ class CreditoECobrancaController extends BaseController
                             'custom_forma_pgto' => $item['custom_forma_pgto'],
                             'data_pagamento' => $item['data_pagamento'],
                             'valor_recebido' => 0,
+                            'valor_desconto' => 0,
+                            'valor_liquido' => 0,
                             'recebido_germoplasma' => 0,
                             'recebido_royalties' => 0,
                             'recebido_tsi' => 0,
@@ -492,6 +494,8 @@ class CreditoECobrancaController extends BaseController
                     }
                     
                     $resultadoAgrupado[$chave]['valor_recebido'] += $item['valor_recebido'];
+                    $resultadoAgrupado[$chave]['valor_desconto'] += $item['valor_desconto'];
+                    $resultadoAgrupado[$chave]['valor_liquido'] += $item['valor_liquido'];
                     $resultadoAgrupado[$chave]['recebido_germoplasma'] += $item['recebido_germoplasma'];
                     $resultadoAgrupado[$chave]['recebido_royalties'] += $item['recebido_royalties'];
                     $resultadoAgrupado[$chave]['recebido_tsi'] += $item['recebido_tsi'];

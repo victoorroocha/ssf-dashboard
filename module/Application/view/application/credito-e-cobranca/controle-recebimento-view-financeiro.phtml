@@ -1,7 +1,7 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div class="align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Crédito e Cobrança</h1>
     </div>
 
@@ -9,7 +9,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-12 mb-4">
             <!-- Approach -->
-            <div class="card shadow mb-4" style="max-width: 90%; margin: 0 auto;">
+            <div class="card shadow mb-4">
                 <div class="card-body">
                     <p>Envio Financeiro</p>
 
@@ -18,7 +18,7 @@
                     </div>
 
                     <!-- Grid Container for the DataGrid -->
-                    <div id="gridContainer" class="d-flex justify-content-center" style="width: 100%;"></div>
+                    <div id="gridContainer"></div>
                 </div>
             </div>
         </div>
@@ -277,7 +277,52 @@
                                                         }
                                                     }  
                                                 },
-
+                                                { 
+                                                    dataField: 'valor_desconto', 
+                                                    caption: 'Valor Desconto', 
+                                                    allowEditing: false, 
+                                                    alignment: 'right', 
+                                                    width: 150, 
+                                                    dataType: 'number', 
+                                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                                    customizeText: function(cellInfo) {
+                                                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                            var numericValue = Number(cellInfo.value);
+                                                            if (isNaN(numericValue)) {
+                                                                return cellInfo.value;
+                                                            }
+                                                            return numericValue.toLocaleString("pt-BR", {
+                                                                style: "currency",
+                                                                currency: "BRL",
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2
+                                                            });
+                                                        }
+                                                    }  
+                                                },
+                                                { 
+                                                    dataField: 'valor_liquido', 
+                                                    caption: 'Valor Liquido', 
+                                                    allowEditing: false, 
+                                                    alignment: 'right', 
+                                                    width: 150, 
+                                                    dataType: 'number', 
+                                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                                    customizeText: function(cellInfo) {
+                                                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                            var numericValue = Number(cellInfo.value);
+                                                            if (isNaN(numericValue)) {
+                                                                return cellInfo.value;
+                                                            }
+                                                            return numericValue.toLocaleString("pt-BR", {
+                                                                style: "currency",
+                                                                currency: "BRL",
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2
+                                                            });
+                                                        }
+                                                    }  
+                                                },
 
                                                 //Colunas ocultas
                                                 { 
@@ -404,11 +449,106 @@
                                                     }
                                                 }  
                                             },
-                                           
+                                            {
+                                                column: "valor_desconto", 
+                                                summaryType: "sum",
+                                                displayFormat: "Total: {0}",  
+                                                valueFormat: {
+                                                    type: "currency",  
+                                                    currency: "BRL" 
+                                                },
+                                                customizeText: function(cellInfo) {
+                                                    if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                        var numericValue = Number(cellInfo.value);
+                                                        if (isNaN(numericValue)) {
+                                                            return cellInfo.value;
+                                                        }
+                                                        return numericValue.toLocaleString("pt-BR", {
+                                                            style: "currency",
+                                                            currency: "BRL",
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }  
+                                            },
+                                            {
+                                                column: "valor_liquido", 
+                                                summaryType: "sum",
+                                                displayFormat: "Total: {0}",  
+                                                valueFormat: {
+                                                    type: "currency",  
+                                                    currency: "BRL" 
+                                                },
+                                                customizeText: function(cellInfo) {
+                                                    if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                        var numericValue = Number(cellInfo.value);
+                                                        if (isNaN(numericValue)) {
+                                                            return cellInfo.value;
+                                                        }
+                                                        return numericValue.toLocaleString("pt-BR", {
+                                                            style: "currency",
+                                                            currency: "BRL",
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }  
+                                            },
                                         ],
                                         groupItems: [
                                             {
                                                 column: 'valor_recebido',
+                                                summaryType: 'sum',
+                                                valueFormat: 'currency',
+                                                displayFormat: 'Total: {0}',
+                                                showInGroupFooter: true,
+                                                valueFormat: {
+                                                    type: "currency",  
+                                                    currency: "BRL" 
+                                                },
+                                                customizeText: function(cellInfo) {
+                                                    if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                        var numericValue = Number(cellInfo.value);
+                                                        if (isNaN(numericValue)) {
+                                                            return cellInfo.value;
+                                                        }
+                                                        return numericValue.toLocaleString("pt-BR", {
+                                                            style: "currency",
+                                                            currency: "BRL",
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }  
+                                            },
+                                            {
+                                                column: 'valor_desconto',
+                                                summaryType: 'sum',
+                                                valueFormat: 'currency',
+                                                displayFormat: 'Total: {0}',
+                                                showInGroupFooter: true,
+                                                valueFormat: {
+                                                    type: "currency",  
+                                                    currency: "BRL" 
+                                                },
+                                                customizeText: function(cellInfo) {
+                                                    if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                        var numericValue = Number(cellInfo.value);
+                                                        if (isNaN(numericValue)) {
+                                                            return cellInfo.value;
+                                                        }
+                                                        return numericValue.toLocaleString("pt-BR", {
+                                                            style: "currency",
+                                                            currency: "BRL",
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }  
+                                            },
+                                            {
+                                                column: 'valor_liquido',
                                                 summaryType: 'sum',
                                                 valueFormat: 'currency',
                                                 displayFormat: 'Total: {0}',
