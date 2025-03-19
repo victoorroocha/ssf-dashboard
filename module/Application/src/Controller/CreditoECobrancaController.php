@@ -83,18 +83,17 @@ class CreditoECobrancaController extends BaseController
                 'message' => 'Serviço Oracle não disponível'
             ]);
         }
-    
+
         // Captura os parâmetros da requisição GET
         $codigoSafra = $this->params()->fromQuery('codigosafra', null);
         $emissao_inicio = $this->params()->fromQuery('emissao_inicio', null);
         $emissao_fim = $this->params()->fromQuery('emissao_fim', null);
         $skip = $this->params()->fromQuery('skip', null);
         $take = $this->params()->fromQuery('take', null);
-         
+
         try {
             // Consulta no Softsul todos pedidos
             $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
-   
 
             $params = [];
             if ($codigoSafra) {
@@ -118,7 +117,7 @@ class CreditoECobrancaController extends BaseController
                 }
                 $statementPg = $pgSql->prepareStatementForSqlObject($selectPg);
                 $pgResult = $statementPg->execute();
-    
+
                 // Mapeia os resultados do PostgreSQL em um array associativo
                 $pgData = [];
                 foreach ($pgResult as $pgRow) {
@@ -138,17 +137,15 @@ class CreditoECobrancaController extends BaseController
                     $pgRow['total_frete'] = floatval(str_replace(',', '.', $pgRow['total_frete']));
                     $pgRow['recebido_frete'] = floatval(str_replace(',', '.', $pgRow['recebido_frete']));
 
-
                     // Cria uma chave única com base nas colunas relevantes
-                    $chave = $pgRow['codigo'] 
-                    . '-' . $pgRow['id'] 
-                    . '-' . $pgRow['vencimento_parcela'] 
-                    . '-' . (!empty($pgRow['id_recebimento']) ? $pgRow['id_recebimento'] : 'x')
-                    . '-' . (!empty($pgRow['total_germoplasma']) && $pgRow['total_germoplasma'] !== '0.00' ? $pgRow['total_germoplasma'] : 'x')
-                    . '-' . (!empty($pgRow['total_tsi']) && $pgRow['total_tsi'] !== '0.00'  ? $pgRow['total_tsi'] : 'x')
-                    . '-' . (!empty($pgRow['total_frete']) && $pgRow['total_frete'] !== '0.00'  ? $pgRow['total_frete'] : 'x')
-                    . '-' . (!empty($pgRow['total_royalties']) && $pgRow['total_royalties'] !== '0.00'  ? $pgRow['total_royalties'] : 'x');
-                    
+                    $chave = $pgRow['codigo']
+                            . '-' . $pgRow['id']
+                            . '-' . $pgRow['vencimento_parcela']
+                            . '-' . (!empty($pgRow['id_recebimento']) ? $pgRow['id_recebimento'] : 'x')
+                            . '-' . (!empty($pgRow['total_germoplasma']) && $pgRow['total_germoplasma'] !== '0.00' ? $pgRow['total_germoplasma'] : 'x')
+                            . '-' . (!empty($pgRow['total_tsi']) && $pgRow['total_tsi'] !== '0.00' ? $pgRow['total_tsi'] : 'x')
+                            . '-' . (!empty($pgRow['total_frete']) && $pgRow['total_frete'] !== '0.00' ? $pgRow['total_frete'] : 'x')
+                            . '-' . (!empty($pgRow['total_royalties']) && $pgRow['total_royalties'] !== '0.00' ? $pgRow['total_royalties'] : 'x');
                     $pgData[$chave] = $pgRow;
                 }
 
@@ -163,7 +160,7 @@ class CreditoECobrancaController extends BaseController
                     $result[$key]['nome_grupo_compra'] = mb_convert_encoding($row['nome_grupo_compra'], 'UTF-8', 'Windows-1252');
                     $result[$key]['nome_tipo_desmembramento'] = mb_convert_encoding($row['nome_tipo_desmembramento'], 'UTF-8', 'Windows-1252');
                     $result[$key]['tipo_parcela'] = mb_convert_encoding($row['tipo_parcela'], 'UTF-8', 'Windows-1252');
-    
+
                     // Conversão de valores numéricos
                     $result[$key]['valor_parcela'] = floatval(str_replace(',', '.', $result[$key]['valor_parcela']));
                     $result[$key]['valor_recebido'] = floatval(str_replace(',', '.', $result[$key]['valor_recebido']));
@@ -179,18 +176,17 @@ class CreditoECobrancaController extends BaseController
                     $result[$key]['recebido_tsi'] = floatval(str_replace(',', '.', $result[$key]['recebido_tsi']));
                     $result[$key]['total_frete'] = floatval(str_replace(',', '.', $result[$key]['total_frete']));
                     $result[$key]['recebido_frete'] = floatval(str_replace(',', '.', $result[$key]['recebido_frete']));
-    
-                    // Cria a chave única para buscar no array associativo do PostgreSQL
-                    $chave = $result[$key]['codigo'] 
-                             . '-' . $result[$key]['id'] 
-                             . '-' . $result[$key]['vencimento_parcela']
-                             . '-' . (!empty($result[$key]['id_recebimento']) ? $result[$key]['id_recebimento'] : 'x')
 
-                             . '-' . (!empty($result[$key]['total_germoplasma']) ? $result[$key]['total_germoplasma'] : 'x')
-                             . '-' . (!empty($result[$key]['total_tsi']) ? $result[$key]['total_tsi'] : 'x')
-                             . '-' . (!empty($result[$key]['total_frete']) ? $result[$key]['total_frete'] : 'x')
-                             . '-' . (!empty($result[$key]['total_royalties']) ? $result[$key]['total_royalties'] : 'x');
-    
+                    // Cria a chave única para buscar no array associativo do PostgreSQL
+                    $chave = $result[$key]['codigo']
+                            . '-' . $result[$key]['id']
+                            . '-' . $result[$key]['vencimento_parcela']
+                            . '-' . (!empty($result[$key]['id_recebimento']) ? $result[$key]['id_recebimento'] : 'x')
+                            . '-' . (!empty($result[$key]['total_germoplasma']) ? $result[$key]['total_germoplasma'] : 'x')
+                            . '-' . (!empty($result[$key]['total_tsi']) ? $result[$key]['total_tsi'] : 'x')
+                            . '-' . (!empty($result[$key]['total_frete']) ? $result[$key]['total_frete'] : 'x')
+                            . '-' . (!empty($result[$key]['total_royalties']) ? $result[$key]['total_royalties'] : 'x');
+
                     // Verifica se há correspondência no PostgreSQL
                     if (isset($pgData[$chave])) {
                         // Adiciona os campos do PostgreSQL ao resultado
@@ -202,6 +198,9 @@ class CreditoECobrancaController extends BaseController
 
                         // Remove a chave do PostgreSQL para que não seja inserida novamente mais tarde
                         unset($pgData[$chave]);
+                    } else {
+                        // Se não tiver no PostgreSQL, gera um ID virtual (GUID)
+                        $result[$key]['id_controle_recebimento'] = (int)substr(uniqid('', true), -8);
                     }
                 }
 
@@ -211,7 +210,6 @@ class CreditoECobrancaController extends BaseController
                     $result[] = $pgRow;
                 }
             }
-
 
             $totalCount = count($result); // Contagem total de registros
             $pagedData = array_slice($result, $skip, 9999); // Aplica paginação
@@ -223,7 +221,6 @@ class CreditoECobrancaController extends BaseController
                 'totalCount' => $totalCount
             ]);
         } catch (\Exception $e) {
-
             return new JsonModel([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -323,6 +320,58 @@ class CreditoECobrancaController extends BaseController
             ]);
         }
     }
+    public function deleteControleRecebimentoAction()
+    {
+        // Obtém o ID da query string
+        $id = intval($this->getRequest()->getQuery('id'));  // Recupera o ID da URL
+
+        // Verifica se o ID foi fornecido
+        if (empty($id)) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'ID não fornecido'
+            ]);
+        }
+
+        $sql = new Sql($this->pgAdapter);
+        $table = 'controle_recebimento';  // Nome da tabela no banco
+
+        try {
+            // Verifica se o registro existe antes de tentar excluir
+            $select = $sql->select();
+            $select->from($table)
+                ->where(['id_controle_recebimento' => $id]);
+
+            $statement = $sql->prepareStatementForSqlObject($select);
+            $result = $statement->execute();
+
+            // Se o registro existe, realiza a exclusão
+            if ($result->count() > 0) {
+                $delete = $sql->delete($table);
+                $delete->where(['id_controle_recebimento' => $id]);
+
+                $deleteStatement = $sql->prepareStatementForSqlObject($delete);
+                $deleteStatement->execute();
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Registro excluído com sucesso!'
+                ]);
+            } else {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Registro não encontrado para exclusão.'
+                ]);
+            }
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Erro ao executar consulta: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+
 
 
     public function controleRecebimentoViewFinanceiroAction()

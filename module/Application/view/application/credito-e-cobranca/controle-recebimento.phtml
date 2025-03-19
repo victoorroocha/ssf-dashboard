@@ -155,7 +155,7 @@
                                 // Realize a ação de filtrar, como enviar uma requisição
                                 let dataGrid = $('#gridContainer').dxDataGrid({
                                     dataSource: new DevExpress.data.CustomStore({
-                                        // key: 'ID_CONTROLE_RECEBIMENTO',
+                                        key: 'id_controle_recebimento',
                                         loadMode: "processed",
                                         load: function(loadOptions) {
 
@@ -203,6 +203,8 @@
                                             }).then(response => {
                                                 if (!response.success) {
                                                     DevExpress.ui.notify(response.message, "error", 3000);
+                                                } else {
+                                                    DevExpress.ui.notify(response.message, "success", 3000);
                                                 }
                                                 return response;
                                             }).catch(error => {
@@ -214,6 +216,28 @@
                                                     return {};
                                                 }
                                                 
+                                            });
+                                        },
+                                        remove: function(key) {
+                                            return $.ajax({
+                                                url: '/credito-e-cobranca/delete-controle-recebimento?id=' + key,  // Passa o ID diretamente na URL
+                                                method: 'DELETE',
+                                                dataType: 'json',
+                                            }).then(response => {
+                                                if (!response.success) {
+                                                    DevExpress.ui.notify(response.message, "error", 3000);
+                                                } else {
+                                                    DevExpress.ui.notify(response.message, "success", 3000);
+                                                }
+                                                return response;
+                                            }).catch(error => {
+                                                if (error.responseJSON) {
+                                                    DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                                                    return {};
+                                                } else {
+                                                    DevExpress.ui.notify("Erro ao excluir dados!", "error", 3000);
+                                                    return {};
+                                                }
                                             });
                                         }
                                     }),
@@ -281,8 +305,14 @@
                                     editing: {
                                         mode: 'batch',    // Modo de edição em lote
                                         allowUpdating: true,
+                                        allowDeleting: true,
+                                        useIcons: true,
                                         selectTextOnEditStart: true,
                                         startEditAction: 'click',  // A edição começa ao clicar
+                                        confirmDelete: true,
+                                        texts: {
+                                            confirmDeleteMessage: "Tem certeza que deseja remover esses lançamentos? É irreversível."
+                                        }
                                     },
                                     selection: {
                                         mode: 'multiple',
@@ -1066,6 +1096,18 @@
                                         });
                                     },
                                     onCellPrepared: function(e) {
+                                        // Verificar se a célula que estamos tratando é de dados e é uma célula de comando
+                                        if (e.rowType === "data" && e.column.type === "buttons") {
+                                            // Verificar o valor de custom_forma_pgto
+                                            if (!e.row.data.custom_forma_pgto) {
+                                                // Se não houver valor em custom_forma_pgto, esconder o link de excluir
+                                                $(e.cellElement).find(".dx-link-delete").hide();
+                                            } else {
+                                                // Caso contrário, garantir que o link de excluir está visível
+                                                $(e.cellElement).find(".dx-link-delete").show();
+                                            }
+                                        }
+
                                         // Se for uma célula de dados e a coluna não for editável...
                                         if(e.rowType === "data" && e.column && e.column.allowEditing === false) {
                                             $(e.cellElement).css("background-color", "#f0f0f0"); // Fundo cinza claro
@@ -1096,7 +1138,6 @@
                                                 'Bonificação Qualidade - Distribuidor',
                                                 'Desenvolvimento de Mercado'
                                             ];
-
                                         
                                             // Validação 1: Parcelas Vencidas e sem pagamento.
                                             if ((vencimento_parcela < hoje) && (data_pagamento == null || data_pagamento == '' || data_pagamento == undefined) && !tiposVendaBonificacao.includes(tipo_venda)) {
