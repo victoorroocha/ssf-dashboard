@@ -243,28 +243,24 @@ class CreditoECobrancaController extends BaseController
         $sql = new Sql($this->pgAdapter);
         $table = 'controle_recebimento';  // Nome da tabela no banco
 
-        // Se 'id_controle_recebimento' está presente, realiza um UPDATE
-        if (isset($data['id_controle_recebimento']) && !empty($data['id_controle_recebimento'])) {
-            try {
-                // Verifica se a linha existe com base no 'id_controle_recebimento'
-                $select = $sql->select();
-                $select->from($table)
-                    ->where(['id_controle_recebimento' => $data['id_controle_recebimento']]);
+        try {
+            // Formata os valores numéricos conforme necessário
+            foreach ($data as $key => $value) {
+                if (is_string($value) && preg_match('/^\d+,\d+$/', $value)) {
+                    $data[$key] = number_format(floatval(str_replace(',', '.', $value)), 2, '.', '');
+                }
+            }
 
+            // Se 'id_controle_recebimento' está presente e não está vazio, tenta realizar um UPDATE
+            if (isset($data['id_controle_recebimento']) && !empty($data['id_controle_recebimento'])) {
+                $select = $sql->select();
+                $select->from($table)->where(['id_controle_recebimento' => $data['id_controle_recebimento']]);
                 $statement = $sql->prepareStatementForSqlObject($select);
                 $result = $statement->execute();
 
                 // Se a linha existir, realiza o UPDATE
                 if ($result->count() > 0) {
                     $update = $sql->update($table);
-
-                    // Formata os valores numéricos conforme necessário
-                    foreach ($data as $key => $value) {
-                        if (is_string($value) && preg_match('/^\d+,\d+$/', $value)) {
-                            $data[$key] = number_format(floatval(str_replace(',', '.', $value)), 2, '.', '');
-                        }
-                    }
-
                     $update->set($data);
                     $update->where(['id_controle_recebimento' => $data['id_controle_recebimento']]);
 
@@ -275,29 +271,11 @@ class CreditoECobrancaController extends BaseController
                         'success' => true,
                         'message' => 'Dados atualizados com sucesso!'
                     ]);
-                } else {
-                    return new JsonModel([
-                        'success' => false,
-                        'message' => 'Registro não encontrado para atualização.'
-                    ]);
                 }
-            } catch (\Exception $e) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Erro ao executar consulta: ' . $e->getMessage()
-                ]);
             }
-        }
 
-        // Se 'id_controle_recebimento' não está presente, realiza um INSERT
-        try {
-            // Formata os valores numéricos conforme necessário
-            foreach ($data as $key => $value) {
-                if (is_string($value) && preg_match('/^\d+,\d+$/', $value)) {
-                    $data[$key] = number_format(floatval(str_replace(',', '.', $value)), 2, '.', '');
-                }
-            }
-            // Remove 'id_controle_recebimento' dos dados para que o banco o atribua automaticamente
+            // Se o 'id_controle_recebimento' não existir ou a linha não for encontrada, faz um INSERT
+            // Remove 'id_controle_recebimento' para que o banco o atribua automaticamente, se necessário
             unset($data['id_controle_recebimento']);
 
             $insert = $sql->insert($table);
@@ -306,20 +284,18 @@ class CreditoECobrancaController extends BaseController
             $insertStatement = $sql->prepareStatementForSqlObject($insert);
             $insertStatement->execute();
 
-            
             return new JsonModel([
                 'success' => true,
                 'message' => 'Dados inseridos com sucesso!'
             ]);
         } catch (\Exception $e) {
-            echo '<pre>insert';
-            print_r( $e->getMessage());exit;
             return new JsonModel([
                 'success' => false,
                 'message' => 'Erro ao executar consulta: ' . $e->getMessage()
             ]);
         }
     }
+
     public function deleteControleRecebimentoAction()
     {
         // Obtém o ID da query string
