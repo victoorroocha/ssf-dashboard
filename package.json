@@ -1,0 +1,27 @@
+{
+  "name": "ssf-dashboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.php",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "robocopy node_modules\\devextreme public\\devextreme /E && robocopy node_modules\\jszip public\\jszip /E && robocopy node_modules\\cldrjs\\dist public\\cldrjs\\dist /E && robocopy node_modules\\globalize\\dist public\\globalize\\dist /E && robocopy node_modules\\exceljs\\dist public\\exceljs\\dist /E && robocopy node_modules\\file-saver\\dist public\\file-saver\\dist /E"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victoorroocha/ssf-dashboard.git"
+  },
+  "author": "Victor Rocha",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/victoorroocha/ssf-dashboard/issues"
+  },
+  "homepage": "https://github.com/victoorroocha/ssf-dashboard#readme",
+  "dependencies": {
+    "cldrjs": "^0.5.5",
+    "devextreme": "^20.1.16",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "globalize": "^1.7.0"
+  }
+}

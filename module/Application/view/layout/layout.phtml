@@ -22,8 +22,9 @@
     <?= $this->headLink(['rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.ico']) ?>
 
     <!-- DevExtreme CSS (versão gratuita) -->
-    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/20.1.16/css/dx.common.css">
-    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/20.1.16/css/dx.light.css">
+    <link rel="stylesheet" href="/devextreme/dist/css/dx.common.css">
+    <link rel="stylesheet" href="/devextreme/dist/css/dx.light.css">
+
 
     <!-- Estilos globais -->
     <?= $this->headLink()
@@ -38,15 +39,20 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- DevExtreme Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
-    <script src="https://cdn3.devexpress.com/jslib/20.1.16/js/dx.all.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cldrjs/0.5.5/cldr.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cldrjs/0.5.5/cldr/event.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cldrjs/0.5.5/cldr/supplemental.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/globalize/1.6.0/globalize.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/globalize/1.6.0/globalize/date.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="/jszip/dist/jszip.min.js"></script>
+    <script src="/devextreme/dist/js/dx.all.js"></script>
+
+    <script src="/cldrjs/dist/cldr.js"></script>
+    <script src="/cldrjs/dist/cldr/event.js"></script>
+    <script src="/cldrjs/dist/cldr/supplemental.js"></script>
+
+    <script src="/globalize/dist/globalize.js"></script>
+    <script src="/globalize/dist/globalize/date.js"></script>
+
+
+    <!-- ExcelJS e FileSaver -->
+    <script src="/exceljs/dist/exceljs.min.js"></script>
+    <script src="/file-saver/dist/FileSaver.min.js"></script>
     
     <!-- Scripts personalizados -->
     <?= $this->headScript() ?>
