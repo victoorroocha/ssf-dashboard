@@ -38,6 +38,9 @@
                             <div class="legend-item">
                                 <span class="circle pago-sem-forma-pagamento"></span><span>Falta Forma Pgto</span>
                             </div>
+                            <div class="legend-item">
+                                <span class="circle pedido-inconsistente"></span><span>Pedido Inconsistente</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1119,7 +1122,7 @@
                                             const tipo_venda = e.data['tipo_venda'];
                                             const id_tipo_desmembramento = e.data['id_tipo_desmembramento'];
                                             const custom_forma_pgto = e.data['custom_forma_pgto'];
-                                            const data_pagamento = e.data['data_pagamento'];
+                                            const data_pagamento = e.data['data_pagamento'] !== null ? new Date(e.data['data_pagamento']) : null;
                                             const vencimento_parcela = e.data['vencimento_parcela'] !== null ? new Date(e.data['vencimento_parcela']) : null;
                                             const hoje = new Date();
 
@@ -1188,6 +1191,13 @@
                                                 if (e.column.dataField === 'codigo') {
                                                     $(e.cellElement).css("background-color", "#D7BDE2"); 
                                                 } 
+                                            }
+
+                                            // Validação 7: Pedido Inconsistente
+                                            if ((data_pagamento > hoje)) {
+                                                if (e.column.dataField !== 'codigo') {
+                                                    $(e.cellElement).css("background-color", "#e60e2e"); 
+                                                }
                                             }
                                         }
                                     },

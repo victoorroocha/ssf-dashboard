@@ -142,6 +142,9 @@
 .pago-devolvido {
     background-color: #D7BDE2; 
 }
+.pedido-inconsistente {
+    background-color: #e60e2e; 
+}
 
 .legend span {
     vertical-align: middle;
