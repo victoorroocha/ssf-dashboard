@@ -59,31 +59,31 @@ class AccessControl
         $this->acl->allow('Administrador');
 
         // Diretor 
-        $this->acl->allow('Diretor', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Diretor', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
         $this->acl->allow('Diretor', 'UsuarioController', ['perfilUsuario']);
 
         // Gerente 
-        $this->acl->allow('Gerente', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Gerente', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
         $this->acl->allow('Gerente', 'UsuarioController', ['perfilUsuario']);
 
         // Coordenador 
-        $this->acl->allow('Coordenador', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Coordenador', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
         $this->acl->allow('Coordenador', 'UsuarioController', ['perfilUsuario']);
 
         // Analista
-        $this->acl->allow('Analista', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Analista', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
         $this->acl->allow('Analista', 'UsuarioController', ['perfilUsuario']);
 
         // Assistente 
-        $this->acl->allow('Assistente', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
+        $this->acl->allow('Assistente', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
         $this->acl->allow('Assistente', 'UsuarioController', ['perfilUsuario']);
 
         // Auxiliar 
-        $this->acl->allow('Auxiliar', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
+        $this->acl->allow('Auxiliar', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
         $this->acl->allow('Auxiliar', 'UsuarioController', ['perfilUsuario']);
 
         // Convidado
-        $this->acl->allow('Convidado', 'CreditoECobrancaController', ['controleRecebimento']);
+        $this->acl->allow('Convidado', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento', 'controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
     }
 
     public function getAcl()

@@ -295,7 +295,6 @@ class CreditoECobrancaController extends BaseController
             ]);
         }
     }
-
     public function deleteControleRecebimentoAction()
     {
         // Obtém o ID da query string
