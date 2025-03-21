@@ -1205,18 +1205,6 @@
                                         e.newData = { ...e.oldData, ...e.newData };
                                     }
                                 }).dxDataGrid('instance');
-
-                                $("#gridContainer").on('scroll', function() {
-                                    var grid = $("#gridContainer").dxDataGrid('instance');
-                                    var scrollPosition = grid.getScrollable().scrollTop();
-                                    var scrollHeight = grid.getScrollable().scrollHeight();
-                                    
-                                    // Acionando a requisição se estiver chegando ao final
-                                    if (scrollPosition + 550 >= scrollHeight) {
-                                        console.log("Chegou ao final, buscando mais dados...");
-                                        grid.refresh(); // Força o refresh que vai fazer o load de novos dados
-                                    }
-                                });
                             } else {
                                 // Se o formulário for inválido
                                 DevExpress.ui.notify("Por favor, corrija os erros de validação.", "error", 3000);

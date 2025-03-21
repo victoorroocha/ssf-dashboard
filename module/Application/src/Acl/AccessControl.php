@@ -43,9 +43,10 @@ class AccessControl
             'DbController',
             'IndexController',
             'LoginController',
-            'CreditoECobrancaController',
             'UsuarioController',
             'MenuController',
+            'CreditoECobrancaController',
+            'ControladoriaController',
         ];
 
         foreach ($controllers as $controller) {
@@ -60,30 +61,37 @@ class AccessControl
 
         // Diretor 
         $this->acl->allow('Diretor', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Diretor', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Diretor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Diretor', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Gerente 
         $this->acl->allow('Gerente', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Gerente', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Gerente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Gerente', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Coordenador', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Coordenador', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Analista
         $this->acl->allow('Analista', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Analista', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Analista', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Analista', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Assistente 
         $this->acl->allow('Assistente', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
-        $this->acl->allow('Assistente', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Assistente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Assistente', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
-        $this->acl->allow('Auxiliar', 'UsuarioController', ['perfilUsuario']);
+        $this->acl->allow('Auxiliar', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Auxiliar', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
 
         // Convidado
         $this->acl->allow('Convidado', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento', 'controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
     }
 
     public function getAcl()

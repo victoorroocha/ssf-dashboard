@@ -8,6 +8,7 @@ use Laminas\Router\Http\Literal;
 use Laminas\Router\Http\Segment;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
+use Application\Repository\ControladoriaRepository;  // Importar repositório
 
 return [
     'router' => [
@@ -112,7 +113,22 @@ return [
                     ],
                     'defaults' => [
                         'controller' => Controller\CreditoECobrancaController::class,
-                        'action'     => 'index',  // Action padrão caso nenhuma seja informada
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
+             // Controladoria
+             'controladoria' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/controladoria[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\ControladoriaController::class,
+                        'action'     => 'index', 
                     ],
                 ],
             ],
@@ -131,8 +147,9 @@ return [
             Controller\DbController::class => Factory\GenericControllerFactory::class,  
             Controller\LoginController::class => Factory\LoginControllerFactory::class,
             Controller\ErrorController::class => Factory\GenericControllerFactory::class,
-            Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
             Controller\UsuarioController::class => Factory\GenericControllerFactory::class,
+            Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
+            Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -156,7 +173,6 @@ return [
                     'WE8MSWIN1252'
                 );
             },
-            CreditoECobrancaRepository::class => InvokableFactory::class, 
             'Application\Repository\UsuarioRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\UsuarioRepository($adapter);
@@ -173,6 +189,8 @@ return [
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado
                 return new \Application\Repository\MenuRepository($adapter);
             },
+            CreditoECobrancaRepository::class => InvokableFactory::class, 
+            ControladoriaRepository::class => InvokableFactory::class, 
         ],
     ],
     'view_manager' => [
