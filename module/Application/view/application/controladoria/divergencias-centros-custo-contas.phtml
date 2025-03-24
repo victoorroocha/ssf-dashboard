@@ -106,6 +106,10 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd",
                             },
+                            validationRules: [{
+                                type: 'required',
+                                message: 'Data de Lançamento é obrigatório.',
+                            }],
                         },
                         {
                             dataField: "lancamento_fim",

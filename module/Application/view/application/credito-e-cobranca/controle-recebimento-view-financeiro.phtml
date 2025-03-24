@@ -91,7 +91,10 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd"
                             },
-                            isRequired: true,
+                            validationRules: [{
+                                type: 'required',
+                                message: 'Data de Pagamento é obrigatório.',
+                            }],
                         },
                         {
                             dataField: "pagamento_fim",
