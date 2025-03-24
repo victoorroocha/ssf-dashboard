@@ -59,4 +59,30 @@ class OracleService
         // Fecha a conexão quando o objeto for destruído
         oci_close($this->connection);
     }
+
+
+    public function getCargoUsuario($username)
+    {
+        $sql = "SELECT upper(R024CAR.TITCAR) as TITCAR
+                FROM VETORH.R034FUN
+                INNER JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
+                INNER JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU     
+                INNER JOIN VETORH.R999USU ON R999USU.CODUSU = R910USU.CODENT 
+                INNER JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR
+                WHERE R999USU.NOMUSU LIKE :username";
+        
+        $stid = oci_parse($this->connection, $sql);
+        oci_bind_by_name($stid, ':username', $username);
+        
+        if (!oci_execute($stid)) {
+            $error = oci_error($stid);
+            oci_free_statement($stid);
+            throw new \Exception("Erro ao buscar cargo: " . $error['message']);
+        }
+        
+        $result = oci_fetch_assoc($stid);
+        oci_free_statement($stid);
+        
+        return $result['TITCAR'] ?? null;
+    }
 }

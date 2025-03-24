@@ -159,10 +159,9 @@ return [
                 return new \Application\Acl\AccessControl();
             },
             'Application\Service\AuthService' => function($container) {
-                // Obtém a instância do adaptador do DB registrada como 'Laminas\Db\Adapter\Adapter'
-                return new \Application\Service\AuthService(
-                    $container->get('Laminas\Db\Adapter\Adapter')
-                );
+                $dbAdapter = $container->get(\Laminas\Db\Adapter\Adapter::class);
+                $oracleService = $container->get(\Application\Service\OracleService::class);
+                return new \Application\Service\AuthService($dbAdapter, $oracleService);
             },
             'Application\Service\OracleService' => function($container) {
                 $config = $container->get('config')['oracle'];  // Supondo que a configuração do Oracle esteja em 'config'
