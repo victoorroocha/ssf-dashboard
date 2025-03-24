@@ -41,17 +41,8 @@
     <script src="/jszip/dist/jszip.min.js"></script>
     <script src="/devextreme/dist/js/dx.all.js"></script>
 
-    <script src="/cldrjs/dist/cldr.js"></script>
-    <script src="/cldrjs/dist/cldr/event.js"></script>
-    <script src="/cldrjs/dist/cldr/supplemental.js"></script>
-
-    <script src="/globalize/dist/globalize.js"></script>
-    <script src="/globalize/dist/globalize/date.js"></script>
-
-
-    <!-- ExcelJS e FileSaver -->
-    <script src="/exceljs/dist/exceljs.min.js"></script>
-    <script src="/file-saver/dist/FileSaver.min.js"></script>
+    <!-- CDN para localização em português -->
+    <script src="/devextreme/dist/js/localization/dx.messages.pt.js"></script>
     
     <!-- Scripts personalizados -->
     <?= $this->headScript() ?>
@@ -92,6 +83,34 @@
     <script src="<?= $this->basePath('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= $this->basePath('vendor/jquery-easing/jquery.easing.min.js') ?>"></script>
     <script src="<?= $this->basePath('js/sb-admin-2.min.js') ?>"></script>
+
+    <script>
+        // Configuração da localização
+        $(document).ready(function() {
+            // Carrega as mensagens em português
+            DevExpress.localization.loadMessages({
+                "Yes": "Sim",
+                "No": "Não",
+                "Cancel": "Cancelar",
+                "Close": "Fechar",
+                "Loading...": "Carregando...",
+                "Search": "Pesquisar",
+                "Delete": "Excluir",
+                "Edit": "Editar",
+                "Save": "Salvar",
+                "Add": "Adicionar",
+                "OK": "OK",
+                "dxList-pullingDownText": "Puxe para atualizar...",
+                "dxList-pulledDownText": "Solte para atualizar...",
+                "dxList-refreshingText": "Atualizando...",
+                "dxList-pageLoadingText": "Carregando...",
+                "dxList-nextButtonText": "Mais"
+            });
+            
+            // Define o locale para português
+            DevExpress.localization.locale('pt-BR');
+        });
+    </script>
 </body>
 
 <script>

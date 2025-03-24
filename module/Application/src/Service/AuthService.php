@@ -117,7 +117,6 @@ class AuthService
 
         // Extrai o username do email (parte antes do @)
         $username = strstr($email, '@', true);
-
         
         // Formata o nome
         $nome = $this->formatarNomeUsuario($username);
@@ -184,6 +183,8 @@ class AuthService
                 if (strpos($cargoNormalizado, $palavraNormalizada) !== false) {
                     $roleEncontrado = $role;
                     break; // Sai do loop quando encontrar a primeira correspondência
+                } else {
+                    $roleEncontrado = 'Convidado';
                 }
             }
             

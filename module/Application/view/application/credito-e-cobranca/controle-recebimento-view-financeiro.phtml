@@ -30,7 +30,7 @@
 
 <script>
     $(document).ready(function() {
-
+        var dataGrid = null;
         var filtros = {};  // Variável para armazenar os filtros globais
         $("#form-filtro").dxForm({
             formData: {
@@ -138,8 +138,14 @@
                                     pagamento_fim: formData.pagamento_fim
                                 };
                                 
+                                if (dataGrid != null) {
+                                    if (dataGrid.instance) {
+                                        dataGrid.dispose();
+                                    }
+                                }
+                                
                                 // Realize a ação de filtrar, como enviar uma requisição
-                                let dataGrid = $('#gridContainer').dxDataGrid({
+                                dataGrid = $('#gridContainer').dxDataGrid({
                                     dataSource: new DevExpress.data.CustomStore({
                                         // key: 'ID_CONTROLE_RECEBIMENTO',
                                         load: function(loadOptions) {
