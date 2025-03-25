@@ -90,7 +90,7 @@ class ControladoriaController extends BaseController
             }
 
             $totalCount = count($result);
-            $pagedData = array_slice($result, $skip, 9999); 
+            $pagedData = $result; 
 
 
             // Retorna os dados como JSON

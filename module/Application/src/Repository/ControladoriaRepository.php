@@ -8,17 +8,29 @@ class ControladoriaRepository
 
     public function getLancamentosCentrosCustoContaContas($codempresa = null, $codfilial = null, $lancamento_inicio = null, $lancamento_fim = null)
     {
-        $wheres = "";
-        
+        $wheresContabilizados = "";
         if (!empty($codempresa)) {
-            $wheres .= " AND lc.CODEMP = {$codempresa}";
+            $wheresContabilizados .= " AND lc.CODEMP = {$codempresa}";
         }
         if (!empty($codfilial)) {
-            $wheres .= " AND lc.CODFIL = {$codfilial}";
+            $wheresContabilizados .= " AND lc.CODFIL = {$codfilial}";
         }
         if (!empty($lancamento_inicio)) {
             $lancamento_fim = !empty($lancamento_fim) ? $lancamento_fim : date('Y-m-d');
-            $wheres .= " AND LC.DATLCT BETWEEN TO_DATE('{$lancamento_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$lancamento_fim}', 'YYYY-MM-DD')";
+            $wheresContabilizados .= " AND LC.DATLCT BETWEEN TO_DATE('{$lancamento_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$lancamento_fim}', 'YYYY-MM-DD')";
+        }
+
+
+        $wheresNaoContabilizados = "";
+        if (!empty($codempresa)) {
+            $wheresNaoContabilizados .= " AND RT.CODEMP = {$codempresa}";
+        }
+        if (!empty($codfilial)) {
+            $wheresNaoContabilizados .= " AND LC.CODFIL = {$codfilial}";
+        }
+        if (!empty($lancamento_inicio)) {
+            $lancamento_fim = !empty($lancamento_fim) ? $lancamento_fim : date('Y-m-d');
+            $wheresNaoContabilizados .= " AND RT.DATMOV BETWEEN TO_DATE('{$lancamento_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$lancamento_fim}', 'YYYY-MM-DD')";
         }
        
         
@@ -77,17 +89,61 @@ class ControladoriaRepository
                     RT.DEBCRE AS TIPO, 
                     CASE WHEN PL.GRUCTA = '1' THEN '1-ATIVO' WHEN PL.GRUCTA = '2' THEN '2-PASIVO' WHEN PL.GRUCTA = '3' THEN '3-RECEITAS' WHEN PL.GRUCTA = '5' THEN '5-CUSTOS E DESPESAS' WHEN PL.GRUCTA = '6' THEN '6-CONTAS GERENCIAIS' END CLASSIFICACAO,
                     CASE WHEN CU.TIPCCU = 1 THEN '1 - Produtivo/Operacional Indireto' WHEN CU.TIPCCU = 2 THEN '2 - Produtivo/Operacional Direto' WHEN CU.TIPCCU = 3 THEN '3 - Administrativo' WHEN CU.TIPCCU = 4 THEN '4 - Comercial' WHEN CU.TIPCCU = 5 THEN '5 - Financeiro' END AS TIPO_CENTRO_CUSTO,
-                    CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN '1 - CC Produtivo em Conta ADM' WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN '2 - CC ADM em Conta Produtiva' ELSE NULL END LANCAMENTO_INCONSIST -- 1 = CC Produtivo em Conta ADM; 2 = CC ADM em Conta Produtiva;
+                    CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN '1 - CC Produtivo em Conta ADM' WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN '2 - CC ADM em Conta Produtiva' ELSE NULL END LANCAMENTO_INCONSIST, -- 1 = CC Produtivo em Conta ADM; 2 = CC ADM em Conta Produtiva;
+                    NULL AS NUMDOC,
+                    'Contabilizados' AS FLG_CONTABILIZADO
                 FROM Sapiens.E640RAT RT  
                 LEFT JOIN Sapiens.E640LCT LC ON RT.CODEMP = LC.CODEMP AND RT.NUMLCT = LC.NUMLCT AND RT.FILRAT = LC.CODFIL  
                 LEFT JOIN Sapiens.E045PLA PL ON RT.CODEMP = PL.CODEMP AND RT.CTARED = PL.CTARED
                 LEFT JOIN Sapiens.E046HPD HP ON HP.CODHPD = LC.CODHPD
                 INNER JOIN Sapiens.E044CCU CU ON RT.CODEMP = CU.CODEMP AND RT.CODCCU = CU.CODCCU 
                 INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
-                INNER JOIN Sapiens.E070FIL FI    ON RT.CODEMP = FI.CODEMP AND RT.FILRAT = FI.CODFIL 
+                INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.FILRAT = FI.CODFIL 
                 WHERE LC.SITLCT = '2' 
                 AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
-                {$wheres}
+                {$wheresContabilizados}
+
+                UNION ALL
+
+                -- TRAZ CASOS NÃO CONTABILIZADOS AINDA.
+                SELECT 
+                    RT.CODEMP, 
+                    EMP.NOMEMP,   
+                    RT.CODFIL as FILRAT,
+                    FI.SIGFIL,  
+                    TO_CHAR(RT.DATMOV, 'YYYY-MM-DD') AS DATLCT,
+                    TO_CHAR(RT.DATMOV, 'FMMonth') AS MES_LANCAMENTO,
+                    PL.CLACTA AS CONTA_CONTABIL,      
+                    PL.DESPAR AS DSC_CONTA_CONTABIL,       
+                    PL.CTARED AS CONTA_REDUZIDA,       
+                    PL.ABRCTA AS DSC_CONTA_REDUZIDA,     
+                    CU.CLACCU AS CONTA_CENTRO_CUSTO,       
+                    CU.CODCCU AS CENTRO_CUSTO,       
+                    CU.DESCCU AS DSC_CENTRO_CUSTO,     
+                    NULL AS CONTRA_PARTIDA,    
+                    LC.NUMLOT AS LOTE,      
+                    null AS NUM_LANCAMENTO,      
+                    null AS CODIGO_HISTORICO, 
+                    NULL AS HISTORICO,
+                    CASE WHEN LC.ESTEOS = 'E' THEN RT.VLRRAT ELSE 0 END AS DEBITO,       
+                    CASE WHEN LC.ESTEOS = 'S' THEN RT.VLRRAT ELSE 0 END AS CREDITO,    
+                    (CASE WHEN LC.ESTEOS = 'E' THEN RT.VLRRAT ELSE 0 END) - (CASE WHEN LC.ESTEOS = 'S' THEN RT.VLRRAT ELSE 0 END) AS TOTAL,
+                    CASE WHEN LC.ESTEOS = 'E' THEN 'D' WHEN LC.ESTEOS = 'S' THEN 'C' ELSE NULL END AS TIPO, 
+                    CASE WHEN PL.GRUCTA = '1' THEN '1-ATIVO' WHEN PL.GRUCTA = '2' THEN '2-PASIVO' WHEN PL.GRUCTA = '3' THEN '3-RECEITAS' WHEN PL.GRUCTA = '5' THEN '5-CUSTOS E DESPESAS' WHEN PL.GRUCTA = '6' THEN '6-CONTAS GERENCIAIS' END CLASSIFICACAO,
+                    CASE WHEN CU.TIPCCU = 1 THEN '1 - Produtivo/Operacional Indireto' WHEN CU.TIPCCU = 2 THEN '2 - Produtivo/Operacional Direto' WHEN CU.TIPCCU = 3 THEN '3 - Administrativo' WHEN CU.TIPCCU = 4 THEN '4 - Comercial' WHEN CU.TIPCCU = 5 THEN '5 - Financeiro' END AS TIPO_CENTRO_CUSTO,
+                    CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN '1 - CC Produtivo em Conta ADM' WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN '2 - CC ADM em Conta Produtiva' ELSE NULL END LANCAMENTO_INCONSIST, -- 1 = CC Produtivo em Conta ADM; 2 = CC ADM em Conta Produtiva;
+                    LC.NUMDOC,
+                    'Não contabilizados' AS FLG_CONTABILIZADO
+                FROM Sapiens.E210RAT RT
+                LEFT JOIN Sapiens.E210MVP LC ON LC.CODEMP = RT.CODEMP AND LC.CODPRO = RT.CODPRO AND LC.CODDER = RT.CODDER AND LC.CODDEP = RT.CODDEP AND LC.DATMOV = RT.DATMOV AND LC.SEQMOV = RT.SEQMOV
+                LEFT JOIN Sapiens.E045PLA PL ON RT.CODEMP = PL.CODEMP AND RT.CTARED = PL.CTARED
+                INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
+                INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.CODFIL = FI.CODFIL 
+                INNER JOIN Sapiens.E044CCU CU ON RT.CODEMP = CU.CODEMP AND RT.CODCCU = CU.CODCCU
+                WHERE 1 = 1
+                AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
+                AND (LC.NUMLOT = 0 OR LC.NUMLOT IS null)
+                {$wheresNaoContabilizados}
         ";  
     }
     public function getLookupEmpresaQuery()

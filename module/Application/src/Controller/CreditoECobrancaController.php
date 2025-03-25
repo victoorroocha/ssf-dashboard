@@ -212,7 +212,7 @@ class CreditoECobrancaController extends BaseController
             }
 
             $totalCount = count($result); // Contagem total de registros
-            $pagedData = array_slice($result, $skip, 9999); // Aplica paginação
+            $pagedData = $result; // Aplica paginação
 
             // Retorna os dados como JSON
             return new JsonModel([
