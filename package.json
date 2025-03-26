@@ -20,6 +20,7 @@
   "dependencies": {
     "cldrjs": "^0.5.5",
     "devextreme": "^20.1.16",
+    "devextreme-themebuilder": "20.2",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "globalize": "^1.7.0"

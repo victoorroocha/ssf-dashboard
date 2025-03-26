@@ -1,5 +1,5 @@
 <?php
-$host = 'localhost';
+$host = '192.168.0.54';
 $dbname = 'ssf_dashboard'; // Nome do banco de dados
 $user = 'postgres'; // Seu usuário do PostgreSQL
 $password = 'admin'; // A senha do seu banco PostgreSQL
