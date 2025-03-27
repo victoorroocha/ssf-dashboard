@@ -160,7 +160,7 @@ class ControladoriaRepository
     {
         return "SELECT 
                     CODFIL as id,
-                    CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || NUMCGC || ' - ' || CIDFIL AS dsc
+                    CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || CIDFIL AS dsc 
                 FROM E070FIL
                 WHERE 1 = 1 
                 AND CODEMP = 5
