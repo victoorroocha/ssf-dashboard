@@ -9,9 +9,9 @@ class ControladoriaRepository
     public function getLancamentosCentrosCustoContaContas($codempresa = null, $codfilial = null, $lancamento_inicio = null, $lancamento_fim = null)
     {
         $wheresContabilizados = "";
-        if (!empty($codempresa)) {
-            $wheresContabilizados .= " AND lc.CODEMP = {$codempresa}";
-        }
+        // if (!empty($codempresa)) {
+        //     $wheresContabilizados .= " AND lc.CODEMP = {$codempresa}";
+        // }
         if (!empty($codfilial)) {
             $wheresContabilizados .= " AND lc.CODFIL = {$codfilial}";
         }
@@ -22,9 +22,9 @@ class ControladoriaRepository
 
 
         $wheresNaoContabilizados = "";
-        if (!empty($codempresa)) {
-            $wheresNaoContabilizados .= " AND RT.CODEMP = {$codempresa}";
-        }
+        // if (!empty($codempresa)) {
+        //     $wheresNaoContabilizados .= " AND RT.CODEMP = {$codempresa}";
+        // }
         if (!empty($codfilial)) {
             $wheresNaoContabilizados .= " AND LC.CODFIL = {$codfilial}";
         }
@@ -100,6 +100,7 @@ class ControladoriaRepository
                 INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
                 INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.FILRAT = FI.CODFIL 
                 WHERE LC.SITLCT = '2' 
+                AND lc.CODEMP = 5
                 AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
                 {$wheresContabilizados}
 
@@ -143,6 +144,7 @@ class ControladoriaRepository
                 WHERE 1 = 1
                 AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
                 AND (LC.NUMLOT = 0 OR LC.NUMLOT IS null)
+                AND RT.CODEMP = 5
                 {$wheresNaoContabilizados}
         ";  
     }
@@ -156,18 +158,12 @@ class ControladoriaRepository
     }
     public function getLookupFilialQuery($codempresa = null)
     {
-        $wheres = "";
-        
-        if (!empty($codempresa)) {
-            $wheres .= " AND CODEMP = {$codempresa}";
-        }
-
         return "SELECT 
                     CODFIL as id,
-                    CODFIL || ' - ' || UPPER(SIGFIL) AS dsc 
+                    CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || NUMCGC || ' - ' || CIDFIL AS dsc
                 FROM E070FIL
                 WHERE 1 = 1 
-                {$wheres}
+                AND CODEMP = 5
                 ORDER BY CODEMP, CODFIL";
     }
 }

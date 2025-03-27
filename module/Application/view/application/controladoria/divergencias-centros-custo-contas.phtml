@@ -39,16 +39,59 @@
         $("#form-filtro").dxForm({
             formData: formData,
             items: [
+                // {
+                //     dataField: "codempresa",
+                //     label: { text: "Empresa" },
+                //     editorType: "dxSelectBox",
+                //     editorOptions: {
+                //         dataSource: new DevExpress.data.CustomStore({
+                //             loadMode: "raw",
+                //             load: function() {
+                //                 return $.ajax({
+                //                     url: "/controladoria/get-lookup-empresa", 
+                //                     method: "GET",
+                //                     dataType: "json"
+                //                 }).then(response => {
+                //                     if (response.success) {
+                //                         return response.data;
+                //                     } else {
+                //                         DevExpress.ui.notify(response.message, "error", 3000);
+                //                         return [];
+                //                     }
+                //                 }).catch(error => {
+                //                     if (error.responseJSON) {
+                //                         DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                //                         return {};
+                //                     } else {
+                //                         DevExpress.ui.notify("Erro ao buscar empresas!", "error", 3000);
+                //                         return [];
+                //                     }
+                //                 });
+                //             }
+                //         }),
+                //         displayExpr: "DSC", 
+                //         valueExpr: "ID", 
+                //         placeholder: "Selecione a empresa",
+                //         searchEnabled: true,
+                //         onValueChanged: function(e) {
+                //             // Obtém o código da empresa selecionada
+                //             var codempresa = e.value;
+
+                //             // Atualiza as filiais com base na empresa selecionada
+                //             atualizarFiliais(codempresa);
+                //         },
+                //     },
+                // },
                 {
-                    dataField: "codempresa",
-                    label: { text: "Empresa" },
+                    dataField: "codfilial",
+                    label: { text: "Filial" },
                     editorType: "dxSelectBox",
                     editorOptions: {
                         dataSource: new DevExpress.data.CustomStore({
                             loadMode: "raw",
                             load: function() {
                                 return $.ajax({
-                                    url: "/controladoria/get-lookup-empresa", 
+                                    url: "/controladoria/get-lookup-filial", 
                                     method: "GET",
                                     dataType: "json"
                                 }).then(response => {
@@ -71,26 +114,7 @@
                         }),
                         displayExpr: "DSC", 
                         valueExpr: "ID", 
-                        placeholder: "Selecione a empresa",
-                        searchEnabled: true,
-                        onValueChanged: function(e) {
-                            // Obtém o código da empresa selecionada
-                            var codempresa = e.value;
-
-                            // Atualiza as filiais com base na empresa selecionada
-                            atualizarFiliais(codempresa);
-                        },
-                    },
-                },
-                {
-                    dataField: "codfilial",
-                    label: { text: "Filial" },
-                    editorType: "dxSelectBox",
-                    editorOptions: {
-                        dataSource: [], // Inicia sem filiais
-                        displayExpr: "DSC", 
-                        valueExpr: "ID", 
-                        placeholder: "Selecione a filial",
+                        placeholder: "Selecione a Filial",
                         searchEnabled: true,
                     },
                 },
@@ -572,33 +596,33 @@
             ],
         });
 
-        function atualizarFiliais(codempresa) {
-            var codfilial = $("#form-filtro").dxForm("instance").getEditor("codfilial");
+        // function atualizarFiliais(codempresa) {
+        //     var codfilial = $("#form-filtro").dxForm("instance").getEditor("codfilial");
 
-            // Faz uma requisição para obter as filiais da empresa selecionada
-            $.ajax({
-                url: "/controladoria/get-lookup-filial", 
-                method: "GET",
-                dataType: "json",
-                data: { codempresa: codempresa }, // Envia o ID da empresa para filtrar as filiais
-                success: function(response) {
-                    if (response.success) {
-                        // Atualiza o dataSource de filiais
-                        codfilial.option("dataSource", response.data);
-                        codfilial.option("value", null); // Reseta o valor de codfilial
-                    } else {
-                        DevExpress.ui.notify(response.message, "error", 3000);
-                        codfilial.option("dataSource", []);
-                    }
-                },
-                error: function() {
-                    DevExpress.ui.notify("Erro ao buscar filiais!", "error", 3000);
-                    codfilial.option("dataSource", []);
-                }
-            });
-        }
+        //     // Faz uma requisição para obter as filiais da empresa selecionada
+        //     $.ajax({
+        //         url: "/controladoria/get-lookup-filial", 
+        //         method: "GET",
+        //         dataType: "json",
+        //         data: { codempresa: codempresa }, // Envia o ID da empresa para filtrar as filiais
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 // Atualiza o dataSource de filiais
+        //                 codfilial.option("dataSource", response.data);
+        //                 codfilial.option("value", null); // Reseta o valor de codfilial
+        //             } else {
+        //                 DevExpress.ui.notify(response.message, "error", 3000);
+        //                 codfilial.option("dataSource", []);
+        //             }
+        //         },
+        //         error: function() {
+        //             DevExpress.ui.notify("Erro ao buscar filiais!", "error", 3000);
+        //             codfilial.option("dataSource", []);
+        //         }
+        //     });
+        // }
 
-        atualizarFiliais(null);
+        // atualizarFiliais(null);
     });
 
 
