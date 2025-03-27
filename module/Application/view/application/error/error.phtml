@@ -1,24 +1,12 @@
-
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
     <?= $this->headTitle('SSF - Dashboard')->setSeparator(' - ')->setAutoEscape(false) ?>
 
-    <?= $this->headMeta()
-        ->appendName('viewport', 'width=device-width, initial-scale=1.0')
-        ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
-    ?>
-
     <!-- Custom meta tags -->
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Favicon -->
-    <?= $this->headLink(['rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.ico']) ?>
-
-    <!-- DevExtreme CSS (versão gratuita) -->
-    <link rel="stylesheet" href="/devextreme/dist/css/dx.common.css">
-    <link rel="stylesheet" href="/devextreme/dist/css/dx.light.css">
 
     <!-- Estilos globais -->
     <?= $this->headLink()
@@ -28,17 +16,6 @@
         ->prependStylesheet('https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i')
         ->prependStylesheet($this->basePath('vendor/fontawesome-free/css/all.min.css'))
     ?>
-
-    <!-- jQuery (DevExtreme e Bootstrap dependem dele) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- DevExtreme Libraries -->
-    <script src="/jszip/dist/jszip.min.js"></script>
-    <script src="/devextreme/dist/js/dx.all.js"></script>
-
-    <!-- CDN para localização em português -->
-    <script src="/devextreme/dist/js/localization/dx.messages.pt.js"></script>
-    
 
     <style>
         html, body {
@@ -53,20 +30,37 @@
         .container-fluid {
             max-width: 600px; /* Define um limite para o conteúdo */
         }
+        .error-404 { color: #e74a3b; }
+        .error-500 { color: #f6c23e; }
+        .error-other { color: #36b9cc; }
     </style>
 
     <!-- Scripts personalizados -->
     <?= $this->headScript() ?>
 </head>
 
+<?php 
+    $erroCode = 404;
+    $classeErro = 'error-other';
+    // Verifique se a variável 'response' está definida
+    if (isset($this->erro)) {
+        $erroCode = $this->erro;
+    } 
+
+    if ($erroCode == 404) {
+        $classeErro = 'error-404';
+    } elseif ($erroCode == 500) {
+        $classeErro = 'error-500';
+    }
+?>
+
 <body>
     <!-- Begin Page Content -->
     <div class="container-fluid">
-
         <!-- 404 Error Text -->
         <div class="text-center">
-            <div class="error mx-auto" data-text="403">403</div>
-            <p class="lead text-gray-800 mb-5">Você não tem permissão para acessar essa tela.</p>
+            <div class="error mx-auto <?php echo $classeErro; ?>" data-text="<?php echo $erroCode; ?>" data-text="<?php echo $erroCode  ?>"><?php echo $erroCode  ?></div>
+            <p class="lead text-gray-800 mb-5">Página não encontrada</p>
             <p class="text-gray-500 mb-0">Parece que você encontrou uma falha na matriz...</p>
             <a href="/">&larr; Voltar para tela inicial</a>
         </div>

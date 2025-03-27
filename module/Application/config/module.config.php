@@ -199,6 +199,10 @@ return [
         'strategies' => [
             'ViewJsonStrategy',
         ],
-        'exception_strategy' => 'error',
+        'display_exceptions' => false, // Não mostrar exceptions diretamente
+        'exception_template' => 'error/error', // Template padrão para erros
+        'template_map' => [
+            'error/error' => __DIR__ . '/../view/application/error/error.phtml',
+        ],
     ],
 ];

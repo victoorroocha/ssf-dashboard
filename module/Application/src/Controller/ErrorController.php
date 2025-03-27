@@ -8,6 +8,8 @@ class ErrorController extends AbstractActionController
 {
     public function unauthorizedAction()
     {
-        return new ViewModel();
+        $viewModel = new ViewModel();
+        $viewModel->setTerminal(true); // Isso desativa o layout
+        return $viewModel;
     }
 }

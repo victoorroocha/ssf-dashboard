@@ -3,6 +3,7 @@ namespace Application;
 
 use Laminas\Mvc\MvcEvent;
 use Laminas\Session\Container;
+use Laminas\View\Model\ViewModel;
 
 class Module
 {
@@ -15,6 +16,7 @@ class Module
     public function onBootstrap(MvcEvent $e)
     {
         $application = $e->getApplication();
+        $eventManager = $application->getEventManager();
         $viewModel = $e->getViewModel();  // Acesse o ViewModel da requisição atual
 
         // Recupera a sessão e define a variável globalmente
@@ -38,6 +40,64 @@ class Module
             $viewModel->setVariable('menus', $menus);
         }
 
+        // ADIÇÃO: Configuração do handler de erros (novo)
+        $eventManager->attach(
+            MvcEvent::EVENT_DISPATCH_ERROR,
+            [$this, 'handleError']
+        );
+        
+        $eventManager->attach(
+            MvcEvent::EVENT_RENDER_ERROR,
+            [$this, 'handleError']
+        );
+    }
+
+    // ADIÇÃO: Novo método para tratamento de erros
+    public function handleError(MvcEvent $e)
+    {
+        // Ignora se for rota de login ou se já houver resposta
+        if ($e->getRouteMatch() && $e->getRouteMatch()->getMatchedRouteName() === 'login') {
+            return;
+        }
+
+        // Configura o response
+        $response = $e->getResponse();
+        if (!$response) {
+            $response = new \Laminas\Http\Response();
+            $e->setResponse($response);
+        }
+
+        if ($e->getError() === \Laminas\Mvc\Application::ERROR_ROUTER_NO_MATCH || $e->getError() === \Laminas\Mvc\Application::ERROR_EXCEPTION) { // erro de rota
+            $response->setStatusCode(404);
+            
+            $errorModel = new ViewModel();
+            $errorModel->setTerminal(true);
+            $errorModel->setTemplate('error/error');
+            
+            // Passando response para a view
+            $errorModel->setVariables([
+                'nomeUsuario' => 'Usuário',
+                'menus' => [],
+                'erro' => 404 
+            ]);
+            
+            $e->setViewModel($errorModel);
+        } else { // erro 500
+
+            $response->setStatusCode(500);
+            
+            $errorModel = new ViewModel();
+            $errorModel->setTerminal(true);
+            $errorModel->setTemplate('error/error');
+            
+            $errorModel->setVariables([
+                'nomeUsuario' => 'Usuário',
+                'menus' => [],
+                'erro' => 500 
+            ]);
+            
+            $e->setViewModel($errorModel);
+        }
     }
 
     public function checkAuthentication(MvcEvent $e)
