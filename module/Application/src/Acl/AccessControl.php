@@ -47,6 +47,7 @@ class AccessControl
             'MenuController',
             'CreditoECobrancaController',
             'ControladoriaController',
+            'RecursosHumanosController',
         ];
 
         foreach ($controllers as $controller) {

@@ -9,6 +9,7 @@ use Laminas\Router\Http\Segment;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
 use Application\Repository\ControladoriaRepository;  // Importar repositório
+use Application\Repository\RecursosHumanosRepository;  // Importar repositório
 
 return [
     'router' => [
@@ -117,7 +118,7 @@ return [
                     ],
                 ],
             ],
-             // Controladoria
+            // Controladoria
              'controladoria' => [
                 'type'    => Segment::class,
                 'options' => [
@@ -128,6 +129,21 @@ return [
                     ],
                     'defaults' => [
                         'controller' => Controller\ControladoriaController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
+            // Recursos Humanos
+             'recursos-humanos' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/recursos-humanos[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\RecursosHumanosController::class,
                         'action'     => 'index', 
                     ],
                 ],
@@ -150,6 +166,7 @@ return [
             Controller\UsuarioController::class => Factory\GenericControllerFactory::class,
             Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
             Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
+            Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -190,6 +207,7 @@ return [
             },
             CreditoECobrancaRepository::class => InvokableFactory::class, 
             ControladoriaRepository::class => InvokableFactory::class, 
+            RecursosHumanosRepository::class => InvokableFactory::class, 
         ],
     ],
     'view_manager' => [

@@ -1,0 +1,638 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Recursos Humanos</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Apurações de Colaboradores</p>
+
+                    <div id="form-container">
+                        <div id="form-filtro"></div> <!-- Seu formulário aqui -->
+                    </div>
+                    <!-- Grid Container for the DataGrid -->
+                    <div id="gridContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        var dataGrid = null;
+        var filtros = {};  // Variável para armazenar os filtros globais
+        var formData = {
+            codempresa: null,
+            codfilial: null,
+            lancamento_inicio: null,
+            lancamento_fim: null,
+        };
+        // $("#form-filtro").dxForm({
+        //     formData: formData,
+        //     items: [
+        //         // {
+        //         //     dataField: "codempresa",
+        //         //     label: { text: "Empresa" },
+        //         //     editorType: "dxSelectBox",
+        //         //     editorOptions: {
+        //         //         dataSource: new DevExpress.data.CustomStore({
+        //         //             loadMode: "raw",
+        //         //             load: function() {
+        //         //                 return $.ajax({
+        //         //                     url: "/controladoria/get-lookup-empresa", 
+        //         //                     method: "GET",
+        //         //                     dataType: "json"
+        //         //                 }).then(response => {
+        //         //                     if (response.success) {
+        //         //                         return response.data;
+        //         //                     } else {
+        //         //                         DevExpress.ui.notify(response.message, "error", 3000);
+        //         //                         return [];
+        //         //                     }
+        //         //                 }).catch(error => {
+        //         //                     if (error.responseJSON) {
+        //         //                         DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+        //         //                         return {};
+        //         //                     } else {
+        //         //                         DevExpress.ui.notify("Erro ao buscar empresas!", "error", 3000);
+        //         //                         return [];
+        //         //                     }
+        //         //                 });
+        //         //             }
+        //         //         }),
+        //         //         displayExpr: "DSC", 
+        //         //         valueExpr: "ID", 
+        //         //         placeholder: "Selecione a empresa",
+        //         //         searchEnabled: true,
+        //         //         onValueChanged: function(e) {
+        //         //             // Obtém o código da empresa selecionada
+        //         //             var codempresa = e.value;
+
+        //         //             // Atualiza as filiais com base na empresa selecionada
+        //         //             atualizarFiliais(codempresa);
+        //         //         },
+        //         //     },
+        //         // },
+        //         {
+        //             dataField: "codfilial",
+        //             label: { text: "Filial" },
+        //             editorType: "dxSelectBox",
+        //             editorOptions: {
+        //                 dataSource: new DevExpress.data.CustomStore({
+        //                     loadMode: "raw",
+        //                     load: function() {
+        //                         return $.ajax({
+        //                             url: "/controladoria/get-lookup-filial", 
+        //                             method: "GET",
+        //                             dataType: "json"
+        //                         }).then(response => {
+        //                             if (response.success) {
+        //                                 return response.data;
+        //                             } else {
+        //                                 DevExpress.ui.notify(response.message, "error", 3000);
+        //                                 return [];
+        //                             }
+        //                         }).catch(error => {
+        //                             if (error.responseJSON) {
+        //                                 DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+        //                                 return {};
+        //                             } else {
+        //                                 DevExpress.ui.notify("Erro ao buscar empresas!", "error", 3000);
+        //                                 return [];
+        //                             }
+        //                         });
+        //                     }
+        //                 }),
+        //                 displayExpr: "DSC", 
+        //                 valueExpr: "ID", 
+        //                 placeholder: "Selecione a Filial",
+        //                 searchEnabled: true,
+        //             },
+        //         },
+        //         {
+        //             itemType: "group",
+        //             colCount: 2, // Duas colunas para as datas ficarem lado a lado
+        //             items: [
+        //                 {
+        //                     dataField: "lancamento_inicio",
+        //                     label: { text: "Período Lançamentos" },
+        //                     editorType: "dxDateBox",
+        //                     editorOptions: {
+        //                         displayFormat: "dd/MM/yyyy", 
+        //                         dateSerializationFormat: "yyyy-MM-dd",
+        //                     },
+        //                     validationRules: [{
+        //                         type: 'required',
+        //                         message: 'Data de Lançamento é obrigatório.',
+        //                     }],
+        //                 },
+        //                 {
+        //                     dataField: "lancamento_fim",
+        //                     label: { text: "Até" },
+        //                     editorType: "dxDateBox",
+        //                     editorOptions: {
+        //                         displayFormat: "dd/MM/yyyy", 
+        //                         dateSerializationFormat: "yyyy-MM-dd"
+        //                     },
+        //                 },
+        //             ]
+        //         },
+        //         {
+        //             itemType: "button",
+        //             horizontalAlignment: "left",
+        //             buttonOptions: {
+        //                 text: "Filtrar",
+        //                 type: "success",
+        //                 onClick: function () {
+        //                     // Instância do formulário
+        //                     var formInstance = $("#form-filtro").dxForm("instance");
+                            
+        //                     // Validação do formulário
+        //                     var validationResult = formInstance.validate();  // Valida o formulário
+
+        //                     // Verifica se o formulário é válido
+        //                     if (validationResult.isValid) {
+        //                         // Se o formulário for válido, captura os dados
+        //                         var formData = formInstance.option("formData");
+
+        //                         // Atualiza a variável de filtros
+        //                         filtros = {
+        //                             codempresa: formData.codempresa,
+        //                             codfilial: formData.codfilial,
+        //                             lancamento_inicio: formData.lancamento_inicio,
+        //                             lancamento_fim: formData.lancamento_fim
+        //                         };
+                                
+        //                         if (dataGrid != null) {
+        //                             if (dataGrid.instance) {
+        //                                 dataGrid.dispose();
+        //                             }
+        //                         }
+
+        //                         // Realize a ação de filtrar, como enviar uma requisição
+        //                         dataGrid = $('#gridContainer').dxDataGrid({
+        //                             dataSource: new DevExpress.data.CustomStore({
+        //                                 loadMode: "processed",
+        //                                 load: function(loadOptions) {
+
+        //                                     let params = {
+        //                                         skip: loadOptions.skip || 0, 
+        //                                         take: loadOptions.take || 500, 
+        //                                         sort: loadOptions.sort ? JSON.stringify(loadOptions.sort) : null,
+        //                                         codempresa: filtros.codempresa || null,
+        //                                         codfilial: filtros.codfilial || null,
+        //                                         lancamento_inicio: filtros.lancamento_inicio || null,
+        //                                         lancamento_fim: filtros.lancamento_fim || null,
+        //                                     };
+
+        //                                     return $.ajax({
+        //                                         url: '/controladoria/list-divergencias-centros-custo-contas',
+        //                                         method: 'GET',
+        //                                         dataType: 'json',
+        //                                         data: params, 
+        //                                     }).then(response => {
+        //                                         if (response.success) {
+        //                                             return {
+        //                                                 data: response.data,
+        //                                                 totalCount: response.totalCount 
+        //                                             };
+        //                                         } else {
+        //                                             DevExpress.ui.notify(response.message, "error", 3000);
+        //                                             return { data: [], totalCount: 0 };
+        //                                         }
+        //                                     }).catch(error => {
+        //                                         if (error.responseJSON) {
+        //                                             DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+        //                                             return { data: [], totalCount: 0 };
+        //                                         } else {
+        //                                             DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+        //                                             return { data: [], totalCount: 0 };
+        //                                         }
+        //                                     });
+        //                                 }
+        //                             }),
+        //                             height: 600,
+        //                             width: '100%',
+        //                             columnAutoWidth: true,
+        //                             elementAttr: {
+        //                                 class: "grid-personalizada"
+        //                             },
+        //                             keyExpr: 'ID',  // Define qual campo é a chave única
+        //                             showBorders: true,
+        //                             columnChooser: {
+        //                                 enabled: true,
+        //                                 mode: "dragAndDrop", // or "select"
+        //                                 position: { 
+        //                                     my: "right", 
+        //                                     at: "right", 
+        //                                     of: ".dx-datagrid-column-chooser-button" 
+        //                                 }
+        //                             },
+        //                             groupPanel: {
+        //                                 visible: true,
+        //                             },
+        //                             toolbar: {
+        //                                 items: [
+        //                                     {
+        //                                         location: "after",
+        //                                         widget: "dxButton",
+        //                                         options: {
+        //                                             icon: "fa fa-expand", // ícone para expandir
+        //                                             text: "",
+        //                                             onClick: function () {
+        //                                                 var grid = $("#gridContainer").dxDataGrid("instance");
+        //                                                 grid.expandAll(); // Expande todos os grupos
+        //                                             }
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         location: "after",
+        //                                         widget: "dxButton",
+        //                                         options: {
+        //                                             icon: "fa fa-compress", // ícone para colapsar
+        //                                             text: "",
+        //                                             onClick: function () {
+        //                                                 var grid = $("#gridContainer").dxDataGrid("instance");
+        //                                                 grid.collapseAll(); // Colapsa todos os grupos
+        //                                             }
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         name: "refresh", // Define o nome do botão
+        //                                         location: "after", // Coloca o botão após os outros itens na toolbar
+        //                                         widget: "dxButton",
+        //                                         options: {
+        //                                             icon: "refresh", // Ícone de refresh
+        //                                             onClick: function() {
+        //                                                 // Lógica para atualizar/recarregar os dados da grid
+        //                                                 $("#gridContainer").dxDataGrid("instance").refresh(); // Atualiza a grid
+        //                                             },
+        //                                             text: "Atualizar" // Texto exibido no botão
+        //                                         }
+        //                                     }
+        //                                 ]
+        //                             },
+        //                             editing: {
+        //                                 mode: 'batch',    // Modo de edição em lote
+        //                                 allowUpdating: false,
+        //                                 allowDeleting: false,
+        //                                 useIcons: true,
+        //                                 selectTextOnEditStart: true,
+        //                                 startEditAction: 'click',  // A edição começa ao clicar
+        //                                 confirmDelete: true,
+        //                                 texts: {
+        //                                     confirmDeleteMessage: "Tem certeza que deseja remover esses lançamentos? É irreversível."
+        //                                 }
+        //                             },
+        //                             selection: {
+        //                                 mode: 'multiple',
+        //                                 showCheckBoxesMode: 'none'
+        //                             },
+        //                             hoverStateEnabled: true,
+        //                             pager: {
+        //                                 visible: true
+        //                             },
+        //                             paging: {
+        //                                 pageSize: 500
+        //                             },
+        //                             headerFilter: {
+        //                                 visible: true,
+        //                             },
+        //                             filterRow: {
+        //                                 visible: true,
+        //                                 applyFilter: 'auto',
+        //                             },
+        //                             export: {
+        //                                 enabled: true,
+        //                                 fileName: "Divergências entre Contas e Centros de Custos",
+        //                                 allowExportSelectedData: false,
+        //                             },
+        //                             searchPanel: {
+        //                                 visible: true,
+        //                                 width: 240,
+        //                                 placeholder: 'Procure...',
+        //                             },
+        //                             columns: [
+        //                                 { dataField: 'CODEMP', caption: 'Empresa', allowEditing: false, alignment: 'center', width: 'auto' },
+        //                                 { dataField: 'NOMEMP', caption: 'Nome Empresa', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'FILRAT', caption: 'Filial', allowEditing: false, alignment: 'center', width: 'auto' },
+        //                                 { dataField: 'SIGFIL', caption: 'Nome Filial', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { 
+        //                                     dataField: 'DATLCT', 
+        //                                     caption: 'Dt. Lançamento', 
+        //                                     allowEditing: false, 
+        //                                     alignment: 'center', 
+        //                                     width: 'auto', 
+        //                                     dataType: 'date', 
+        //                                     format: 'dd/MM/yyyy',
+        //                                     editorOptions: {
+        //                                         displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
+        //                                     },
+        //                                 },
+        //                                 { dataField: 'MES_LANCAMENTO', caption: 'Mês Lançamento', allowEditing: false, alignment: 'center', width: 100 },
+        //                                 { dataField: 'CONTA_CONTABIL', caption: 'Conta Contábil', allowEditing: false, alignment: 'center', width: 'auto' },
+        //                                 { dataField: 'DSC_CONTA_CONTABIL', caption: 'Descrição Conta Contábil', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'CONTA_REDUZIDA', caption: 'Conta Reduzida', allowEditing: false, alignment: 'center', width: 100 },
+        //                                 { dataField: 'DSC_CONTA_REDUZIDA', caption: 'Descrição Conta Reduzida', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'CONTA_CENTRO_CUSTO', caption: 'Conta Centro de Custo', allowEditing: false, alignment: 'center', width: 100 },
+        //                                 { dataField: 'CENTRO_CUSTO', caption: 'Centro de Custo', allowEditing: false, alignment: 'center', width: 100 },
+        //                                 { dataField: 'DSC_CENTRO_CUSTO', caption: 'Descrição Centro de Custo', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'CONTRA_PARTIDA', caption: 'Contra Partida', allowEditing: false, alignment: 'center', width: 100 },
+        //                                 { dataField: 'LOTE', caption: 'Lote', allowEditing: false, alignment: 'center', width: 90 },
+        //                                 { dataField: 'NUM_LANCAMENTO', caption: 'Lançamento', allowEditing: false, alignment: 'center', width: 'auto' },
+        //                                 { dataField: 'CODIGO_HISTORICO', caption: 'Cod. Histórico', allowEditing: false, alignment: 'center', width: 90 },
+        //                                 { dataField: 'HISTORICO', caption: 'Histórico', allowEditing: false, alignment: 'left', width: 'auto'  },
+        //                                 { 
+        //                                     dataField: 'DEBITO', 
+        //                                     caption: 'Debito', 
+        //                                     allowEditing: false, 
+        //                                     alignment: 'right', 
+        //                                     width: 'auto', 
+        //                                     dataType: 'number', 
+        //                                     format: { type: 'currency', currency: 'BRL', precision: 2 },
+        //                                     customizeText: function(cellInfo) {
+        //                                         if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                             var numericValue = Number(cellInfo.value);
+        //                                             if (isNaN(numericValue)) {
+        //                                                 return cellInfo.value;
+        //                                             }
+        //                                             return numericValue.toLocaleString("pt-BR", {
+        //                                                 style: "currency",
+        //                                                 currency: "BRL",
+        //                                                 minimumFractionDigits: 2,
+        //                                                 maximumFractionDigits: 2
+        //                                             });
+        //                                         }
+        //                                     }  
+        //                                 },
+        //                                 { 
+        //                                     dataField: 'CREDITO', 
+        //                                     caption: 'Crédito', 
+        //                                     allowEditing: false, 
+        //                                     alignment: 'right', 
+        //                                     width: 'auto', 
+        //                                     dataType: 'number', 
+        //                                     format: { type: 'currency', currency: 'BRL', precision: 2 },
+        //                                     customizeText: function(cellInfo) {
+        //                                         if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                             var numericValue = Number(cellInfo.value);
+        //                                             if (isNaN(numericValue)) {
+        //                                                 return cellInfo.value;
+        //                                             }
+        //                                             return numericValue.toLocaleString("pt-BR", {
+        //                                                 style: "currency",
+        //                                                 currency: "BRL",
+        //                                                 minimumFractionDigits: 2,
+        //                                                 maximumFractionDigits: 2
+        //                                             });
+        //                                         }
+        //                                     }  
+        //                                 },
+        //                                 { 
+        //                                     dataField: 'TOTAL', 
+        //                                     caption: 'Total', 
+        //                                     allowEditing: false, 
+        //                                     alignment: 'right', 
+        //                                     width: 'auto', 
+        //                                     dataType: 'number', 
+        //                                     format: { type: 'currency', currency: 'BRL', precision: 2 },
+        //                                     customizeText: function(cellInfo) {
+        //                                         if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                             var numericValue = Number(cellInfo.value);
+        //                                             if (isNaN(numericValue)) {
+        //                                                 return cellInfo.value;
+        //                                             }
+        //                                             return numericValue.toLocaleString("pt-BR", {
+        //                                                 style: "currency",
+        //                                                 currency: "BRL",
+        //                                                 minimumFractionDigits: 2,
+        //                                                 maximumFractionDigits: 2
+        //                                             });
+        //                                         }
+        //                                     }  
+        //                                 },
+        //                                 { dataField: 'TIPO', caption: 'Tipo', allowEditing: false, alignment: 'center', width: 90 },
+        //                                 { dataField: 'TIPO_CENTRO_CUSTO', caption: 'Tipo Centro de Custo', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'LANCAMENTO_INCONSIST', caption: 'Lançamento Inconsistente', allowEditing: false, alignment: 'left', width: 'auto' },
+        //                                 { dataField: 'NUMDOC', caption: 'Número Documento', allowEditing: false, alignment: 'center', width: 'auto'},
+        //                                 { dataField: 'FLG_CONTABILIZADO', caption: 'Contabilizado?', allowEditing: false, alignment: 'center', width: 'auto'},
+        //                             ],
+        //                             summary: {
+        //                                 totalItems: [
+        //                                     {
+        //                                         column: "DEBITO", 
+        //                                         summaryType: "sum",
+        //                                         displayFormat: "Total: {0}",  
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         column: "CREDITO", 
+        //                                         summaryType: "sum",
+        //                                         displayFormat: "Total: {0}",  
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         column: "TOTAL", 
+        //                                         summaryType: "sum",
+        //                                         displayFormat: "Total: {0}",  
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                 ],
+        //                                 groupItems: [
+        //                                     {
+        //                                         column: 'DEBITO',
+        //                                         summaryType: 'sum',
+        //                                         valueFormat: 'currency',
+        //                                         displayFormat: 'Total: {0}',
+        //                                         showInGroupFooter: true,
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         column: 'CREDITO',
+        //                                         summaryType: 'sum',
+        //                                         valueFormat: 'currency',
+        //                                         displayFormat: 'Total: {0}',
+        //                                         showInGroupFooter: true,
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                     {
+        //                                         column: 'TOTAL',
+        //                                         summaryType: 'sum',
+        //                                         valueFormat: 'currency',
+        //                                         displayFormat: 'Total: {0}',
+        //                                         showInGroupFooter: true,
+        //                                         valueFormat: {
+        //                                             type: "currency",  
+        //                                             currency: "BRL" 
+        //                                         },
+        //                                         customizeText: function(cellInfo) {
+        //                                             // Verifica se o valor é válido antes de formatar
+        //                                             if (cellInfo.value !== undefined && cellInfo.value !== null) {
+        //                                                 // Exibe o valor formatado como moeda brasileira
+        //                                                 return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //                                             }
+        //                                             return '';
+        //                                         }
+        //                                     },
+        //                                 ],
+
+        //                             },
+        //                             onToolbarPreparing: function (e) {
+        //                                 // Aqui você pode personalizar ainda mais a barra de ferramentas
+        //                                 var toolbarItems = e.toolbarOptions.items;
+        //                                 // Adicionar os botões de expandir/colapsar
+        //                                 toolbarItems.push({
+        //                                     location: "after",
+        //                                     widget: "dxButton",
+        //                                     options: {
+        //                                         icon: "fa fa-expand",
+        //                                         text: "",
+        //                                         onClick: function () {
+        //                                             var grid = e.component;
+        //                                             grid.expandAll(); // Expande todos os grupos
+        //                                         }
+        //                                     }
+        //                                 });
+
+        //                                 toolbarItems.push({
+        //                                     location: "after",
+        //                                     widget: "dxButton",
+        //                                     options: {
+        //                                         icon: "fa fa-compress",
+        //                                         text: "",
+        //                                         onClick: function () {
+        //                                             var grid = e.component;
+        //                                             grid.collapseAll(); // Colapsa todos os grupos
+        //                                         }
+        //                                     }
+        //                                 });
+
+        //                                 e.toolbarOptions.items.push({
+        //                                     name: "refresh", // Adiciona o botão refresh na toolbar
+        //                                     location: "after", // Coloca depois dos outros itens
+        //                                     widget: "dxButton",
+        //                                     options: {
+        //                                         icon: "refresh", // Ícone do botão (ícone de atualização)
+        //                                         onClick: function() {
+        //                                             // Recarrega os dados da grid
+        //                                             e.component.refresh(); // Atualiza a grid
+        //                                         },
+        //                                         text: "Atualizar" 
+        //                                     }
+        //                                 });
+        //                             }
+        //                         }).dxDataGrid('instance');
+        //                     } else {
+        //                         // Se o formulário for inválido
+        //                         DevExpress.ui.notify("Por favor, corrija os erros de validação.", "error", 3000);
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     ],
+        // });
+
+        // function atualizarFiliais(codempresa) {
+        //     var codfilial = $("#form-filtro").dxForm("instance").getEditor("codfilial");
+
+        //     // Faz uma requisição para obter as filiais da empresa selecionada
+        //     $.ajax({
+        //         url: "/controladoria/get-lookup-filial", 
+        //         method: "GET",
+        //         dataType: "json",
+        //         data: { codempresa: codempresa }, // Envia o ID da empresa para filtrar as filiais
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 // Atualiza o dataSource de filiais
+        //                 codfilial.option("dataSource", response.data);
+        //                 codfilial.option("value", null); // Reseta o valor de codfilial
+        //             } else {
+        //                 DevExpress.ui.notify(response.message, "error", 3000);
+        //                 codfilial.option("dataSource", []);
+        //             }
+        //         },
+        //         error: function() {
+        //             DevExpress.ui.notify("Erro ao buscar filiais!", "error", 3000);
+        //             codfilial.option("dataSource", []);
+        //         }
+        //     });
+        // }
+
+        // atualizarFiliais(null);
+    });
+
+
+    // Função para formatar a data
+    // function formatarData(data) {
+    //     const date = new Date(data);
+    //     const dia = ('0' + date.getDate()).slice(-2);
+    //     const mes = ('0' + (date.getMonth() + 1)).slice(-2);
+    //     const ano = date.getFullYear();
+    //     return `${dia}/${mes}/${ano}`;
+    // }    
+
+</script>
