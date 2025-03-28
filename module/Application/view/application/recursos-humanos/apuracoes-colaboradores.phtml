@@ -113,7 +113,7 @@
                     items: [
                         {
                             dataField: "tipoApuracao",
-                            editorType: "dxSelectBox",
+                            editorType: "dxTagBox",
                             label: { visible: false },
                             editorOptions: {
                                 dataSource: [
@@ -135,8 +135,16 @@
                                 valueExpr: "ID",
                                 placeholder: "Selecione o Tipo de Apuração",
                                 searchEnabled: true,
-                                showClearButton: true
-                            }
+                                showClearButton: true,
+                                showSelectionControls: true,
+                                applyValueMode: "useButtons",
+                                selectAllText: "Selecionar todos", 
+                                noDataText: "Nenhum dado disponível"
+                            }, 
+                            validationRules: [{
+                                type: 'required',
+                                message: 'Tipo de apuração é obrigatório.',
+                            }],
                         }
                     ]
                 },
@@ -146,9 +154,36 @@
                         text: "FILTRAR",
                         type: "success",
                         onClick: function() {
-                            const formData = formInstance.option("formData");
-                            // Chamar a função que atualiza a grid com os filtros
-                            atualizarGrid(formData);
+                             // Instância do formulário
+                             var formInstance = $("#form-filtro").dxForm("instance");
+                             var button = this; // Referência ao botão
+
+                            // Validação do formulário
+                            var validationResult = formInstance.validate();  // Valida o formulário
+
+                            // Verifica se o formulário é válido
+                            if (validationResult.isValid) {
+                                // Desabilita o botão
+                                button.option("disabled", true);
+                                
+                                // Opcional: Mostrar um indicador de carregamento
+                                button.option("text", "Processando...");
+
+                                // Se o formulário for válido, captura os dados
+                                const formData = formInstance.option("formData");
+
+                                // Chamar a função que atualiza a grid com os filtros
+                                atualizarGrid(formData).finally(function() {
+                                    // Reabilita o botão independente do resultado
+                                    button.option("disabled", false);
+                                    button.option("text", "FILTRAR");
+                                });
+
+                            } else {
+                                // Se o formulário for inválido
+                                DevExpress.ui.notify("Por favor, corrija os erros de validação.", "error", 3000);
+                            }
+
                         }
                     }
                 }
@@ -180,230 +215,243 @@
                 displayExpr: displayExpr,
                 valueExpr: valueExpr,
                 placeholder: placeholder,
-                searchEnabled: true
+                searchEnabled: true,
+                showClearButton: true,
             };
         }
 
         // Função que será chamada ao clicar no botão FILTRAR
         function atualizarGrid(filtros) {
-            console.log("Filtros aplicados:", filtros);
-            
-            dataGrid = $('#gridContainer').dxDataGrid({
-                dataSource: new DevExpress.data.CustomStore({
-                    key: 'ID', // Certifique-se de definir um campo único como chave
-                    loadMode: "processed",
-                    load: function(loadOptions) {
-                        let params = filtros;
+            // Destroi sempre a grid antes de inicia-la novamente.
+            if (dataGrid != null) {
+                if (dataGrid.instance) {
+                    dataGrid.dispose();
+                }
+            }
 
-                        return $.ajax({
-                            url: '/recursos-humanos/list-lancamentos-apuracoes-colaboradores',
-                            method: 'GET',
-                            dataType: 'json',
-                            data: params, 
-                        }).then(response => {
-                            if (response.success) {
-                                return {
-                                    data: response.data,
-                                    totalCount: response.totalCount 
-                                };
-                            } else {
-                                DevExpress.ui.notify(response.message, "error", 3000);
-                                return { data: [], totalCount: 0 };
+            return new Promise((resolve, reject) => {
+                dataGrid = $('#gridContainer').dxDataGrid({
+                    dataSource: new DevExpress.data.CustomStore({
+                        loadMode: "processed",
+                        load: function(loadOptions) {
+                            let params = filtros;
+
+                            return $.ajax({
+                                url: '/recursos-humanos/list-lancamentos-apuracoes-colaboradores',
+                                method: 'GET',
+                                dataType: 'json',
+                                data: params, 
+                            }).then(response => {
+                                if (response.success) {
+                                    resolve(); // Resolve a Promise quando a requisição for bem-sucedida
+                                    return {
+                                        data: response.data,
+                                        totalCount: response.totalCount 
+                                    };
+                                } else {
+                                    reject(); // Rejeita a Promise em caso de erro
+                                    DevExpress.ui.notify(response.message, "error", 3000);
+                                    return { data: [], totalCount: 0 };
+                                }
+                            }).catch(error => {
+                                reject(); // Rejeita a Promise em caso de erro
+                                console.log('error', error);
+                                if (error.responseJSON) {
+                                    DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                                    return { data: [], totalCount: 0 };
+                                } else {
+                                    DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                                    return { data: [], totalCount: 0 };
+                                }
+                            });
+                        }
+                    }),
+                    height: 600,
+                    width: '100%',
+                    columnAutoWidth: true,
+                    elementAttr: {
+                        class: "grid-personalizada"
+                    },
+                    showBorders: true,
+                    columnChooser: {
+                        enabled: true,
+                        mode: "dragAndDrop",
+                        position: { 
+                            my: "right", 
+                            at: "right", 
+                            of: ".dx-datagrid-column-chooser-button" 
+                        }
+                    },
+                    groupPanel: {
+                        visible: true,
+                    },
+                    toolbar: {
+                        items: [
+                            {
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-expand",
+                                    text: "",
+                                    onClick: function () {
+                                        var grid = $("#gridContainer").dxDataGrid("instance");
+                                        grid.expandAll();
+                                    }
+                                }
+                            },
+                            {
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-compress",
+                                    text: "",
+                                    onClick: function () {
+                                        var grid = $("#gridContainer").dxDataGrid("instance");
+                                        grid.collapseAll();
+                                    }
+                                }
+                            },
+                            {
+                                name: "refresh",
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        $("#gridContainer").dxDataGrid("instance").refresh();
+                                    },
+                                    text: "Atualizar"
+                                }
                             }
-                        }).catch(error => {
-                            console.log('error', error);
-                            if (error.responseJSON) {
-                                DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
-                                return { data: [], totalCount: 0 };
-                            } else {
-                                DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
-                                return { data: [], totalCount: 0 };
-                            }
-                        });
-                    }
-                }),
-                height: 600,
-                width: '100%',
-                columnAutoWidth: true,
-                elementAttr: {
-                    class: "grid-personalizada"
-                },
-                showBorders: true,
-                columnChooser: {
-                    enabled: true,
-                    mode: "dragAndDrop",
-                    position: { 
-                        my: "right", 
-                        at: "right", 
-                        of: ".dx-datagrid-column-chooser-button" 
-                    }
-                },
-                groupPanel: {
-                    visible: true,
-                },
-                toolbar: {
-                    items: [
-                        {
+                        ]
+                    },
+                    editing: {
+                        mode: 'batch',
+                        allowUpdating: false,
+                        allowDeleting: false,
+                    },
+                    selection: {
+                        mode: 'multiple',
+                        showCheckBoxesMode: 'none'
+                    },
+                    hoverStateEnabled: true,
+                    pager: {
+                        visible: true
+                    },
+                    paging: {
+                        pageSize: 500
+                    },
+                    headerFilter: {
+                        visible: true,
+                    },
+                    filterRow: {
+                        visible: true,
+                        applyFilter: 'auto',
+                    },
+                    export: {
+                        enabled: true,
+                        fileName: "Apurações Colaboradores",
+                        allowExportSelectedData: false,
+                    },
+                    searchPanel: {
+                        visible: true,
+                        width: 240,
+                        placeholder: 'Procure...',
+                    },
+                    columns: [
+                        { dataField: 'NUMEMP', caption: 'Empresa', allowEditing: false, alignment: 'center', width: 80 },
+                        { dataField: 'NOMEMP', caption: 'Nome Empresa', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'TIPCOL', caption: 'Tipo Colaborador', allowEditing: false, alignment: 'center', width: 70 },
+                        { dataField: 'NUMCAD', caption: 'Matrícula', allowEditing: false, alignment: 'center', width: 80 },
+                        { dataField: 'NOMFUN', caption: 'Colaborador', allowEditing: false, alignment: 'left', width: 'auto', sortIndex: 1, sortOrder: 'asc' },
+                        { dataField: 'TITCAR', caption: 'Cargo', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'NOMLOC', caption: 'Local', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { 
+                            dataField: 'DATAPU_CONVERT', 
+                            caption: 'Dt. Apuração', 
+                            allowEditing: false, 
+                            alignment: 'center', 
+                            width: 100, 
+                            dataType: 'date', 
+                            format: 'dd/MM/yyyy',
+                            editorOptions: {
+                                displayFormat: 'dd/MM/yyyy'  
+                            },
+                            sortIndex: 2, sortOrder: 'asc'
+                        },
+                        { dataField: 'ESCALA_TROCA', caption: 'Escala Apuração', allowEditing: false, alignment: 'center', width: 'auto' },
+                        { dataField: 'MARCACOES', caption: 'Horário Trabalhado', allowEditing: false, alignment: 'center', width: 'auto' },
+                        { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'TIPO_APURACAO', caption: 'Tipo Apuração', allowEditing: false, alignment: 'center', width: 'auto', sortIndex: 3, sortOrder: 'asc' }
+                    ],                
+                    summary: {
+                        totalItems: [
+                            {
+                                column: "TIPO_APURACAO", 
+                                summaryType: "count",
+                                displayFormat: "Total de Registros: {0}",
+                                customizeText: function(cellInfo) {
+                                    console.log('cellInfo', cellInfo);
+                                    return cellInfo.value + " ocorrências";
+                                }
+                            },
+                        ],
+                        groupItems: [
+                            {
+                                column: "TIPO_APURACAO", 
+                                summaryType: "count",
+                                displayFormat: "Total de Registros: {0}",
+                                customizeText: function(cellInfo) {
+                                    console.log('cellInfo', cellInfo);
+                                    return cellInfo.value + " ocorrências";
+                                }
+                            },
+                        ],
+                    },
+                    onToolbarPreparing: function (e) {
+                        var toolbarItems = e.toolbarOptions.items;
+                        
+                        toolbarItems.push({
                             location: "after",
                             widget: "dxButton",
                             options: {
                                 icon: "fa fa-expand",
                                 text: "",
                                 onClick: function () {
-                                    var grid = $("#gridContainer").dxDataGrid("instance");
+                                    var grid = e.component;
                                     grid.expandAll();
                                 }
                             }
-                        },
-                        {
+                        });
+
+                        toolbarItems.push({
                             location: "after",
                             widget: "dxButton",
                             options: {
                                 icon: "fa fa-compress",
                                 text: "",
                                 onClick: function () {
-                                    var grid = $("#gridContainer").dxDataGrid("instance");
+                                    var grid = e.component;
                                     grid.collapseAll();
                                 }
                             }
-                        },
-                        {
+                        });
+
+                        e.toolbarOptions.items.push({
                             name: "refresh",
                             location: "after",
                             widget: "dxButton",
                             options: {
                                 icon: "refresh",
                                 onClick: function() {
-                                    $("#gridContainer").dxDataGrid("instance").refresh();
+                                    e.component.refresh();
                                 },
-                                text: "Atualizar"
+                                text: "Atualizar" 
                             }
-                        }
-                    ]
-                },
-                editing: {
-                    mode: 'batch',
-                    allowUpdating: false,
-                    allowDeleting: false,
-                },
-                selection: {
-                    mode: 'multiple',
-                    showCheckBoxesMode: 'none'
-                },
-                hoverStateEnabled: true,
-                pager: {
-                    visible: true
-                },
-                paging: {
-                    pageSize: 500
-                },
-                headerFilter: {
-                    visible: true,
-                },
-                filterRow: {
-                    visible: true,
-                    applyFilter: 'auto',
-                },
-                export: {
-                    enabled: true,
-                    fileName: "Apurações Colaboradores",
-                    allowExportSelectedData: false,
-                },
-                searchPanel: {
-                    visible: true,
-                    width: 240,
-                    placeholder: 'Procure...',
-                },
-                columns: [
-                    { dataField: 'CODEMP', caption: 'Empresa', allowEditing: false, alignment: 'center', width: 'auto' },
-                    { dataField: 'NOMEMP', caption: 'Nome Empresa', allowEditing: false, alignment: 'left', width: 'auto' },
-                    { dataField: 'FILRAT', caption: 'Filial', allowEditing: false, alignment: 'center', width: 'auto' },
-                    { dataField: 'SIGFIL', caption: 'Nome Filial', allowEditing: false, alignment: 'left', width: 'auto' }
-                    // Adicione suas outras colunas aqui
-                ],
-                summary: {
-                    totalItems: [
-                        // Exemplo de totalizador (descomente se necessário)
-                        // {
-                        //     column: "DEBITO", 
-                        //     summaryType: "sum",
-                        //     displayFormat: "Total: {0}",  
-                        //     valueFormat: {
-                        //         type: "currency",  
-                        //         currency: "BRL" 
-                        //     },
-                        //     customizeText: function(cellInfo) {
-                        //         if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                        //             return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        //         }
-                        //         return '';
-                        //     }
-                        // },
-                    ],
-                    groupItems: [
-                        // Exemplo de totalizador de grupo (descomente se necessário)
-                        // {
-                        //     column: 'DEBITO',
-                        //     summaryType: 'sum',
-                        //     valueFormat: 'currency',
-                        //     displayFormat: 'Total: {0}',
-                        //     showInGroupFooter: true,
-                        //     valueFormat: {
-                        //         type: "currency",  
-                        //         currency: "BRL" 
-                        //     },
-                        //     customizeText: function(cellInfo) {
-                        //         if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                        //             return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        //         }
-                        //         return '';
-                        //     }
-                        // },
-                    ],
-                },
-                onToolbarPreparing: function (e) {
-                    var toolbarItems = e.toolbarOptions.items;
-                    
-                    toolbarItems.push({
-                        location: "after",
-                        widget: "dxButton",
-                        options: {
-                            icon: "fa fa-expand",
-                            text: "",
-                            onClick: function () {
-                                var grid = e.component;
-                                grid.expandAll();
-                            }
-                        }
-                    });
-
-                    toolbarItems.push({
-                        location: "after",
-                        widget: "dxButton",
-                        options: {
-                            icon: "fa fa-compress",
-                            text: "",
-                            onClick: function () {
-                                var grid = e.component;
-                                grid.collapseAll();
-                            }
-                        }
-                    });
-
-                    e.toolbarOptions.items.push({
-                        name: "refresh",
-                        location: "after",
-                        widget: "dxButton",
-                        options: {
-                            icon: "refresh",
-                            onClick: function() {
-                                e.component.refresh();
-                            },
-                            text: "Atualizar" 
-                        }
-                    });
-                }
-            }).dxDataGrid('instance');
+                        });
+                    }
+                }).dxDataGrid('instance');
+            });
         }
     });
 

@@ -6,67 +6,82 @@ class RecursosHumanosRepository
 {
     public function getLancamentosApuracoesColaboradores($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codEscala = null, $codFilial = null, $tipoApuracao = null)
     {
-        $wheres = "";
+        $wheresInternos = "";
+        $wheresExternos = "";
+        $columnTipoApuracao = "";
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
-            $wheres .= " AND dadosApuracao.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
         }
         if (!empty($codColaborador)) {
-            $wheres .= " AND dadosApuracao.NUMCAD = {$codColaborador}";
+            $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
         }
         if (!empty($codSupervisor)) {
-            $wheres .= " AND dadosApuracao.USU_NUMCAD = {$codSupervisor}";
+            $wheresInternos .= " AND R034CPL.USU_NUMCAD = {$codSupervisor}";
         }
         if (!empty($codCentroCusto)) {
-            $wheres .= " AND dadosApuracao.CODCCU = {$codCentroCusto}";
-        }
-        if (!empty($codEscala)) {
-            $wheres .= " AND dadosApuracao.COD_ESCALA_APURACAO = {$codEscala}";
+            $wheresInternos .= " AND R034FUN.CODCCU = {$codCentroCusto}";
         }
         if (!empty($codFilial)) {
-            $wheres .= " AND dadosApuracao.CODFIL = {$codFilial}";
+            $wheresInternos .= " AND R034FUN.CODFIL = {$codFilial}";
+        }
+        if (!empty($codEscala)) {
+            $wheresInternos .= " AND R066APU.CODESC = {$codEscala}";
         }
 
         if (!empty($tipoApuracao)) {
             switch($tipoApuracao) {
                 case 1: // Faltas
-                    $wheres .= " AND dadosApuracao.FALTA = 1 AND dadosApuracao.FLG_MARCACAO = 0";
+                    $wheresExternos .= " AND dadosApuracao.FALTA = 1 AND dadosApuracao.FLG_MARCACAO = 0";
+                    $columnTipoApuracao .= "Faltas";
                 break;
                 case 2: // Intrajornada
-                    $wheres .= " AND dadosApuracao.INTRAJORNADA = 1";
+                    $wheresExternos .= " AND dadosApuracao.INTRAJORNADA = 1";
+                    $columnTipoApuracao .= "Intrajornada";
                 break;
                 case 3: // Interjornada
-                    $wheres .= " AND dadosApuracao.INTERJORNADA = 1";
+                    $wheresExternos .= " AND dadosApuracao.INTERJORNADA = 1";
+                    $columnTipoApuracao .= "Interjornada";
                 break;
                 case 4: // Horas Extras (Acima de 2h)
-                    $wheres .= " AND dadosApuracao.HORAS_EXTRAS_2HRS = 1";
+                    $wheresExternos .= " AND dadosApuracao.HORAS_EXTRAS_2HRS = 1";
+                    $columnTipoApuracao .= "Interjornada";
                 break;
                 case 5: // Adicional Noturno
-                    $wheres .= " AND dadosApuracao.ADICIONAL_NOTURNO = 1";
+                    $wheresExternos .= " AND dadosApuracao.ADICIONAL_NOTURNO = 1";
+                    $columnTipoApuracao .= "Adicional Noturno";
                 break;
                 case 6: // Trabalho em Folga
-                    $wheres .= " AND dadosApuracao.FLG_TRABALHOU_FOLGA = 1";
+                    $wheresExternos .= " AND dadosApuracao.FLG_TRABALHOU_FOLGA = 1";
+                    $columnTipoApuracao .= "Trabalho em Folga";
                 break;
                 case 7: // Trabalho em Feriado
-                    $wheres .= " AND dadosApuracao.FLG_TRABALHOU_FERIADO = 1";
+                    $wheresExternos .= " AND dadosApuracao.FLG_TRABALHOU_FERIADO = 1";
+                    $columnTipoApuracao .= "Trabalho em Feriado";
                 break;
                 case 8: // Justificativa Marcação - Treinamento
-                    $wheres .= " AND NVL(dadosApuracao.TREINAMENTO,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.TREINAMENTO,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Treinamento";
                 break;
                 case 9: // Justificativa Marcação - Serviço Externo
-                    $wheres .= " AND NVL(dadosApuracao.SERVICO_EXTERNO,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.SERVICO_EXTERNO,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Serviço Externo";
                 break;
                 case 10: // Justificativa Marcação - Home Office
-                    $wheres .= " AND NVL(dadosApuracao.HOME_OFFICE,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.HOME_OFFICE,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Home Office";
                 break;
                 case 11: // Justificativa Marcação - Registro Duplicado
-                    $wheres .= " AND NVL(dadosApuracao.REGISTRO_DUPLICADO,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.REGISTRO_DUPLICADO,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Registro Duplicado";
                 break;
                 case 12: // Justificativa Marcação - Falha Equipamento
-                    $wheres .= " AND NVL(dadosApuracao.FALHA_EQUIPAMENTO,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.FALHA_EQUIPAMENTO,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Falha Equipamento";
                 break;
                 case 13: // Justificativa Marcação - Esquecimento
-                    $wheres .= " AND NVL(dadosApuracao.ESQUECIMENTO,0) > 0";
+                    $wheresExternos .= " AND NVL(dadosApuracao.ESQUECIMENTO,0) > 0";
+                    $columnTipoApuracao .= "Justificativa Marcação - Esquecimento";
                 break;
             }
         }
@@ -86,21 +101,22 @@ class RecursosHumanosRepository
                         ,R034FUN.CODCAR
                         ,R024CAR.TITCAR
                         ,R034FUN.TABORG 
-                        ,R034FUN.NUMLOC 
-                        ,R016ORN.NOMLOC 
+                        ,R034FUN.NUMLOC
+                        ,upper(R016ORN.NOMLOC) as NOMLOC
                         ,R034CPL.USU_NUMCAD
-                        ,SUPERV.NOMFUN AS NOME_SUPERVISOR
+                        ,CASE WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' ELSE SUPERV.NOMFUN END AS NOME_SUPERVISOR
                         ,R066APU.HORDAT 
                         ,R004HOR.DESHOR
                         ,CASE WHEN R066APU.HORDAT IN (9999,9996) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FOLGA
                         ,CASE WHEN R066APU.HORDAT IN (9997) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FERIADO
                         ,R034FUN.CODESC AS CODIGO_ESCALA_CADASTRO
-                        ,R006ESC.NOMESC AS COD_ESCALA_CADASTRO
+                        ,R006ESC.NOMESC AS ESCALA_CADASTRO
                         ,R066APU.CODESC AS COD_ESCALA_APURACAO
                         ,ESCALA_TROCA.NOMESC AS ESCALA_TROCA
                         ,(ESCALA_TROCA.HORSEM/5) AS JORNADA_DIA
                         ,CASE WHEN R034FUN.CODESC <> R066APU.CODESC THEN 1 ELSE 0 END FLG_TROCA_ESCALA
                         ,R066APU.DATAPU
+                        ,TO_CHAR(R066APU.DATAPU, 'YYYY-MM-DD') AS DATAPU_CONVERT
                         ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 'Não Houve Marcações' ELSE MARCACAO.MARCACOES END MARCACOES
                         ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 0 ELSE 1 END FLG_MARCACAO
                         ,NVL(SITUACAO.FALTA,0) AS FALTA
@@ -115,7 +131,7 @@ class RecursosHumanosRepository
                         ,NVL(JUSTIFICATIVAS.TESTE,0) AS TESTE
                         ,NVL(JUSTIFICATIVAS.FALHA_EQUIPAMENTO,0) AS FALHA_EQUIPAMENTO
                         ,NVL(JUSTIFICATIVAS.ESQUECIMENTO,0) AS ESQUECIMENTO
-                        ,'Faltas' AS TIPO_APURACAO
+                        ,'{$columnTipoApuracao}' AS TIPO_APURACAO
                     FROM VETORH.R066APU
                     LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R066APU.NUMEMP AND R034FUN.TIPCOL = R066APU.TIPCOL AND R034FUN.NUMCAD = R066APU.NUMCAD 
                     LEFT JOIN VETORH.R006ESC ON R006ESC.CODESC = R034FUN.CODESC
@@ -179,19 +195,11 @@ class RecursosHumanosRepository
                         ORDER BY DATACC
                     ) JUSTIFICATIVAS ON JUSTIFICATIVAS.NUMCRA = R034FUN.NUMCRA AND JUSTIFICATIVAS.DATACC = R066APU.DATAPU 
                 WHERE R066APU.NUMEMP = 5
+                {$wheresInternos}
                 ) dadosApuracao
                 WHERE 1 = 1
-                {$wheres}";  
+                {$wheresExternos}";  
     }
-
-
-
-
-
-
-
-
-
 
 
 

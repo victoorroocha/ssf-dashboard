@@ -55,7 +55,8 @@ class RecursosHumanosController extends BaseController
         $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
         $codEscala = $this->params()->fromQuery('escala', null);
         $codFilial = $this->params()->fromQuery('filial', null);
-        $tipoApuracao = $this->params()->fromQuery('tipoApuracao', null);
+        $tipoApuracoes = $this->params()->fromQuery('tipoApuracao', null);
+
 
         try {
             // Define o cabeçalho corretamente antes de qualquer saída
@@ -65,34 +66,32 @@ class RecursosHumanosController extends BaseController
                                               ->addHeaderLine('Expires', '0');
 
             // Consulta no Softsul todos pedidos
-            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores($apuracao_inicio, $apuracao_fim, $codColaborador,$codSupervisor, $codCentroCusto, $codEscala, $codFilial, $tipoApuracao) : '';
-
             $result = [];
-            if ($sql) {
-                // Executa a consulta Oracle
-                $result = $this->oracleService->executeQuery($sql);
-                
-                // Processa os dados do Oracle
-                foreach ($result as $key => $row) {
-                    // Convertendo apenas as colunas de texto para UTF-8
-                    $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR'];
-                    foreach ($textColumns as $col) {
-                        if (isset($row[$col])) {
-                            $result[$key][$col] = utf8_encode($row[$col]);
+            foreach ($tipoApuracoes as $key => $tipoApuracao) {
+                $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores($apuracao_inicio, $apuracao_fim, $codColaborador,$codSupervisor, $codCentroCusto, $codEscala, $codFilial, $tipoApuracao) : '';
+
+                if ($sql) {
+                    // Executa a consulta Oracle
+                    $chunkResult = $this->oracleService->executeQuery($sql);
+                    
+                    // Processa os dados do Oracle
+                    foreach ($chunkResult  as $key => $row) {
+                        // Convertendo apenas as colunas de texto para UTF-8
+                        $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR', 'ESCALA_CADASTRO', 'ESCALA_TROCA'];
+                        foreach ($textColumns as $col) {
+                            if (isset($row[$col])) {
+                                $row[$col] = utf8_encode($row[$col]);
+                            }
                         }
+
+                        // Adiciona cada linha ao array result final
+                        $result[] = $row;
                     }
                 }
             }
 
             $totalCount = count($result);
-                        
-            // Garantir que os dados estão em UTF-8
-            array_walk_recursive($result, function(&$value) {
-                if (is_string($value)) {
-                    // Converter para UTF-8
-                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-                }
-            });
+
 
             return new JsonModel([
                 'success' => true,
