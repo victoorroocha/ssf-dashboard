@@ -36,7 +36,259 @@ class RecursosHumanosController extends BaseController
 
         return new ViewModel();
     }
-    // public function listDivergenciasCentrosCustoContasAction()
+    public function listLancamentosApuracoesColaboradoresAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+
+
+        // Captura os parâmetros da requisição GET
+        $apuracao_inicio = $this->params()->fromQuery('dataInicial', null);
+        $apuracao_fim = $this->params()->fromQuery('dataFinal', null);
+        $codColaborador = $this->params()->fromQuery('colaborador', null);
+        $codSupervisor = $this->params()->fromQuery('supervisor', null);
+        $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
+        $codEscala = $this->params()->fromQuery('escala', null);
+        $codFilial = $this->params()->fromQuery('filial', null);
+        $tipoApuracao = $this->params()->fromQuery('tipoApuracao', null);
+
+        try {
+            // Define o cabeçalho corretamente antes de qualquer saída
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                              ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                              ->addHeaderLine('Pragma', 'no-cache')
+                                              ->addHeaderLine('Expires', '0');
+
+            // Consulta no Softsul todos pedidos
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores($apuracao_inicio, $apuracao_fim, $codColaborador,$codSupervisor, $codCentroCusto, $codEscala, $codFilial, $tipoApuracao) : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle
+                $result = $this->oracleService->executeQuery($sql);
+                
+                // Processa os dados do Oracle
+                foreach ($result as $key => $row) {
+                    // Convertendo apenas as colunas de texto para UTF-8
+                    $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR'];
+                    foreach ($textColumns as $col) {
+                        if (isset($row[$col])) {
+                            $result[$key][$col] = utf8_encode($row[$col]);
+                        }
+                    }
+                }
+            }
+
+            $totalCount = count($result);
+                        
+            // Garantir que os dados estão em UTF-8
+            array_walk_recursive($result, function(&$value) {
+                if (is_string($value)) {
+                    // Converter para UTF-8
+                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                }
+            });
+
+            return new JsonModel([
+                'success' => true,
+                'data' => $result,
+                'totalCount' => $totalCount
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function getLookupColaboradorAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+    
+        try {
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupColaboradorQuery() : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
+                
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+            }
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function getLookupSupervisorAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+    
+        try {
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupSupervisorQuery() : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
+
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+            }
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function getLookupCentroCustoAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+    
+        try {
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupCentroCustoQuery() : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
+
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+            }
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function getLookupEscalaAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+    
+        try {
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupEscalaQuery() : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
+
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+            }
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function getLookupFilialAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+    
+        try {
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupFilialQuery() : '';
+
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
+
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+            }
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+
+
+
+    // // action com paginação
+    // public function listLancamentosApuracoesColaboradoresAction()
     // {
     //     // Verifica se o serviço Oracle está disponível
     //     if (!$this->oracleService) {
@@ -46,59 +298,99 @@ class RecursosHumanosController extends BaseController
     //         ]);
     //     }
 
+
     //     // Captura os parâmetros da requisição GET
-    //     $codempresa = $this->params()->fromQuery('codempresa', null);
-    //     $codfilial = $this->params()->fromQuery('codfilial', null);
-    //     $lancamento_inicio = $this->params()->fromQuery('lancamento_inicio', null);
-    //     $lancamento_fim = $this->params()->fromQuery('lancamento_fim', null);
-    //     $skip = $this->params()->fromQuery('skip', null);
-    //     $take = $this->params()->fromQuery('take', null);
+    //     $apuracao_inicio = $this->params()->fromQuery('dataInicial', null);
+    //     $apuracao_fim = $this->params()->fromQuery('dataFinal', null);
+    //     $codColaborador = $this->params()->fromQuery('colaborador', null);
+    //     $codSupervisor = $this->params()->fromQuery('supervisor', null);
+    //     $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
+    //     $codEscala = $this->params()->fromQuery('escala', null);
+    //     $codFilial = $this->params()->fromQuery('filial', null);
+    //     $tipoApuracao = $this->params()->fromQuery('tipoApuracao', null);
+        
+    //     // Novos parâmetros para otimização
+    //     $page = (int) $this->params()->fromQuery('page', 1);
+    //     $pageSize = (int) $this->params()->fromQuery('pageSize', 200);
+    //     $columns = $this->params()->fromQuery('columns', null); // Colunas específicas
 
     //     try {
-    //         // Consulta no Softsul todos pedidos
-    //         $sql = $this->ControladoriaRepository ? $this->ControladoriaRepository->getLancamentosCentrosCustoContaContas($codempresa, $codfilial, $lancamento_inicio, $lancamento_fim) : '';
+    //         // Define o cabeçalho corretamente antes de qualquer saída
+    //         $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+    //                                           ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+    //                                           ->addHeaderLine('Pragma', 'no-cache')
+    //                                           ->addHeaderLine('Expires', '0');
 
-    //         $params = [];
-    //         if ($lancamento_inicio && $lancamento_fim) {
-    //             $params['lancamento_inicio'] = $lancamento_inicio;
-    //             $params['lancamento_fim'] = $lancamento_fim;
-    //         }
+    //         // Consulta no Softsul todos pedidos
+    //         $sql = $this->RecursosHumanosRepository ? 
+    //             $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores(
+    //                 $apuracao_inicio, $apuracao_fim, $codColaborador, 
+    //                 $codSupervisor, $codCentroCusto, $codEscala, 
+    //                 $codFilial, $tipoApuracao
+    //             ) : '';
+
     //         $result = [];
     //         if ($sql) {
-    //             // Executa a consulta Oracle, caso tenha uma consulta
-    //             $result = $this->oracleService->executeQuery($sql, $params);
-
-
+    //             // Executa a consulta Oracle
+    //             $result = $this->oracleService->executeQuery($sql);
+                
     //             // Processa os dados do Oracle
     //             foreach ($result as $key => $row) {
-    //                 // Convertendo a codificação para UTF-8
-    //                 $result[$key]['NOMEMP'] = utf8_encode($row['NOMEMP']);
-    //                 $result[$key]['SIGFIL'] = utf8_encode($row['SIGFIL']);
-    //                 $result[$key]['MES_LANCAMENTO'] = utf8_encode($row['MES_LANCAMENTO']);
-    //                 $result[$key]['DSC_CONTA_CONTABIL'] = utf8_encode($row['DSC_CONTA_CONTABIL']);
-    //                 $result[$key]['DSC_CONTA_REDUZIDA'] = utf8_encode($row['DSC_CONTA_REDUZIDA']);
-    //                 $result[$key]['DSC_CENTRO_CUSTO'] = utf8_encode($row['DSC_CENTRO_CUSTO']);
-    //                 $result[$key]['HISTORICO'] = utf8_encode($row['HISTORICO']);
-    //                 $result[$key]['CLASSIFICACAO'] = utf8_encode($row['CLASSIFICACAO']);
-    //                 $result[$key]['TIPO_CENTRO_CUSTO'] = utf8_encode($row['TIPO_CENTRO_CUSTO']);
-
-    //                 // Conversão de valores numéricos
-    //                 $result[$key]['DEBITO'] = floatval(str_replace(',', '.', $result[$key]['DEBITO']));
-    //                 $result[$key]['CREDITO'] = floatval(str_replace(',', '.', $result[$key]['CREDITO']));
-    //                 $result[$key]['TOTAL'] = floatval(str_replace(',', '.', $result[$key]['TOTAL']));
+    //                 // Convertendo apenas as colunas de texto para UTF-8
+    //                 $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR'];
+    //                 foreach ($textColumns as $col) {
+    //                     if (isset($row[$col])) {
+    //                         $result[$key][$col] = utf8_encode($row[$col]);
+    //                     }
+    //                 }
+                    
+    //                 // Se foram solicitadas colunas específicas, filtrar
+    //                 if ($columns) {
+    //                     $requestedColumns = explode(',', $columns);
+    //                     $filteredRow = [];
+    //                     foreach ($requestedColumns as $requestedCol) {
+    //                         if (isset($result[$key][$requestedCol])) {
+    //                             $filteredRow[$requestedCol] = $result[$key][$requestedCol];
+    //                         }
+    //                     }
+    //                     $result[$key] = $filteredRow;
+    //                 }
     //             }
     //         }
 
     //         $totalCount = count($result);
-    //         $pagedData = $result; 
+            
+    //         // Aplicar paginação
+    //         $pagedData = array_slice(
+    //             $result, 
+    //             ($page - 1) * $pageSize, 
+    //             $pageSize
+    //         );
+            
+    //         // Garantir que os dados estão em UTF-8
+    //         array_walk_recursive($pagedData, function(&$value) {
+    //             if (is_string($value)) {
+    //                 // Converter para UTF-8
+    //                 $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+    //             }
+    //         });
+            
+    //         // // Validar se a conversão para JSON deu certo
+    //         // $json = json_encode($responseArray, JSON_UNESCAPED_UNICODE);
+    //         // if (json_last_error() !== JSON_ERROR_NONE) {
+    //         //     echo 'JSON Error: ' . json_last_error_msg();
+    //         //     exit;
+    //         // }
 
-
-    //         // Retorna os dados como JSON
     //         return new JsonModel([
     //             'success' => true,
     //             'data' => $pagedData,
-    //             'totalCount' => $totalCount
+    //             'totalCount' => $totalCount,
+    //             'currentPage' => $page,
+    //             'pageSize' => $pageSize,
+    //             'totalPages' => ceil($totalCount / $pageSize)
     //         ]);
+            
     //     } catch (\Exception $e) {
     //         return new JsonModel([
     //             'success' => false,
@@ -106,81 +398,4 @@ class RecursosHumanosController extends BaseController
     //         ]);
     //     }
     // }
-    // public function getLookupEmpresaAction()
-    // {
-    //     // Verifica se o serviço Oracle está disponível
-    //     if (!$this->oracleService) {
-    //         return new JsonModel([
-    //             'success' => false,
-    //             'message' => 'Serviço Oracle não disponível'
-    //         ]);
-    //     }
-    
-    //     try {
-    //         // Consulta dados na Softsul
-    //         $sql = $this->ControladoriaRepository ? $this->ControladoriaRepository->getLookupEmpresaQuery() : '';
-
-    //         $result = [];
-    //         if ($sql) {
-    //             // Executa a consulta Oracle, caso tenha uma consulta
-    //             $result = $this->oracleService->executeQuery($sql);
-
-    //             foreach ($result as $key => $row) {
-    //                 $result[$key]['DSC'] = utf8_encode($row['DSC']);
-    //             }
-    //         }
-
-    //         // Retorna os dados como JSON
-    //         return new JsonModel([
-    //             'success' => true,
-    //             'data' => $result
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return new JsonModel([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ]);
-    //     }
-    // }
-    // public function getLookupFilialAction()
-    // {
-    //     // Verifica se o serviço Oracle está disponível
-    //     if (!$this->oracleService) {
-    //         return new JsonModel([
-    //             'success' => false,
-    //             'message' => 'Serviço Oracle não disponível'
-    //         ]);
-    //     }
-
-    //     // Recupera o ID da empresa enviado pela requisição
-    //     $codempresa = $this->getRequest()->getQuery('codempresa');
-
-    //     try {
-    //         // Consulta dados na Softsul
-    //         $sql = $this->ControladoriaRepository ? $this->ControladoriaRepository->getLookupFilialQuery($codempresa) : '';
-
-    //         $result = [];
-    //         if ($sql) {
-    //             // Executa a consulta Oracle, caso tenha uma consulta
-    //             $result = $this->oracleService->executeQuery($sql);
-
-    //             foreach ($result as $key => $row) {
-    //                 $result[$key]['DSC'] = utf8_encode($row['DSC']);
-    //             }
-    //         }
-
-    //         // Retorna os dados como JSON
-    //         return new JsonModel([
-    //             'success' => true,
-    //             'data' => $result
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return new JsonModel([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ]);
-    //     }
-    // }
-
-
 }

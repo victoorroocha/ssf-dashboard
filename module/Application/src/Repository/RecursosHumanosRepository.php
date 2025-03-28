@@ -4,166 +4,281 @@ namespace Application\Repository;
 
 class RecursosHumanosRepository
 {
+    public function getLancamentosApuracoesColaboradores($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codEscala = null, $codFilial = null, $tipoApuracao = null)
+    {
+        $wheres = "";
+        if (!empty($apuracao_inicio)) {
+            $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
+            $wheres .= " AND dadosApuracao.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+        }
+        if (!empty($codColaborador)) {
+            $wheres .= " AND dadosApuracao.NUMCAD = {$codColaborador}";
+        }
+        if (!empty($codSupervisor)) {
+            $wheres .= " AND dadosApuracao.USU_NUMCAD = {$codSupervisor}";
+        }
+        if (!empty($codCentroCusto)) {
+            $wheres .= " AND dadosApuracao.CODCCU = {$codCentroCusto}";
+        }
+        if (!empty($codEscala)) {
+            $wheres .= " AND dadosApuracao.COD_ESCALA_APURACAO = {$codEscala}";
+        }
+        if (!empty($codFilial)) {
+            $wheres .= " AND dadosApuracao.CODFIL = {$codFilial}";
+        }
 
-
-    // public function getLancamentosCentrosCustoContaContas($codempresa = null, $codfilial = null, $lancamento_inicio = null, $lancamento_fim = null)
-    // {
-    //     $wheresContabilizados = "";
-    //     // if (!empty($codempresa)) {
-    //     //     $wheresContabilizados .= " AND lc.CODEMP = {$codempresa}";
-    //     // }
-    //     if (!empty($codfilial)) {
-    //         $wheresContabilizados .= " AND lc.CODFIL = {$codfilial}";
-    //     }
-    //     if (!empty($lancamento_inicio)) {
-    //         $lancamento_fim = !empty($lancamento_fim) ? $lancamento_fim : date('Y-m-d');
-    //         $wheresContabilizados .= " AND LC.DATLCT BETWEEN TO_DATE('{$lancamento_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$lancamento_fim}', 'YYYY-MM-DD')";
-    //     }
-
-
-    //     $wheresNaoContabilizados = "";
-    //     // if (!empty($codempresa)) {
-    //     //     $wheresNaoContabilizados .= " AND RT.CODEMP = {$codempresa}";
-    //     // }
-    //     if (!empty($codfilial)) {
-    //         $wheresNaoContabilizados .= " AND LC.CODFIL = {$codfilial}";
-    //     }
-    //     if (!empty($lancamento_inicio)) {
-    //         $lancamento_fim = !empty($lancamento_fim) ? $lancamento_fim : date('Y-m-d');
-    //         $wheresNaoContabilizados .= " AND RT.DATMOV BETWEEN TO_DATE('{$lancamento_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$lancamento_fim}', 'YYYY-MM-DD')";
-    //     }
-       
+        if (!empty($tipoApuracao)) {
+            switch($tipoApuracao) {
+                case 1: // Faltas
+                    $wheres .= " AND dadosApuracao.FALTA = 1 AND dadosApuracao.FLG_MARCACAO = 0";
+                break;
+                case 2: // Intrajornada
+                    $wheres .= " AND dadosApuracao.INTRAJORNADA = 1";
+                break;
+                case 3: // Interjornada
+                    $wheres .= " AND dadosApuracao.INTERJORNADA = 1";
+                break;
+                case 4: // Horas Extras (Acima de 2h)
+                    $wheres .= " AND dadosApuracao.HORAS_EXTRAS_2HRS = 1";
+                break;
+                case 5: // Adicional Noturno
+                    $wheres .= " AND dadosApuracao.ADICIONAL_NOTURNO = 1";
+                break;
+                case 6: // Trabalho em Folga
+                    $wheres .= " AND dadosApuracao.FLG_TRABALHOU_FOLGA = 1";
+                break;
+                case 7: // Trabalho em Feriado
+                    $wheres .= " AND dadosApuracao.FLG_TRABALHOU_FERIADO = 1";
+                break;
+                case 8: // Justificativa Marcação - Treinamento
+                    $wheres .= " AND NVL(dadosApuracao.TREINAMENTO,0) > 0";
+                break;
+                case 9: // Justificativa Marcação - Serviço Externo
+                    $wheres .= " AND NVL(dadosApuracao.SERVICO_EXTERNO,0) > 0";
+                break;
+                case 10: // Justificativa Marcação - Home Office
+                    $wheres .= " AND NVL(dadosApuracao.HOME_OFFICE,0) > 0";
+                break;
+                case 11: // Justificativa Marcação - Registro Duplicado
+                    $wheres .= " AND NVL(dadosApuracao.REGISTRO_DUPLICADO,0) > 0";
+                break;
+                case 12: // Justificativa Marcação - Falha Equipamento
+                    $wheres .= " AND NVL(dadosApuracao.FALHA_EQUIPAMENTO,0) > 0";
+                break;
+                case 13: // Justificativa Marcação - Esquecimento
+                    $wheres .= " AND NVL(dadosApuracao.ESQUECIMENTO,0) > 0";
+                break;
+            }
+        }
         
-    //     return "SELECT 
-    //                 RT.CODEMP, 
-    //                 EMP.NOMEMP,   
-    //                 RT.FILRAT,
-    //                 FI.SIGFIL,  
-    //                 TO_CHAR(LC.DATLCT, 'YYYY-MM-DD') AS DATLCT,
-    //                 TO_CHAR(LC.DATLCT, 'FMMonth') AS MES_LANCAMENTO,
-    //                 PL.CLACTA AS CONTA_CONTABIL,      
-    //                 PL.DESPAR AS DSC_CONTA_CONTABIL,       
-    //                 PL.CTARED AS CONTA_REDUZIDA,       
-    //                 PL.ABRCTA AS DSC_CONTA_REDUZIDA,     
-    //                 CU.CLACCU AS CONTA_CENTRO_CUSTO,       
-    //                 CU.CODCCU AS CENTRO_CUSTO,       
-    //                 CU.DESCCU AS DSC_CENTRO_CUSTO,     
-    //                 CASE 
-    //                     WHEN RT.DEBCRE = 'C' THEN LC.CTADEB
-    //                     WHEN RT.DEBCRE = 'D' THEN LC.CTACRE
-    //                     ELSE NULL
-    //                 END AS CONTRA_PARTIDA,    
-    //                 LC.NUMLOT AS LOTE,      
-    //                 RT.NUMLCT AS NUM_LANCAMENTO,      
-    //                 LC.CODHPD AS CODIGO_HISTORICO,      
-    //                 CASE 
-    //                     WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 4 THEN 
-    //                         SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-    //                         SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 1) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 2) - INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 2) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 3) - INSTR(lc.cpllct, ',\"\"', 1, 2) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 3) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 3) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 4) - INSTR(lc.cpllct, ',\"\"', 1, 3) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 4) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 5) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 4) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 5) - INSTR(lc.cpllct, ',\"\"', 1, 4) - 1)
-    //                     WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 3 THEN 
-    //                         SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-    //                         SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 1) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 2) - INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 2) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 3) - INSTR(lc.cpllct, ',\"\"', 1, 2) - 1)
-    //                     WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) > 1 AND (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) < 3 THEN 
-    //                         SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-    //                         SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',', 1, 1) - 1) ||
-    //                         SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-    //                         SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 1) + 1, INSTR(lc.cpllct || ',', ',', 1, 2) - INSTR(lc.cpllct, ',', 1, 1) - 1)
-    //                     WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) <= 1 THEN HP.DESHPD || LC.CPLLCT
-    //                     ELSE LC.CPLLCT
-    //                 END AS HISTORICO,  
-    //                 CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE 0 END AS DEBITO,       
-    //                 CASE WHEN RT.DEBCRE = 'C' THEN RT.VLRRAT ELSE 0 END AS CREDITO,    
-    //                 (CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE 0 END) - (CASE WHEN RT.DEBCRE = 'C' THEN RT.VLRRAT ELSE 0 END) AS TOTAL,
-    //                 RT.DEBCRE AS TIPO, 
-    //                 CASE WHEN PL.GRUCTA = '1' THEN '1-ATIVO' WHEN PL.GRUCTA = '2' THEN '2-PASIVO' WHEN PL.GRUCTA = '3' THEN '3-RECEITAS' WHEN PL.GRUCTA = '5' THEN '5-CUSTOS E DESPESAS' WHEN PL.GRUCTA = '6' THEN '6-CONTAS GERENCIAIS' END CLASSIFICACAO,
-    //                 CASE WHEN CU.TIPCCU = 1 THEN '1 - Produtivo/Operacional Indireto' WHEN CU.TIPCCU = 2 THEN '2 - Produtivo/Operacional Direto' WHEN CU.TIPCCU = 3 THEN '3 - Administrativo' WHEN CU.TIPCCU = 4 THEN '4 - Comercial' WHEN CU.TIPCCU = 5 THEN '5 - Financeiro' END AS TIPO_CENTRO_CUSTO,
-    //                 CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN '1 - CC Produtivo em Conta ADM' WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN '2 - CC ADM em Conta Produtiva' ELSE NULL END LANCAMENTO_INCONSIST, -- 1 = CC Produtivo em Conta ADM; 2 = CC ADM em Conta Produtiva;
-    //                 NULL AS NUMDOC,
-    //                 'Contabilizados' AS FLG_CONTABILIZADO
-    //             FROM Sapiens.E640RAT RT  
-    //             LEFT JOIN Sapiens.E640LCT LC ON RT.CODEMP = LC.CODEMP AND RT.NUMLCT = LC.NUMLCT AND RT.FILRAT = LC.CODFIL  
-    //             LEFT JOIN Sapiens.E045PLA PL ON RT.CODEMP = PL.CODEMP AND RT.CTARED = PL.CTARED
-    //             LEFT JOIN Sapiens.E046HPD HP ON HP.CODHPD = LC.CODHPD
-    //             INNER JOIN Sapiens.E044CCU CU ON RT.CODEMP = CU.CODEMP AND RT.CODCCU = CU.CODCCU 
-    //             INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
-    //             INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.FILRAT = FI.CODFIL 
-    //             WHERE LC.SITLCT = '2' 
-    //             AND lc.CODEMP = 5
-    //             AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
-    //             {$wheresContabilizados}
+        return "SELECT dadosApuracao.* FROM (
+                    SELECT 
+                        ROW_NUMBER() OVER (ORDER BY R066APU.NUMEMP, R066APU.TIPCOL, R034FUN.CODFIL, R066APU.NUMCAD, R066APU.DATAPU) AS ID
+                        ,R066APU.NUMEMP 
+                        ,R066APU.TIPCOL 
+                        ,R030EMP.NOMEMP 
+                        ,R034FUN.CODFIL 
+                        ,R066APU.NUMCAD 
+                        ,R034FUN.NUMCRA 
+                        ,R034FUN.NOMFUN 
+                        ,R034FUN.DATADM
+                        ,R034FUN.CODCCU 
+                        ,R034FUN.CODCAR
+                        ,R024CAR.TITCAR
+                        ,R034FUN.TABORG 
+                        ,R034FUN.NUMLOC 
+                        ,R016ORN.NOMLOC 
+                        ,R034CPL.USU_NUMCAD
+                        ,SUPERV.NOMFUN AS NOME_SUPERVISOR
+                        ,R066APU.HORDAT 
+                        ,R004HOR.DESHOR
+                        ,CASE WHEN R066APU.HORDAT IN (9999,9996) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FOLGA
+                        ,CASE WHEN R066APU.HORDAT IN (9997) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FERIADO
+                        ,R034FUN.CODESC AS CODIGO_ESCALA_CADASTRO
+                        ,R006ESC.NOMESC AS COD_ESCALA_CADASTRO
+                        ,R066APU.CODESC AS COD_ESCALA_APURACAO
+                        ,ESCALA_TROCA.NOMESC AS ESCALA_TROCA
+                        ,(ESCALA_TROCA.HORSEM/5) AS JORNADA_DIA
+                        ,CASE WHEN R034FUN.CODESC <> R066APU.CODESC THEN 1 ELSE 0 END FLG_TROCA_ESCALA
+                        ,R066APU.DATAPU
+                        ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 'Não Houve Marcações' ELSE MARCACAO.MARCACOES END MARCACOES
+                        ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 0 ELSE 1 END FLG_MARCACAO
+                        ,NVL(SITUACAO.FALTA,0) AS FALTA
+                        ,NVL(SITUACAO.INTRAJORNADA,0) AS INTRAJORNADA
+                        ,NVL(SITUACAO.INTERJORNADA,0) AS INTERJORNADA
+                        ,NVL(SITUACAO.HORAS_EXTRAS_2HRS,0) AS HORAS_EXTRAS_2HRS
+                        ,NVL(SITUACAO.ADICIONAL_NOTURNO,0) AS ADICIONAL_NOTURNO
+                        ,NVL(JUSTIFICATIVAS.TREINAMENTO,0) AS TREINAMENTO
+                        ,NVL(JUSTIFICATIVAS.SERVICO_EXTERNO,0) AS SERVICO_EXTERNO
+                        ,NVL(JUSTIFICATIVAS.HOME_OFFICE,0) AS HOME_OFFICE
+                        ,NVL(JUSTIFICATIVAS.REGISTRO_DUPLICADO,0) AS REGISTRO_DUPLICADO
+                        ,NVL(JUSTIFICATIVAS.TESTE,0) AS TESTE
+                        ,NVL(JUSTIFICATIVAS.FALHA_EQUIPAMENTO,0) AS FALHA_EQUIPAMENTO
+                        ,NVL(JUSTIFICATIVAS.ESQUECIMENTO,0) AS ESQUECIMENTO
+                        ,'Faltas' AS TIPO_APURACAO
+                    FROM VETORH.R066APU
+                    LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R066APU.NUMEMP AND R034FUN.TIPCOL = R066APU.TIPCOL AND R034FUN.NUMCAD = R066APU.NUMCAD 
+                    LEFT JOIN VETORH.R006ESC ON R006ESC.CODESC = R034FUN.CODESC
+                    LEFT JOIN VETORH.R034CPL ON R034CPL.NUMEMP = R034FUN.NUMEMP AND R034CPL.TIPCOL = R034FUN.TIPCOL AND R034CPL.NUMCAD = R034FUN.NUMCAD 
+                    LEFT JOIN VETORH.R004HOR ON R004HOR.CODHOR = R066APU.HORDAT 
+                    LEFT JOIN VETORH.R030EMP ON R030EMP.NUMEMP = R066APU.NUMEMP 
+                    LEFT JOIN VETORH.R034FUN SUPERV ON SUPERV.NUMEMP = R034CPL.USU_NUMEMP AND SUPERV.TIPCOL = R034CPL.USU_TIPCOL AND SUPERV.NUMCAD = R034CPL.USU_NUMCAD 
+                    LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR   
+                    LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
+                    LEFT JOIN VETORH.R004HOR ON R004HOR.CODHOR = R066APU.HORDAT 
+                    LEFT JOIN VETORH.R006ESC ESCALA_TROCA ON ESCALA_TROCA.CODESC = R066APU.CODESC 
+                    LEFT JOIN (
+                        SELECT 
+                            NUMEMP,
+                            TIPCOL,
+                            NUMCAD, 
+                            NUMCRA,
+                            DATAPU,
+                            '[' || LISTAGG(TO_CHAR(HORACC), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES_MIN,
+                            '[' || LISTAGG(TO_CHAR(DATACC + (HORACC / 1440), 'HH24:MI'), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES
+                        FROM VETORH.R070ACC
+                        GROUP BY NUMEMP, TIPCOL, NUMCAD, NUMCRA, DATAPU
+                    ) MARCACAO ON MARCACAO.NUMEMP = R066APU.NUMEMP AND MARCACAO.TIPCOL = R066APU.TIPCOL AND MARCACAO.NUMCAD = R066APU.NUMCAD AND MARCACAO.DATAPU = R066APU.DATAPU
+                    LEFT JOIN (
+                        SELECT
+                             R066SIT.NUMEMP
+                            ,R066SIT.TIPCOL 
+                            ,R066SIT.NUMCAD
+                            ,R066SIT.DATAPU
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (15,65) THEN 1 ELSE 0 END) FALTA
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (68) THEN 1 ELSE 0 END) INTRAJORNADA
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (69) THEN 1 ELSE 0 END) INTERJORNADA
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (16,66,301,302,303,304) AND R066SIT.QTDHOR > 120 THEN 1 ELSE 0 END) HORAS_EXTRAS_2HRS
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (50) THEN 1 ELSE 0 END) ADICIONAL_NOTURNO
+                        FROM VETORH.R066SIT 
+                        WHERE R066SIT.CODSIT IN (15,65,68,69,16,66,301,302,303,304,50)
+                        GROUP BY R066SIT.NUMEMP,R066SIT.TIPCOL,R066SIT.NUMCAD,R066SIT.DATAPU
+                    ) SITUACAO ON SITUACAO.NUMEMP = R066APU.NUMEMP AND SITUACAO.TIPCOL = R066APU.TIPCOL AND SITUACAO.NUMCAD = R066APU.NUMCAD AND SITUACAO.DATAPU = R066APU.DATAPU 
+                    LEFT JOIN (
+                        SELECT *
+                        FROM (
+                        SELECT 
+                            R070JUS.NUMCRA,
+                            R070JUS.DATACC,
+                            R076JMA.DESJMA
+                        FROM VETORH.R070JUS 
+                        INNER JOIN VETORH.R076JMA ON R076JMA.CODJMA = R070JUS.CODJMA 
+                        )
+                        PIVOT (
+                            COUNT(DESJMA)
+                            FOR DESJMA IN (
+                                'TREINAMENTO' AS TREINAMENTO,
+                                'SERVIÇO EXTERNO' AS SERVICO_EXTERNO,
+                                'HOME OFFICE' AS HOME_OFFICE,
+                                'REGISTRO DUPLICADO' AS REGISTRO_DUPLICADO,
+                                'TESTE' AS TESTE,
+                                'FALHA NO EQUIPAMENTO' AS FALHA_EQUIPAMENTO,
+                                'ESQUECIMENTO' AS ESQUECIMENTO
+                            )
+                        )
+                        ORDER BY DATACC
+                    ) JUSTIFICATIVAS ON JUSTIFICATIVAS.NUMCRA = R034FUN.NUMCRA AND JUSTIFICATIVAS.DATACC = R066APU.DATAPU 
+                WHERE R066APU.NUMEMP = 5
+                ) dadosApuracao
+                WHERE 1 = 1
+                {$wheres}";  
+    }
 
-    //             UNION ALL
 
-    //             -- TRAZ CASOS NÃO CONTABILIZADOS AINDA.
-    //             SELECT 
-    //                 RT.CODEMP, 
-    //                 EMP.NOMEMP,   
-    //                 RT.CODFIL as FILRAT,
-    //                 FI.SIGFIL,  
-    //                 TO_CHAR(RT.DATMOV, 'YYYY-MM-DD') AS DATLCT,
-    //                 TO_CHAR(RT.DATMOV, 'FMMonth') AS MES_LANCAMENTO,
-    //                 PL.CLACTA AS CONTA_CONTABIL,      
-    //                 PL.DESPAR AS DSC_CONTA_CONTABIL,       
-    //                 PL.CTARED AS CONTA_REDUZIDA,       
-    //                 PL.ABRCTA AS DSC_CONTA_REDUZIDA,     
-    //                 CU.CLACCU AS CONTA_CENTRO_CUSTO,       
-    //                 CU.CODCCU AS CENTRO_CUSTO,       
-    //                 CU.DESCCU AS DSC_CENTRO_CUSTO,     
-    //                 NULL AS CONTRA_PARTIDA,    
-    //                 LC.NUMLOT AS LOTE,      
-    //                 null AS NUM_LANCAMENTO,      
-    //                 null AS CODIGO_HISTORICO, 
-    //                 NULL AS HISTORICO,
-    //                 CASE WHEN LC.ESTEOS = 'E' THEN RT.VLRRAT ELSE 0 END AS DEBITO,       
-    //                 CASE WHEN LC.ESTEOS = 'S' THEN RT.VLRRAT ELSE 0 END AS CREDITO,    
-    //                 (CASE WHEN LC.ESTEOS = 'E' THEN RT.VLRRAT ELSE 0 END) - (CASE WHEN LC.ESTEOS = 'S' THEN RT.VLRRAT ELSE 0 END) AS TOTAL,
-    //                 CASE WHEN LC.ESTEOS = 'E' THEN 'D' WHEN LC.ESTEOS = 'S' THEN 'C' ELSE NULL END AS TIPO, 
-    //                 CASE WHEN PL.GRUCTA = '1' THEN '1-ATIVO' WHEN PL.GRUCTA = '2' THEN '2-PASIVO' WHEN PL.GRUCTA = '3' THEN '3-RECEITAS' WHEN PL.GRUCTA = '5' THEN '5-CUSTOS E DESPESAS' WHEN PL.GRUCTA = '6' THEN '6-CONTAS GERENCIAIS' END CLASSIFICACAO,
-    //                 CASE WHEN CU.TIPCCU = 1 THEN '1 - Produtivo/Operacional Indireto' WHEN CU.TIPCCU = 2 THEN '2 - Produtivo/Operacional Direto' WHEN CU.TIPCCU = 3 THEN '3 - Administrativo' WHEN CU.TIPCCU = 4 THEN '4 - Comercial' WHEN CU.TIPCCU = 5 THEN '5 - Financeiro' END AS TIPO_CENTRO_CUSTO,
-    //                 CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN '1 - CC Produtivo em Conta ADM' WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN '2 - CC ADM em Conta Produtiva' ELSE NULL END LANCAMENTO_INCONSIST, -- 1 = CC Produtivo em Conta ADM; 2 = CC ADM em Conta Produtiva;
-    //                 LC.NUMDOC,
-    //                 'Não contabilizados' AS FLG_CONTABILIZADO
-    //             FROM Sapiens.E210RAT RT
-    //             LEFT JOIN Sapiens.E210MVP LC ON LC.CODEMP = RT.CODEMP AND LC.CODPRO = RT.CODPRO AND LC.CODDER = RT.CODDER AND LC.CODDEP = RT.CODDEP AND LC.DATMOV = RT.DATMOV AND LC.SEQMOV = RT.SEQMOV
-    //             LEFT JOIN Sapiens.E045PLA PL ON RT.CODEMP = PL.CODEMP AND RT.CTARED = PL.CTARED
-    //             INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
-    //             INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.CODFIL = FI.CODFIL 
-    //             INNER JOIN Sapiens.E044CCU CU ON RT.CODEMP = CU.CODEMP AND RT.CODCCU = CU.CODCCU
-    //             WHERE 1 = 1
-    //             AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
-    //             AND (LC.NUMLOT = 0 OR LC.NUMLOT IS null)
-    //             AND RT.CODEMP = 5
-    //             {$wheresNaoContabilizados}
-    //     ";  
-    // }
-    // public function getLookupEmpresaQuery()
-    // {
-    //     return "SELECT 
-    //                 CODEMP as id, 
-    //                 CODEMP || ' - ' || UPPER(NOMEMP) AS dsc 
-    //             FROM E070EMP
-    //             ORDER BY CODEMP"; 
-    // }
-    // public function getLookupFilialQuery($codempresa = null)
-    // {
-    //     return "SELECT 
-    //                 CODFIL as id,
-    //                 CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || CIDFIL AS dsc 
-    //             FROM E070FIL
-    //             WHERE 1 = 1 
-    //             AND CODEMP = 5
-    //             ORDER BY CODEMP, CODFIL";
-    // }
+
+
+
+
+
+
+
+
+
+
+
+
+    // LOOKUPS FILTROS
+    public function getLookupColaboradorQuery()
+    {
+        return "SELECT 
+                    COLABORADORES.ID,
+                    COLABORADORES.DSC
+                FROM (
+                    SELECT DISTINCT
+                        R034FUN.NUMEMP,
+                        R034FUN.NUMCAD AS ID,
+                        R034FUN.NOMFUN,
+                        SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 1, 3) || '.' ||
+                        SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 4, 3) || '.' ||
+                        SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 7, 3) || '-' ||
+                        SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 10, 2) || ' - ' || 
+                        UPPER(R034FUN.NOMFUN) || ' - ' || 
+                        R034FUN.NUMCAD AS DSC
+                    FROM VETORH.R034FUN
+                    LEFT JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
+                    LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
+                    WHERE R034FUN.NUMEMP = 5
+                    AND R910USU.CONHAB = 1
+                ) COLABORADORES
+                ORDER BY COLABORADORES.NOMFUN ASC"; 
+    }
+    public function getLookupSupervisorQuery()
+    {
+        return "SELECT 
+                    COLABORADORES.ID
+                    ,COLABORADORES.DSC
+                FROM (
+                SELECT DISTINCT
+                    R034FUN.NUMEMP
+                    ,R034FUN.NUMCAD AS ID
+                    ,R034FUN.NOMFUN
+                    ,SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 1, 3) || '.' ||
+                    SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 4, 3) || '.' ||
+                    SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 7, 3) || '-' ||
+                    SUBSTR(LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0'), 10, 2) || ' - ' || 
+                    UPPER(R034FUN.NOMFUN) || ' - ' || 
+                    R034FUN.NUMCAD AS DSC
+                FROM VETORH.R034CPL 
+                LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R034CPL.USU_NUMEMP AND R034FUN.TIPCOL = R034CPL.USU_TIPCOL AND R034FUN.NUMCAD = R034CPL.USU_NUMCAD
+                LEFT JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD                                                                                                                                                      
+                LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
+                WHERE R034CPL.USU_NUMCAD IS NOT NULL
+                AND R910USU.CONHAB = 1
+                AND R034FUN.NUMEMP = 5
+                ) COLABORADORES
+                ORDER BY COLABORADORES.NOMFUN ASC"; 
+    }
+    public function getLookupCentroCustoQuery()
+    {
+        return "SELECT 
+                    CCU.ID
+                    ,CCU.DSC
+                FROM (
+                    SELECT DISTINCT
+                        R018CCU.CODCCU AS ID
+                        ,R018CCU.NOMCCU
+                        ,R018CCU.CODCCU || ' - ' || UPPER(R018CCU.NOMCCU) AS DSC
+                        FROM VETORH.R018CCU
+                        WHERE R018CCU.CODCCU NOT IN (111,156,157,159,158,152,133,118,154)
+                ) CCU
+                ORDER BY CCU.NOMCCU ASC"; 
+    }
+    public function getLookupEscalaQuery()
+    {
+        return "SELECT 
+                     R006ESC.CODESC AS ID
+                    ,R006ESC.CODESC || ' - ' || R006ESC.NOMESC AS DSC
+                FROM VETORH.R006ESC
+                ORDER BY CODESC"; 
+    }
+    public function getLookupFilialQuery()
+    {
+        return "SELECT 
+                    CODFIL as ID,
+                    CODFIL || ' - ' || UPPER(NOMFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || UPPER(R074CID.NOMCID) AS DSC
+                FROM VETORH.R030FIL
+                INNER JOIN VETORH.R074CID ON R074CID.CODCID = R030FIL.CODCID 
+                WHERE NUMEMP = 5
+                ORDER BY CODFIL"; 
+    }
 }

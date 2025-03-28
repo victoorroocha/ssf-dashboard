@@ -193,7 +193,17 @@
                     key: 'ID', // Certifique-se de definir um campo único como chave
                     loadMode: "processed",
                     load: function(loadOptions) {
-                        let params = filtros;
+                        let params = {
+                            ...filtros, // Seus filtros existentes
+                            page: (loadOptions.skip / loadOptions.take) + 1, // Calcula a página atual
+                            pageSize: loadOptions.take // Tamanho da página solicitado
+                        };
+
+                        // Adiciona parâmetros de ordenação se existirem
+                        if (loadOptions.sort) {
+                            params.sort = loadOptions.sort[0].selector;
+                            params.sortOrder = loadOptions.sort[0].desc ? 'desc' : 'asc';
+                        }
 
                         return $.ajax({
                             url: '/recursos-humanos/list-lancamentos-apuracoes-colaboradores',
@@ -222,6 +232,12 @@
                         });
                     }
                 }),
+                remoteOperations: {
+                    paging: true,
+                    filtering: true,
+                    sorting: true,
+                    grouping: true
+                },
                 height: 600,
                 width: '100%',
                 columnAutoWidth: true,
@@ -285,6 +301,13 @@
                     mode: 'batch',
                     allowUpdating: false,
                     allowDeleting: false,
+                    useIcons: true,
+                    selectTextOnEditStart: true,
+                    startEditAction: 'click',
+                    confirmDelete: true,
+                    texts: {
+                        confirmDeleteMessage: "Tem certeza que deseja remover esses lançamentos? É irreversível."
+                    }
                 },
                 selection: {
                     mode: 'multiple',
@@ -292,7 +315,11 @@
                 },
                 hoverStateEnabled: true,
                 pager: {
-                    visible: true
+                    visible: true,
+                    showPageSizeSelector: true,
+                    allowedPageSizes: [500, 1000, 1500, 2000],
+                    showInfo: true,
+                    showNavigationButtons: true
                 },
                 paging: {
                     pageSize: 500
