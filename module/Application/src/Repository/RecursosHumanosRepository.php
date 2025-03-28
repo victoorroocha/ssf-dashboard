@@ -97,6 +97,8 @@ class RecursosHumanosRepository
                         ,R034FUN.NUMCRA 
                         ,R034FUN.NOMFUN 
                         ,R034FUN.DATADM
+                        ,R034FUN.SITAFA
+                        ,SITUACAO_COLABORADOR.DESSIT AS DSC_SITUACAO_COLABORADOR
                         ,R034FUN.CODCCU 
                         ,R034FUN.CODCAR
                         ,R024CAR.TITCAR
@@ -143,6 +145,7 @@ class RecursosHumanosRepository
                     LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
                     LEFT JOIN VETORH.R004HOR ON R004HOR.CODHOR = R066APU.HORDAT 
                     LEFT JOIN VETORH.R006ESC ESCALA_TROCA ON ESCALA_TROCA.CODESC = R066APU.CODESC 
+                    LEFT JOIN VETORH.R010SIT SITUACAO_COLABORADOR ON SITUACAO_COLABORADOR.CODSIT = R034FUN.SITAFA
                     LEFT JOIN (
                         SELECT 
                             NUMEMP,
