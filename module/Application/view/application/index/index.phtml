@@ -1,3 +1,61 @@
+<style>
+    /* Mantemos apenas os estilos visuais, removendo o grid customizado */
+    .dashboard-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 15px;
+        margin-bottom: 20px;
+        height: 100%;
+    }
+    .indicator-card {
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        height: 100%;
+    }
+    .indicator-title {
+        font-size: 16px;
+        color: #555;
+    }
+    .indicator-value {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .indicator-change {
+        font-size: 14px;
+    }
+    .indicator-change.positive {
+        color: #4caf50;
+    }
+    .indicator-change.negative {
+        color: #f44336;
+    }
+    /* Garante que os gráficos tenham altura mínima */
+    .chart-container {
+        min-height: 300px;
+    }
+    .full-width-chart {
+        min-height: 400px;
+    }
+    #range-selector-container {
+        margin: 0 auto;
+    }
+
+    #range-selector {
+        width: 100%;
+        margin: 20px 0;
+    }
+
+    /* Opcional: Estilo para o Range Selector */
+    .dx-range-selector {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+</style>
+
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Page Heading -->
@@ -11,19 +69,442 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Em Desenvolvimento...</p>
+                    <p>Em Desenvolvimento... <small>Recursos Humanos - Dados/Gráficos Fictícios</small></p>
+
+                    <div id="form-container"></div>
+                    <!-- Container centralizado para o Range Selector -->
+                    <div class="d-flex justify-content-center mb-4">
+                        <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
+                            <div id="range-selector"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Linha de indicadores -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <div class="indicator-card" style="background-color: #fff8e1;">
+                                    <div class="indicator-title">Taxa de Faltas</div>
+                                    <div class="indicator-value">5.2%</div>
+                                    <div class="indicator-change positive">↓ 1.2% vs último mês</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <div class="indicator-card" style="background-color: #e8f5e9;">
+                                    <div class="indicator-title">Horas Extras/Mês</div>
+                                    <div class="indicator-value">1.420h</div>
+                                    <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico de largura total -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="dashboard-card">
+                                <div id="grafico-comparativo-mensal" class="full-width-chart"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Linha de gráficos menores -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <div id="grafico-top-faltas" class="chart-container"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <div id="grafico-horas-extras-noturno" class="chart-container"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 
-
 <script>
-    $(document).ready(function() {
-    });
+// Variáveis globais para armazenar os valores selecionados
+const formSelections = {
+    colaborador: null,
+    supervisor: null,
+    local: null,
+    cargo: null,
+    dataInicio: null,
+    dataFim: null
+};
 
+$(document).ready(function() {
+    
+
+    // Inicializa o formulário
+    const formInstance = $("#form-container").dxForm({
+        formData: {},
+        colCount: 1,
+        items: [
+            {
+                itemType: "group",
+                colCount: 2,
+                items: [
+                    {
+                        dataField: "colaborador",
+                        editorType: "dxSelectBox",
+                        label: { visible: false },
+                        editorOptions: getSelectBoxOptions("/controladoria/get-lookup-colaborador", "NOMFUN", "ID", "Selecione o Colaborador")
+                    },
+                    {
+                        dataField: "supervisor",
+                        editorType: "dxSelectBox",
+                        label: { visible: false },
+                        editorOptions: getSelectBoxOptions("/controladoria/get-lookup-supervisor", "NOME_SUPERVISOR", "ID", "Selecione o Supervisor")
+                    }
+                ]
+            },
+            {
+                itemType: "group",
+                colCount: 2,
+                items: [
+                    {
+                        dataField: "local",
+                        editorType: "dxSelectBox",
+                        label: { visible: false },
+                        editorOptions: getSelectBoxOptions("/controladoria/get-lookup-local", "NOMLOC", "ID", "Selecione o Local")
+                    },
+                    {
+                        dataField: "cargo",
+                        editorType: "dxSelectBox",
+                        label: { visible: false },
+                        editorOptions: getSelectBoxOptions("/controladoria/get-lookup-cargo", "TITCAR", "ID", "Selecione o Cargo")
+                    }
+                ]
+            }
+        ],
+        onFieldDataChanged: function(e) {
+            // Atualiza a variável global quando um campo é alterado
+            formSelections[e.dataField] = e.value;
+            atualizarGraficos();
+        }
+    }).dxForm("instance");
+
+    function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+        return {
+            dataSource: new DevExpress.data.CustomStore({
+                loadMode: "raw",
+                load: function() {
+                    return $.ajax({
+                        url: url,
+                        method: "GET",
+                        dataType: "json"
+                    }).then(response => {
+                        if (response.success) {
+                            return response.data;
+                        } else {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                            return [];
+                        }
+                    }).catch(error => {
+                        DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                        return [];
+                    });
+                }
+            }),
+            displayExpr: displayExpr,
+            valueExpr: valueExpr,
+            placeholder: placeholder,
+            searchEnabled: true,
+            onValueChanged: function(e) {
+                // Garante que a variável global seja atualizada mesmo quando mudado diretamente no selectBox
+                const dataField = $(e.element).closest(".dx-field").data("dx-field-item").dataField;
+                formSelections[dataField] = e.value;
+                atualizarGraficos();
+            }
+        };
+    }
+
+    // Inicializa o Range Selector
+    const today = moment();
+    const startYear = today.year() - 3;
+    const startOfYear = today.clone().startOf('year');  // Primeiro dia do ano atual
+    const currentDate = today.clone();  // Data atual
+
+    // Define valores iniciais nas variáveis globais
+    formSelections.dataInicio = startOfYear.toDate();
+    formSelections.dataFim = currentDate.toDate();
+
+    const rangeSelectorInstance = $("#range-selector").dxRangeSelector({
+        width: '100%', // Esta propriedade é importante
+        scale: {
+            startValue: moment(`${startYear}-01-01`).toDate(),
+            endValue: today.clone().endOf('year').toDate(),
+            minorTickInterval: "month",
+            tickInterval: "month",
+            useTicks: true,
+            label: { format: "MMM yyyy" }
+        },
+        value: [startOfYear.toDate(), currentDate.toDate()],  // Intervalo do primeiro dia do ano até hoje
+        sliderMarker: { format: "monthAndYear" },
+        behavior: { callValueChanged: "onMoving" },
+        onInitialized: function(e) {
+            atualizarGraficos();
+        },
+        onValueChanged: function(e) {
+            const startDate = moment(e.value[0]);
+            const endDate = moment(e.value[1]);
+            
+            // Atualiza as variáveis globais
+            formSelections.dataInicio = startDate.toDate();
+            formSelections.dataFim = endDate.toDate();
+            
+            atualizarGraficos();
+        }
+    }).dxRangeSelector("instance");
+
+    // Função para atualizar os gráficos
+    function atualizarGraficos() {
+        console.log("Atualizando gráficos com os seguintes parâmetros:", formSelections);
+        
+
+        // Dados fictícios mensais (janeiro a dezembro)
+        const dadosMensais = [
+            { 
+                mes: "Jan", 
+                faltas: 12, 
+                intrajornada: 8, 
+                interjornada: 3, 
+                horasExtras2H: 15, 
+                adicionalNoturno: 7, 
+                esquecimentos: 10,
+                folgasTrabalhadas: 2
+            },
+            { 
+                mes: "Fev", 
+                faltas: 8, 
+                intrajornada: 5, 
+                interjornada: 2, 
+                horasExtras2H: 12, 
+                adicionalNoturno: 5, 
+                esquecimentos: 8,
+                folgasTrabalhadas: 1
+            },
+            { 
+                mes: "Mar", 
+                faltas: 15, 
+                intrajornada: 10, 
+                interjornada: 4, 
+                horasExtras2H: 18, 
+                adicionalNoturno: 9, 
+                esquecimentos: 12,
+                folgasTrabalhadas: 3
+            },
+            { 
+                mes: "Abr", 
+                faltas: 10, 
+                intrajornada: 7, 
+                interjornada: 3, 
+                horasExtras2H: 14, 
+                adicionalNoturno: 6, 
+                esquecimentos: 9,
+                folgasTrabalhadas: 2
+            },
+            { 
+                mes: "Mai", 
+                faltas: 18, 
+                intrajornada: 12, 
+                interjornada: 5, 
+                horasExtras2H: 22, 
+                adicionalNoturno: 11, 
+                esquecimentos: 15,
+                folgasTrabalhadas: 4
+            },
+            { 
+                mes: "Jun", 
+                faltas: 9, 
+                intrajornada: 6, 
+                interjornada: 2, 
+                horasExtras2H: 11, 
+                adicionalNoturno: 5, 
+                esquecimentos: 7,
+                folgasTrabalhadas: 1
+            },
+            { 
+                mes: "Jul", 
+                faltas: 11, 
+                intrajornada: 8, 
+                interjornada: 3, 
+                horasExtras2H: 16, 
+                adicionalNoturno: 7, 
+                esquecimentos: 10,
+                folgasTrabalhadas: 2
+            },
+            { 
+                mes: "Ago", 
+                faltas: 14, 
+                intrajornada: 9, 
+                interjornada: 4, 
+                horasExtras2H: 19, 
+                adicionalNoturno: 8, 
+                esquecimentos: 13,
+                folgasTrabalhadas: 3
+            },
+            { 
+                mes: "Set", 
+                faltas: 7, 
+                intrajornada: 5, 
+                interjornada: 2, 
+                horasExtras2H: 10, 
+                adicionalNoturno: 4, 
+                esquecimentos: 6,
+                folgasTrabalhadas: 1
+            },
+            { 
+                mes: "Out", 
+                faltas: 16, 
+                intrajornada: 11, 
+                interjornada: 5, 
+                horasExtras2H: 20, 
+                adicionalNoturno: 10, 
+                esquecimentos: 14,
+                folgasTrabalhadas: 4
+            },
+            { 
+                mes: "Nov", 
+                faltas: 10, 
+                intrajornada: 7, 
+                interjornada: 3, 
+                horasExtras2H: 13, 
+                adicionalNoturno: 6, 
+                esquecimentos: 9,
+                folgasTrabalhadas: 2
+            },
+            { 
+                mes: "Dez", 
+                faltas: 5, 
+                intrajornada: 3, 
+                interjornada: 1, 
+                horasExtras2H: 8, 
+                adicionalNoturno: 3, 
+                esquecimentos: 4,
+                folgasTrabalhadas: 0
+            }
+        ];
+
+        // 1. Gráfico de linhas - Comparativo mensal
+        $("#grafico-comparativo-mensal").dxChart({
+            dataSource: dadosMensais,
+            commonSeriesSettings: {
+                argumentField: "mes",
+                type: "line",
+                point: { visible: true }
+            },
+            series: [
+                { valueField: "faltas", name: "Faltas", color: "#ff5252" },
+                { valueField: "intrajornada", name: "Intrajornada", color: "#ff9800" },
+                { valueField: "interjornada", name: "Interjornada", color: "#ffc107" },
+                { valueField: "horasExtras2H", name: "Horas Extras +2H", color: "#4caf50" },
+                { valueField: "adicionalNoturno", name: "Adicional Noturno", color: "#2196f3" },
+                { valueField: "esquecimentos", name: "Esquecimentos", color: "#9c27b0" },
+                { valueField: "folgasTrabalhadas", name: "Folgas Trabalhadas", color: "#607d8b" }
+            ],
+            title: "Indicadores Mensais de Ponto",
+            legend: {
+                verticalAlignment: "bottom",
+                horizontalAlignment: "center"
+            },
+            valueAxis: {
+                title: { text: "Quantidade" }
+            },
+            tooltip: {
+                enabled: true,
+                customizeTooltip: function(arg) {
+                    return { text: `${arg.seriesName}: ${arg.valueText}` };
+                }
+            }
+        });
+
+        // 2. Gráfico de barras - Top 5 meses com mais faltas
+        $("#grafico-top-faltas").dxChart({
+            dataSource: [...dadosMensais]
+                .sort((a, b) => b.faltas - a.faltas)
+                .slice(0, 5),
+            series: {
+                argumentField: "mes",
+                valueField: "faltas",
+                name: "Faltas",
+                type: "bar",
+                color: "#ff5252",
+                label: {
+                    visible: true,
+                    format: "fixedPoint",
+                    precision: 0
+                }
+            },
+            title: "Top 5 Meses com Mais Faltas",
+            legend: {
+                visible: false
+            },
+            valueAxis: {
+                title: { text: "Quantidade de Faltas" }
+            }
+        });
+
+        // 3. Gráfico de área - Horas extras e adicional noturno
+        $("#grafico-horas-extras-noturno").dxChart({
+            dataSource: dadosMensais,
+            commonSeriesSettings: {
+                argumentField: "mes",
+                type: "area"
+            },
+            series: [
+                { 
+                    valueField: "horasExtras2H", 
+                    name: "Horas Extras +2H", 
+                    color: "#4caf50",
+                    opacity: 0.7
+                },
+                { 
+                    valueField: "adicionalNoturno", 
+                    name: "Adicional Noturno", 
+                    color: "#2196f3",
+                    opacity: 0.7
+                }
+            ],
+            title: "Horas Extras vs Adicional Noturno",
+            legend: {
+                verticalAlignment: "bottom",
+                horizontalAlignment: "center"
+            }
+        });
+        
+        // Aqui você fará a requisição para carregar os gráficos
+        // Exemplo:
+        /*
+        $.ajax({
+            url: "/controladoria/get-dados-graficos",
+            method: "POST",
+            data: {
+                colaborador: formSelections.colaborador,
+                supervisor: formSelections.supervisor,
+                local: formSelections.local,
+                cargo: formSelections.cargo,
+                dataInicio: moment(formSelections.dataInicio).format("YYYY-MM-DD"),
+                dataFim: moment(formSelections.dataFim).format("YYYY-MM-DD")
+            },
+            success: function(response) {
+                // Atualize seus gráficos aqui
+            },
+            error: function(error) {
+                DevExpress.ui.notify("Erro ao carregar gráficos", "error", 3000);
+            }
+        });
+        */
+    }
+});
 </script>
 <!-- /.container-fluid -->

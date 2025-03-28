@@ -12,9 +12,7 @@ class IndexController extends AbstractActionController
 {
     public function indexAction()
     {
-       
         $session = new Container('auth');
-
 
         if (isset($session->user)) {
             // Usuário autenticado, renderiza a página inicial
