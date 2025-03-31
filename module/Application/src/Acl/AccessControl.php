@@ -83,6 +83,14 @@ class AccessControl
         $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial']);
 
+        // Encarregado
+        $this->acl->allow('Encarregado', 'IndexController', ['index']);
+        $this->acl->allow('Encarregado', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
+        $this->acl->allow('Encarregado', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
+        $this->acl->allow('Encarregado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial']);
+
+
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index']);
         $this->acl->allow('Analista', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
