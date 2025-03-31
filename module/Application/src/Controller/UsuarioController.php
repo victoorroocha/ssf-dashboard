@@ -178,4 +178,5 @@ class UsuarioController extends BaseController
             ]);
         }
     }
+
 }

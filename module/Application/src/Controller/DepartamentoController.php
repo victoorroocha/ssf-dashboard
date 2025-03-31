@@ -148,6 +148,27 @@ class DepartamentoController extends BaseController
             ]);
         }
     }
+    public function getLookupDepartamentoAction()
+    {
+        try {
+            // Recupera o valor do filtro (pesquisa) ou do código do pedido
+            $filtro = $this->getRequest()->getQuery('filtro'); 
+            $id_departamento = $this->getRequest()->getQuery('id_departamento'); 
+            
+            $result = $this->departamentoRepository ? $this->departamentoRepository->getLookupDepartamento($filtro, $id_departamento) : '';
+
+            // Retorna os dados como JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 
 
 }

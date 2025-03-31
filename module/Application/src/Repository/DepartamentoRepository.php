@@ -123,4 +123,30 @@ class DepartamentoRepository
 
         return $data;
     }
+    public function getLookupDepartamento($filtro, $id_departamento)
+    {
+
+        $wheres = "";
+        if (isset($id_departamento) && !empty($id_departamento)) {
+            $wheres .= " AND id = $id_departamento";
+        }
+
+        // Query base
+        $sql = "SELECT id as id_departamento, nome_departamento
+                FROM departamento where ativo = true
+                {$wheres}
+                ORDER BY nome_departamento ASC";
+
+        // Executa a query
+        $statement = $this->adapter->createStatement($sql);
+        $result = $statement->execute();
+
+        // Obtém os dados
+        $data = [];
+        foreach ($result as $row) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
 }

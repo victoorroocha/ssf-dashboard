@@ -29,6 +29,32 @@
 
 <script>
     $(document).ready(function() {
+
+        var departamentoDataSource = new DevExpress.data.CustomStore({
+            key: "id_departamento",
+            load: function(loadOptions) {
+                return $.ajax({
+                    url: '/departamento/get-lookup-departamento',
+                    type: "GET",
+                    dataType: "json",
+                    data: { filtro: loadOptions.searchValue }
+                }).then(function(data) {
+                    return data;
+                });
+            },
+            byKey: function(key) {
+                return $.ajax({
+                    url: '/departamento/get-lookup-departamento', 
+                    type: "GET",
+                    dataType: "json",
+                    data: { id_departamento: key }
+                }).then(function(data) {
+                    var result = data.data;
+                    return result.find(item => item.id_departamento == key);
+                });
+            }
+        });
+
         let dataGrid = $('#gridContainer').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
                 key: 'id', // Chave única da tabela
@@ -193,7 +219,7 @@
                             caption: 'Nome',
                             validationRules: [{ type: 'required', message: 'Nome é obrigatório' }],
                             editorOptions: {
-                                width: '100%', // Garante que o campo ocupe 100% da largura
+                                width: '100%', 
                             }
                         },
                         {
@@ -214,6 +240,11 @@
                                 mode: 'password',
                                 width: '100%', 
                             },
+                        },
+                        {
+                            dataField: 'id_departamento',
+                            caption: 'Departamento',
+                            editorType: 'dxSelectBox'
                         },
                         {
                             dataField: 'role',
@@ -269,7 +300,7 @@
                 {
                     dataField: 'id',
                     caption: 'ID',
-                    allowEditing: false, // Não permite edição do ID
+                    allowEditing: false, 
                     alignment: 'center', 
                     width: 65,
                     sortOrder: 'asc'
@@ -288,10 +319,23 @@
                     caption: 'Email',
                 },
                 {
+                    dataField: 'id_departamento',
+                    caption: 'Departamento',
+                    alignment: 'center',
+                    lookup: {
+                        dataSource: departamentoDataSource,
+                        displayExpr: "nome_departamento", 
+                        valueExpr: "id_departamento"    
+                    }, 
+                    autoExpandGroup: false,
+                    groupIndex: 0
+                },
+                {
                     dataField: 'role',
                     caption: 'Função',
                     alignment: 'center', 
-                    groupIndex: 0
+                    autoExpandGroup: false,
+                    groupIndex: 1
                 },
                 {
                     dataField: 'ativo',

@@ -14,11 +14,10 @@ class UsuarioRepository
         $this->adapter = $adapter;
         $this->bcrypt = new Bcrypt(); // Instância do Bcrypt para criptografar a senha
     }
-
     public function listarUsuarios($skip, $take, $sort = null)
     {
         // Query base
-        $sql = 'SELECT id, nome, email, role, ativo FROM usuario';
+        $sql = 'SELECT id, nome, email, id_departamento, role, ativo FROM usuario';
 
         // Adiciona ordenação, se fornecida
         if ($sort) {
@@ -66,11 +65,12 @@ class UsuarioRepository
         }
 
         // Query de inserção
-        $sql = 'INSERT INTO usuario (nome, email, role, ativo, senha) VALUES (:nome, :email, :role, :ativo, :senha)';
+        $sql = 'INSERT INTO usuario (nome, email, id_departamento, role, ativo, senha) VALUES (:nome, :email, :id_departamento, :role, :ativo, :senha)';
         $statement = $this->adapter->createStatement($sql);
         $statement->execute([
             ':nome' => $data['nome'],
             ':email' => $data['email'],
+            ':id_departamento' => $data['id_departamento'] ?? null,
             ':role' => $data['role'],
             ':ativo' => $data['ativo'] ?? false,
             ':senha' => $data['senha'] ?? null,
@@ -84,22 +84,24 @@ class UsuarioRepository
             $data['senha'] = $this->bcrypt->create($data['senha']);
 
             // Query de atualização
-            $sql = 'UPDATE usuario SET nome = :nome, role = :role, ativo = :ativo, senha = :senha WHERE id = :id';
+            $sql = 'UPDATE usuario SET nome = :nome, id_departamento = :id_departamento, role = :role, ativo = :ativo, senha = :senha WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([
                 ':nome' => $data['nome'],
                 ':role' => $data['role'],
+                ':id_departamento' => $data['id_departamento'] ?? null,
                 ':ativo' => $data['ativo'] ?? false,
                 ':senha' => $data['senha'], 
                 ':id' => $data['id'],
             ]);
         } else {
             // Query de atualização
-            $sql = 'UPDATE usuario SET nome = :nome, role = :role, ativo = :ativo WHERE id = :id';
+            $sql = 'UPDATE usuario SET nome = :nome, id_departamento = :id_departamento, role = :role, ativo = :ativo WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([
                 ':nome' => $data['nome'],
                 ':role' => $data['role'],
+                ':id_departamento' => $data['id_departamento'] ?? null,
                 ':ativo' => $data['ativo'] ?? false,
                 ':id' => $data['id'],
             ]);
