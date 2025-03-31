@@ -69,60 +69,62 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Em Desenvolvimento... <small>Recursos Humanos - Dados/Gráficos Fictícios</small></p>
+                    <p>Em Desenvolvimento...</p>
 
-                    <div id="form-container"></div>
-                    <!-- Container centralizado para o Range Selector -->
-                    <div class="d-flex justify-content-center mb-4">
-                        <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
-                            <div id="range-selector"></div>
+                    <?php if ($this->idUsuario == 1) { //Apenas meu usuario ?>
+                        <div id="form-container"></div>
+                        <!-- Container centralizado para o Range Selector -->
+                        <div class="d-flex justify-content-center mb-4">
+                            <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
+                                <div id="range-selector"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <!-- Linha de indicadores -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="dashboard-card">
-                                <div class="indicator-card" style="background-color: #fff8e1;">
-                                    <div class="indicator-title">Taxa de Faltas</div>
-                                    <div class="indicator-value">5.2%</div>
-                                    <div class="indicator-change positive">↓ 1.2% vs último mês</div>
+                        
+                        <!-- Linha de indicadores -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #fff8e1;">
+                                        <div class="indicator-title">Taxa de Faltas</div>
+                                        <div class="indicator-value">5.2%</div>
+                                        <div class="indicator-change positive">↓ 1.2% vs último mês</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #e8f5e9;">
+                                        <div class="indicator-title">Horas Extras/Mês</div>
+                                        <div class="indicator-value">1.420h</div>
+                                        <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="dashboard-card">
-                                <div class="indicator-card" style="background-color: #e8f5e9;">
-                                    <div class="indicator-title">Horas Extras/Mês</div>
-                                    <div class="indicator-value">1.420h</div>
-                                    <div class="indicator-change negative">↑ 15% vs último mês</div>
+                        
+                        <!-- Gráfico de largura total -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="dashboard-card">
+                                    <div id="grafico-comparativo-mensal" class="full-width-chart"></div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Gráfico de largura total -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="dashboard-card">
-                                <div id="grafico-comparativo-mensal" class="full-width-chart"></div>
+                        
+                        <!-- Linha de gráficos menores -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="dashboard-card">
+                                    <div id="grafico-top-faltas" class="chart-container"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="dashboard-card">
+                                    <div id="grafico-horas-extras-noturno" class="chart-container"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Linha de gráficos menores -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="dashboard-card">
-                                <div id="grafico-top-faltas" class="chart-container"></div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="dashboard-card">
-                                <div id="grafico-horas-extras-noturno" class="chart-container"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>

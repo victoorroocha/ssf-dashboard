@@ -166,6 +166,7 @@ class AuthService
                 'DIRETOR' => 'Diretor',
                 'GERENTE' => 'Gerente',
                 'COORDENADOR' => 'Coordenador',
+                'ENCARREGADO' => 'Encarregado',
                 'ANALISTA' => 'Analista',
                 'ASSISTENTE' => 'Assistente',
                 'AUXILIAR' => 'Auxiliar'

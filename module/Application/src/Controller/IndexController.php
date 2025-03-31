@@ -14,9 +14,11 @@ class IndexController extends AbstractActionController
     {
         $session = new Container('auth');
 
+
         if (isset($session->user)) {
             // Usuário autenticado, renderiza a página inicial
             return new ViewModel([
+                'idUsuario' => $session->user['id'] , 
                 'nomeUsuario' => $session->user['nome'] , 
             ]);
         } else {

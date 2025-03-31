@@ -31,6 +31,7 @@ class AccessControl
                   ->addRole(new Role('Assistente'))
                   ->addRole(new Role('Analista'))
                   ->addRole(new Role('Coordenador'))
+                  ->addRole(new Role('Encarregado'))
                   ->addRole(new Role('Gerente'))
                   ->addRole(new Role('Diretor'))
                   ->addRole(new Role('Administrador')); 
