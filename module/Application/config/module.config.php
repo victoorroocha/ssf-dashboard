@@ -10,6 +10,7 @@ use Laminas\ServiceManager\Factory\InvokableFactory;
 use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
 use Application\Repository\ControladoriaRepository;  // Importar repositório
 use Application\Repository\RecursosHumanosRepository;  // Importar repositório
+use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
     'router' => [
@@ -103,6 +104,21 @@ return [
                     ],
                 ],
             ],
+            // Departamento
+            'departamento' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/departamento[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\DepartamentoController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
             // Credito e Cobrança
             'credito-e-cobranca' => [
                 'type'    => Segment::class,
@@ -164,6 +180,7 @@ return [
             Controller\LoginController::class => Factory\LoginControllerFactory::class,
             Controller\ErrorController::class => Factory\GenericControllerFactory::class,
             Controller\UsuarioController::class => Factory\GenericControllerFactory::class,
+            Controller\DepartamentoController::class => Factory\GenericControllerFactory::class,
             Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
             Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
             Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
@@ -204,6 +221,10 @@ return [
             'Application\Repository\MenuRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado
                 return new \Application\Repository\MenuRepository($adapter);
+            },
+            'Application\Repository\DepartamentoRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\DepartamentoRepository($adapter);
             },
             CreditoECobrancaRepository::class => InvokableFactory::class, 
             ControladoriaRepository::class => InvokableFactory::class, 

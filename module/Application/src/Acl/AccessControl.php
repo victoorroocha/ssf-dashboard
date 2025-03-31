@@ -46,6 +46,7 @@ class AccessControl
             'LoginController',
             'UsuarioController',
             'MenuController',
+            'DepartamentoController',
             'CreditoECobrancaController',
             'ControladoriaController',
             'RecursosHumanosController',

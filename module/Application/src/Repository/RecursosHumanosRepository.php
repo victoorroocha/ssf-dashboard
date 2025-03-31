@@ -12,6 +12,7 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -45,7 +46,7 @@ class RecursosHumanosRepository
                 break;
                 case 4: // Horas Extras (Acima de 2h)
                     $wheresExternos .= " AND dadosApuracao.HORAS_EXTRAS_2HRS = 1";
-                    $columnTipoApuracao .= "Interjornada";
+                    $columnTipoApuracao .= "Horas Extras (Acima de 2h)";
                 break;
                 case 5: // Adicional Noturno
                     $wheresExternos .= " AND dadosApuracao.ADICIONAL_NOTURNO = 1";
@@ -83,6 +84,10 @@ class RecursosHumanosRepository
                     $wheresExternos .= " AND NVL(dadosApuracao.ESQUECIMENTO,0) > 0";
                     $columnTipoApuracao .= "Justificativa Marcação - Esquecimento";
                 break;
+                case 14: // Compensação
+                    $wheresExternos .= " AND dadosApuracao.TIPO_COMPENSACAO IS NOT NULL";
+                    $columnTipoApuracao .= "Compensação";
+                break;
             }
         }
         
@@ -98,6 +103,7 @@ class RecursosHumanosRepository
                         ,R034FUN.NOMFUN 
                         ,R034FUN.DATADM
                         ,R034FUN.SITAFA
+                        ,TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') AS DATAFA
                         ,SITUACAO_COLABORADOR.DESSIT AS DSC_SITUACAO_COLABORADOR
                         ,R034FUN.CODCCU 
                         ,R034FUN.CODCAR
@@ -133,6 +139,7 @@ class RecursosHumanosRepository
                         ,NVL(JUSTIFICATIVAS.TESTE,0) AS TESTE
                         ,NVL(JUSTIFICATIVAS.FALHA_EQUIPAMENTO,0) AS FALHA_EQUIPAMENTO
                         ,NVL(JUSTIFICATIVAS.ESQUECIMENTO,0) AS ESQUECIMENTO
+                        ,COMPENSACAO.DESSIT AS TIPO_COMPENSACAO
                         ,'{$columnTipoApuracao}' AS TIPO_APURACAO
                     FROM VETORH.R066APU
                     LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R066APU.NUMEMP AND R034FUN.TIPCOL = R066APU.TIPCOL AND R034FUN.NUMCAD = R066APU.NUMCAD 
@@ -197,6 +204,17 @@ class RecursosHumanosRepository
                         )
                         ORDER BY DATACC
                     ) JUSTIFICATIVAS ON JUSTIFICATIVAS.NUMCRA = R034FUN.NUMCRA AND JUSTIFICATIVAS.DATACC = R066APU.DATAPU 
+                    LEFT JOIN (
+                        SELECT 
+                            R064CMP.NUMEMP
+                            ,R064CMP.TIPCOL
+                            ,R064CMP.NUMCAD
+                            ,R064CMP.DATINI 
+                            ,R064CMP.DATFIM
+                            ,R010SIT.DESSIT
+                        FROM VETORH.R064CMP
+                        INNER JOIN VETORH.R010SIT ON  R010SIT.CODSIT = R064CMP.CODSIT
+                    ) COMPENSACAO ON COMPENSACAO.NUMEMP = R066APU.NUMEMP AND COMPENSACAO.TIPCOL = R066APU.TIPCOL AND COMPENSACAO.NUMCAD = R066APU.NUMCAD AND COMPENSACAO.DATINI >= R066APU.DATAPU AND COMPENSACAO.DATFIM <= R066APU.DATAPU
                 WHERE R066APU.NUMEMP = 5
                 {$wheresInternos}
                 ) dadosApuracao
@@ -226,10 +244,9 @@ class RecursosHumanosRepository
                         UPPER(R034FUN.NOMFUN) || ' - ' || 
                         R034FUN.NUMCAD AS DSC
                     FROM VETORH.R034FUN
-                    LEFT JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
-                    LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
+                    -- LEFT JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
+                    -- LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
                     WHERE R034FUN.NUMEMP = 5
-                    AND R910USU.CONHAB = 1
                 ) COLABORADORES
                 ORDER BY COLABORADORES.NOMFUN ASC"; 
     }

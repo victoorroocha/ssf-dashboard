@@ -1,6 +1,3 @@
-<style>.full-width-group .dx-item {
-    width: 100% !important;
-}</style>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
@@ -15,7 +12,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Gestão dos Usuários</p>
+                    <p>Cadastro de Departamentos</p>
 
                     <!-- Grid Container for the DataGrid -->
                     <div id="gridContainer"></div>
@@ -29,9 +26,35 @@
 
 <script>
     $(document).ready(function() {
+        var usuariosDataSource = new DevExpress.data.CustomStore({
+            key: "id_gestor_departamento",
+            load: function(loadOptions) {
+                return $.ajax({
+                    url: '/departamento/get-lookup-gestor-departamento',
+                    type: "GET",
+                    dataType: "json",
+                    data: { filtro: loadOptions.searchValue }
+                }).then(function(data) {
+                    return data;
+                });
+            },
+            byKey: function(key) {
+                return $.ajax({
+                    url: '/departamento/get-lookup-gestor-departamento', 
+                    type: "GET",
+                    dataType: "json",
+                    data: { id_gestor_departamento: key }
+                }).then(function(data) {
+                    var result = data.data;
+                    return result.find(item => item.id_gestor_departamento == key);
+                });
+            }
+        });
+
+
         let dataGrid = $('#gridContainer').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
-                key: 'id', // Chave única da tabela
+                key: 'id',
                 loadMode: "processed",
                 load: function(loadOptions) {
                     // Parâmetros para a requisição
@@ -42,7 +65,7 @@
                     };
 
                     return $.ajax({
-                        url: '/usuario/list-usuarios', // Endpoint para listar usuários
+                        url: '/departamento/list-departamentos', // Endpoint para listar departamentos
                         method: 'GET',
                         dataType: 'json',
                         data: params,
@@ -68,7 +91,7 @@
                 },
                 update: function(key, values) {
                     return $.ajax({
-                        url: '/usuario/add-or-update-usuario', 
+                        url: '/departamento/add-or-update-departamento', 
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key, ...values }),
@@ -92,10 +115,10 @@
                 },
                 insert: function(values) {
                     return $.ajax({
-                        url: '/usuario/add-or-update-usuario',
+                        url: '/departamento/add-or-update-departamento',
                         method: 'POST',
                         contentType: 'application/json',
-                        data: JSON.stringify(values), // Envia os valores do novo usuário
+                        data: JSON.stringify(values), // Envia os valores do novo departamento
                         dataType: 'json'
                     }).then(response => {
                         if (!response.success) {
@@ -116,10 +139,10 @@
                 },
                 remove: function(key) {
                     return $.ajax({
-                        url: '/usuario/excluir-usuario', // Endpoint para excluir usuário
+                        url: '/departamento/excluir-departamento', // Endpoint para excluir departamento
                         method: 'DELETE',
                         contentType: 'application/json',
-                        data: JSON.stringify({ id: key }), // Envia o ID do usuário a ser excluído
+                        data: JSON.stringify({ id: key }), // Envia o ID do departamento a ser excluído
                         dataType: 'json'
                     }).then(response => {
                         if (!response.success) {
@@ -141,9 +164,6 @@
             }),
             width: '100%',
             columnAutoWidth: true,
-            elementAttr: {
-                class: "grid-personalizada"
-            },
             keyExpr: 'ID', 
             showBorders: true,
             groupPanel: {
@@ -175,68 +195,19 @@
                             onClick: function() {
                                 $("#gridContainer").dxDataGrid("instance").addRow();
                             },
-                            text: "Adicionar Usuário"
+                            text: "Adicionar Departamento"
                         }
                     }
                 ]
             },
             editing: {
-                mode: 'form',
+                mode: 'batch',
                 allowUpdating: true,
                 allowAdding: true,
                 allowDeleting: true,
                 useIcons: true,
-                form: {
-                    items: [
-                        {
-                            dataField: 'nome',
-                            caption: 'Nome',
-                            validationRules: [{ type: 'required', message: 'Nome é obrigatório' }],
-                            editorOptions: {
-                                width: '100%', // Garante que o campo ocupe 100% da largura
-                            }
-                        },
-                        {
-                            dataField: 'email',
-                            caption: 'Email',
-                            validationRules: [
-                                { type: 'required', message: 'Email é obrigatório' },
-                                { type: 'email', message: 'Email inválido' }
-                            ],
-                            editorOptions: {
-                                width: '100%', 
-                            }
-                        },
-                        {
-                            dataField: 'senha',
-                            caption: 'Senha',
-                            editorOptions: {
-                                mode: 'password',
-                                width: '100%', 
-                            },
-                        },
-                        {
-                            dataField: 'role',
-                            caption: 'Função',
-                            editorType: 'dxSelectBox',
-                            editorOptions: {
-                                items: ["Auxiliar", "Assistente", "Analista", "Coordenador", "Encarregado", "Gerente", "Diretor", "Administrador"],
-                                width: '100%', 
-                            },
-                            validationRules: [{ type: 'required', message: 'Função é obrigatória' }]
-                        },
-                        {
-                            dataField: 'ativo',
-                            caption: 'Ativo',
-                            editorType: 'dxCheckBox',
-                            editorOptions: {
-                                width: '100%', 
-                            }
-                        }
-                    ]
-                }, 
                 texts: {
-                    confirmDeleteMessage: "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita." 
+                    confirmDeleteMessage: "Tem certeza que deseja excluir este departamento? Esta ação não pode ser desfeita." 
                 }
             },
             selection: {
@@ -257,7 +228,7 @@
             },
             export: {
                 enabled: true,
-                fileName: "Lista de Usuários",
+                fileName: "Lista de Departamentos",
                 allowExportSelectedData: false,
             },
             searchPanel: {
@@ -266,32 +237,27 @@
                 placeholder: 'Procure...',
             },
             columns: [
+                // {
+                //     dataField: 'id',
+                //     caption: 'ID',
+                //     allowEditing: false, // Não permite edição do ID
+                //     alignment: 'center', 
+                //     width: 65,
+                //     sortOrder: 'asc'
+                // },
                 {
-                    dataField: 'id',
-                    caption: 'ID',
-                    allowEditing: false, // Não permite edição do ID
-                    alignment: 'center', 
-                    width: 65,
-                    sortOrder: 'asc'
+                    dataField: 'nome_departamento',
+                    caption: 'Nome Departamento',
                 },
                 {
-                    dataField: 'nome',
-                    caption: 'Nome',
-                },
-                {
-                    dataField: 'senha',
-                    caption: 'Senha',
-                    visible: false
-                },
-                {
-                    dataField: 'email',
-                    caption: 'Email',
-                },
-                {
-                    dataField: 'role',
-                    caption: 'Função',
-                    alignment: 'center', 
-                    groupIndex: 0
+                    dataField: 'id_gestor_departamento',
+                    caption: 'Gestor Departamento',
+                    width: 300,
+                    lookup: {
+                        dataSource: usuariosDataSource,
+                        displayExpr: "nome",  
+                        valueExpr: "id_gestor_departamento"
+                    }
                 },
                 {
                     dataField: 'ativo',
@@ -305,6 +271,37 @@
                 e.newData = { ...e.oldData, ...e.newData };
             }
         });
+
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: "raw",
+                    load: function() {
+                        return $.ajax({
+                            url: url,
+                            method: "GET",
+                            dataType: "json"
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, "error", 3000);
+                                return [];
+                            }
+                        }).catch(error => {
+                            DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+            };
+        }
 
     });
 </script>

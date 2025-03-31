@@ -130,6 +130,7 @@
                                     { ID: 11, DSC: "11 - Justificativa Marcação - Registro Duplicado" },
                                     { ID: 12, DSC: "12 - Justificativa Marcação - Falha Equipamento" },
                                     { ID: 13, DSC: "13 - Justificativa Marcação - Esquecimento" },
+                                    { ID: 14, DSC: "14 - Compensação" },
                                 ],
                                 displayExpr: "DSC",
                                 valueExpr: "ID",
@@ -382,8 +383,22 @@
                         { dataField: 'ESCALA_TROCA', caption: 'Escala Apuração', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'MARCACOES', caption: 'Horário Trabalhado', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'TIPO_COMPENSACAO', caption: 'Tipo Compensação', allowEditing: false, alignment: 'center', width: 150 },
                         { dataField: 'TIPO_APURACAO', caption: 'Tipo Apuração', allowEditing: false, alignment: 'center', width: 'auto', sortIndex: 3, sortOrder: 'asc' },
-                        { dataField: 'DSC_SITUACAO_COLABORADOR', caption: 'Situação Colaborador', allowEditing: false, alignment: 'center', width: 'auto', visible: false }
+                        { dataField: 'DSC_SITUACAO_COLABORADOR', caption: 'Situação Colaborador', allowEditing: false, alignment: 'center', width: 150, visible: false },
+                        { 
+                            dataField: 'DATAFA', 
+                            caption: 'Dt. Afastamento', 
+                            allowEditing: false, 
+                            alignment: 'center', 
+                            width: 100, 
+                            dataType: 'date', 
+                            format: 'dd/MM/yyyy',
+                            editorOptions: {
+                                displayFormat: 'dd/MM/yyyy'  
+                            }, 
+                            visible: false
+                        },
                     ],                
                     summary: {
                         totalItems: [
