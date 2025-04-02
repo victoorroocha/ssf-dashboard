@@ -233,22 +233,25 @@ class RecursosHumanosRepository
             $wheresExternos .= " AND DADOS.CMPLAN BETWEEN TO_DATE('{$dataInicial}', 'YYYY-MM-DD') AND TO_DATE('{$dataFinal}', 'YYYY-MM-DD')";
             $wheresInternos .= " AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA <= R011LAN.DATLAN THEN 1 ELSE 0 END = 0"; // não considerar saldos de colaboradores demitidos até a data de lançamento.
         }
-        if (!empty($codColaborador)) {
-            $wheresInternos .= " AND R011LAN.NUMCAD = {$codColaborador}";
-        }
-        if (!empty($codSupervisor)) {
-            $wheresInternos .= " AND (R034CPL.USU_NUMCAD = {$codSupervisor} OR R034FUN.NUMCAD = {$codSupervisor})";
-        }
-        if (!empty($codCentroCusto)) {
-            $wheresInternos .= " AND R034FUN.CODCCU = {$codCentroCusto}";
-        }
-        if (!empty($codFilial)) {
-            $wheresInternos .= " AND R034FUN.CODFIL = {$codFilial}";
-        }
+        // if (!empty($codColaborador)) {
+        //     $wheresInternos .= " AND R011LAN.NUMCAD = {$codColaborador}";
+        // }
+        // if (!empty($codSupervisor)) {
+        //     $wheresInternos .= " AND (R034CPL.USU_NUMCAD = {$codSupervisor} OR R034FUN.NUMCAD = {$codSupervisor})";
+        // }
+        // if (!empty($codCentroCusto)) {
+        //     $wheresInternos .= " AND R034FUN.CODCCU = {$codCentroCusto}";
+        // }
+        // if (!empty($codFilial)) {
+        //     $wheresInternos .= " AND R034FUN.CODFIL = {$codFilial}";
+        // }
         
         return "SELECT 
                      DADOS.NUMEMP
                     ,DADOS.NOMEMP
+                    ,DADOS.CODFIL
+                    ,DADOS.NOMFIL
+                    ,DADOS.CODCCU
                     ,DADOS.TIPCOL
                     ,DADOS.NUMCAD
                     ,DADOS.NUMCRA 
@@ -273,6 +276,9 @@ class RecursosHumanosRepository
                         ,R030EMP.NOMEMP
                         ,R011LAN.TIPCOL
                         ,R011LAN.NUMCAD
+                        ,R034FUN.CODFIL
+                        ,R030FIL.NOMFIL
+                        ,R034FUN.CODCCU
                         ,R034FUN.NUMCRA 
                         ,R034FUN.NOMFUN 
                         ,R034FUN.DATADM 
@@ -280,6 +286,7 @@ class RecursosHumanosRepository
                         ,R024CAR.TITCAR
                         ,R034FUN.TABORG 
                         ,R034FUN.NUMLOC 
+                        ,R034FUN.DATAFA
                         ,R016ORN.NOMLOC 
                         ,R034CPL.USU_NUMCAD
                         ,SUPERV.NOMFUN AS NOME_SUPERVISOR
@@ -304,17 +311,18 @@ class RecursosHumanosRepository
                     LEFT JOIN VETORH.R010SIT ON R010SIT.CODSIT = R011LAN.CODSIT 
                     LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR   
                     LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
+                    LEFT JOIN VETORH.R030FIL ON R030FIL.CODFIL = R034FUN.CODFIL AND R030FIL.NUMEMP = R011LAN.NUMEMP
                     WHERE (R011LAN.PERREF NOT IN ('31/12/1900') OR R011LAN.CMPLAN NOT IN ('31/12/1900'))
                     AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
-                    AND R011LAN.NUMEMP = 5
+                    AND R011LAN.ORILAN = 'A'
                     {$wheresInternos}
-                    GROUP BY R011LAN.NUMEMP,R030EMP.NOMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R034FUN.NUMCRA,R034FUN.NOMFUN,R034FUN.DATADM,R034FUN.CODCAR,R024CAR.TITCAR,R034FUN.TABORG,R034FUN.NUMLOC,R016ORN.NOMLOC,R034CPL.USU_NUMCAD,SUPERV.NOMFUN,R011LAN.DATCMP
+                    GROUP BY R011LAN.NUMEMP,R030EMP.NOMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R034FUN.CODFIL,R030FIL.NOMFIL,R034FUN.CODCCU,R034FUN.NUMCRA,R034FUN.NOMFUN,R034FUN.DATADM,R034FUN.CODCAR,R024CAR.TITCAR,R034FUN.TABORG,R034FUN.NUMLOC, R034FUN.DATAFA,R016ORN.NOMLOC,R034CPL.USU_NUMCAD,SUPERV.NOMFUN,R011LAN.DATCMP
                             ,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR
                     ORDER BY R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.DATLAN
                 ) DADOS
                 WHERE DADOS.RN = 1
                 {$wheresExternos}
-                GROUP BY NUMEMP,NOMEMP,TIPCOL,NUMCAD,NUMCRA,NOMFUN,DATADM,CODCAR,TITCAR,TABORG,NUMLOC,NOMLOC,USU_NUMCAD,NOME_SUPERVISOR,DATCMP,MES_REFERENCIA,ANO_REFERENCIA,DADOS.CMPLAN
+                GROUP BY NUMEMP,NOMEMP,CODFIL, NOMFIL, CODCCU, TIPCOL,NUMCAD,NUMCRA,NOMFUN,DATADM,CODCAR,TITCAR,TABORG,NUMLOC,NOMLOC,USU_NUMCAD,NOME_SUPERVISOR,DATCMP,MES_REFERENCIA,ANO_REFERENCIA,DADOS.CMPLAN
                 ORDER BY DADOS.NUMCAD, DADOS.ANO_REFERENCIA, DADOS.MES_REFERENCIA ASC ";  
     }
 

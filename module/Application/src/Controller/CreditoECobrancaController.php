@@ -495,7 +495,7 @@ class CreditoECobrancaController extends BaseController
             // Inicializa array agrupado
             $resultadoAgrupado = [];
             foreach ($result as $item) {
-                if (isset($item['custom_forma_pgto'])) {
+                if (isset($item['custom_forma_pgto']) && !empty($item['custom_forma_pgto'])) {
 
                     $chave = $item['codigo'] . '|' . $item['numero_parcela'] . '|' . $item['cliente_id'] . '|' . $item['nome_cliente'] . '|' . $item['custom_forma_pgto'] . '|' . $item['data_pagamento'];
                     

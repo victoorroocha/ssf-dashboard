@@ -42,48 +42,48 @@
             formData: {},
             colCount: 1,
             items: [
-                {
-                    itemType: "group",
-                    colCount: 2,
-                    items: [
-                        {
-                            dataField: "colaborador",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-colaborador", "DSC", "ID", "Selecione o Colaborador")
-                        },
-                        {
-                            dataField: "supervisor",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-supervisor", "DSC", "ID", "Selecione o Supervisor")
-                        }
-                    ]
-                },
-                {
-                    itemType: "group",
-                    colCount: 3,
-                    items: [
-                        {
-                            dataField: "centroCusto",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-centro-custo", "DSC", "ID", "Selecione o Centro de Custo")
-                        },
-                        {
-                            dataField: "filial",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-filial", "DSC", "ID", "Selecione a Filial")
-                        },  
-                        {
-                            dataField: "local",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-local", "DSC", "ID", "Selecione a Local")
-                        }
-                    ]
-                },
+                // {
+                //     itemType: "group",
+                //     colCount: 2,
+                //     items: [
+                //         {
+                //             dataField: "colaborador",
+                //             editorType: "dxSelectBox",
+                //             label: { visible: false },
+                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-colaborador", "DSC", "ID", "Selecione o Colaborador")
+                //         },
+                //         {
+                //             dataField: "supervisor",
+                //             editorType: "dxSelectBox",
+                //             label: { visible: false },
+                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-supervisor", "DSC", "ID", "Selecione o Supervisor")
+                //         }
+                //     ]
+                // },
+                // {
+                //     itemType: "group",
+                //     colCount: 3,
+                //     items: [
+                //         {
+                //             dataField: "centroCusto",
+                //             editorType: "dxSelectBox",
+                //             label: { visible: false },
+                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-centro-custo", "DSC", "ID", "Selecione o Centro de Custo")
+                //         },
+                //         {
+                //             dataField: "filial",
+                //             editorType: "dxSelectBox",
+                //             label: { visible: false },
+                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-filial", "DSC", "ID", "Selecione a Filial")
+                //         },  
+                //         {
+                //             dataField: "local",
+                //             editorType: "dxSelectBox",
+                //             label: { visible: false },
+                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-local", "DSC", "ID", "Selecione a Local")
+                //         }
+                //     ]
+                // },
                 {
                     itemType: "group",
                     colCount: 2,
@@ -342,6 +342,9 @@
                     columns: [
                         { dataField: 'NUMEMP', caption: 'Empresa', allowEditing: false, alignment: 'center', width: 80 },
                         { dataField: 'NOMEMP', caption: 'Nome Empresa', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'CODFIL', caption: 'Filial', allowEditing: false, alignment: 'center', width: 80 },
+                        { dataField: 'NOMFIL', caption: 'Nome Filial', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'CODCCU', caption: 'Centro de Custo', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'TIPCOL', caption: 'Tipo Colaborador', allowEditing: false, alignment: 'center', width: 70 },
                         { dataField: 'NUMCAD', caption: 'Matrícula', allowEditing: false, alignment: 'center', width: 80 },
                         { dataField: 'NOMFUN', caption: 'Colaborador', allowEditing: false, alignment: 'left', width: 'auto', sortIndex: 1, sortOrder: 'asc' },
@@ -350,6 +353,7 @@
                         { dataField: 'MES_REFERENCIA', caption: 'Mês Referência', allowEditing: false, alignment: 'center', width: 120 },
                         { dataField: 'ANO_REFERENCIA', caption: 'Ano Referência', allowEditing: false, alignment: 'center', width: 120 },
                         { 
+                            name: "saldoFormatado",
                             caption: "Saldo",
                             alignment: 'center', width: 100, 
                             calculateCellValue: function(rowData) {
@@ -371,6 +375,22 @@
                                 } else {
                                     return `${formattedHours}:${formattedMinutes}:00`;
                                 }
+                            },
+                            allowFiltering: true, 
+                            filterValue: null, 
+                            calculateFilterExpression: function(filterValue, selectedFilterOperation) {
+                                // Converte o filtro de HH:MM:00 para minutos (baseado no SALDO original)
+                                if (!filterValue) return null;
+                                
+                                const [hours, minutes] = filterValue.replace('-', '').split(':').map(Number);
+                                const totalMinutes = (hours * 60) + minutes;
+                                
+                                // Retorna a expressão de filtro aplicada ao campo SALDO (não ao calculado)
+                                return [
+                                    ['SALDO', selectedFilterOperation || '=', filterValue.startsWith('-') ? -totalMinutes : totalMinutes],
+                                    'or',
+                                    ['SALDO', '=', null] // Opcional: inclui registros nulos
+                                ];
                             }
                         },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
@@ -419,7 +439,17 @@
                     },
                     onContentReady: function(e) {
                         calculateTotals(e.component);
-                    }
+                    },
+                    summary: {
+                        groupItems: [{
+                            column: 'SALDO',
+                            summaryType: 'sum',
+                            displayFormat: '{0}',
+                            customizeText: (cellInfo) => {
+                              console.log('cellInfo', cellInfo)
+                            }
+                        }],
+                    },
                 }).dxDataGrid('instance');
             });
         }
