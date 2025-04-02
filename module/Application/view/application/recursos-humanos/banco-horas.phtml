@@ -225,8 +225,45 @@
                             }).then(response => {
                                 if (response.success) {
                                     resolve(); // Resolve a Promise quando a requisição for bem-sucedida
+                                    // Adiciona flag para linhas que devem ser incluídas no cálculo
+                                    const processedData = response.data;
+
+                                    // Agrupar os dados por NUMCAD, mantendo apenas o registro com a data mais recente (CMPLAN)
+                                    const dataUnic = processedData.reduce((acc, current) => {
+                                        // Se o NUMCAD já existe no acumulador
+                                        if (acc[current.NUMCAD]) {
+                                            // Compara as datas usando Moment.js (formato DD/MM/YY)
+                                            const currentDate = moment(current.CMPLAN, 'DD/MM/YY');
+                                            const existingDate = moment(acc[current.NUMCAD].CMPLAN, 'DD/MM/YY');
+                                            
+                                            // Mantém o registro com a data mais recente
+                                            if (currentDate.isAfter(existingDate)) {
+                                                acc[current.NUMCAD] = current;
+                                            }
+                                        } else {
+                                            // Se o NUMCAD não existe, adiciona ao acumulador
+                                            acc[current.NUMCAD] = current;
+                                        }
+                                        return acc;
+                                    }, {});
+
+                                    // 2. Extrair apenas os NUMCADs dos registros mais recentes
+                                    const uniqueNumcads = Object.keys(dataUnic);
+
+                                    // 3. Marcar todos os registros que estão no dataUnic
+                                    const markedData = processedData.map(item => {
+                                        const isMostRecent = item.NUMCAD in dataUnic && item.CMPLAN === dataUnic[item.NUMCAD].CMPLAN;
+                                        return {
+                                            ...item,
+                                            SALDO_SUMMARY: isMostRecent ? item.SALDO : 0, 
+                                            TOTAL_COLABORADOR_SUMMARY: isMostRecent ? 1 : 0,
+                                            SALDO_POSIVO_SUMMARY: isMostRecent && item.SALDO > 0 ? 1 : 0,
+                                            SALDO_NEGATIVO_SUMMARY: isMostRecent && item.SALDO < 0 ? 1 : 0
+                                        };
+                                    });
+
                                     return {
-                                        data: response.data,
+                                        data: markedData, // Usar os dados marcados
                                         totalCount: response.totalCount 
                                     };
                                 } else {
@@ -352,46 +389,15 @@
                         { dataField: 'NOMLOC', caption: 'Local', allowEditing: false, alignment: 'left', width: 'auto' },
                         { dataField: 'MES_REFERENCIA', caption: 'Mês Referência', allowEditing: false, alignment: 'center', width: 120 },
                         { dataField: 'ANO_REFERENCIA', caption: 'Ano Referência', allowEditing: false, alignment: 'center', width: 120 },
-                        { 
-                            name: "saldoFormatado",
-                            caption: "Saldo",
-                            alignment: 'center', width: 100, 
-                            calculateCellValue: function(rowData) {
-                                if (!rowData || rowData.SALDO === undefined || rowData.SALDO === null) {
-                                    return '00:00:00'; 
-                                }
-
-                                const saldo = rowData.SALDO;
-                                const absSaldo = Math.abs(saldo);
-                                const hours = Math.floor(absSaldo / 60);
-                                const minutes = absSaldo % 60;
-                                
-                                // Formatação com padding zero
-                                const formattedHours = hours.toString().padStart(2, '0');
-                                const formattedMinutes = minutes.toString().padStart(2, '0');
-                                
-                                if (saldo < 0) {
-                                    return `-${formattedHours}:${formattedMinutes}:00`;
-                                } else {
-                                    return `${formattedHours}:${formattedMinutes}:00`;
-                                }
+                        {
+                            dataField: 'SALDO',
+                            dataType: 'number',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
                             },
-                            allowFiltering: true, 
-                            filterValue: null, 
-                            calculateFilterExpression: function(filterValue, selectedFilterOperation) {
-                                // Converte o filtro de HH:MM:00 para minutos (baseado no SALDO original)
-                                if (!filterValue) return null;
-                                
-                                const [hours, minutes] = filterValue.replace('-', '').split(':').map(Number);
-                                const totalMinutes = (hours * 60) + minutes;
-                                
-                                // Retorna a expressão de filtro aplicada ao campo SALDO (não ao calculado)
-                                return [
-                                    ['SALDO', selectedFilterOperation || '=', filterValue.startsWith('-') ? -totalMinutes : totalMinutes],
-                                    'or',
-                                    ['SALDO', '=', null] // Opcional: inclui registros nulos
-                                ];
-                            }
+                            caption: 'Saldo Horas',
+                            width: 200
                         },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
                     ],                
@@ -437,99 +443,134 @@
                             }
                         });
                     },
-                    onContentReady: function(e) {
-                        calculateTotals(e.component);
-                    },
                     summary: {
-                        groupItems: [{
-                            column: 'SALDO',
-                            summaryType: 'sum',
-                            displayFormat: '{0}',
-                            customizeText: (cellInfo) => {
-                              console.log('cellInfo', cellInfo)
-                            }
-                        }],
+                        totalItems: [
+                            {
+                                column: 'TOTAL_COLABORADOR_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Total de Colaboradores: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_POSIVO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Com Saldo Positivo: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_NEGATIVO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Com Saldo Negativo: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    if (!cellInfo.value && cellInfo.value !== 0) {
+                                        return '00:00:00'; 
+                                    }
+                                    const saldo = cellInfo.value;
+                                    const absSaldo = Math.abs(saldo);
+                                    const hours = Math.floor(absSaldo / 60);
+                                    const minutes = absSaldo % 60;
+                                    
+                                    const formattedHours = hours.toString().padStart(2, '0');
+                                    const formattedMinutes = minutes.toString().padStart(2, '0');
+                                    
+                                    return (saldo < 0) ?  'Saldo Total: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total: ' + `${formattedHours}:${formattedMinutes}:00`;
+                                }, 
+                            },
+                        ],
+                        groupItems: [
+                            {
+                                column: 'TOTAL_COLABORADOR_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Total de Colaboradores: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_POSIVO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Com Saldo Positivo: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_NEGATIVO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    return 'Com Saldo Negativo: ' + `${cellInfo.value}`
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    if (!cellInfo.value && cellInfo.value !== 0) {
+                                        return '00:00:00'; 
+                                    }
+                                    const saldo = cellInfo.value;
+                                    const absSaldo = Math.abs(saldo);
+                                    const hours = Math.floor(absSaldo / 60);
+                                    const minutes = absSaldo % 60;
+                                    
+                                    const formattedHours = hours.toString().padStart(2, '0');
+                                    const formattedMinutes = minutes.toString().padStart(2, '0');
+                                    
+                                    return (saldo < 0) ? 'Saldo Total: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total: ' + `${formattedHours}:${formattedMinutes}:00`;
+                                }, 
+                            },
+                        ],
                     },
                 }).dxDataGrid('instance');
             });
         }
 
-        function calculateTotals(mainGrid) {
-            const data = mainGrid.getVisibleRows().map(row => row.data);
-
-            // Agrupar os dados por NUMCAD, mantendo apenas o registro com a data mais recente (CMPLAN)
-            const colaboradoresUnicos = data.reduce((acc, current) => {
-                // Se o NUMCAD já existe no acumulador
-                if (acc[current.NUMCAD]) {
-                    // Compara as datas usando Moment.js (formato DD/MM/YY)
-                    const currentDate = moment(current.CMPLAN, 'DD/MM/YY');
-                    const existingDate = moment(acc[current.NUMCAD].CMPLAN, 'DD/MM/YY');
-                    
-                    // Mantém o registro com a data mais recente
-                    if (currentDate.isAfter(existingDate)) {
-                        acc[current.NUMCAD] = current;
-                    }
-                } else {
-                    // Se o NUMCAD não existe, adiciona ao acumulador
-                    acc[current.NUMCAD] = current;
-                }
-                return acc;
-            }, {});
-
-            // Converter o objeto de volta para array
-            const colaboradoresFiltrados = Object.values(colaboradoresUnicos);
-
-            // Calcular totais (exemplo - adapte conforme suas necessidades)
-            const totalColaboradores = colaboradoresFiltrados.length;
-            // Filtrar apenas os que têm saldo positivo
-            const totalColaboradoresPositivos = colaboradoresFiltrados.filter(item => parseInt(item.SALDO) > 0).length;
-            const totalColaboradoresNegativos = colaboradoresFiltrados.filter(item => parseInt(item.SALDO) < 0).length;
+       
+        function formatHourBalance(saldoHora) {
+            if (!saldoHora && saldoHora !== 0) {
+                return '00:00:00'; 
+            }
+            const saldo = saldoHora;
+            const absSaldo = Math.abs(saldo);
+            const hours = Math.floor(absSaldo / 60);
+            const minutes = absSaldo % 60;
             
-            const totalMinutes = colaboradoresFiltrados.reduce(
-                (sum, item) => sum + parseInt(item.SALDO || 0), 
-                0
-            );
-            const absTotalMinutes = Math.abs(totalMinutes);
-            const hours = Math.floor(absTotalMinutes / 60);
-            const minutes = absTotalMinutes % 60;
-            const saldoTotal = `${totalMinutes < 0 ? '-' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+            const formattedHours = hours.toString().padStart(2, '0');
+            const formattedMinutes = minutes.toString().padStart(2, '0');
             
-            // Dados para a grid de totais
-            const totalsData = [
-                { description: 'Total de Colaboradores', value: totalColaboradores },
-                { description: 'Com Saldo Positivo', value: totalColaboradoresPositivos },
-                { description: 'Com Saldo Negativo', value: totalColaboradoresNegativos },
-                { description: 'Saldo Total', value: saldoTotal }
-            ];
-            
-            // Criar a grid de totais
-            totalsGrid = $('#gridTotalsContainer').dxDataGrid({
-                dataSource: totalsData,
-                showBorders: true,
-                showColumnHeaders: false,
-                width: '100%',
-                columns: [
-                    { 
-                        dataField: 'description', 
-                        width: '70%',
-                        cellTemplate: function(container, options) {
-                            $('<div>')
-                                .text(options.value)
-                                .css('font-weight', 'bold')
-                                .appendTo(container);
-                        }
-                    },
-                    { 
-                        dataField: 'value',
-                        width: '30%',
-                        alignment: 'right'
-                    }
-                ],
-                onContentReady: function(e) {
-                    // Ajustar altura da grid para se adequar ao conteúdo
-                    e.component.option('height', 'auto');
-                }
-            }).dxDataGrid('instance');
+            return (saldo < 0) 
+                ? `-${formattedHours}:${formattedMinutes}:00` 
+                : `${formattedHours}:${formattedMinutes}:00`;
         }
     });
 
