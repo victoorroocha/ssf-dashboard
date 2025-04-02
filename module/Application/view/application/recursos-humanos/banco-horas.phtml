@@ -1,4 +1,3 @@
-
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Page Heading -->
@@ -12,13 +11,20 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Apurações de Colaboradores</p>
+                    <p>Banco Horas</p>
 
                     <div id="form-container">
-                        <div id="form-filtro"></div> <!-- Seu formulário aqui -->
+                        <div id="form-filtro"></div> 
                     </div>
                     <!-- Grid Container for the DataGrid -->
                     <div id="gridContainer"></div>
+
+                    <!-- Container for the Totals Grid - aligned to right -->
+                    <div class="row mt-3">
+                        <div class="col-md-3 offset-md-9">
+                            <div id="gridTotalsContainer"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -29,42 +35,13 @@
 <script>
     $(document).ready(function() {
         var dataGrid = null;
-       
+        let totalsGrid = null;
+
         // Inicializa o formulário
         const formInstance = $("#form-filtro").dxForm({
             formData: {},
             colCount: 1,
             items: [
-                {
-                    itemType: "group",
-                    colCount: 2,
-                    items: [
-                        {
-                            dataField: "dataInicial",
-                            label: { visible: false },
-                            editorType: "dxDateBox",
-                            editorOptions: {
-                                displayFormat: "dd/MM/yyyy", 
-                                dateSerializationFormat: "yyyy-MM-dd",
-                                placeholder: "Data Apuração Inicio",
-                            },
-                            validationRules: [{
-                                type: 'required',
-                                message: 'Data de Apuração é obrigatório.',
-                            }],
-                        },
-                        {
-                            dataField: "dataFinal",
-                            label: { visible: false },
-                            editorType: "dxDateBox",
-                            editorOptions: {
-                                displayFormat: "dd/MM/yyyy", 
-                                dateSerializationFormat: "yyyy-MM-dd",
-                                placeholder: "Data Apuração Fim",
-                            },
-                        },
-                    ]
-                },
                 {
                     itemType: "group",
                     colCount: 2,
@@ -94,58 +71,58 @@
                             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-centro-custo", "DSC", "ID", "Selecione o Centro de Custo")
                         },
                         {
-                            dataField: "escala",
-                            editorType: "dxSelectBox",
-                            label: { visible: false },
-                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-escala", "DSC", "ID", "Selecione a Escala")
-                        },
-                        {
                             dataField: "filial",
                             editorType: "dxSelectBox",
                             label: { visible: false },
                             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-filial", "DSC", "ID", "Selecione a Filial")
+                        },  
+                        {
+                            dataField: "local",
+                            editorType: "dxSelectBox",
+                            label: { visible: false },
+                            editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-local", "DSC", "ID", "Selecione a Local")
                         }
                     ]
                 },
                 {
                     itemType: "group",
-                    colCount: 1,
+                    colCount: 2,
                     items: [
                         {
-                            dataField: "tipoApuracao",
-                            editorType: "dxTagBox",
+                            dataField: "dataInicial",
                             label: { visible: false },
+                            editorType: "dxDateBox",
                             editorOptions: {
-                                dataSource: [
-                                    { ID: 1, DSC: "1 - Faltas" },
-                                    { ID: 2, DSC: "2 - Intrajornada" },
-                                    { ID: 3, DSC: "3 - Interjornada" },
-                                    { ID: 4, DSC: "4 - Horas Extras (Acima de 2h)" },
-                                    { ID: 5, DSC: "5 - Adicional Noturno" },
-                                    { ID: 6, DSC: "6 - Trabalho em Folga" },
-                                    { ID: 7, DSC: "7 - Trabalho em Feriado" },
-                                    { ID: 8, DSC: "8 - Justificativa Marcação - Treinamento" },
-                                    { ID: 9, DSC: "9 - Justificativa Marcação - Serviço Externo" },
-                                    { ID: 10, DSC: "10 - Justificativa Marcação - Home Office" },
-                                    { ID: 11, DSC: "11 - Justificativa Marcação - Registro Duplicado" },
-                                    { ID: 12, DSC: "12 - Justificativa Marcação - Falha Equipamento" },
-                                    { ID: 13, DSC: "13 - Justificativa Marcação - Esquecimento" },
-                                    { ID: 14, DSC: "14 - Compensação" },
-                                ],
-                                displayExpr: "DSC",
-                                valueExpr: "ID",
-                                placeholder: "Selecione o Tipo de Apuração",
-                                searchEnabled: true,
-                                showClearButton: true,
-                                showSelectionControls: true,
-                                applyValueMode: "useButtons",
-                                selectAllText: "Selecionar todos", 
-                                noDataText: "Nenhum dado disponível"
-                            }, 
+                                displayFormat: "MM/yyyy",         
+                                dateSerializationFormat: "yyyy-MM-dd", 
+                                placeholder: "Mês/Ano inicial",
+                                type: "date",                      
+                                calendarOptions: {
+                                    zoomLevel: "year", 
+                                    maxZoomLevel: "year",
+                                    minZoomLevel: "month",
+                                }
+                            },
                             validationRules: [{
                                 type: 'required',
-                                message: 'Tipo de apuração é obrigatório.',
+                                message: 'Período é obrigatório.',
                             }],
+                        },
+                        {
+                            dataField: "dataFinal",
+                            label: { visible: false },
+                            editorType: "dxDateBox",
+                            editorOptions: {
+                                displayFormat: "MM/yyyy",
+                                dateSerializationFormat: "yyyy-MM-dd",
+                                placeholder: "Mês/Ano final",
+                                type: "date",
+                                calendarOptions: {
+                                    zoomLevel: "year", 
+                                    maxZoomLevel: "year",
+                                    minZoomLevel: "month",
+                                }
+                            },
                         }
                     ]
                 },
@@ -229,6 +206,9 @@
                     dataGrid.dispose();
                 }
             }
+            if (totalsGrid != null && totalsGrid.instance) {
+                totalsGrid.dispose();
+            }
 
             return new Promise((resolve, reject) => {
                 dataGrid = $('#gridContainer').dxDataGrid({
@@ -238,7 +218,7 @@
                             let params = filtros;
 
                             return $.ajax({
-                                url: '/recursos-humanos/list-lancamentos-apuracoes-colaboradores',
+                                url: '/recursos-humanos/list-banco-horas',
                                 method: 'GET',
                                 dataType: 'json',
                                 data: params, 
@@ -337,7 +317,7 @@
                     },
                     hoverStateEnabled: true,
                     pager: {
-                        visible: true
+                        visible: false
                     },
                     paging: {
                         pageSize: 500
@@ -351,7 +331,7 @@
                     },
                     export: {
                         enabled: true,
-                        fileName: "Apurações Colaboradores",
+                        fileName: "Saldo Banco de Horas",
                         allowExportSelectedData: false,
                     },
                     searchPanel: {
@@ -367,61 +347,34 @@
                         { dataField: 'NOMFUN', caption: 'Colaborador', allowEditing: false, alignment: 'left', width: 'auto', sortIndex: 1, sortOrder: 'asc' },
                         { dataField: 'TITCAR', caption: 'Cargo', allowEditing: false, alignment: 'left', width: 'auto' },
                         { dataField: 'NOMLOC', caption: 'Local', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'MES_REFERENCIA', caption: 'Mês Referência', allowEditing: false, alignment: 'center', width: 120 },
+                        { dataField: 'ANO_REFERENCIA', caption: 'Ano Referência', allowEditing: false, alignment: 'center', width: 120 },
                         { 
-                            dataField: 'DATAPU_CONVERT', 
-                            caption: 'Dt. Apuração', 
-                            allowEditing: false, 
-                            alignment: 'center', 
-                            width: 100, 
-                            dataType: 'date', 
-                            format: 'dd/MM/yyyy',
-                            editorOptions: {
-                                displayFormat: 'dd/MM/yyyy'  
-                            },
-                            sortIndex: 2, sortOrder: 'asc'
+                            caption: "Saldo",
+                            alignment: 'center', width: 100, 
+                            calculateCellValue: function(rowData) {
+                                if (!rowData || rowData.SALDO === undefined || rowData.SALDO === null) {
+                                    return '00:00:00'; 
+                                }
+
+                                const saldo = rowData.SALDO;
+                                const absSaldo = Math.abs(saldo);
+                                const hours = Math.floor(absSaldo / 60);
+                                const minutes = absSaldo % 60;
+                                
+                                // Formatação com padding zero
+                                const formattedHours = hours.toString().padStart(2, '0');
+                                const formattedMinutes = minutes.toString().padStart(2, '0');
+                                
+                                if (saldo < 0) {
+                                    return `-${formattedHours}:${formattedMinutes}:00`;
+                                } else {
+                                    return `${formattedHours}:${formattedMinutes}:00`;
+                                }
+                            }
                         },
-                        { dataField: 'ESCALA_TROCA', caption: 'Escala Apuração', allowEditing: false, alignment: 'center', width: 'auto' },
-                        { dataField: 'MARCACOES', caption: 'Horário Trabalhado', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
-                        { dataField: 'TIPO_COMPENSACAO', caption: 'Tipo Compensação', allowEditing: false, alignment: 'center', width: 150 },
-                        { dataField: 'TIPO_APURACAO', caption: 'Tipo Apuração', allowEditing: false, alignment: 'center', width: 'auto', sortIndex: 3, sortOrder: 'asc' },
-                        { dataField: 'DSC_SITUACAO_COLABORADOR', caption: 'Situação Colaborador', allowEditing: false, alignment: 'center', width: 150, visible: false },
-                        { 
-                            dataField: 'DATAFA', 
-                            caption: 'Dt. Afastamento', 
-                            allowEditing: false, 
-                            alignment: 'center', 
-                            width: 100, 
-                            dataType: 'date', 
-                            format: 'dd/MM/yyyy',
-                            editorOptions: {
-                                displayFormat: 'dd/MM/yyyy'  
-                            }, 
-                            visible: false
-                        },
                     ],                
-                    summary: {
-                        totalItems: [
-                            {
-                                column: "TIPO_APURACAO", 
-                                summaryType: "count",
-                                displayFormat: "Total de Registros: {0}",
-                                customizeText: function(cellInfo) {
-                                    return cellInfo.value + " ocorrências";
-                                }
-                            },
-                        ],
-                        groupItems: [
-                            {
-                                column: "TIPO_APURACAO", 
-                                summaryType: "count",
-                                displayFormat: "Total de Registros: {0}",
-                                customizeText: function(cellInfo) {
-                                    return cellInfo.value + " ocorrências";
-                                }
-                            },
-                        ],
-                    },
                     onToolbarPreparing: function (e) {
                         var toolbarItems = e.toolbarOptions.items;
                         
@@ -463,9 +416,90 @@
                                 text: "Atualizar" 
                             }
                         });
+                    },
+                    onContentReady: function(e) {
+                        calculateTotals(e.component);
                     }
                 }).dxDataGrid('instance');
             });
+        }
+
+        function calculateTotals(mainGrid) {
+            const data = mainGrid.getVisibleRows().map(row => row.data);
+
+            // Agrupar os dados por NUMCAD, mantendo apenas o registro com a data mais recente (CMPLAN)
+            const colaboradoresUnicos = data.reduce((acc, current) => {
+                // Se o NUMCAD já existe no acumulador
+                if (acc[current.NUMCAD]) {
+                    // Compara as datas usando Moment.js (formato DD/MM/YY)
+                    const currentDate = moment(current.CMPLAN, 'DD/MM/YY');
+                    const existingDate = moment(acc[current.NUMCAD].CMPLAN, 'DD/MM/YY');
+                    
+                    // Mantém o registro com a data mais recente
+                    if (currentDate.isAfter(existingDate)) {
+                        acc[current.NUMCAD] = current;
+                    }
+                } else {
+                    // Se o NUMCAD não existe, adiciona ao acumulador
+                    acc[current.NUMCAD] = current;
+                }
+                return acc;
+            }, {});
+
+            // Converter o objeto de volta para array
+            const colaboradoresFiltrados = Object.values(colaboradoresUnicos);
+
+            // Calcular totais (exemplo - adapte conforme suas necessidades)
+            const totalColaboradores = colaboradoresFiltrados.length;
+            // Filtrar apenas os que têm saldo positivo
+            const totalColaboradoresPositivos = colaboradoresFiltrados.filter(item => parseInt(item.SALDO) > 0).length;
+            const totalColaboradoresNegativos = colaboradoresFiltrados.filter(item => parseInt(item.SALDO) < 0).length;
+            
+            const totalMinutes = colaboradoresFiltrados.reduce(
+                (sum, item) => sum + parseInt(item.SALDO || 0), 
+                0
+            );
+            const absTotalMinutes = Math.abs(totalMinutes);
+            const hours = Math.floor(absTotalMinutes / 60);
+            const minutes = absTotalMinutes % 60;
+            const saldoTotal = `${totalMinutes < 0 ? '-' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+            
+            // Dados para a grid de totais
+            const totalsData = [
+                { description: 'Total de Colaboradores', value: totalColaboradores },
+                { description: 'Com Saldo Positivo', value: totalColaboradoresPositivos },
+                { description: 'Com Saldo Negativo', value: totalColaboradoresNegativos },
+                { description: 'Saldo Total', value: saldoTotal }
+            ];
+            
+            // Criar a grid de totais
+            totalsGrid = $('#gridTotalsContainer').dxDataGrid({
+                dataSource: totalsData,
+                showBorders: true,
+                showColumnHeaders: false,
+                width: '100%',
+                columns: [
+                    { 
+                        dataField: 'description', 
+                        width: '70%',
+                        cellTemplate: function(container, options) {
+                            $('<div>')
+                                .text(options.value)
+                                .css('font-weight', 'bold')
+                                .appendTo(container);
+                        }
+                    },
+                    { 
+                        dataField: 'value',
+                        width: '30%',
+                        alignment: 'right'
+                    }
+                ],
+                onContentReady: function(e) {
+                    // Ajustar altura da grid para se adequar ao conteúdo
+                    e.component.option('height', 'auto');
+                }
+            }).dxDataGrid('instance');
         }
     });
 

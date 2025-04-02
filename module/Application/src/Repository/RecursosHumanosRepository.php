@@ -4,6 +4,7 @@ namespace Application\Repository;
 
 class RecursosHumanosRepository
 {
+
     public function getLancamentosApuracoesColaboradores($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codEscala = null, $codFilial = null, $tipoApuracao = null)
     {
         $wheresInternos = "";
@@ -222,11 +223,106 @@ class RecursosHumanosRepository
                 {$wheresExternos}";  
     }
 
+    public function getBancoHorasColaboradores($dataInicial = null, $dataFinal = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codFilial = null)
+    {
+        $wheresInternos = "";
+        $wheresExternos = "";
+        $columnTipoApuracao = "";
+        if (!empty($dataInicial)) {
+            $dataFinal = !empty($dataFinal) ? $dataFinal : date('Y-m-d');
+            $wheresExternos .= " AND DADOS.CMPLAN BETWEEN TO_DATE('{$dataInicial}', 'YYYY-MM-DD') AND TO_DATE('{$dataFinal}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA <= R011LAN.DATLAN THEN 1 ELSE 0 END = 0"; // não considerar saldos de colaboradores demitidos até a data de lançamento.
+        }
+        if (!empty($codColaborador)) {
+            $wheresInternos .= " AND R011LAN.NUMCAD = {$codColaborador}";
+        }
+        if (!empty($codSupervisor)) {
+            $wheresInternos .= " AND (R034CPL.USU_NUMCAD = {$codSupervisor} OR R034FUN.NUMCAD = {$codSupervisor})";
+        }
+        if (!empty($codCentroCusto)) {
+            $wheresInternos .= " AND R034FUN.CODCCU = {$codCentroCusto}";
+        }
+        if (!empty($codFilial)) {
+            $wheresInternos .= " AND R034FUN.CODFIL = {$codFilial}";
+        }
+        
+        return "SELECT 
+                     DADOS.NUMEMP
+                    ,DADOS.NOMEMP
+                    ,DADOS.TIPCOL
+                    ,DADOS.NUMCAD
+                    ,DADOS.NUMCRA 
+                    ,DADOS.NOMFUN 
+                    ,DADOS.DATADM 
+                    ,DADOS.CODCAR
+                    ,DADOS.TITCAR
+                    ,DADOS.TABORG 
+                    ,DADOS.NUMLOC 
+                    ,DADOS.NOMLOC 
+                    ,DADOS.USU_NUMCAD
+                    ,DADOS.NOME_SUPERVISOR
+                    ,DADOS.MES_REFERENCIA
+                    ,DADOS.ANO_REFERENCIA
+                    ,DADOS.CMPLAN
+                    ,SUM(DADOS.SALDO) AS SALDO
+                    ,CASE WHEN SUM(DADOS.SALDO) < 0 THEN '-' || TO_CHAR(FLOOR(ABS(SUM(DADOS.SALDO)) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(ABS(SUM(DADOS.SALDO)), 60), 'FM00') || ':00'
+                    ELSE TO_CHAR(FLOOR(SUM(DADOS.SALDO) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(SUM(DADOS.SALDO), 60), 'FM00') || ':00' END AS SALDO_FORMAT
+                FROM (
+                    SELECT 
+                         R011LAN.NUMEMP
+                        ,R030EMP.NOMEMP
+                        ,R011LAN.TIPCOL
+                        ,R011LAN.NUMCAD
+                        ,R034FUN.NUMCRA 
+                        ,R034FUN.NOMFUN 
+                        ,R034FUN.DATADM 
+                        ,R034FUN.CODCAR
+                        ,R024CAR.TITCAR
+                        ,R034FUN.TABORG 
+                        ,R034FUN.NUMLOC 
+                        ,R016ORN.NOMLOC 
+                        ,R034CPL.USU_NUMCAD
+                        ,SUPERV.NOMFUN AS NOME_SUPERVISOR
+                        ,R011LAN.DATCMP
+                        ,R011LAN.CODBHR
+                        ,R011BHR.DESBHR
+                        ,R011LAN.CODSIT
+                        ,R011LAN.SINLAN
+                        ,R011LAN.DATLAN
+                        ,R011LAN.CMPLAN
+                        ,TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'MM')) AS MES_REFERENCIA
+                        ,TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'YYYY')) AS ANO_REFERENCIA
+                        ,SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END) 
+                        OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO
+                        ,ROW_NUMBER() OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, TO_CHAR(R011LAN.CMPLAN, 'MM'), TO_CHAR(R011LAN.CMPLAN, 'YYYY') ORDER BY R011LAN.DATLAN DESC) AS RN
+                    FROM VETORH.R011LAN
+                    LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R011LAN.NUMEMP AND R034FUN.TIPCOL = R011LAN.TIPCOL AND R034FUN.NUMCAD = R011LAN.NUMCAD
+                    LEFT JOIN VETORH.R034CPL ON R034CPL.NUMEMP = R034FUN.NUMEMP AND R034CPL.TIPCOL = R034FUN.TIPCOL AND R034CPL.NUMCAD = R034FUN.NUMCAD 
+                    LEFT JOIN VETORH.R030EMP ON R030EMP.NUMEMP = R011LAN.NUMEMP 
+                    LEFT JOIN VETORH.R034FUN SUPERV ON SUPERV.NUMEMP = R034CPL.USU_NUMEMP AND SUPERV.TIPCOL = R034CPL.USU_TIPCOL AND SUPERV.NUMCAD = R034CPL.USU_NUMCAD
+                    LEFT JOIN VETORH.R011BHR ON R011BHR.CODBHR = R011LAN.CODBHR 
+                    LEFT JOIN VETORH.R010SIT ON R010SIT.CODSIT = R011LAN.CODSIT 
+                    LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR   
+                    LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
+                    WHERE (R011LAN.PERREF NOT IN ('31/12/1900') OR R011LAN.CMPLAN NOT IN ('31/12/1900'))
+                    AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
+                    AND R011LAN.NUMEMP = 5
+                    {$wheresInternos}
+                    GROUP BY R011LAN.NUMEMP,R030EMP.NOMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R034FUN.NUMCRA,R034FUN.NOMFUN,R034FUN.DATADM,R034FUN.CODCAR,R024CAR.TITCAR,R034FUN.TABORG,R034FUN.NUMLOC,R016ORN.NOMLOC,R034CPL.USU_NUMCAD,SUPERV.NOMFUN,R011LAN.DATCMP
+                            ,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR
+                    ORDER BY R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.DATLAN
+                ) DADOS
+                WHERE DADOS.RN = 1
+                {$wheresExternos}
+                GROUP BY NUMEMP,NOMEMP,TIPCOL,NUMCAD,NUMCRA,NOMFUN,DATADM,CODCAR,TITCAR,TABORG,NUMLOC,NOMLOC,USU_NUMCAD,NOME_SUPERVISOR,DATCMP,MES_REFERENCIA,ANO_REFERENCIA,DADOS.CMPLAN
+                ORDER BY DADOS.NUMCAD, DADOS.ANO_REFERENCIA, DADOS.MES_REFERENCIA ASC ";  
+    }
 
 
 
 
-    // LOOKUPS FILTROS
+
+    #region LOOKUPS FILTROS
     public function getLookupColaboradorQuery()
     {
         return "SELECT 
@@ -309,4 +405,23 @@ class RecursosHumanosRepository
                 WHERE NUMEMP = 5
                 ORDER BY CODFIL"; 
     }
+    public function getLookupLocalQuery()
+    {
+        return "SELECT  
+                    A.ID
+                    ,A.DSC 
+                FROM (
+                SELECT DISTINCT
+                    R016ORN.NUMLOC AS ID
+                    ,r016orn.TABORG 
+                    ,R016ORN.NOMLOC
+                    ,R016ORN.NUMLOC || ' - ' || UPPER(R016ORN.NOMLOC) AS DSC
+                FROM VETORH.R034FUN
+                LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
+                WHERE R016ORN.TABORG = 3
+                AND R034FUN.NUMEMP = 5
+                ORDER BY R016ORN.NOMLOC
+                ) A"; 
+    }
+    #endregion
 }

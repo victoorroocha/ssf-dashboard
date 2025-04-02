@@ -4,12 +4,12 @@
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        padding: 15px;
+        padding: 5px;
         margin-bottom: 20px;
-        height: 100%;
+        height: 85%;
     }
     .indicator-card {
-        padding: 20px;
+        padding: 5px;
         border-radius: 8px;
         text-align: center;
         height: 100%;
@@ -82,7 +82,7 @@
                         
                         <!-- Linha de indicadores -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-2">
                                 <div class="dashboard-card">
                                     <div class="indicator-card" style="background-color: #fff8e1;">
                                         <div class="indicator-title">Taxa de Faltas</div>
@@ -91,7 +91,43 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #e8f5e9;">
+                                        <div class="indicator-title">Horas Extras/Mês</div>
+                                        <div class="indicator-value">1.420h</div>
+                                        <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #e8f5e9;">
+                                        <div class="indicator-title">Horas Extras/Mês</div>
+                                        <div class="indicator-value">1.420h</div>
+                                        <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #e8f5e9;">
+                                        <div class="indicator-title">Horas Extras/Mês</div>
+                                        <div class="indicator-value">1.420h</div>
+                                        <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #e8f5e9;">
+                                        <div class="indicator-title">Horas Extras/Mês</div>
+                                        <div class="indicator-value">1.420h</div>
+                                        <div class="indicator-change negative">↑ 15% vs último mês</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <div class="dashboard-card">
                                     <div class="indicator-card" style="background-color: #e8f5e9;">
                                         <div class="indicator-title">Horas Extras/Mês</div>
@@ -103,16 +139,16 @@
                         </div>
                         
                         <!-- Gráfico de largura total -->
-                        <div class="row">
+                        <!-- <div class="row">
                             <div class="col-12">
                                 <div class="dashboard-card">
                                     <div id="grafico-comparativo-mensal" class="full-width-chart"></div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         
                         <!-- Linha de gráficos menores -->
-                        <div class="row">
+                        <!-- <div class="row">
                             <div class="col-md-6">
                                 <div class="dashboard-card">
                                     <div id="grafico-top-faltas" class="chart-container"></div>
@@ -123,7 +159,7 @@
                                     <div id="grafico-horas-extras-noturno" class="chart-container"></div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                     <?php } ?>
                 </div>
             </div>
@@ -144,8 +180,6 @@ const formSelections = {
 };
 
 $(document).ready(function() {
-    
-
     // Inicializa o formulário
     const formInstance = $("#form-container").dxForm({
         formData: {},
@@ -232,16 +266,16 @@ $(document).ready(function() {
 
     // Inicializa o Range Selector
     const today = moment();
-    const startYear = today.year() - 3;
-    const startOfYear = today.clone().startOf('year');  // Primeiro dia do ano atual
-    const currentDate = today.clone();  // Data atual
+    const startYear = 2023; // definido para pegar historico de 2023 pra k.
+    const startOfMonth = today.clone().startOf('month');  // Primeiro dia do mês atual
+    const endOfMonth = today.clone().endOf('month');     // Último dia do mês atual
 
     // Define valores iniciais nas variáveis globais
-    formSelections.dataInicio = startOfYear.toDate();
-    formSelections.dataFim = currentDate.toDate();
+    formSelections.dataInicio = moment(startOfMonth.toDate()).format("DD/MM/YYYY"); 
+    formSelections.dataFim = moment(endOfMonth.toDate()).format("DD/MM/YYYY");
 
     const rangeSelectorInstance = $("#range-selector").dxRangeSelector({
-        width: '100%', // Esta propriedade é importante
+        width: '100%',
         scale: {
             startValue: moment(`${startYear}-01-01`).toDate(),
             endValue: today.clone().endOf('year').toDate(),
@@ -250,7 +284,7 @@ $(document).ready(function() {
             useTicks: true,
             label: { format: "MMM yyyy" }
         },
-        value: [startOfYear.toDate(), currentDate.toDate()],  // Intervalo do primeiro dia do ano até hoje
+        value: [startOfMonth.toDate(), endOfMonth.toDate()],  // Intervalo: primeiro dia do mês até o último dia
         sliderMarker: { format: "monthAndYear" },
         behavior: { callValueChanged: "onMoving" },
         onInitialized: function(e) {
@@ -258,11 +292,10 @@ $(document).ready(function() {
         },
         onValueChanged: function(e) {
             const startDate = moment(e.value[0]);
-            const endDate = moment(e.value[1]);
-            
-            // Atualiza as variáveis globais
-            formSelections.dataInicio = startDate.toDate();
-            formSelections.dataFim = endDate.toDate();
+            const endDate = moment(e.value[1]).subtract(1, 'days'); // quando faz o changed sempre pega dia 01 do proximo mes ao selecionado. Tratei pra subtrair um dia, pegando o ultimo dia do mes selecionado.
+
+            formSelections.dataInicio = moment(startDate.toDate()).format("DD/MM/YYYY");
+            formSelections.dataFim = moment(endDate.toDate()).format("DD/MM/YYYY");
             
             atualizarGraficos();
         }
