@@ -1,0 +1,758 @@
+<!-- Linha de indicadores - Versão responsiva -->
+<div class="cards-container">
+    <!-- Card consolidado -->
+    <div class="dashboard-card">
+        <div class="indicator-card" style="background-color: #184223; position: relative;">
+            <div class="indicator-title">FUNCIONÁRIOS</div>
+            <div class="employee-stats">
+                <div class="employee-stat">
+                    <div class="employee-stat-value" id="totalFuncionarios">248</div>
+                    <div class="employee-stat-label">Total</div>
+                </div>
+                <div class="employee-stat">
+                    <div class="employee-stat-value" id="afastados">4</div>
+                    <div class="employee-stat-label">Afastados</div>
+                </div>
+                <div class="employee-stat">
+                    <div class="employee-stat-value" id="admitidos">63</div>
+                    <div class="employee-stat-label">Admitidos</div>
+                </div>
+                <div class="employee-stat">
+                    <div class="employee-stat-value" id="demitidos">33</div>
+                    <div class="employee-stat-label">Demitidos</div>
+                </div>
+            </div>
+            <!-- Novo elemento para exibir o Turnover no centro -->
+            <div class="turnover-stat">
+                <div class="turnover-value" id="turnoverPercent"></div>
+                <div class="turnover-label">Turnover</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards individuais -->
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #2e7d32;">
+                <div class="indicator-title">FALTAS</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #388e3c;">
+                <div class="indicator-title">INTRAJORNADAS</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #43a047;">
+                <div class="indicator-title">INTERJORNADAS</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #4caf50;">
+                <div class="indicator-title">HORA EXTRA +2H</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #5cb860;">
+                <div class="indicator-title">AD. NOTURNO</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #7cc67f;">
+                <div class="indicator-title">MÉDIA SALARIAL</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-column">
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #8bc34a;">
+                <div class="indicator-title">SALDO HORAS</div>
+                <div class="indicator-value"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seção do Gráfico (abaixo dos cards) -->
+<div id="chart1"></div>
+
+ <!-- Período de Apuração -->
+ <div class="period-title"><span id="title-correncias-supervisor"></span>
+    </div>
+
+<!-- Container para os gráficos lado a lado -->
+<div class="row" style="margin: 0 -5px;">
+    <div class="col-md-6" style="padding: 0 5px;">
+        <div id="chart2" style="width: 100%;"></div>
+    </div>
+    <div class="col-md-6" style="padding: 0 5px;">
+        <div id="chart3" style="width: 100%;"></div>
+    </div>
+</div>
+
+<!-- Container para os gráficos lado a lado -->
+<div class="row" style="margin: 0 -5px;">
+    <div class="col-md-6" style="padding: 0 5px;">
+        <div id="chart4" style="width: 100%;"></div>
+    </div>
+    <div class="col-md-6" style="padding: 0 5px;">
+        <div id="chart5" style="width: 100%;"></div>
+    </div>
+</div>
+
+<div id="chart6"></div>
+
+<script>
+    var grafico1 = null;
+    var grafico2 = null;
+    var grafico3 = null;
+    var grafico4 = null;
+    var grafico5 = null;
+    var grafico6 = null;
+
+    $(document).ready(function () {
+    });
+
+
+    // Função para atualizar os gráficos
+    function atualizarInfosDashboad() {
+        console.log("Atualizando gráficos com os seguintes parâmetros:", formSelections);
+        $('#periodo-apuracao').text(
+            moment(formSelections.dataInicio, 'YYYY-MM-DD').format('DD/MM/YYYY') + 
+            ' - ' + 
+            moment(formSelections.dataFim, 'YYYY-MM-DD').format('DD/MM/YYYY')
+        );
+
+        $.ajax({
+            url: '/filtrar-dados',
+            method: 'GET',
+            dataType: 'json',
+            data: formSelections,
+            success: function(response) {
+                if (response.success) {
+                    // INICIO CARDS
+                        // Acessar os dados do objeto
+                        const infoCardsAtualResult = response.data.infoCardsAtualResult;
+                        
+                        // Atualizar o card de FUNCIONÁRIOS
+                        document.querySelector('.employee-stat:nth-child(1) .employee-stat-value').textContent = infoCardsAtualResult.QTD_FUNCIONARIO ?? 0;
+                        document.querySelector('.employee-stat:nth-child(2) .employee-stat-value').textContent = infoCardsAtualResult.QTD_AFASTADOS ?? 0;
+                        document.querySelector('.employee-stat:nth-child(3) .employee-stat-value').textContent = infoCardsAtualResult.QTD_ADMITIDO ?? 0;
+                        document.querySelector('.employee-stat:nth-child(4) .employee-stat-value').textContent = infoCardsAtualResult.QTD_DEMITIDO ?? 0;
+                        document.querySelector('.turnover-stat .turnover-value').textContent = infoCardsAtualResult.TURNOVER_PERC + "%";
+
+                        // Atualizar os outros cards
+                        document.querySelector('.card-column:nth-child(2) .indicator-value').textContent = infoCardsAtualResult.QTD_FALTAS ?? 0;
+                        document.querySelector('.card-column:nth-child(3) .indicator-value').textContent = infoCardsAtualResult.QTD_INTRAJORNADA ?? 0;
+                        document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = infoCardsAtualResult.QTD_INTERJORNADA ?? 0;
+                        document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = infoCardsAtualResult.QTD_HORAS_EXTRAS_2HRS ?? 0;
+                        document.querySelector('.card-column:nth-child(6) .indicator-value').textContent = infoCardsAtualResult.QTD_ADICIONAL_NOTURNO ?? 0;
+                        document.querySelector('.card-column:nth-child(8) .indicator-value').textContent = infoCardsAtualResult.SALDO_HORAS ?? 0;
+
+                        // Formatando a média salarial para moeda brasileira
+                        const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        const mediaSalarialFormatada = formatadorMoeda.format(infoCardsAtualResult.MEDIA_SALARIAL);
+                        document.querySelector('.card-column:nth-child(7) .indicator-value').textContent = mediaSalarialFormatada;
+                    // FIM CARDS
+
+                    // INICIO GRAFICO1 
+                        var dataSourceGrafico1 = response.data.infoGrafico1Result;
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico1)) {
+                            // Ordem correta dos dias da semana
+                            const ordemDias = [
+                                "SEGUNDA-FEIRA",
+                                "TERÇA-FEIRA",
+                                "QUARTA-FEIRA",
+                                "QUINTA-FEIRA",
+                                "SEXTA-FEIRA",
+                                "SÁBADO",
+                                "DOMINGO"
+                            ];
+
+                            // Ordena o dataSourceGrafico1 conforme a ordem definida
+                            dataSourceGrafico1.sort((a, b) => {
+                                return ordemDias.indexOf(a.DIA_SEMANA_APU) - ordemDias.indexOf(b.DIA_SEMANA_APU);
+                            });
+
+                            grafico1 = $("#chart1").dxChart({
+                                dataSource: dataSourceGrafico1,
+                                commonSeriesSettings: {
+                                    argumentField: "DIA_SEMANA_APU"
+                                },
+                                series: [
+                                    { 
+                                        valueField: "QTD_FALTAS", 
+                                        name: "Faltas", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#d32f2f",
+                                                weight: 600
+                                            }
+                                        }
+                                    },
+                                    { 
+                                        valueField: "QTD_INTRAJORNADA", 
+                                        name: "Intrajornada", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#fbc02d",
+                                                weight: 600
+                                            }
+                                        }
+                                    },
+                                    { 
+                                        valueField: "QTD_INTERJORNADA", 
+                                        name: "Interjornada", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#7fa47f",
+                                                weight: 600
+                                            }
+                                        } 
+                                    },
+                                    { 
+                                        valueField: "QTD_HORAS_EXTRAS_2HRS", 
+                                        name: "Horas Extras (+2h)", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#0288d1",
+                                                weight: 600
+                                            }
+                                        } 
+                                    },
+                                    { 
+                                        valueField: "QTD_ADICIONAL_NOTURNO", 
+                                        name: "Adicional Noturno", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#2e7d32",
+                                                weight: 600
+                                            }
+                                        } 
+                                    },
+                                    {
+                                        valueField: "TOTAL",
+                                        name: "Total de Ocorrências",
+                                        type: "line",
+                                        color: "#000",
+                                        point: { visible: true, size: 6 },
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#000",
+                                                weight: 600
+                                            }
+                                        }
+                                    }
+                                ],
+                                palette: [
+                                    "#d32f2f",
+                                    "#fbc02d",
+                                    "#0288d1",
+                                    "#2e7d32",
+                                    "#7b1fa2"
+                                ],
+                                argumentAxis: {
+                                    label: {
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45
+                                    },
+                                    grid: {
+                                        visible: false // remove as linhas verticais
+                                    }
+                                },
+                                valueAxis: {
+                                    grid: {
+                                        visible: false // remove as linhas horizontais
+                                    }
+                                },
+                                legend: {
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico1 != null) {
+                                if (grafico1.dxChart("instance")) {
+                                    grafico1.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO1
+
+                    // INICIO GRAFICO2 
+                        $('#title-correncias-supervisor').text("Ocorrências por Supervisor");
+                        var dataSourceGrafico2 = response.data.infoGrafico2Result.filter(item => item.QTD_FALTAS > 0).sort(function(a, b) {
+                            return b.QTD_FALTAS - a.QTD_FALTAS; // ordem decrescente
+                        });
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico2)) {
+                            grafico2 = $("#chart2").dxChart({
+                                dataSource: dataSourceGrafico2,
+                                rotated: false, // Transforma em gráfico de barras horizontais
+                                commonSeriesSettings: {
+                                    argumentField: "NOME_SUPERVISOR",
+                                    barPadding: 0.05
+                                },
+                                series: [
+                                    { 
+                                        valueField: "QTD_FALTAS", 
+                                        name: "Faltas", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#d32f2f",
+                                                weight: 600
+                                            }
+                                        }
+                                    },
+                                ],
+                                palette: [
+                                    "#d32f2f",
+                                ],
+                                argumentAxis: {
+                                    label: {
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                    },
+                                    grid: {
+                                        visible: false // Remove as linhas horizontais agora
+                                    }
+                                },
+                                valueAxis: {
+                                    grid: {
+                                        visible: false // Remove as linhas verticais agora
+                                    }
+                                },
+                                legend: {
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico2 != null) {
+                                if (grafico2.dxChart("instance")) {
+                                    grafico2.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO2
+
+                    // INICIO GRAFICO3
+                        var dataSourceGrafico3 = response.data.infoGrafico2Result.filter(item => item.QTD_HORAS_EXTRAS_2HRS > 0).sort(function(a, b) {
+                            return b.QTD_HORAS_EXTRAS_2HRS - a.QTD_HORAS_EXTRAS_2HRS; // ordem decrescente
+                        });
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico3)) {
+                            grafico3 = $("#chart3").dxChart({
+                                dataSource: dataSourceGrafico3,
+                                rotated: false, // Transforma em gráfico de barras horizontais
+                                commonSeriesSettings: {
+                                    argumentField: "NOME_SUPERVISOR",
+                                    barPadding: 0.05
+                                },
+                                series: [
+                                    { 
+                                        valueField: "QTD_HORAS_EXTRAS_2HRS", 
+                                        name: "Horas Extras (+2h)", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#0288d1",
+                                                weight: 600
+                                            }
+                                        } 
+                                    },
+                                ],
+                                palette: [
+                                    "#0288d1",
+                                ],
+                                argumentAxis: {
+                                    label: {
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                    },
+                                    grid: {
+                                        visible: false // Remove as linhas horizontais agora
+                                    }
+                                },
+                                valueAxis: {
+                                    grid: {
+                                        visible: false // Remove as linhas verticais agora
+                                    }
+                                },
+                                legend: {
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico3 != null) {
+                                if (grafico3.dxChart("instance")) {
+                                    grafico3.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO3
+
+                    // INICIO GRAFICO4
+                        var dataSourceGrafico4 = response.data.infoGrafico2Result.filter(item => item.QTD_INTRAJORNADA > 0).sort(function(a, b) {
+                            return b.QTD_INTRAJORNADA - a.QTD_INTRAJORNADA; // ordem decrescente
+                        });
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico4)) {
+                            grafico4 = $("#chart4").dxChart({
+                                dataSource: dataSourceGrafico4,
+                                rotated: false, // Transforma em gráfico de barras horizontais
+                                commonSeriesSettings: {
+                                    argumentField: "NOME_SUPERVISOR",
+                                    barPadding: 0.05
+                                },
+                                series: [
+                                    { 
+                                        valueField: "QTD_INTRAJORNADA", 
+                                        name: "Intrajornada", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#fbc02d",
+                                                weight: 600
+                                            }
+                                        }
+                                    },
+                                ],
+                                palette: [
+                                    "#fbc02d",
+                                ],
+                                argumentAxis: {
+                                    label: {
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                    },
+                                    grid: {
+                                        visible: false // Remove as linhas horizontais agora
+                                    }
+                                },
+                                valueAxis: {
+                                    grid: {
+                                        visible: false // Remove as linhas verticais agora
+                                    }
+                                },
+                                legend: {
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico4 != null) {
+                                if (grafico4.dxChart("instance")) {
+                                    grafico4.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO4
+
+                    // INICIO GRAFICO5
+                        var dataSourceGrafico5 = response.data.infoGrafico2Result.filter(item => item.QTD_INTERJORNADA > 0).sort(function(a, b) {
+                            return b.QTD_INTERJORNADA - a.QTD_INTERJORNADA; // ordem decrescente
+                        });
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico5)) {
+                            grafico5 = $("#chart5").dxChart({
+                                dataSource: dataSourceGrafico5,
+                                rotated: false, // Transforma em gráfico de barras horizontais
+                                commonSeriesSettings: {
+                                    argumentField: "NOME_SUPERVISOR",
+                                    barPadding: 0.05
+                                },
+                                series: [
+                                    { 
+                                        valueField: "QTD_INTERJORNADA", 
+                                        name: "Interjornada", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "#fff",
+                                            font: {
+                                                color: "#7fa47f",
+                                                weight: 600
+                                            }
+                                        } 
+                                    },
+                                ],
+                                palette: [
+                                    "#7fa47f",
+                                ],
+                                argumentAxis: {
+                                    label: {
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                    },
+                                    grid: {
+                                        visible: false // Remove as linhas horizontais agora
+                                    }
+                                },
+                                valueAxis: {
+                                    grid: {
+                                        visible: false // Remove as linhas verticais agora
+                                    }
+                                },
+                                legend: {
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico5 != null) {
+                                if (grafico5.dxChart("instance")) {
+                                    grafico5.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO5  
+                    
+                    
+                    // INICIO GRAFICO6
+                        var dataSourceGrafico6 = response.data.infoGrafico6Result.sort(function(a, b) {
+                            return a.SALDO - b.SALDO; // ordem decrescente
+                        });
+
+                        // Verifica se veio algo e se é um array
+                        if (Array.isArray(dataSourceGrafico6)) {
+                            // Defina seus valores de referência
+                            const saldoMinimo = -1800;
+                            const saldoMaximo = 1800;
+
+                            grafico6 = $("#chart6").dxChart({
+                                dataSource: dataSourceGrafico6,
+                                rotated: true,
+                                size: {
+                                    height: 700
+                                },
+                                commonSeriesSettings: {
+                                    argumentField: "NOME_SUPERVISOR",
+                                    barPadding: 0.05
+                                },
+                                series: [
+                                    { 
+                                        valueField: "SALDO", 
+                                        name: "Saldo Horas", 
+                                        type: "bar",
+                                        label: {
+                                            visible: true,
+                                            backgroundColor: "transparent",
+                                            font: {
+                                                color: '#b3afaf', // Cor preta para todos os labels
+                                                weight: 600
+                                            },
+                                            position: function(point) {
+                                                // Posiciona à direita para valores positivos, esquerda para negativos
+                                                return point.value >= 0 ? 'outside' : 'inside';
+                                            },
+                                            alignment: function(point) {
+                                                // Alinha à direita para positivos, esquerda para negativos
+                                                return point.value >= 0 ? 'right' : 'left';
+                                            },
+                                            customizeText: function(point) {
+                                                var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
+                                                return item?.SALDO_FORMAT || point.value.toFixed(2);
+                                            }
+                                        } 
+                                    }
+                                ],
+                                customizePoint: function(point) {
+                                    if(point.value < saldoMinimo) {
+                                        return {
+                                            color: '#d63031',
+                                            hoverStyle: { color: '#c0392b' },
+                                            selectionStyle: { color: '#a71f1f' },
+                                            label: { font: { color: '#ffffff' } }
+                                        };
+                                    } 
+                                    if(point.value > saldoMaximo) {
+                                        return {
+                                            color: '#2e7d32',
+                                            hoverStyle: { color: '#1b5e20' },
+                                            selectionStyle: { color: '#0d470f' },
+                                            label: { font: { color: '#ffffff' } }
+                                        };
+                                    }
+                                    if(point.value < 0) {
+                                        return {
+                                            color: '#ff6b6b',
+                                            hoverStyle: { color: '#ff5252' },
+                                            selectionStyle: { color: '#ff3838' },
+                                            label: { font: { color: '#000000' } }
+                                        };
+                                    } else {
+                                        return {
+                                            color: '#7fa47f',
+                                            hoverStyle: { color: '#6cbe6c' },
+                                            selectionStyle: { color: '#5cb860' },
+                                            label: { font: { color: '#000000' } }
+                                        };
+                                    }
+                                },
+                                argumentAxis: {
+                                    label: {
+                                        visible: true,  // Mantém os nomes dos supervisores
+                                        overlappingBehavior: "stagger",
+                                        staggeringSpacing: 5
+                                    },
+                                    grid: { visible: false },
+                                    tickInterval: 1
+                                },
+                                valueAxis: {
+                                    label: {
+                                        visible: false  // Remove os valores numéricos
+                                    },
+                                    grid: { visible: false },  // Remove as linhas de grade
+                                    tickInterval: 500,
+                                    constantLines: [{
+                                        label: { 
+                                            text: '',
+                                            horizontalAlignment: 'right',
+                                            font: { color: '#d63031', weight: 'bold' }
+                                        },
+                                        width: 2,
+                                        value: saldoMinimo,
+                                        color: '#d63031',
+                                        dashStyle: 'dash',
+                                        paddingTopBottom: 15
+                                    }, {
+                                        label: { 
+                                            text: '',
+                                            horizontalAlignment: 'left',
+                                            font: { color: '#2e7d32', weight: 'bold' }
+                                        },
+                                        width: 2,
+                                        value: saldoMaximo,
+                                        color: '#2e7d32',
+                                        dashStyle: 'dash',
+                                        paddingTopBottom: 15
+                                    }],
+                                    strips: [{
+                                        startValue: 0,
+                                        endValue: 0,
+                                        color: '#666',
+                                        opacity: 0.3,
+                                        label: { text: 'Linha de equilíbrio' }
+                                    }]
+                                },
+                                legend: {
+                                    visible: false
+                                },
+                                // tooltip: {
+                                //     enabled: true,
+                                //     customizeTooltip: function(point) {
+                                //         var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
+                                //         let status = '';
+                                //         if(point.value < saldoMinimo) status = ' (Abaixo do limite mínimo)';
+                                //         else if(point.value > saldoMaximo) status = ' (Acima do limite máximo)';
+                                        
+                                //         return {
+                                //             text: `<strong>${point.argument}</strong><br/>Saldo: ${item?.SALDO_FORMAT || point.valueText}${status}`,
+                                //             color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
+                                //             borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
+                                //         };
+                                //     }
+                                // },
+                                title: {
+                                    text: 'Saldo de Horas',
+                                    subtitle: 'Valores mais escuros para > 30horas'
+                                }
+                            });
+                        } else {
+                            // Destroi o grafico antes de inicia-la novamente.
+                            if (grafico6 != null) {
+                                if (grafico6.dxChart("instance")) {
+                                    grafico6.dxChart("instance").dispose();
+                                }
+                            }
+                        }
+                    // FIM GRAFICO6 
+                } else {
+                    DevExpress.ui.notify("Erro ao carregar dados", "error", 3000);
+                }
+            },
+            error: function(error) {
+                DevExpress.ui.notify("Erro na requisição", "error", 3000);
+            }
+        });
+    }
+</script>

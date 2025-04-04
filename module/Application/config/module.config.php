@@ -16,12 +16,12 @@ return [
     'router' => [
         'routes' => [
             'home' => [
-                'type'    => Literal::class,
+                'type'    => Segment::class,
                 'options' => [
-                    'route'    => '/',
+                    'route' => '/[:action]',
                     'defaults' => [
                         'controller' => Controller\IndexController::class,
-                        'action'     => 'index',
+                        'action'     => 'index', 
                     ],
                 ],
             ],
@@ -52,16 +52,6 @@ return [
                     'defaults' => [
                         'controller' => Controller\ErrorController::class,
                         'action'     => 'index', 
-                    ],
-                ],
-            ],
-            'application' => [
-                'type'    => Segment::class,
-                'options' => [
-                    'route'    => '/application[/:action]',
-                    'defaults' => [
-                        'controller' => Controller\IndexController::class,
-                        'action'     => 'index',
                     ],
                 ],
             ],
@@ -168,7 +158,7 @@ return [
     ],
     'controllers' => [
         'factories' => [
-            Controller\IndexController::class => InvokableFactory::class,
+            // Controller\IndexController::class => InvokableFactory::class,
             Controller\MenuController::class => function($container) {
                 return new Controller\MenuController(
                     $container->get('Laminas\Db\Adapter\Adapter'), // Adaptador do banco de dados
@@ -176,6 +166,7 @@ return [
                     $container->get('Application\Acl\AccessControl')->getAcl() // ACL
                 );
             },
+            Controller\IndexController::class => Factory\GenericControllerFactory::class,
             Controller\DbController::class => Factory\GenericControllerFactory::class,  
             Controller\LoginController::class => Factory\LoginControllerFactory::class,
             Controller\ErrorController::class => Factory\GenericControllerFactory::class,

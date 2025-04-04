@@ -120,6 +120,95 @@ class RecursosHumanosController extends BaseController
     }
     #endregion
 
+    #region Controle Banco de Horas
+        public function bancoHorasAction()
+        {
+            $session = new Container('auth');
+    
+            if (!isset($session->user)) {
+                // Redireciona o usuário para o login caso não esteja autenticado
+                return $this->redirect()->toRoute('login');
+            }
+    
+            return new ViewModel();
+        }
+        public function listBancoHorasAction()
+        {
+            // Verifica se o serviço Oracle está disponível
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+    
+    
+            // Captura os parâmetros da requisição GET
+            $dataInicial = $this->params()->fromQuery('dataInicial', null);
+            $dataFinal = $this->params()->fromQuery('dataFinal', null);
+            $codColaborador = $this->params()->fromQuery('colaborador', null);
+            $codSupervisor = $this->params()->fromQuery('supervisor', null);
+            $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
+            $codFilial = $this->params()->fromQuery('filial', null);
+    
+    
+            try {
+                // Define o cabeçalho corretamente antes de qualquer saída
+                $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                                  ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                                  ->addHeaderLine('Pragma', 'no-cache')
+                                                  ->addHeaderLine('Expires', '0');
+    
+                // Consulta no Softsul todos pedidos
+                $result = [];
+                $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getBancoHorasColaboradores($dataInicial, $dataFinal, $codColaborador, $codSupervisor, $codCentroCusto, $codFilial) : '';
+           
+    
+                if ($sql) {
+                    // Executa a consulta Oracle
+                    $chunkResult = $this->oracleService->executeQuery($sql);
+    
+                    // Processa os dados do Oracle
+                    foreach ($chunkResult  as $key => $row) {
+                        // Convertendo apenas as colunas de texto para UTF-8
+                        $textColumns = ['NOMEMP', 'NOMFIL', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR'];
+                        foreach ($textColumns as $col) {
+                            if (isset($row[$col])) {
+                                $row[$col] = utf8_encode($row[$col]);
+                            }
+                        }
+    
+                        // Adiciona cada linha ao array result final
+                        $result[] = $row;
+                    }
+                }
+    
+                
+                // Garantir que os dados estão em UTF-8
+                array_walk_recursive($result, function(&$value) {
+                    if (is_string($value)) {
+                        // Converter para UTF-8
+                        $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                    }
+                });
+    
+                $totalCount = count($result);
+    
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $result,
+                    'totalCount' => $totalCount
+                ]);
+                
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        #endregion
+
     #region Lookups Filtros
     public function getLookupColaboradorAction()
     {
@@ -333,22 +422,7 @@ class RecursosHumanosController extends BaseController
             ]);
         }
     }
-    #endregion
-
-
-    #region Controle Banco de Horas
-    public function bancoHorasAction()
-    {
-        $session = new Container('auth');
-
-        if (!isset($session->user)) {
-            // Redireciona o usuário para o login caso não esteja autenticado
-            return $this->redirect()->toRoute('login');
-        }
-
-        return new ViewModel();
-    }
-    public function listBancoHorasAction()
+    public function getLookupCargoAction()
     {
         // Verifica se o serviço Oracle está disponível
         if (!$this->oracleService) {
@@ -357,66 +431,28 @@ class RecursosHumanosController extends BaseController
                 'message' => 'Serviço Oracle não disponível'
             ]);
         }
-
-
-        // Captura os parâmetros da requisição GET
-        $dataInicial = $this->params()->fromQuery('dataInicial', null);
-        $dataFinal = $this->params()->fromQuery('dataFinal', null);
-        $codColaborador = $this->params()->fromQuery('colaborador', null);
-        $codSupervisor = $this->params()->fromQuery('supervisor', null);
-        $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
-        $codFilial = $this->params()->fromQuery('filial', null);
-
-
+    
         try {
-            // Define o cabeçalho corretamente antes de qualquer saída
-            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
-                                              ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
-                                              ->addHeaderLine('Pragma', 'no-cache')
-                                              ->addHeaderLine('Expires', '0');
+            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLookupCargoQuery() : '';
 
-            // Consulta no Softsul todos pedidos
             $result = [];
-            $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getBancoHorasColaboradores($dataInicial, $dataFinal, $codColaborador, $codSupervisor, $codCentroCusto, $codFilial) : '';
-       
-
             if ($sql) {
-                // Executa a consulta Oracle
-                $chunkResult = $this->oracleService->executeQuery($sql);
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql);
 
-                // Processa os dados do Oracle
-                foreach ($chunkResult  as $key => $row) {
-                    // Convertendo apenas as colunas de texto para UTF-8
-                    $textColumns = ['NOMEMP', 'NOMFIL', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR'];
-                    foreach ($textColumns as $col) {
-                        if (isset($row[$col])) {
-                            $row[$col] = utf8_encode($row[$col]);
-                        }
-                    }
-
-                    // Adiciona cada linha ao array result final
-                    $result[] = $row;
+                foreach ($result as $key => $row) {
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
                 }
             }
 
-            
-            // Garantir que os dados estão em UTF-8
-            array_walk_recursive($result, function(&$value) {
-                if (is_string($value)) {
-                    // Converter para UTF-8
-                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-                }
-            });
-
-            $totalCount = count($result);
-
+            // Retorna os dados como JSON
             return new JsonModel([
                 'success' => true,
-                'data' => $result,
-                'totalCount' => $totalCount
+                'data' => $result
             ]);
-            
         } catch (\Exception $e) {
+            
+
             return new JsonModel([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -424,7 +460,6 @@ class RecursosHumanosController extends BaseController
         }
     }
     #endregion
-
 
     // // action com paginação
     // public function listLancamentosApuracoesColaboradoresAction()
