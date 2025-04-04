@@ -337,7 +337,8 @@
             },
             value: [startOfMonth.toDate(), endOfMonth.toDate()],  // Intervalo: primeiro dia do mês até o último dia
             sliderMarker: { format: "monthAndYear" },
-            behavior: { callValueChanged: "onMoving" },
+            behavior: { callValueChanged: "onMovingComplete" }, // Alterado para "onMovingComplete"
+            applyValueMode: "onHandleRelease",
             onInitialized: function(e) {
                 atualizarInfosDashboad();
             },

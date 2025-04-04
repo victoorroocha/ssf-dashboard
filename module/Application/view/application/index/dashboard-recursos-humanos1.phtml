@@ -160,6 +160,37 @@
                 data: formSelections,
                 success: function(response) {
                     if (response.success) {
+                        if (response.data.infoGrafico2Result != null && response.data.infoGrafico6Result != null) {
+                            $('#title-correncias-supervisor').text("Ocorrências por Supervisor");
+                        } else {
+                            $('#title-correncias-supervisor').text("");
+                        }
+                        if (grafico1 && grafico1.dxChart('instance')) {
+                            grafico1.dxChart('instance').dispose();
+                            grafico1 = null;
+                        }
+                        if (grafico2 && grafico2.dxChart('instance')) {
+                            grafico2.dxChart('instance').dispose();
+                            grafico2 = null;
+                        }
+                        if (grafico3 && grafico3.dxChart('instance')) {
+                            grafico3.dxChart('instance').dispose();
+                            grafico3 = null;
+                        }
+                        if (grafico4 && grafico4.dxChart('instance')) {
+                            grafico4.dxChart('instance').dispose();
+                            grafico4 = null;
+                        }
+                        if (grafico5 && grafico5.dxChart('instance')) {
+                            grafico5.dxChart('instance').dispose();
+                            grafico5 = null;
+                        }
+                        if (grafico6 && grafico6.dxChart('instance')) {
+                            grafico6.dxChart('instance').dispose();
+                            grafico6 = null;
+                        }
+
+
                         // INICIO CARDS
                             // Acessar os dados do objeto
                             const infoCardsAtualResult = response.data.infoCardsAtualResult;
@@ -192,7 +223,6 @@
 
                         // INICIO GRAFICO1 
                             var dataSourceGrafico1 = response.data.infoGrafico1Result;
-
                             // Verifica se veio algo e se é um array
                             if (Array.isArray(dataSourceGrafico1)) {
                                 // Ordem correta dos dias da semana
@@ -327,430 +357,397 @@
                                         enabled: true
                                     }
                                 });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico1 != null) {
-                                    if (grafico1.dxChart("instance")) {
-                                        grafico1.dxChart("instance").dispose();
-                                    }
-                                }
                             }
                         // FIM GRAFICO1
 
                         // INICIO GRAFICO2 
-                            $('#title-correncias-supervisor').text("Ocorrências por Supervisor");
-                            var dataSourceGrafico2 = response.data.infoGrafico2Result.filter(item => item.QTD_FALTAS > 0).sort(function(a, b) {
-                                return b.QTD_FALTAS - a.QTD_FALTAS; // ordem decrescente
-                            });
+                            if (Array.isArray(response.data.infoGrafico2Result)) {
+                                var dataSourceGrafico2 = response.data.infoGrafico2Result.filter(item => item.QTD_FALTAS > 0).sort(function(a, b) {
+                                    return b.QTD_FALTAS - a.QTD_FALTAS; // ordem decrescente
+                                });
 
-                            // Verifica se veio algo e se é um array
-                            if (Array.isArray(dataSourceGrafico2)) {
-                                grafico2 = $("#chart2").dxChart({
-                                    dataSource: dataSourceGrafico2,
-                                    rotated: false, // Transforma em gráfico de barras horizontais
-                                    commonSeriesSettings: {
-                                        argumentField: "NOME_SUPERVISOR",
-                                        barPadding: 0.05
-                                    },
-                                    series: [
-                                        { 
-                                            valueField: "QTD_FALTAS", 
-                                            name: "Faltas", 
-                                            type: "bar",
-                                            label: {
-                                                visible: true,
-                                                backgroundColor: "#fff",
-                                                font: {
-                                                    color: "#d32f2f",
-                                                    weight: 600
+                                // Verifica se veio algo e se é um array
+                                if (Array.isArray(dataSourceGrafico2)) {
+                                    grafico2 = $("#chart2").dxChart({
+                                        dataSource: dataSourceGrafico2,
+                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            barPadding: 0.05
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "QTD_FALTAS", 
+                                                name: "Faltas", 
+                                                type: "bar",
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "#fff",
+                                                    font: {
+                                                        color: "#d32f2f",
+                                                        weight: 600
+                                                    }
                                                 }
+                                            },
+                                        ],
+                                        palette: [
+                                            "#d32f2f",
+                                        ],
+                                        argumentAxis: {
+                                            label: {
+                                                overlappingBehavior: "rotate",
+                                                rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                            },
+                                            grid: {
+                                                visible: false // Remove as linhas horizontais agora
                                             }
                                         },
-                                    ],
-                                    palette: [
-                                        "#d32f2f",
-                                    ],
-                                    argumentAxis: {
-                                        label: {
-                                            overlappingBehavior: "rotate",
-                                            rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                        valueAxis: {
+                                            grid: {
+                                                visible: false // Remove as linhas verticais agora
+                                            }
                                         },
-                                        grid: {
-                                            visible: false // Remove as linhas horizontais agora
+                                        legend: {
+                                            verticalAlignment: "bottom",
+                                            horizontalAlignment: "center"
+                                        },
+                                        tooltip: {
+                                            enabled: true
                                         }
-                                    },
-                                    valueAxis: {
-                                        grid: {
-                                            visible: false // Remove as linhas verticais agora
-                                        }
-                                    },
-                                    legend: {
-                                        verticalAlignment: "bottom",
-                                        horizontalAlignment: "center"
-                                    },
-                                    tooltip: {
-                                        enabled: true
-                                    }
-                                });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico2 != null) {
-                                    if (grafico2.dxChart("instance")) {
-                                        grafico2.dxChart("instance").dispose();
-                                    }
+                                    });
                                 }
                             }
+
                         // FIM GRAFICO2
 
                         // INICIO GRAFICO3
-                            var dataSourceGrafico3 = response.data.infoGrafico2Result.filter(item => item.QTD_HORAS_EXTRAS_2HRS > 0).sort(function(a, b) {
-                                return b.QTD_HORAS_EXTRAS_2HRS - a.QTD_HORAS_EXTRAS_2HRS; // ordem decrescente
-                            });
-
-                            // Verifica se veio algo e se é um array
-                            if (Array.isArray(dataSourceGrafico3)) {
-                                grafico3 = $("#chart3").dxChart({
-                                    dataSource: dataSourceGrafico3,
-                                    rotated: false, // Transforma em gráfico de barras horizontais
-                                    commonSeriesSettings: {
-                                        argumentField: "NOME_SUPERVISOR",
-                                        barPadding: 0.05
-                                    },
-                                    series: [
-                                        { 
-                                            valueField: "QTD_HORAS_EXTRAS_2HRS", 
-                                            name: "Horas Extras (+2h)", 
-                                            type: "bar",
-                                            label: {
-                                                visible: true,
-                                                backgroundColor: "#fff",
-                                                font: {
-                                                    color: "#0288d1",
-                                                    weight: 600
-                                                }
-                                            } 
-                                        },
-                                    ],
-                                    palette: [
-                                        "#0288d1",
-                                    ],
-                                    argumentAxis: {
-                                        label: {
-                                            overlappingBehavior: "rotate",
-                                            rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
-                                        },
-                                        grid: {
-                                            visible: false // Remove as linhas horizontais agora
-                                        }
-                                    },
-                                    valueAxis: {
-                                        grid: {
-                                            visible: false // Remove as linhas verticais agora
-                                        }
-                                    },
-                                    legend: {
-                                        verticalAlignment: "bottom",
-                                        horizontalAlignment: "center"
-                                    },
-                                    tooltip: {
-                                        enabled: true
-                                    }
+                            if (Array.isArray(response.data.infoGrafico2Result)) {
+                                var dataSourceGrafico3 = response.data.infoGrafico2Result.filter(item => item.QTD_HORAS_EXTRAS_2HRS > 0).sort(function(a, b) {
+                                    return b.QTD_HORAS_EXTRAS_2HRS - a.QTD_HORAS_EXTRAS_2HRS; // ordem decrescente
                                 });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico3 != null) {
-                                    if (grafico3.dxChart("instance")) {
-                                        grafico3.dxChart("instance").dispose();
-                                    }
+
+                                // Verifica se veio algo e se é um array
+                                if (Array.isArray(dataSourceGrafico3)) {
+                                    grafico3 = $("#chart3").dxChart({
+                                        dataSource: dataSourceGrafico3,
+                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            barPadding: 0.05
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "QTD_HORAS_EXTRAS_2HRS", 
+                                                name: "Horas Extras (+2h)", 
+                                                type: "bar",
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "#fff",
+                                                    font: {
+                                                        color: "#0288d1",
+                                                        weight: 600
+                                                    }
+                                                } 
+                                            },
+                                        ],
+                                        palette: [
+                                            "#0288d1",
+                                        ],
+                                        argumentAxis: {
+                                            label: {
+                                                overlappingBehavior: "rotate",
+                                                rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                            },
+                                            grid: {
+                                                visible: false // Remove as linhas horizontais agora
+                                            }
+                                        },
+                                        valueAxis: {
+                                            grid: {
+                                                visible: false // Remove as linhas verticais agora
+                                            }
+                                        },
+                                        legend: {
+                                            verticalAlignment: "bottom",
+                                            horizontalAlignment: "center"
+                                        },
+                                        tooltip: {
+                                            enabled: true
+                                        }
+                                    });
                                 }
                             }
                         // FIM GRAFICO3
 
                         // INICIO GRAFICO4
-                            var dataSourceGrafico4 = response.data.infoGrafico2Result.filter(item => item.QTD_INTRAJORNADA > 0).sort(function(a, b) {
-                                return b.QTD_INTRAJORNADA - a.QTD_INTRAJORNADA; // ordem decrescente
-                            });
+                            if (Array.isArray(response.data.infoGrafico2Result)) {
+                                var dataSourceGrafico4 = response.data.infoGrafico2Result.filter(item => item.QTD_INTRAJORNADA > 0).sort(function(a, b) {
+                                    return b.QTD_INTRAJORNADA - a.QTD_INTRAJORNADA; // ordem decrescente
+                                });
 
-                            // Verifica se veio algo e se é um array
-                            if (Array.isArray(dataSourceGrafico4)) {
-                                grafico4 = $("#chart4").dxChart({
-                                    dataSource: dataSourceGrafico4,
-                                    rotated: false, // Transforma em gráfico de barras horizontais
-                                    commonSeriesSettings: {
-                                        argumentField: "NOME_SUPERVISOR",
-                                        barPadding: 0.05
-                                    },
-                                    series: [
-                                        { 
-                                            valueField: "QTD_INTRAJORNADA", 
-                                            name: "Intrajornada", 
-                                            type: "bar",
-                                            label: {
-                                                visible: true,
-                                                backgroundColor: "#fff",
-                                                font: {
-                                                    color: "#fbc02d",
-                                                    weight: 600
+                                // Verifica se veio algo e se é um array
+                                if (Array.isArray(dataSourceGrafico4)) {
+                                    grafico4 = $("#chart4").dxChart({
+                                        dataSource: dataSourceGrafico4,
+                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            barPadding: 0.05
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "QTD_INTRAJORNADA", 
+                                                name: "Intrajornada", 
+                                                type: "bar",
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "#fff",
+                                                    font: {
+                                                        color: "#fbc02d",
+                                                        weight: 600
+                                                    }
                                                 }
+                                            },
+                                        ],
+                                        palette: [
+                                            "#fbc02d",
+                                        ],
+                                        argumentAxis: {
+                                            label: {
+                                                overlappingBehavior: "rotate",
+                                                rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                            },
+                                            grid: {
+                                                visible: false // Remove as linhas horizontais agora
                                             }
                                         },
-                                    ],
-                                    palette: [
-                                        "#fbc02d",
-                                    ],
-                                    argumentAxis: {
-                                        label: {
-                                            overlappingBehavior: "rotate",
-                                            rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                        valueAxis: {
+                                            grid: {
+                                                visible: false // Remove as linhas verticais agora
+                                            }
                                         },
-                                        grid: {
-                                            visible: false // Remove as linhas horizontais agora
+                                        legend: {
+                                            verticalAlignment: "bottom",
+                                            horizontalAlignment: "center"
+                                        },
+                                        tooltip: {
+                                            enabled: true
                                         }
-                                    },
-                                    valueAxis: {
-                                        grid: {
-                                            visible: false // Remove as linhas verticais agora
-                                        }
-                                    },
-                                    legend: {
-                                        verticalAlignment: "bottom",
-                                        horizontalAlignment: "center"
-                                    },
-                                    tooltip: {
-                                        enabled: true
-                                    }
-                                });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico4 != null) {
-                                    if (grafico4.dxChart("instance")) {
-                                        grafico4.dxChart("instance").dispose();
-                                    }
+                                    });
                                 }
                             }
                         // FIM GRAFICO4
 
                         // INICIO GRAFICO5
-                            var dataSourceGrafico5 = response.data.infoGrafico2Result.filter(item => item.QTD_INTERJORNADA > 0).sort(function(a, b) {
-                                return b.QTD_INTERJORNADA - a.QTD_INTERJORNADA; // ordem decrescente
-                            });
-
-                            // Verifica se veio algo e se é um array
-                            if (Array.isArray(dataSourceGrafico5)) {
-                                grafico5 = $("#chart5").dxChart({
-                                    dataSource: dataSourceGrafico5,
-                                    rotated: false, // Transforma em gráfico de barras horizontais
-                                    commonSeriesSettings: {
-                                        argumentField: "NOME_SUPERVISOR",
-                                        barPadding: 0.05
-                                    },
-                                    series: [
-                                        { 
-                                            valueField: "QTD_INTERJORNADA", 
-                                            name: "Interjornada", 
-                                            type: "bar",
-                                            label: {
-                                                visible: true,
-                                                backgroundColor: "#fff",
-                                                font: {
-                                                    color: "#7fa47f",
-                                                    weight: 600
-                                                }
-                                            } 
-                                        },
-                                    ],
-                                    palette: [
-                                        "#7fa47f",
-                                    ],
-                                    argumentAxis: {
-                                        label: {
-                                            overlappingBehavior: "rotate",
-                                            rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
-                                        },
-                                        grid: {
-                                            visible: false // Remove as linhas horizontais agora
-                                        }
-                                    },
-                                    valueAxis: {
-                                        grid: {
-                                            visible: false // Remove as linhas verticais agora
-                                        }
-                                    },
-                                    legend: {
-                                        verticalAlignment: "bottom",
-                                        horizontalAlignment: "center"
-                                    },
-                                    tooltip: {
-                                        enabled: true
-                                    }
+                            if (Array.isArray(response.data.infoGrafico2Result)) {
+                                var dataSourceGrafico5 = response.data.infoGrafico2Result.filter(item => item.QTD_INTERJORNADA > 0).sort(function(a, b) {
+                                    return b.QTD_INTERJORNADA - a.QTD_INTERJORNADA; // ordem decrescente
                                 });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico5 != null) {
-                                    if (grafico5.dxChart("instance")) {
-                                        grafico5.dxChart("instance").dispose();
-                                    }
+
+                                // Verifica se veio algo e se é um array
+                                if (Array.isArray(dataSourceGrafico5)) {
+                                    grafico5 = $("#chart5").dxChart({
+                                        dataSource: dataSourceGrafico5,
+                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            barPadding: 0.05
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "QTD_INTERJORNADA", 
+                                                name: "Interjornada", 
+                                                type: "bar",
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "#fff",
+                                                    font: {
+                                                        color: "#7fa47f",
+                                                        weight: 600
+                                                    }
+                                                } 
+                                            },
+                                        ],
+                                        palette: [
+                                            "#7fa47f",
+                                        ],
+                                        argumentAxis: {
+                                            label: {
+                                                overlappingBehavior: "rotate",
+                                                rotationAngle: -45 // Alternativa ao rotate para facilitar leitura
+                                            },
+                                            grid: {
+                                                visible: false // Remove as linhas horizontais agora
+                                            }
+                                        },
+                                        valueAxis: {
+                                            grid: {
+                                                visible: false // Remove as linhas verticais agora
+                                            }
+                                        },
+                                        legend: {
+                                            verticalAlignment: "bottom",
+                                            horizontalAlignment: "center"
+                                        },
+                                        tooltip: {
+                                            enabled: true
+                                        }
+                                    });
                                 }
                             }
                         // FIM GRAFICO5  
                         
-                        
                         // INICIO GRAFICO6
-                            var dataSourceGrafico6 = response.data.infoGrafico6Result.sort(function(a, b) {
-                                return a.SALDO - b.SALDO; // ordem decrescente
-                            });
-
-                            // Verifica se veio algo e se é um array
-                            if (Array.isArray(dataSourceGrafico6)) {
-                                // Defina seus valores de referência
-                                const saldoMinimo = -1800;
-                                const saldoMaximo = 1800;
-
-                                grafico6 = $("#chart6").dxChart({
-                                    dataSource: dataSourceGrafico6,
-                                    rotated: true,
-                                    size: {
-                                        height: 700
-                                    },
-                                    commonSeriesSettings: {
-                                        argumentField: "NOME_SUPERVISOR",
-                                        barPadding: 0.05
-                                    },
-                                    series: [
-                                        { 
-                                            valueField: "SALDO", 
-                                            name: "Saldo Horas", 
-                                            type: "bar",
-                                            label: {
-                                                visible: true,
-                                                backgroundColor: "transparent",
-                                                font: {
-                                                    color: '#b3afaf', // Cor preta para todos os labels
-                                                    weight: 600
-                                                },
-                                                position: function(point) {
-                                                    // Posiciona à direita para valores positivos, esquerda para negativos
-                                                    return point.value >= 0 ? 'outside' : 'inside';
-                                                },
-                                                alignment: function(point) {
-                                                    // Alinha à direita para positivos, esquerda para negativos
-                                                    return point.value >= 0 ? 'right' : 'left';
-                                                },
-                                                customizeText: function(point) {
-                                                    var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
-                                                    return item?.SALDO_FORMAT || point.value.toFixed(2);
-                                                }
-                                            } 
-                                        }
-                                    ],
-                                    customizePoint: function(point) {
-                                        if(point.value < saldoMinimo) {
-                                            return {
-                                                color: '#d63031',
-                                                hoverStyle: { color: '#c0392b' },
-                                                selectionStyle: { color: '#a71f1f' },
-                                                label: { font: { color: '#ffffff' } }
-                                            };
-                                        } 
-                                        if(point.value > saldoMaximo) {
-                                            return {
-                                                color: '#2e7d32',
-                                                hoverStyle: { color: '#1b5e20' },
-                                                selectionStyle: { color: '#0d470f' },
-                                                label: { font: { color: '#ffffff' } }
-                                            };
-                                        }
-                                        if(point.value < 0) {
-                                            return {
-                                                color: '#ff6b6b',
-                                                hoverStyle: { color: '#ff5252' },
-                                                selectionStyle: { color: '#ff3838' },
-                                                label: { font: { color: '#000000' } }
-                                            };
-                                        } else {
-                                            return {
-                                                color: '#7fa47f',
-                                                hoverStyle: { color: '#6cbe6c' },
-                                                selectionStyle: { color: '#5cb860' },
-                                                label: { font: { color: '#000000' } }
-                                            };
-                                        }
-                                    },
-                                    argumentAxis: {
-                                        label: {
-                                            visible: true,  // Mantém os nomes dos supervisores
-                                            overlappingBehavior: "stagger",
-                                            staggeringSpacing: 5
-                                        },
-                                        grid: { visible: false },
-                                        tickInterval: 1
-                                    },
-                                    valueAxis: {
-                                        label: {
-                                            visible: false  // Remove os valores numéricos
-                                        },
-                                        grid: { visible: false },  // Remove as linhas de grade
-                                        tickInterval: 500,
-                                        constantLines: [{
-                                            label: { 
-                                                text: '',
-                                                horizontalAlignment: 'right',
-                                                font: { color: '#d63031', weight: 'bold' }
-                                            },
-                                            width: 2,
-                                            value: saldoMinimo,
-                                            color: '#d63031',
-                                            dashStyle: 'dash',
-                                            paddingTopBottom: 15
-                                        }, {
-                                            label: { 
-                                                text: '',
-                                                horizontalAlignment: 'left',
-                                                font: { color: '#2e7d32', weight: 'bold' }
-                                            },
-                                            width: 2,
-                                            value: saldoMaximo,
-                                            color: '#2e7d32',
-                                            dashStyle: 'dash',
-                                            paddingTopBottom: 15
-                                        }],
-                                        strips: [{
-                                            startValue: 0,
-                                            endValue: 0,
-                                            color: '#666',
-                                            opacity: 0.3,
-                                            label: { text: 'Linha de equilíbrio' }
-                                        }]
-                                    },
-                                    legend: {
-                                        visible: false
-                                    },
-                                    // tooltip: {
-                                    //     enabled: true,
-                                    //     customizeTooltip: function(point) {
-                                    //         var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
-                                    //         let status = '';
-                                    //         if(point.value < saldoMinimo) status = ' (Abaixo do limite mínimo)';
-                                    //         else if(point.value > saldoMaximo) status = ' (Acima do limite máximo)';
-                                            
-                                    //         return {
-                                    //             text: `<strong>${point.argument}</strong><br/>Saldo: ${item?.SALDO_FORMAT || point.valueText}${status}`,
-                                    //             color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
-                                    //             borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
-                                    //         };
-                                    //     }
-                                    // },
-                                    title: {
-                                        text: 'Saldo de Horas',
-                                        subtitle: 'Valores mais escuros para > 30horas'
-                                    }
+                            if (Array.isArray(response.data.infoGrafico6Result)) {
+                                var dataSourceGrafico6 = response.data.infoGrafico6Result.sort(function(a, b) {
+                                    return a.SALDO - b.SALDO; // ordem decrescente
                                 });
-                            } else {
-                                // Destroi o grafico antes de inicia-la novamente.
-                                if (grafico6 != null) {
-                                    if (grafico6.dxChart("instance")) {
-                                        grafico6.dxChart("instance").dispose();
-                                    }
+
+                                // Verifica se veio algo e se é um array
+                                if (Array.isArray(dataSourceGrafico6)) {
+                                    // Defina seus valores de referência
+                                    const saldoMinimo = -1800;
+                                    const saldoMaximo = 1800;
+
+                                    grafico6 = $("#chart6").dxChart({
+                                        dataSource: dataSourceGrafico6,
+                                        rotated: true,
+                                        size: {
+                                            height: 700
+                                        },
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            barPadding: 0.05
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "SALDO", 
+                                                name: "Saldo Horas", 
+                                                type: "bar",
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "transparent",
+                                                    font: {
+                                                        color: '#b3afaf', // Cor preta para todos os labels
+                                                        weight: 600
+                                                    },
+                                                    position: function(point) {
+                                                        // Posiciona à direita para valores positivos, esquerda para negativos
+                                                        return point.value >= 0 ? 'outside' : 'inside';
+                                                    },
+                                                    alignment: function(point) {
+                                                        // Alinha à direita para positivos, esquerda para negativos
+                                                        return point.value >= 0 ? 'right' : 'left';
+                                                    },
+                                                    customizeText: function(point) {
+                                                        var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
+                                                        return item?.SALDO_FORMAT || point.value.toFixed(2);
+                                                    }
+                                                } 
+                                            }
+                                        ],
+                                        customizePoint: function(point) {
+                                            if(point.value < saldoMinimo) {
+                                                return {
+                                                    color: '#d63031',
+                                                    hoverStyle: { color: '#c0392b' },
+                                                    selectionStyle: { color: '#a71f1f' },
+                                                    label: { font: { color: '#ffffff' } }
+                                                };
+                                            } 
+                                            if(point.value > saldoMaximo) {
+                                                return {
+                                                    color: '#2e7d32',
+                                                    hoverStyle: { color: '#1b5e20' },
+                                                    selectionStyle: { color: '#0d470f' },
+                                                    label: { font: { color: '#ffffff' } }
+                                                };
+                                            }
+                                            if(point.value < 0) {
+                                                return {
+                                                    color: '#ff6b6b',
+                                                    hoverStyle: { color: '#ff5252' },
+                                                    selectionStyle: { color: '#ff3838' },
+                                                    label: { font: { color: '#000000' } }
+                                                };
+                                            } else {
+                                                return {
+                                                    color: '#7fa47f',
+                                                    hoverStyle: { color: '#6cbe6c' },
+                                                    selectionStyle: { color: '#5cb860' },
+                                                    label: { font: { color: '#000000' } }
+                                                };
+                                            }
+                                        },
+                                        argumentAxis: {
+                                            label: {
+                                                visible: true,  // Mantém os nomes dos supervisores
+                                                overlappingBehavior: "stagger",
+                                                staggeringSpacing: 5
+                                            },
+                                            grid: { visible: false },
+                                            tickInterval: 1
+                                        },
+                                        valueAxis: {
+                                            label: {
+                                                visible: false  // Remove os valores numéricos
+                                            },
+                                            grid: { visible: false },  // Remove as linhas de grade
+                                            tickInterval: 500,
+                                            constantLines: [{
+                                                label: { 
+                                                    text: '',
+                                                    horizontalAlignment: 'right',
+                                                    font: { color: '#d63031', weight: 'bold' }
+                                                },
+                                                width: 2,
+                                                value: saldoMinimo,
+                                                color: '#d63031',
+                                                dashStyle: 'dash',
+                                                paddingTopBottom: 15
+                                            }, {
+                                                label: { 
+                                                    text: '',
+                                                    horizontalAlignment: 'left',
+                                                    font: { color: '#2e7d32', weight: 'bold' }
+                                                },
+                                                width: 2,
+                                                value: saldoMaximo,
+                                                color: '#2e7d32',
+                                                dashStyle: 'dash',
+                                                paddingTopBottom: 15
+                                            }],
+                                            strips: [{
+                                                startValue: 0,
+                                                endValue: 0,
+                                                color: '#666',
+                                                opacity: 0.3,
+                                                label: { text: 'Linha de equilíbrio' }
+                                            }]
+                                        },
+                                        legend: {
+                                            visible: false
+                                        },
+                                        // tooltip: {
+                                        //     enabled: true,
+                                        //     customizeTooltip: function(point) {
+                                        //         var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
+                                        //         let status = '';
+                                        //         if(point.value < saldoMinimo) status = ' (Abaixo do limite mínimo)';
+                                        //         else if(point.value > saldoMaximo) status = ' (Acima do limite máximo)';
+                                                
+                                        //         return {
+                                        //             text: `<strong>${point.argument}</strong><br/>Saldo: ${item?.SALDO_FORMAT || point.valueText}${status}`,
+                                        //             color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
+                                        //             borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
+                                        //         };
+                                        //     }
+                                        // },
+                                        title: {
+                                            text: 'Saldo de Horas',
+                                            subtitle: 'Valores mais escuros para > 30horas'
+                                        }
+                                    });
                                 }
                             }
                         // FIM GRAFICO6 
