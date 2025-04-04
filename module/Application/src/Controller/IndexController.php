@@ -32,9 +32,11 @@ class IndexController extends BaseController
         if (!isset($session->user)) {
             return $this->redirect()->toRoute('login');
         }
-    
-        // Determina qual dashboard carregar baseado em parâmetro ou lógica específica
-        $dashboard = 'recursos-humanos1';
+        $dashboard = null;
+        if ($session->user['id_departamento'] == 5 || $session->user['role'] == 'Administrador') { // dashboard Recursos Humanos
+            // Determina qual dashboard carregar baseado em parâmetro ou lógica específica
+            $dashboard = 'recursos-humanos1';
+        } 
 
         return new ViewModel([
             'idUsuario' => $session->user['id'],

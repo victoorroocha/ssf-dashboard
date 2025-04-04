@@ -149,45 +149,75 @@
         font-size: 10px;
         font-weight: bold;
     }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
-    <!-- Período de Apuração -->
-    <div class="period-title">
-        Período de Apuração: <span id="periodo-apuracao"></span>
-    </div>
 
     <!-- Content Row -->
     <div class="row">
         <div class="col-lg-12 mb-4">
             <!-- Approach -->
             <div class="card shadow mb-4">
-                <div class="card-body">
-                    <p>Dashboard Apurações</p>
 
-                    <div id="form-container"></div>
+                <?php if (isset($this->dashboard) && !empty($this->dashboard)) { ?>
+                    <div class="card-body">
+                        <p>Dashboard Apurações</p>
 
-                    <!-- Container centralizado para o Range Selector -->
-                    <div class="d-flex justify-content-center mb-4">
-                        <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
-                            <div id="range-selector"></div>
+                        <div id="form-container"></div>
+
+                        <!-- Container centralizado para o Range Selector -->
+                        <div class="d-flex justify-content-center mb-4">
+                            <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
+                                <div id="range-selector"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <?php if ($this->idUsuario == 1) { //Apenas meu usuario ?>
                         <?php 
                             // Carrega o dashboard específico baseado no parâmetro
                             $dashboardFile = 'application/index/dashboard-' . $this->dashboard . '.phtml';
                             echo $this->partial($dashboardFile, []);
                         ?>
-                    <?php } ?>
-                </div>
+                    </div>
+                <?php } else { ?>
+                    <div class="card-body">
+                        <p>Dashboard em desenvolvimento...</p>
+                    </div>
+                <?php }  ?>
             </div>
         </div>
     </div>
 </div>
 
+
+<!-- loading global -->
+<div id="globalLoading" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;">
+    <div style="
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;"></div>
+    <div style="font-size: 18px; color: #333;">Carregando dashboard...</div>
+</div>
 
 
 <script>
@@ -247,6 +277,7 @@
             onFieldDataChanged: function(e) {
                 // Atualiza a variável global quando um campo é alterado
                 formSelections[e.dataField] = e.value;
+                
                 atualizarInfosDashboad();
             }
         }).dxForm("instance");
