@@ -1,5 +1,10 @@
+<!-- Botão para impressão (visível apenas na tela) -->
+<!-- <button onclick="" style="position: fixed; bottom: 20px; right: 50px; z-index: 1000; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+    Exportar para PDF
+</button> -->
+
 <!-- Período de Apuração -->
-<div class="period-title">
+<div class="period-title" id="print-area">
     Período de Apuração: <span id="periodo-apuracao"></span>
 </div>
 
@@ -101,11 +106,9 @@
 </div>
 
 <!-- Seção do Gráfico (abaixo dos cards) -->
-<div id="chart1"></div>
+<div id="chart1" id="print-area"></div>
 
- <!-- Período de Apuração -->
- <div class="period-title"><span id="title-correncias-supervisor"></span>
-    </div>
+<div class="period-title"><span id="title-correncias-supervisor"></span></div>
 
 <!-- Container para os gráficos lado a lado -->
 <div class="row" style="margin: 0 -5px;">
@@ -128,7 +131,6 @@
 </div>
 
 <div id="chart6"></div>
-
 
 <script>
     var grafico1 = null;
@@ -765,4 +767,26 @@
             });
         });
     }
+
+    document.getElementById('printButton').addEventListener('click', function() {
+        // Elemento que queremos converter em PDF
+        const element = document.querySelector('.card-body');
+        
+        // Configurações do PDF
+        const opt = {
+            margin:       10,
+            filename:     'relatorio_rh.pdf',
+            image:       { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                allowTaint: true
+            },
+            jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Gerar PDF
+        html2pdf().set(opt).from(element).save();
+    });
 </script>

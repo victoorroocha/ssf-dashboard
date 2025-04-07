@@ -154,6 +154,7 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
 </style>
 
 <!-- Begin Page Content -->
@@ -164,7 +165,6 @@
         <div class="col-lg-12 mb-4">
             <!-- Approach -->
             <div class="card shadow mb-4">
-
                 <?php if (isset($this->dashboard) && !empty($this->dashboard)) { ?>
                     <div class="card-body">
                         <p>Dashboard Apurações</p>
@@ -177,7 +177,6 @@
                                 <div id="range-selector"></div>
                             </div>
                         </div>
-
                         <?php 
                             // Carrega o dashboard específico baseado no parâmetro
                             $dashboardFile = 'application/index/dashboard-' . $this->dashboard . '.phtml';
@@ -218,7 +217,6 @@
         margin-bottom: 15px;"></div>
     <div style="font-size: 18px; color: #333;">Carregando dashboard...</div>
 </div>
-
 
 <script>
     // Variáveis globais para armazenar os valores selecionados
@@ -352,6 +350,10 @@
                 atualizarInfosDashboad();
             }
         }).dxRangeSelector("instance");
+
+
+
+
     });
 </script>
 <!-- /.container-fluid -->
