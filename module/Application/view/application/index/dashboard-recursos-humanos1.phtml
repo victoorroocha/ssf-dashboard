@@ -754,21 +754,22 @@
                                         legend: {
                                             visible: false
                                         },
-                                        // tooltip: {
-                                        //     enabled: true,
-                                        //     customizeTooltip: function(point) {
-                                        //         var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
-                                        //         let status = '';
-                                        //         if(point.value < saldoMinimo) status = ' (Abaixo do limite mínimo)';
-                                        //         else if(point.value > saldoMaximo) status = ' (Acima do limite máximo)';
+                                        tooltip: {
+                                            enabled: true,
+                                            customizeTooltip: function(point) {
+                                                var item = dataSourceGrafico6.find(i => i.NOME_SUPERVISOR === point.argument);
+
+                                                let status = '';
+                                                if(point.value < saldoMinimo) status = ' (Abaixo do limite mínimo)';
+                                                else if(point.value > saldoMaximo) status = ' (Acima do limite máximo)';
                                                 
-                                        //         return {
-                                        //             text: `<strong>${point.argument}</strong><br/>Saldo: ${item?.SALDO_FORMAT || point.valueText}${status}`,
-                                        //             color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
-                                        //             borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
-                                        //         };
-                                        //     }
-                                        // },
+                                                return {
+                                                    text: `<strong>${point.argument}</strong><br/>Total de Colaboradores: ${item.QTD_FUNCIONARIO}<br/>Com Saldo Positivo: ${item.QTD_POSITIVO}<br/>Com Saldo Negativo: ${item.QTD_NEGATIVO}<br/>Saldo Total: ${item?.SALDO_FORMAT || point.valueText}${status}`,
+                                                    color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
+                                                    borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
+                                                };
+                                            }
+                                        },
                                         title: {
                                             text: 'Saldo de Horas',
                                             subtitle: 'Valores mais escuros para > 30horas'
