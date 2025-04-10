@@ -13,7 +13,7 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
-            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -231,7 +231,7 @@ class RecursosHumanosRepository
         if (!empty($dataInicial)) {
             $dataFinal = !empty($dataFinal) ? $dataFinal : date('Y-m-d');
             $wheresExternos .= " AND DADOS.CMPLAN BETWEEN TO_DATE('{$dataInicial}', 'YYYY-MM-DD') AND TO_DATE('{$dataFinal}', 'YYYY-MM-DD')";
-            $wheresInternos .= " AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA <= R011LAN.DATLAN THEN 1 ELSE 0 END = 0"; // não considerar saldos de colaboradores demitidos até a data de lançamento.
+            $wheresInternos .= " AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0"; // não considerar saldos de colaboradores demitidos até a data de lançamento.
         }
         
         return "SELECT 
@@ -252,6 +252,15 @@ class RecursosHumanosRepository
                     ,DADOS.NOMLOC 
                     ,DADOS.USU_NUMCAD
                     ,DADOS.NOME_SUPERVISOR
+                    ,(
+                        SELECT COUNT(*) 
+                        FROM (
+                        SELECT SYSDATE + LEVEL - 1 AS DATA
+                        FROM DUAL
+                        CONNECT BY SYSDATE + LEVEL - 1 <= DADOS.DATCMP
+                        )
+                        WHERE TO_CHAR(DATA, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH') NOT IN ('SAT', 'SUN')
+                    ) AS DIAS_UTEIS_FECHAMENTO_PONTO
                     ,DADOS.MES_REFERENCIA
                     ,DADOS.ANO_REFERENCIA
                     ,DADOS.CMPLAN
@@ -325,7 +334,7 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
-            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+             $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -414,6 +423,7 @@ class RecursosHumanosRepository
                         ,CASE WHEN R034FUN.SITAFA <> 7 AND R034FUN.DATAFA <> '31/12/1900' AND (TO_NUMBER(TO_CHAR(R034FUN.DATAFA, 'MM')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'MM')) AND TO_NUMBER(TO_CHAR(R034FUN.DATAFA, 'YYYY')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'YYYY'))) THEN R066APU.NUMCAD ELSE NULL END AS NUMCAD_AFASTADO
                         ,CASE WHEN R034FUN.DATADM <> '31/12/1900' AND (TO_NUMBER(TO_CHAR(R034FUN.DATADM, 'MM')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'MM')) AND TO_NUMBER(TO_CHAR(R034FUN.DATADM, 'YYYY')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'YYYY'))) THEN R066APU.NUMCAD ELSE NULL END AS NUMCAD_ADMITIDOS
                         ,CASE WHEN R034FUN.SITAFA = 7 AND R034FUN.DATAFA <> '31/12/1900' AND (TO_NUMBER(TO_CHAR(R034FUN.DATAFA, 'MM')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'MM')) AND TO_NUMBER(TO_CHAR(R034FUN.DATAFA, 'YYYY')) = TO_NUMBER(TO_CHAR(R066APU.DATAPU, 'YYYY'))) THEN R066APU.NUMCAD ELSE NULL END AS NUMCAD_DEMITIDO
+                        ,CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END as FLG_DEMITIDOS
                     FROM VETORH.R066APU
                     LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R066APU.NUMEMP AND R034FUN.TIPCOL = R066APU.TIPCOL AND R034FUN.NUMCAD = R066APU.NUMCAD 
                     LEFT JOIN VETORH.R006ESC ON R006ESC.CODESC = R034FUN.CODESC
@@ -549,7 +559,7 @@ class RecursosHumanosRepository
                         AND R011LAN.NUMEMP = 5
                         AND TO_NUMBER(TO_CHAR(R011LAN.DATLAN, 'YYYY')) >= 2023
                         AND R011LAN.ORILAN = 'A'
-                        AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA <= R011LAN.DATLAN THEN 1 ELSE 0 END = 0
+                        AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
                         {$wheresInternos}
                         GROUP BY R011LAN.NUMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R011LAN.DATCMP,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR
                         ORDER BY R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.DATLAN
@@ -571,7 +581,7 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
-            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -744,7 +754,7 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
-            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA <= R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -995,7 +1005,7 @@ class RecursosHumanosRepository
                     AND SUPERV.NUMEMP = 5
                     AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
                     AND R011LAN.ORILAN = 'A'
-                    AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA <= R011LAN.DATLAN THEN 1 ELSE 0 END = 0
+                    AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
                     {$wheresInternos}
                     GROUP BY R011LAN.NUMEMP,R030EMP.NOMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R034FUN.CODFIL,R030FIL.NOMFIL,R034FUN.CODCCU,R034FUN.NUMCRA,R034FUN.NOMFUN,R034FUN.DATADM,R034FUN.CODCAR,R024CAR.TITCAR,R034FUN.TABORG,R034FUN.NUMLOC, R034FUN.DATAFA,R016ORN.NOMLOC,R034CPL.USU_NUMCAD,SUPERV.NOMFUN,R011LAN.DATCMP
                             ,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR

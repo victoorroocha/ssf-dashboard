@@ -258,9 +258,11 @@
                                             SALDO_SUMMARY: isMostRecent ? item.SALDO : 0, 
                                             TOTAL_COLABORADOR_SUMMARY: isMostRecent ? 1 : 0,
                                             SALDO_POSIVO_SUMMARY: isMostRecent && item.SALDO > 0 ? 1 : 0,
-                                            SALDO_NEGATIVO_SUMMARY: isMostRecent && item.SALDO < 0 ? 1 : 0
+                                            SALDO_NEGATIVO_SUMMARY: isMostRecent && item.SALDO < 0 ? 1 : 0,
+                                            MEDIA_HORAS_DIA: item.SALDO < 0 ? Math.round(Math.abs(parseInt(item.SALDO)) / parseInt(item.DIAS_UTEIS_FECHAMENTO_PONTO)) : 0
                                         };
                                     });
+
 
                                     return {
                                         data: markedData, // Usar os dados marcados
@@ -398,6 +400,16 @@
                             },
                             caption: 'Saldo Horas',
                             width: 200
+                        },
+                        {
+                            dataField: 'MEDIA_HORAS_DIA',
+                            dataType: 'number',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
+                            },
+                            caption: 'Compensação Média Diária',
+                            width: 150
                         },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
                     ],                
