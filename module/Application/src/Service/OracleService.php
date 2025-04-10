@@ -23,6 +23,14 @@ class OracleService
         if (!$this->connection) {
             throw new \Exception("Erro de conexão Oracle: " . oci_error()['message']);
         }
+
+        // Ajusta o formato de data da sessão
+        $stmt = oci_parse($this->connection, "ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY'");
+        if (!oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            throw new \Exception("Erro ao ajustar formato de data: " . $error['message']);
+        }
+        oci_free_statement($stmt);
     }
 
     /**
@@ -34,6 +42,7 @@ class OracleService
     {
         // Prepara a consulta
         $stid = oci_parse($this->connection, $sql);
+
 
         // Executa a consulta
         if (!oci_execute($stid)) {
