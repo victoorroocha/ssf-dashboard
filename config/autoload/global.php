@@ -26,4 +26,18 @@ return [
         'password'         => 'Sapiens',
         'connection_string' => '192.168.0.5:1521/SSF',
     ],
+
+    //conexão com a AWS
+    // 'oracle' => [
+    //     'username'         => 'Sapiens',
+    //     'password'         => 'Sapiens',
+    //     'connection_string' => 'ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com:1521/SSF',
+    // ],
+    // 'oracle' => [
+    //     'username'         => 'Sapiens',
+    //     'password'         => 'Sapiens',
+    //     'connection_string' => "(DESCRIPTION=
+    //                             (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
+    //                             (CONNECT_DATA=(SERVICE_NAME=SSF)))",
+    // ],
 ];
