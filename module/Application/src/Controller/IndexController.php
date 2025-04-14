@@ -33,8 +33,8 @@ class IndexController extends BaseController
             return $this->redirect()->toRoute('login');
         }
         $dashboard = null;
+        // Determina qual dashboard carregar baseado em departamento
         if ((isset($session->user['id_departamento']) && $session->user['id_departamento'] == 5)) { // dashboard Recursos Humanos
-            // Determina qual dashboard carregar baseado em parâmetro ou lógica específica
             $dashboard = 'recursos-humanos1';
         } 
 
