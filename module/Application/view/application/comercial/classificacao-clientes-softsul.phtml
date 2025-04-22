@@ -578,7 +578,7 @@
                     format: { precision: 2 },
                     cellTemplate: function(container, options) {
                         const valor = Number(options.value);
-                        const isPositive = valor >= 0;
+                        const isPositive = valor > 0;
 
                         const textoFormatado = valor.toLocaleString("pt-BR", {
                             minimumFractionDigits: 2,
