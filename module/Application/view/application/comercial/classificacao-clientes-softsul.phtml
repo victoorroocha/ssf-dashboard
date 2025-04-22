@@ -147,6 +147,7 @@
         if ($card.hasClass("ativo")) {
             $card.removeClass("ativo");
             if (clientesGrid) {
+                $('#globalLoading').show(); // Mostra o loading
                 clientesGrid.clearFilter(); // limpa todos os filtros
             }
         } else {
@@ -156,6 +157,7 @@
 
             // Aplica o filtro na grid
             if (clientesGrid) {
+                $('#globalLoading').show(); // Mostra o loading
                 clientesGrid.filter(["CATEGORIA_CLIENTE_ID", "=", idSelecionado]);
             }
         }
@@ -994,6 +996,9 @@
                         }
                     }
                 });
+            },
+            onContentReady: function (e) {
+                $('#globalLoading').hide(); // Esconde o loading assim que a grid estiver pronta
             }
         }).dxDataGrid("instance");
     }
