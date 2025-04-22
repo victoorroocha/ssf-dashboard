@@ -10,6 +10,7 @@ use Laminas\ServiceManager\Factory\InvokableFactory;
 use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
 use Application\Repository\ControladoriaRepository;  // Importar repositório
 use Application\Repository\RecursosHumanosRepository;  // Importar repositório
+use Application\Repository\ComercialRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
@@ -125,7 +126,7 @@ return [
                 ],
             ],
             // Controladoria
-             'controladoria' => [
+            'controladoria' => [
                 'type'    => Segment::class,
                 'options' => [
                     'route'    => '/controladoria[/:action][/:id]',  
@@ -140,7 +141,7 @@ return [
                 ],
             ],
             // Recursos Humanos
-             'recursos-humanos' => [
+            'recursos-humanos' => [
                 'type'    => Segment::class,
                 'options' => [
                     'route'    => '/recursos-humanos[/:action][/:id]',  
@@ -150,6 +151,21 @@ return [
                     ],
                     'defaults' => [
                         'controller' => Controller\RecursosHumanosController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
+            // Comercial
+            'comercial' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/comercial[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\ComercialController::class,
                         'action'     => 'index', 
                     ],
                 ],
@@ -175,6 +191,7 @@ return [
             Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
             Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
             Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
+            Controller\ComercialController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -220,6 +237,7 @@ return [
             CreditoECobrancaRepository::class => InvokableFactory::class, 
             ControladoriaRepository::class => InvokableFactory::class, 
             RecursosHumanosRepository::class => InvokableFactory::class, 
+            ComercialRepository::class => InvokableFactory::class, 
         ],
     ],
     'view_manager' => [

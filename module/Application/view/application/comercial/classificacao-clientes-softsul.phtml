@@ -1,0 +1,1538 @@
+<style>
+    .category-card {
+        flex: 1 0 200px;
+        background: #f4f4f4;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.2s ease-in-out;
+    }
+    .category-card:hover {
+        background-color: #e8f5e9;
+        transform: scale(1.03);
+    } 
+    .category-card .count {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 10px;
+        color: #2e7d32;
+    }
+    .cards-container {
+        margin-top: 20px;
+    }
+    .info-icon {
+        cursor: help;
+        font-size: 12px;
+        vertical-align: middle;
+        color: #666;
+    }
+    .info-icon:hover {
+        color: #333;
+    }
+    .category-card.ativo {
+        background-color: #c8e6c9; /* verde claro */
+        border: 2px solid #388e3c; /* verde escuro */
+        transform: scale(1.05);
+    }
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Comercial</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Classificação Clientes (Base Softsul)</p>
+
+                    <!-- Container de Cards -->
+                    <div class="cards-container" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+                        <div class="category-card" data-category="Raiz Forte" data-id="1">
+                            🌳 <strong>Raiz Forte</strong>
+                            <span class="info-icon" title="🌟 Raiz Forte: Clientes premium — antigos, recorrentes, ticket alto e TSI > 15%. São fiéis e altamente valiosos.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Sementes de Ouro" data-id="2">
+                            🌟 <strong>Sementes de Ouro</strong>
+                            <span class="info-icon" title="🌿 Sementes de Ouro: Clientes consistentes, com bom histórico de compra, ticket saudável e TSI relevante. Um nível abaixo do topo.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Pé de Safra" data-id="3">
+                            🌱 <strong>Pé de Safra</strong>
+                            <span class="info-icon" title="🌱 Pé de Safra: Clientes ativos, ritmo de compra mais espaçado, mas ainda envolvidos. Podem crescer.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Terra Promissora" data-id="4">
+                            🌾 <strong>Terra Promissora</strong>
+                            <span class="info-icon" title="🌾 Terra Promissora: Relativamente novos (até 6 meses), ticket > 100k, TSI e recorrência. Potencial para virar premium.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Broto de Esperança" data-id="5">
+                            🌿 <strong>Broto de Esperança</strong>
+                            <span class="info-icon" title="🌿 Broto de Esperança: Novíssimos (até 6 meses), ainda crescendo, considerando qualquer ticket.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Chuva na Hora Errada" data-id="6">
+                            🌧️ <strong>Chuva na Hora Errada</strong>
+                            <span class="info-icon" title="🌧️ Chuva na Hora Errada: Ticket alto (>100k), mas sumiu — queda brusca, mais de 380 dias sem comprar. Já foram bons, merecem atenção.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                        <div class="category-card" data-category="Solo Adormecido" data-id="7">
+                            😴 <strong>Solo Adormecido</strong>
+                            <span class="info-icon" title="😴 Solo Adormecido: Qualquer ticket, há mais de 380 dias sem comprar.">ℹ️</span>
+                            <div class="count">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela com DevExtreme -->
+                    <div id="clientesGrid"></div>
+
+
+                    <!-- Popup para exibir os pedidos -->
+                    <div id="popupPedidos"></div>
+                    <div id="gridPedidosContainer"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- loading global -->
+<div id="globalLoading" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;">
+    <div style="
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;"></div>
+    <div style="font-size: 18px; color: #333;">Carregando Informações...</div>
+</div>
+
+<script>
+    let clientesData = []; // Variável global para armazenar os dados
+    let clientesGrid;      // Referência à dxDataGrid
+    
+    $(document).ready(function() {
+        atualizarInfosDashboad();
+    });
+
+    $(document).on("click", ".category-card", function () {
+        const $card = $(this);
+        const idSelecionado = $card.index() + 1;
+
+        // Se o card já está ativo, desativa e limpa o filtro
+        if ($card.hasClass("ativo")) {
+            $card.removeClass("ativo");
+            if (clientesGrid) {
+                clientesGrid.clearFilter(); // limpa todos os filtros
+            }
+        } else {
+            // Remove classe ativa dos outros cards e aplica no clicado
+            $(".category-card").removeClass("ativo");
+            $card.addClass("ativo");
+
+            // Aplica o filtro na grid
+            if (clientesGrid) {
+                clientesGrid.filter(["CATEGORIA_CLIENTE_ID", "=", idSelecionado]);
+            }
+        }
+    });
+
+    function atualizarInfosDashboad() {
+        $('#globalLoading').show();
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: "/comercial/list-classificacao-clientes-softsul",
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && Array.isArray(response.data)) {
+                        clientesData = response.data;
+
+                        // Zera os contadores antes de contar novamente
+                        $(".category-card .count").text("0");
+
+                        // Contagem por ID de classificação
+                        const contagemPorId = {};
+
+                        clientesData.forEach(cliente => {
+                            const idClass = cliente.CATEGORIA_CLIENTE_ID;
+                            if (!contagemPorId[idClass]) {
+                                contagemPorId[idClass] = 0;
+                            }
+                            contagemPorId[idClass]++;
+                        });
+
+                        // Atualiza os cards com os contadores
+                        $(".category-card").each(function () {
+                            const idCard = $(this).index() + 1; // IDs de 1 a 7 na ordem
+                            const count = contagemPorId[idCard] || 0;
+                            $(this).find(".count").text(count);
+                        });
+
+                        // Cria ou atualiza a grid
+                        if (clientesGrid) {
+                            clientesGrid.option("dataSource", clientesData);
+                            clientesGrid.clearFilter(); // Mostrar tudo ao carregar
+                        } else {
+                            inicializarGridClientes();
+                        }
+
+                        resolve();
+                    } else {
+                        DevExpress.ui.notify("Erro ao carregar dados", "error", 3000);
+                        reject();
+                    }
+                },
+                error: function(error) {
+                    DevExpress.ui.notify("Erro na requisição", "error", 3000);
+                    reject();
+                },
+                complete: function() {
+                    $('#globalLoading').hide();
+                }
+            });
+        });
+    }
+
+    function inicializarGridClientes() {
+        clientesGrid = $("#clientesGrid").dxDataGrid({
+            dataSource: clientesData,
+            keyExpr: "ID_CLIENTE",
+            height: 600,
+            width: '100%',
+            columnAutoWidth: true,
+            elementAttr: {
+                class: "grid-personalizada"
+            },
+            showBorders: true,
+            columnChooser: {
+                enabled: true,
+                mode: "dragAndDrop",
+                position: { 
+                    my: "right", 
+                    at: "right", 
+                    of: ".dx-datagrid-column-chooser-button" 
+                }
+            },
+            groupPanel: {
+                visible: true,
+            },
+            toolbar: {
+                items: [
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-expand",
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#clientesGrid").dxDataGrid("instance");
+                                grid.expandAll();
+                            }
+                        }
+                    },
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-compress",
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#clientesGrid").dxDataGrid("instance");
+                                grid.collapseAll();
+                            }
+                        }
+                    },
+                    {
+                        name: "refresh",
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "refresh",
+                            onClick: function() {
+                                $("#clientesGrid").dxDataGrid("instance").refresh();
+                            },
+                            text: "Atualizar"
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'batch',
+                allowUpdating: false,
+                allowDeleting: false,
+            },
+            selection: {
+                mode: 'multiple',
+                showCheckBoxesMode: 'none'
+            },
+            hoverStateEnabled: true,
+            pager: {
+                visible: true
+            },
+            paging: {
+                pageSize: 500
+            },
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            export: {
+                enabled: true,
+                fileName: "Base Categorizada de Clientes",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            columns: [
+                { dataField: 'ID_CLIENTE', caption: 'ID', allowEditing: false, width: 80, alignment: 'center' },
+                { dataField: 'NOME_CLIENTE', caption: 'Nome', allowEditing: false, width: 400 },
+                { dataField: 'CGCCPF_CLIENTE', caption: 'CGC/CPF', allowEditing: false, width: 100, alignment: 'center' },
+                { dataField: 'CIDADE_CLIENTE', caption: 'Cidade', allowEditing: false, width: 'auto' },
+                { dataField: 'ESTADO_CLIENTE', caption: 'Estado', allowEditing: false, alignment: 'center', width: 100 },
+                { dataField: 'CLIENTE_REGIAO', caption: 'Região', allowEditing: false, alignment: 'center', width: 150 },
+                { 
+                    dataField: 'DATA_PRIMEIRO_PEDIDO', 
+                    caption: 'Dt. Primeiro Pedido', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 130, 
+                    dataType: 'date', 
+                    format: 'dd/MM/yyyy',
+                    editorOptions: {
+                        displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
+                    },
+                },
+                { dataField: 'PRIMEIRO_PEDIDO_DIAS', caption: 'Primeiro Pedido (dias)', allowEditing: false, width: 130, alignment: 'center', visible: false },
+                { 
+                    dataField: 'DATA_ULTIMO_PEDIDO', 
+                    caption: 'Dt. Último Pedido', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 130, 
+                    dataType: 'date', 
+                    format: 'dd/MM/yyyy',
+                    editorOptions: {
+                        displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
+                    },
+                },
+                { dataField: 'ULTIMO_PEDIDO_DIAS', caption: 'Último Pedido (dias)', allowEditing: false, width: 130, alignment: 'center', visible: false },
+                { dataField: 'QTD_PEDIDOS', caption: 'Qtd. Pedidos', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_PEDIDO_ANO_ATUAL', caption: 'Qtd. Pedidos Ano Atual', allowEditing: false, width: 170, alignment: 'center', visible: false },
+                { dataField: 'QTD_PEDIDO_ANO_ANTERIOR', caption: 'Qtd. Pedidos Ano Anterior', allowEditing: false, width: 170, alignment: 'center', visible: false },
+                { dataField: 'QTD_B50', caption: 'Qtd. Bags 5 Mi', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_B10', caption: 'Qtd. Bags 1000 Kgs', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_SK200', caption: 'Qtd. Sc 200 mil', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_TOTAL', caption: 'Qtd. Total', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_SAFRAS_PARTICIPADAS', caption: 'Qtd. Safras Participou', allowEditing: false, width: 'auto', alignment: 'center' },
+                { dataField: 'MEDIA_PEDIDOS_P_SAFRA', caption: 'Média Pedidos Por Safra', allowEditing: false, width: 'auto', alignment: 'center' },
+                { dataField: 'MEDIA_CULTIVARES_POR_PEDIDO', caption: 'Média Cultivares Por Pedido', allowEditing: false, width: 'auto', alignment: 'center' },
+                { dataField: 'MEDIA_DIAS_ENTRE_PEDIDOS', caption: 'Tempo Médio Entre Pedidos (dias)', allowEditing: false, width: 'auto', alignment: 'center' },
+                { 
+                    dataField: 'PRECO_TOTAL_GERMOPLASMA', 
+                    caption: 'Germoplasma Total', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL_ROYALTIES', 
+                    caption: 'Royalties Total', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL_TSI', 
+                    caption: 'TSI Total', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL_FRETE', 
+                    caption: 'Frete Total', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL', 
+                    caption: 'Preço Total', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL_ANO_ATUAL', 
+                    caption: 'Preço Total Ano Atual', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    visible: false,
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PRECO_TOTAL_ANO_ANTERIOR', 
+                    caption: 'Preço Total Ano Anterior', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    visible: false,
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'TICKET_MEDIO', 
+                    caption: 'Ticket Médio', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                { 
+                    dataField: 'PERC_TSI', 
+                    caption: '% TSI Total', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { precision: 2 },
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                {
+                    dataField: 'PERC_CRESCIMENTO_QUEDA',
+                    caption: '% Crescimento/Queda',
+                    allowEditing: false,
+                    alignment: 'center',
+                    width: 'auto',
+                    dataType: 'number',
+                    format: { precision: 2 },
+                    cellTemplate: function(container, options) {
+                        const valor = Number(options.value);
+                        const isPositive = valor >= 0;
+
+                        const textoFormatado = valor.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+
+                        const icone = $("<i>")
+                            .addClass("fa")
+                            .addClass(isPositive ? "fa-arrow-up" : "fa-arrow-down")
+                            .css("margin-right", "5px")
+                            .css("color", isPositive ? "green" : "red");
+
+                        const spanTexto = $("<span>").text(textoFormatado + "%");
+
+                        container.addClass("dx-cell-content-align-center");
+                        container.append(icone, spanTexto);
+                    }
+                },
+                { dataField: 'CATEGORIA_CLIENTE', caption: 'Categoria', allowEditing: false, alignment: 'center', width: 150 },
+            ],
+            summary: {
+                totalItems: [
+                    {
+                        column: "QTD_PEDIDOS", 
+                        summaryType: "sum",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "QTD_B50", 
+                        summaryType: "sum",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "QTD_B10", 
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        } 
+                    },
+                    {
+                        column: "QTD_SK200", 
+                        summaryType: "sum",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        } 
+                    },
+                    {
+                        column: "QTD_TOTAL", 
+                        summaryType: "sum",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "PRECO_TOTAL_GERMOPLASMA", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "PRECO_TOTAL_ROYALTIES", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "PRECO_TOTAL_TSI", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "PRECO_TOTAL_FRETE", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "PRECO_TOTAL", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: "TICKET_MEDIO", 
+                        summaryType: "avg",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                ],
+                groupItems: [
+                    {
+                        column: 'QTD_PEDIDOS',
+                        summaryType: 'sum',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'QTD_B50',
+                        summaryType: 'sum',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'QTD_B10',
+                        summaryType: 'sum',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'QTD_SK200',
+                        summaryType: 'sum',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'QTD_TOTAL',
+                        summaryType: 'sum',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'PRECO_TOTAL_GERMOPLASMA',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'PRECO_TOTAL_ROYALTIES',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'PRECO_TOTAL_TSI',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'PRECO_TOTAL_FRETE',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'PRECO_TOTAL',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'TICKET_MEDIO',
+                        summaryType: 'avg',
+                        valueFormat: 'currency',
+                        displayFormat: '{0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                ],
+            },
+            onRowClick: function (e) {
+                if (e.rowType === "group") {
+                    // Ignora o clique em linha de agrupamento
+                    return;
+                }
+
+                // Captura o ID do cliente clicado
+                var clienteId = e.data.ID_CLIENTE;
+                var clienteNome = e.data.NOME_CLIENTE;
+                // Chama a função para abrir o popup e carregar os pedidos
+                abrirPopupPedidos(clienteId, clienteNome);
+            },
+            onToolbarPreparing: function (e) {
+                var toolbarItems = e.toolbarOptions.items;
+                
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "Expandir",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll();
+                        }
+                    }
+                });
+
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        text: "Colapsar",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll();
+                        }
+                    }
+                });
+            }
+        }).dxDataGrid("instance");
+    }
+
+    function abrirPopupPedidos(clienteId, clienteNome) {
+        // Faz a requisição AJAX para carregar os pedidos do cliente
+        $.ajax({
+            url: "/comercial/list-pedidos-cliente",
+            method: 'GET',
+            data: { clienteId: clienteId },
+            success: function (result) {
+                const popup = $('#popupPedidos').dxPopup({
+                    title: clienteNome,
+                    visible: false,  // Inicializa o popup mas não o torna visível ainda
+                    width: '80%',
+                    height: '80%',
+                    showTitle: true,
+                    contentTemplate: function(contentElement) {
+                        $("<div>").dxDataGrid({
+                            dataSource: result.data,
+                            keyExpr: "ID_PEDIDO",
+                            height: '100%',
+                            width: '100%',
+                            columnAutoWidth: true,
+                            elementAttr: {
+                                class: "grid-personalizada"
+                            },
+                            showBorders: true,
+                            columnChooser: {
+                                enabled: true,
+                                mode: "dragAndDrop",
+                                position: { 
+                                    my: "right", 
+                                    at: "right", 
+                                    of: ".dx-datagrid-column-chooser-button" 
+                                }
+                            },
+                            groupPanel: {
+                                visible: true,
+                            },
+                            editing: {
+                                mode: 'batch',
+                                allowUpdating: false,
+                                allowDeleting: false,
+                            },
+                            selection: {
+                                mode: 'multiple',
+                                showCheckBoxesMode: 'none'
+                            },
+                            hoverStateEnabled: true,
+                            pager: {
+                                visible: true
+                            },
+                            paging: {
+                                pageSize: 500
+                            },
+                            headerFilter: {
+                                visible: true,
+                            },
+                            filterRow: {
+                                visible: true,
+                                applyFilter: 'auto',
+                            },
+                            export: {
+                                enabled: true,
+                                fileName: "Pedidos - " + clienteNome,
+                                allowExportSelectedData: false,
+                            },
+                            searchPanel: {
+                                visible: true,
+                                width: 240,
+                                placeholder: 'Procure...',
+                            },
+                            columns: [
+                                { dataField: 'ID_PEDIDO', caption: 'ID', allowEditing: false, width: 'auto', alignment: 'center' },
+                                { dataField: 'CODIGO_PEDIDO', caption: 'Código', allowEditing: false, width: 100, alignment: 'center' },
+                                { 
+                                    dataField: 'DATA_PEDIDO', 
+                                    caption: 'Data do Pedido', 
+                                    allowEditing: false, 
+                                    alignment: 'center', 
+                                    width: 130, 
+                                    dataType: 'date', 
+                                    format: 'dd/MM/yyyy',
+                                    editorOptions: {
+                                        displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
+                                    },
+                                },
+                                { dataField: 'CODIGOSAFRA', caption: 'Safra ID', allowEditing: false, width: 80, alignment: 'center' },
+                                { dataField: 'DSC_SAFRA', caption: 'Safra', allowEditing: false, width: 'auto', alignment: 'left' },
+                                { dataField: 'VENDEDOR_ID', caption: 'ID Vendedor', allowEditing: false, width: 80, alignment: 'center' },
+                                { dataField: 'NOME_VENDEDOR', caption: 'Nome Vendedor', allowEditing: false, width: 'auto' },
+                                { dataField: 'QTD_B50', caption: 'Qtd. Bags 5 Mi', allowEditing: false, width: 170, alignment: 'center' },
+                                { dataField: 'QTD_B10', caption: 'Qtd. Bags 1000 Kgs', allowEditing: false, width: 170, alignment: 'center' },
+                                { dataField: 'QTD_SK200', caption: 'Qtd. Sc 200 mil', allowEditing: false, width: 170, alignment: 'center' },
+                                { dataField: 'QTD_TOTAL', caption: 'Qtd. Total', allowEditing: false, width: 170, alignment: 'center' },
+                                { dataField: 'QTD_CULTIVAR_POR_PEDIDO', caption: 'Qtd. Cultivares Adquiridas', allowEditing: false, width: 170, alignment: 'center' },
+                                { 
+                                    dataField: 'PRECO_TOTAL_GERMOPLASMA', 
+                                    caption: 'Germoplasma Total', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PRECO_TOTAL_ROYALTIES', 
+                                    caption: 'Royalties Total', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PRECO_TOTAL_TSI', 
+                                    caption: 'TSI Total', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PRECO_TOTAL_FRETE', 
+                                    caption: 'Frete Total', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PRECO_TOTAL', 
+                                    caption: 'Preço Total', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PERC_TSI', 
+                                    caption: '% TSI Total', 
+                                    allowEditing: false, 
+                                    alignment: 'center', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { precision: 2 },
+                                },
+                            ],
+                            summary: {
+                                totalItems: [
+                                    {
+                                        column: "ID_PEDIDO", 
+                                        summaryType: "count",
+                                        displayFormat: "{0}", 
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'Qtd. Pedidos: ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "QTD_B50", 
+                                        summaryType: "sum",
+                                        displayFormat: "{0}", 
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "QTD_B10", 
+                                        summaryType: "sum",
+                                        displayFormat: "{0}",
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        } 
+                                    },
+                                    {
+                                        column: "QTD_SK200", 
+                                        summaryType: "sum",
+                                        displayFormat: "{0}", 
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        } 
+                                    },
+                                    {
+                                        column: "QTD_TOTAL", 
+                                        summaryType: "sum",
+                                        displayFormat: "{0}", 
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "PRECO_TOTAL_GERMOPLASMA", 
+                                        summaryType: "sum",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "PRECO_TOTAL_ROYALTIES", 
+                                        summaryType: "sum",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "PRECO_TOTAL_TSI", 
+                                        summaryType: "sum",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "PRECO_TOTAL_FRETE", 
+                                        summaryType: "sum",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "PRECO_TOTAL", 
+                                        summaryType: "sum",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: "TICKET_MEDIO", 
+                                        summaryType: "avg",
+                                        displayFormat: "Total: {0}",  
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                ],
+                                groupItems: [
+                                    {
+                                        column: 'QTD_B50',
+                                        summaryType: 'sum',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'QTD_B10',
+                                        summaryType: 'sum',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'QTD_SK200',
+                                        summaryType: 'sum',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'QTD_TOTAL',
+                                        summaryType: 'sum',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'PRECO_TOTAL_GERMOPLASMA',
+                                        summaryType: 'sum',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'PRECO_TOTAL_ROYALTIES',
+                                        summaryType: 'sum',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'PRECO_TOTAL_TSI',
+                                        summaryType: 'sum',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'PRECO_TOTAL_FRETE',
+                                        summaryType: 'sum',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'PRECO_TOTAL',
+                                        summaryType: 'sum',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                    {
+                                        column: 'TICKET_MEDIO',
+                                        summaryType: 'avg',
+                                        valueFormat: 'currency',
+                                        displayFormat: '{0}',
+                                        showInGroupFooter: true,
+                                        valueFormat: {
+                                            type: "currency",  
+                                            currency: "BRL" 
+                                        },
+                                        customizeText: function(cellInfo) {
+                                            // Verifica se o valor é válido antes de formatar
+                                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                                // Exibe o valor formatado como moeda brasileira
+                                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                            return '';
+                                        }
+                                    },
+                                ],
+                            },
+                            onToolbarPreparing: function (e) {
+                                var toolbarItems = e.toolbarOptions.items;
+                                
+                                toolbarItems.push({
+                                    location: "after",
+                                    widget: "dxButton",
+                                    options: {
+                                        icon: "fa fa-expand",
+                                        text: "Expandir",
+                                        onClick: function () {
+                                            var grid = e.component;
+                                            grid.expandAll();
+                                        }
+                                    }
+                                });
+
+                                toolbarItems.push({
+                                    location: "after",
+                                    widget: "dxButton",
+                                    options: {
+                                        icon: "fa fa-compress",
+                                        text: "Colapsar",
+                                        onClick: function () {
+                                            var grid = e.component;
+                                            grid.collapseAll();
+                                        }
+                                    }
+                                });
+                            }
+                        }).appendTo(contentElement);
+                    }
+                }).dxPopup('instance');
+
+
+                popup.show();
+            },
+            error: function () {
+                alert("Erro ao carregar os pedidos do cliente.");
+            }
+        });
+    }
+
+
+
+    
+</script>
+

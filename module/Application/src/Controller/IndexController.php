@@ -29,6 +29,7 @@ class IndexController extends BaseController
     {
         $session = new Container('auth');
 
+
         if (!isset($session->user)) {
             return $this->redirect()->toRoute('login');
         }
