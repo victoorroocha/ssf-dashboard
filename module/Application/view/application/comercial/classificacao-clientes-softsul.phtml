@@ -204,15 +204,12 @@
                             inicializarGridClientes();
                         }
 
-                        resolve();
                     } else {
                         DevExpress.ui.notify("Erro ao carregar dados", "error", 3000);
-                        reject();
                     }
                 },
                 error: function(error) {
                     DevExpress.ui.notify("Erro na requisição", "error", 3000);
-                    reject();
                 },
                 complete: function() {
                     $('#globalLoading').hide();
