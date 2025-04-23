@@ -315,9 +315,10 @@
                 placeholder: 'Procure...',
             },
             columns: [
-                { dataField: 'ID_CLIENTE', caption: 'ID', allowEditing: false, width: 80, alignment: 'center' },
+                { dataField: 'ID_CLIENTE', caption: 'ID', allowEditing: false, width: 'auto', alignment: 'center' },
                 { dataField: 'NOME_CLIENTE', caption: 'Nome', allowEditing: false, width: 400 },
                 { dataField: 'CGCCPF_CLIENTE', caption: 'CGC/CPF', allowEditing: false, width: 100, alignment: 'center' },
+                { dataField: 'INSCRICAO_CLIENTE', caption: 'Inscrição', allowEditing: false, width: 100, alignment: 'center' },
                 { dataField: 'CIDADE_CLIENTE', caption: 'Cidade', allowEditing: false, width: 'auto' },
                 { dataField: 'ESTADO_CLIENTE', caption: 'Estado', allowEditing: false, alignment: 'center', width: 100 },
                 { dataField: 'CLIENTE_REGIAO', caption: 'Região', allowEditing: false, alignment: 'center', width: 150 },
@@ -355,9 +356,9 @@
                 { dataField: 'QTD_SK200', caption: 'Qtd. Sc 200 mil', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_TOTAL', caption: 'Qtd. Total', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_SAFRAS_PARTICIPADAS', caption: 'Qtd. Safras Participou', allowEditing: false, width: 'auto', alignment: 'center' },
-                { dataField: 'MEDIA_PEDIDOS_P_SAFRA', caption: 'Média Pedidos Por Safra', allowEditing: false, width: 'auto', alignment: 'center' },
-                { dataField: 'MEDIA_CULTIVARES_POR_PEDIDO', caption: 'Média Cultivares Por Pedido', allowEditing: false, width: 'auto', alignment: 'center' },
-                { dataField: 'MEDIA_DIAS_ENTRE_PEDIDOS', caption: 'Tempo Médio Entre Pedidos (dias)', allowEditing: false, width: 'auto', alignment: 'center' },
+                { dataField: 'MEDIA_PEDIDOS_P_SAFRA', caption: 'Média Pedidos Por Safra', allowEditing: false, width: 'auto', alignment: 'center', dataType: 'number', format: { precision: 2 }, },
+                { dataField: 'MEDIA_CULTIVARES_POR_PEDIDO', caption: 'Média Cultivares Por Pedido', allowEditing: false, width: 'auto', alignment: 'center', dataType: 'number', format: { precision: 2 }, },
+                { dataField: 'MEDIA_DIAS_ENTRE_PEDIDOS', caption: 'Tempo Médio Entre Pedidos (dias)', allowEditing: false, width: 'auto', alignment: 'center', dataType: 'number', format: { precision: 2 }, },
                 { 
                     dataField: 'PRECO_TOTAL_GERMOPLASMA', 
                     caption: 'Germoplasma Total', 
@@ -365,21 +366,7 @@
                     alignment: 'right', 
                     width: 'auto', 
                     dataType: 'number', 
-                    format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
+                    format: { type: 'currency', currency: 'BRL', precision: 2 }, 
                 },
                 { 
                     dataField: 'PRECO_TOTAL_ROYALTIES', 
@@ -389,20 +376,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PRECO_TOTAL_TSI', 
@@ -412,20 +385,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PRECO_TOTAL_FRETE', 
@@ -435,20 +394,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PRECO_TOTAL', 
@@ -458,20 +403,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PRECO_TOTAL_ANO_ATUAL', 
@@ -482,20 +413,6 @@
                     visible: false,
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PRECO_TOTAL_ANO_ANTERIOR', 
@@ -506,20 +423,6 @@
                     visible: false,
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'TICKET_MEDIO', 
@@ -529,20 +432,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 { 
                     dataField: 'PERC_TSI', 
@@ -552,18 +441,6 @@
                     width: 'auto', 
                     dataType: 'number', 
                     format: { precision: 2 },
-                    customizeText: function(cellInfo) {
-                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
-                            var numericValue = Number(cellInfo.value);
-                            if (isNaN(numericValue)) {
-                                return cellInfo.value;
-                            }
-                            return numericValue.toLocaleString("pt-BR", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }  
                 },
                 {
                     dataField: 'PERC_CRESCIMENTO_QUEDA',
@@ -598,6 +475,19 @@
             ],
             summary: {
                 totalItems: [
+                    {
+                        column: "ID_CLIENTE", 
+                        summaryType: "count",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'Qtd. Clientes: ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
                     {
                         column: "QTD_PEDIDOS", 
                         summaryType: "sum",
@@ -767,6 +657,19 @@
                     },
                 ],
                 groupItems: [
+                    {
+                        column: "ID_CLIENTE", 
+                        summaryType: "count",
+                        displayFormat: "{0}", 
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'Qtd. Clientes: ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                            return '';
+                        }
+                    },
                     {
                         column: 'QTD_PEDIDOS',
                         summaryType: 'sum',
@@ -954,16 +857,13 @@
                 ],
             },
             onRowClick: function (e) {
-                if (e.rowType === "group") {
-                    // Ignora o clique em linha de agrupamento
-                    return;
+                if (e.rowType === "data") {
+                    // Captura o ID do cliente clicado
+                    var clienteId = e.data.ID_CLIENTE;
+                    var clienteNome = e.data.NOME_CLIENTE;
+                    // Chama a função para abrir o popup e carregar os pedidos
+                    abrirPopupPedidos(clienteId, clienteNome);
                 }
-
-                // Captura o ID do cliente clicado
-                var clienteId = e.data.ID_CLIENTE;
-                var clienteNome = e.data.NOME_CLIENTE;
-                // Chama a função para abrir o popup e carregar os pedidos
-                abrirPopupPedidos(clienteId, clienteNome);
             },
             onToolbarPreparing: function (e) {
                 var toolbarItems = e.toolbarOptions.items;
@@ -1008,7 +908,7 @@
             data: { clienteId: clienteId },
             success: function (result) {
                 const popup = $('#popupPedidos').dxPopup({
-                    title: clienteNome,
+                    title: clienteNome + "- PEDIDOS",
                     visible: false,  // Inicializa o popup mas não o torna visível ainda
                     width: '80%',
                     height: '80%',
