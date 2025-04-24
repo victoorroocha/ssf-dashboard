@@ -262,6 +262,7 @@ class ComercialRepository
                         ,SUM(A.PRECO_TOTAL_TSI) AS PRECO_TOTAL_TSI
                         ,SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE) AS PRECO_TOTAL
                         ,ROUND((SUM(A.PRECO_TOTAL_TSI) / SUM(A.PRECO_TOTAL))*100,2) AS PERC_TSI
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || A.ID_PEDIDO || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM (
                     SELECT  
                         P.ID AS ID_PEDIDO
