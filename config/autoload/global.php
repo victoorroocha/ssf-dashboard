@@ -16,16 +16,16 @@
 return [
     'db' => [
         'driver'   => 'Pdo_Pgsql',
-        'hostname' => '192.168.0.54',
+        'hostname' => '172.31.23.70',
         'database' => 'ssf_dashboard',
         'username' => 'postgres',
         'password' => 'admin',
     ],
-    'oracle' => [
-        'username'         => 'Sapiens',
-        'password'         => 'Sapiens',
-        'connection_string' => '192.168.0.5:1521/SSF',
-    ],
+    // 'oracle' => [
+    //     'username'         => 'Sapiens',
+    //     'password'         => 'Sapiens',
+    //     'connection_string' => '192.168.0.5:1521/SSF',
+    // ],
 
     //conexão com a AWS
     // 'oracle' => [
@@ -33,11 +33,11 @@ return [
     //     'password'         => 'Sapiens',
     //     'connection_string' => 'ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com:1521/SSF',
     // ],
-    // 'oracle' => [
-    //     'username'         => 'Sapiens',
-    //     'password'         => 'Sapiens',
-    //     'connection_string' => "(DESCRIPTION=
-    //                             (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
-    //                             (CONNECT_DATA=(SERVICE_NAME=SSF)))",
-    // ],
+    'oracle' => [
+        'username'         => 'Sapiens',
+        'password'         => 'Sapiens',
+        'connection_string' => "(DESCRIPTION=
+                                (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
+                                (CONNECT_DATA=(SERVICE_NAME=SSF)))",
+    ],
 ];
