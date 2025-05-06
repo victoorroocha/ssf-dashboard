@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.php",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "robocopy node_modules\\devextreme public\\devextreme /E && robocopy node_modules\\jszip public\\jszip /E && robocopy node_modules\\cldrjs\\dist public\\cldrjs\\dist /E && robocopy node_modules\\globalize\\dist public\\globalize\\dist /E && robocopy node_modules\\exceljs\\dist public\\exceljs\\dist /E && robocopy node_modules\\file-saver\\dist public\\file-saver\\dist /E && robocopy node_modules\\moment public\\moment /E"
+  	"test": "echo \"Error: no test specified\" && exit 1",
+	"postinstall": "mkdir -p public/devextreme public/jszip public/cldrjs/dist public/globalize/dist public/exceljs/dist public/file-saver/dist public/moment && cp -r node_modules/devextreme public/devextreme && cp -r node_modules/jszip public/jszip && cp -r node_modules/cldrjs/dist public/cldrjs/dist && cp -r node_modules/globalize/dist public/globalize/dist && cp -r node_modules/exceljs/dist public/exceljs/dist && cp -r node_modules/file-saver/dist public/file-saver/dist && cp -r node_modules/moment public/moment"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   "dependencies": {
     "cldrjs": "^0.5.5",
     "devextreme": "^20.1.16",
-    "devextreme-themebuilder": "20.2",
+    "devextreme-themebuilder": "^24.2.7",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "globalize": "^1.7.0",
