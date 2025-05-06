@@ -970,6 +970,25 @@
                                 placeholder: 'Procure...',
                             },
                             columns: [
+                                {
+                                    caption: 'Abrir Pedido Softsul',
+                                    allowEditing: false,
+                                    width: 'auto',
+                                    alignment: 'center',
+                                    cellTemplate: function(container, options) {
+                                        if (options.data.LINK_REDIRECT_SOFTSUL) {
+                                            $('<a>')
+                                                .attr('href', options.data.LINK_REDIRECT_SOFTSUL)
+                                                .attr('target', '_blank')
+                                                .attr('title', 'Abrir pedido no sistema')
+                                                .addClass('dx-link')
+                                                .html('<i class="fa fa-link"></i>')
+                                                .appendTo(container);
+                                        } else {
+                                            container.text('N/A');
+                                        }
+                                    }
+                                },
                                 { dataField: 'ID_PEDIDO', caption: 'ID', allowEditing: false, width: 'auto', alignment: 'center' },
                                 { dataField: 'CODIGO_PEDIDO', caption: 'Código', allowEditing: false, width: 100, alignment: 'center' },
                                 { 
