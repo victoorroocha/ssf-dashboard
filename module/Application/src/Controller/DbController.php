@@ -44,7 +44,7 @@ class DbController extends AbstractActionController
 
         return new ViewModel([
             'pg_time'     => $pgTime,
-            'oracle_time' => $oracleTime[0]['ORACLE_TIME'],
+            'oracle_time' => $oracleTime,
         ]);
     }
 }
