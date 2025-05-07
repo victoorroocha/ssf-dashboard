@@ -14,7 +14,7 @@ class AuthService
     private $dbAdapter;
     private $oracleService;
 
-    public function __construct(Adapter $dbAdapter, OracleService $oracleService)
+    public function __construct(Adapter $dbAdapter, OracleService $oracleService = null)
     {
         $this->dbAdapter = $dbAdapter;
         $this->oracleService = $oracleService;
