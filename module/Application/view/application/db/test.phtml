@@ -12,7 +12,17 @@
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <p>Data Hora Banco Postgres: <?php echo $this->pg_error ? utf8_encode($this->pg_error) : $this->pg_time; ?></p>
-                    <p>Data Hora Banco Oracle: <?php echo $this->oracle_error ? utf8_encode($this->oracle_error) : $this->oracle_time[0]['ORACLE_TIME'] ?></p>
+                    <p>Data Hora Banco Oracle: 
+                        <?php 
+                        if ($this->oracle_error) {
+                            echo utf8_encode($this->oracle_error);
+                        } elseif (isset($this->oracle_time[0]['ORACLE_TIME'])) {
+                            echo $this->oracle_time[0]['ORACLE_TIME'];
+                        } else {
+                            echo $this->oracle_time;
+                        }
+                        ?>
+                    </p>
                 </div>
             </div>
 
