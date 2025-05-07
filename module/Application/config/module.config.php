@@ -200,11 +200,6 @@ return [
             'Application\Acl\AccessControl' => function($container) {
                 return new \Application\Acl\AccessControl();
             },
-            'Application\Service\AuthService' => function($container) {
-                $dbAdapter = $container->get(\Laminas\Db\Adapter\Adapter::class);
-                $oracleService = $container->get(\Application\Service\OracleService::class);
-                return new \Application\Service\AuthService($dbAdapter, $oracleService);
-            },
             'Application\Service\OracleService' => function($container) {
                 $config = $container->get('config')['oracle'];  // Supondo que a configuração do Oracle esteja em 'config'
                 return new \Application\Service\OracleService(
@@ -213,6 +208,19 @@ return [
                     $config['connection_string'],
                     'WE8MSWIN1252'
                 );
+            },
+            'Application\Service\AuthService' => function($container) {
+                $dbAdapter = $container->get(\Laminas\Db\Adapter\Adapter::class);
+                //$oracleService = $container->get(\Application\Service\OracleService::class);
+
+		$oracleService = null;
+		try {
+			$oracleService = $container->get(\Application\Service\OracleService::class);
+		} catch (\Throwable $e) {
+			error_log('Erro ao iniciar OracleService: ' . $e->getMessage());
+		}
+
+                return new \Application\Service\AuthService($dbAdapter, $oracleService);
             },
             'Application\Repository\UsuarioRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
