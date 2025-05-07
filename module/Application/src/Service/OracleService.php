@@ -13,24 +13,23 @@ class OracleService
         $this->username = $username;
         $this->password = $password;
         $this->connection_string = $connection_string;
-        $this->connect();
+        $this->connection = null;  // A conexão agora é inicializada como null
     }
 
     private function connect()
     {
-        $this->connection = oci_connect($this->username, $this->password, $this->connection_string);
-
-        if (!$this->connection) {
-            throw new \Exception("Erro de conexão Oracle: " . oci_error()['message']);
+        // Verifica se a função OCI está disponível
+        if (!function_exists('oci_connect')) {
+            throw new \Exception("A extensão OCI8 não está instalada ou configurada no servidor PHP.");
         }
 
-        // // Ajusta o formato de data da sessão
-        // $stmt = oci_parse($this->connection, "ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY'");
-        // if (!oci_execute($stmt)) {
-        //     $error = oci_error($stmt);
-        //     throw new \Exception("Erro ao ajustar formato de data: " . $error['message']);
-        // }
-        // oci_free_statement($stmt);
+        // Tenta estabelecer a conexão com o banco Oracle, se não estiver conectada
+        if (!$this->connection) {
+            $this->connection = oci_connect($this->username, $this->password, $this->connection_string);
+            if (!$this->connection) {
+                throw new \Exception("Erro de conexão Oracle: " . oci_error()['message']);
+            }
+        }
     }
 
     /**
@@ -40,9 +39,11 @@ class OracleService
      */
     public function executeQuery($sql)
     {
+        // Verifica se a conexão foi estabelecida, caso contrário, tenta conectar
+        $this->connect();
+
         // Prepara a consulta
         $stid = oci_parse($this->connection, $sql);
-
 
         // Executa a consulta
         if (!oci_execute($stid)) {
@@ -65,13 +66,17 @@ class OracleService
 
     public function __destruct()
     {
-        // Fecha a conexão quando o objeto for destruído
-        oci_close($this->connection);
+        // Verifica se a conexão está aberta antes de tentar fechá-la
+        if ($this->connection) {
+            oci_close($this->connection);
+        }
     }
-
 
     public function getCargoUsuario($username)
     {
+        // Verifica se a conexão foi estabelecida, caso contrário, tenta conectar
+        $this->connect();
+
         $sql = "SELECT upper(R024CAR.TITCAR) as TITCAR
                 FROM VETORH.R034FUN
                 INNER JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
