@@ -34,6 +34,7 @@ class DbController extends AbstractActionController
         // Usando Oracle, se disponível
         $oracleTime = "não conectado";
         if ($this->oracleService) {
+           
             try {
                 $oracleTime = $this->oracleService->executeQuery("SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') as oracle_time FROM dual");
             } catch (\Exception $e) {
@@ -43,7 +44,7 @@ class DbController extends AbstractActionController
 
         return new ViewModel([
             'pg_time'     => $pgTime,
-            'oracle_time' => $oracleTime,
+            'oracle_time' => $oracleTime[0]['ORACLE_TIME'],
         ]);
     }
 }
