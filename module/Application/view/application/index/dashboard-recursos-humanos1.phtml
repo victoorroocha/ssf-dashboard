@@ -86,19 +86,19 @@
         </div>
     </div>
     
-    <div class="card-column">
+    <!-- <div class="card-column">
         <div class="dashboard-card">
             <div class="indicator-card" style="background-color: #7cc67f;">
                 <div class="indicator-title">MÉDIA SALARIAL</div>
                 <div class="indicator-value"></div>
             </div>
         </div>
-    </div>
+    </div> -->
     
     <div class="card-column">
         <div class="dashboard-card">
             <div class="indicator-card" style="background-color: #8bc34a;">
-                <div class="indicator-title">SALDO HORAS</div>
+                <div class="indicator-title">SALDO BANCO DE HORAS</div>
                 <div class="indicator-value"></div>
             </div>
         </div>
@@ -130,6 +130,7 @@
     </div>
 </div>
 
+<div id="chart7"></div>
 <div id="chart6"></div>
 
 
@@ -163,6 +164,7 @@
     var grafico4 = null;
     var grafico5 = null;
     var grafico6 = null;
+    var grafico7 = null;
 
     $(document).ready(function () {
     });
@@ -173,9 +175,7 @@
         $('#globalLoading').show();
 
         $('#periodo-apuracao').text(
-            moment(formSelections.dataInicio, 'YYYY-MM-DD').format('DD/MM/YYYY') + 
-            ' - ' + 
-            moment(formSelections.dataFim, 'YYYY-MM-DD').format('DD/MM/YYYY')
+            moment(formSelections.dataInicio, 'YYYY-MM-DD').format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())
         );
 
         return new Promise((resolve, reject) => {
@@ -186,7 +186,7 @@
                 data: formSelections,
                 success: function(response) {
                     if (response.success) {
-                        if (response.data.infoGrafico2Result != null && response.data.infoGrafico6Result != null) {
+                        if (response.data.infoGrafico2Result != null && response.data.infoGrafico6Result != null && response.data.infoGrafico7Result != null) {
                             $('#title-correncias-supervisor').text("Ocorrências por Supervisor");
                         } else {
                             $('#title-correncias-supervisor').text("");
@@ -215,6 +215,10 @@
                             grafico6.dxChart('instance').dispose();
                             grafico6 = null;
                         }
+                        if (grafico7 && grafico7.dxChart('instance')) {
+                            grafico7.dxChart('instance').dispose();
+                            grafico7 = null;
+                        }
 
 
                         // INICIO CARDS
@@ -234,17 +238,17 @@
                             document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = infoCardsAtualResult.QTD_INTERJORNADA ?? 0;
                             document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = infoCardsAtualResult.QTD_HORAS_EXTRAS_2HRS ?? 0;
                             document.querySelector('.card-column:nth-child(6) .indicator-value').textContent = infoCardsAtualResult.QTD_ADICIONAL_NOTURNO ?? 0;
-                            document.querySelector('.card-column:nth-child(8) .indicator-value').textContent = infoCardsAtualResult.SALDO_HORAS ?? 0;
+                            document.querySelector('.card-column:nth-child(7) .indicator-value').textContent = infoCardsAtualResult.SALDO_HORAS ?? 0;
 
-                            // Formatando a média salarial para moeda brasileira
-                            const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL',
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                            const mediaSalarialFormatada = formatadorMoeda.format(infoCardsAtualResult.MEDIA_SALARIAL);
-                            document.querySelector('.card-column:nth-child(7) .indicator-value').textContent = mediaSalarialFormatada;
+                            // // Formatando a média salarial para moeda brasileira
+                            // const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                            //     style: 'currency',
+                            //     currency: 'BRL',
+                            //     minimumFractionDigits: 2,
+                            //     maximumFractionDigits: 2
+                            // });
+                            // const mediaSalarialFormatada = formatadorMoeda.format(infoCardsAtualResult.MEDIA_SALARIAL);
+                            // document.querySelector('.card-column:nth-child(7) .indicator-value').textContent = mediaSalarialFormatada;
                         // FIM CARDS
 
                         // INICIO GRAFICO1 
@@ -508,14 +512,17 @@
                         // INICIO GRAFICO4
                             if (Array.isArray(response.data.infoGrafico2Result)) {
                                 var dataSourceGrafico4 = response.data.infoGrafico2Result.filter(item => item.QTD_INTRAJORNADA > 0).sort(function(a, b) {
-                                    return b.QTD_INTRAJORNADA - a.QTD_INTRAJORNADA; // ordem decrescente
+                                    return a.QTD_INTRAJORNADA - b.QTD_INTRAJORNADA; // ordem decrescente
                                 });
 
                                 // Verifica se veio algo e se é um array
                                 if (Array.isArray(dataSourceGrafico4)) {
                                     grafico4 = $("#chart4").dxChart({
                                         dataSource: dataSourceGrafico4,
-                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        size: {
+                                            height: 600
+                                        },
+                                        rotated: true, // Transforma em gráfico de barras horizontais
                                         commonSeriesSettings: {
                                             argumentField: "NOME_SUPERVISOR",
                                             barPadding: 0.05
@@ -567,14 +574,17 @@
                         // INICIO GRAFICO5
                             if (Array.isArray(response.data.infoGrafico2Result)) {
                                 var dataSourceGrafico5 = response.data.infoGrafico2Result.filter(item => item.QTD_INTERJORNADA > 0).sort(function(a, b) {
-                                    return b.QTD_INTERJORNADA - a.QTD_INTERJORNADA; // ordem decrescente
+                                    return a.QTD_INTERJORNADA - b.QTD_INTERJORNADA; // ordem decrescente
                                 });
 
                                 // Verifica se veio algo e se é um array
                                 if (Array.isArray(dataSourceGrafico5)) {
                                     grafico5 = $("#chart5").dxChart({
                                         dataSource: dataSourceGrafico5,
-                                        rotated: false, // Transforma em gráfico de barras horizontais
+                                        size: {
+                                            height: 600
+                                        },
+                                        rotated: true, // Transforma em gráfico de barras horizontais
                                         commonSeriesSettings: {
                                             argumentField: "NOME_SUPERVISOR",
                                             barPadding: 0.05
@@ -778,6 +788,112 @@
                                 }
                             }
                         // FIM GRAFICO6 
+
+                        // INICIO GRAFICO7
+                            if (Array.isArray(response.data.infoGrafico7Result)) {
+                                var dataSourceGrafico7 = response.data.infoGrafico7Result.sort(function(a, b) {
+                                    return a.NOME_SUPERVISOR.localeCompare(b.NOME_SUPERVISOR); // ordem alfabética
+                                });
+
+                                if (Array.isArray(dataSourceGrafico7)) {
+                                    // Filtra os dados para remover valores zero nas duas colunas (não permite exibir barras com valores zerados)
+                                    dataSourceGrafico7 = dataSourceGrafico7.filter(item => item.SALDO_POSITIVO !== 0 || item.SALDO_NEGATIVO !== 0);
+
+                                    grafico7 = $("#chart7").dxChart({
+                                        dataSource: dataSourceGrafico7,
+                                        size: {
+                                            height: 700
+                                        },
+                                        commonSeriesSettings: {
+                                            argumentField: "NOME_SUPERVISOR",
+                                            type: "bar",
+                                            barPadding: 0.05 // Mais grossa
+                                        },
+                                        series: [
+                                            { 
+                                                valueField: "SALDO_POSITIVO", 
+                                                name: "Horas Positivas",
+                                                color: '#2e7d32',
+                                                hoverStyle: { color: '#1b5e20' },
+                                                selectionStyle: { color: '#0d470f' },
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "transparent",
+                                                    font: {
+                                                        color: '#b3afaf', // Cor cinza
+                                                        weight: 600  // Negrito
+                                                    },
+                                                    customizeText: function(point) {
+                                                        var item = dataSourceGrafico7.find(i => i.NOME_SUPERVISOR === point.argument);
+                                                        return item?.SALDO_POSITIVO_FORMAT || point.value.toFixed(2);
+                                                    }
+                                                }
+                                            },
+                                            { 
+                                                valueField: "SALDO_NEGATIVO", 
+                                                name: "Horas Negativas",
+                                                color: '#d63031',
+                                                hoverStyle: { color: '#c0392b' },
+                                                selectionStyle: { color: '#a71f1f' },
+                                                label: {
+                                                    visible: true,
+                                                    backgroundColor: "transparent",
+                                                    font: {
+                                                        color: '#b3afaf', // Cor cinza
+                                                        weight: 600  // Negrito
+                                                    },
+                                                    customizeText: function(point) {
+                                                        var item = dataSourceGrafico7.find(i => i.NOME_SUPERVISOR === point.argument);
+                                                        return item?.SALDO_NEGATIVO_FORMAT || point.value.toFixed(2);
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        argumentAxis: {
+                                            label: {
+                                                visible: true,
+                                                overlappingBehavior: "rotate",  // Adicionado para permitir a rotação
+                                                rotationAngle: -45  // Rotaciona os nomes para facilitar a leitura
+                                            },
+                                            grid: { visible: false }  // Remove linhas de fundo do eixo X
+                                        },
+                                        valueAxis: {
+                                            label: {
+                                                visible: false  // Esconde os rótulos da escala do eixo Y
+                                            },
+                                            grid: { visible: false },  // Remove as linhas de fundo do eixo Y
+                                            tickInterval: 500,
+                                            visible: false  // Esconde a escala do eixo Y completamente
+                                        },
+                                        legend: {
+                                            visible: true,
+                                            verticalAlignment: "bottom",  // Coloca a legenda embaixo
+                                            horizontalAlignment: "center"  // Centraliza a legenda
+                                        },
+                                        tooltip: {
+                                            enabled: true,
+                                            customizeTooltip: function(point) {
+                                                var item = dataSourceGrafico7.find(i => i.NOME_SUPERVISOR === point.argument);
+
+                                                return {
+                                                    text: `<strong>${point.argument}</strong><br/>Total de Colaboradores: ${item.QTD_FUNCIONARIO}<br/>` +
+                                                        (point.seriesName === 'Horas Positivas' && item.QTD_POSITIVO > 0 ? `Com Saldo Positivo: ${item.QTD_POSITIVO}<br/>` : '') +
+                                                        (point.seriesName === 'Horas Negativas' && item.QTD_NEGATIVO > 0 ? `Com Saldo Negativo: ${item.QTD_NEGATIVO}<br/>` : '') +
+                                                        (point.seriesName === 'Horas Positivas' && item.SALDO_POSITIVO > 0 ? `Saldo Positivo: ${item.SALDO_POSITIVO_FORMAT}<br/>` : '') +
+                                                        (point.seriesName === 'Horas Negativas' && item.SALDO_NEGATIVO < 0 ? `Saldo Negativo: ${item.SALDO_NEGATIVO_FORMAT}` : ''),
+                                                    color: point.value < 0 ? '#ff6b6b' : '#7fa47f',
+                                                    borderColor: point.value < 0 ? '#d63031' : '#2e7d32'
+                                                };
+                                            }
+                                        },
+                                        title: {
+                                            text: 'Horas Positivas e Negativas'
+                                        }
+                                    });
+                                }
+                            }
+                        // FIM GRAFICO7
+
                     } else {
                         DevExpress.ui.notify("Erro ao carregar dados", "error", 3000);
                     }

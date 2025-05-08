@@ -630,7 +630,12 @@ class RecursosHumanosRepository
                         ,R034FUN.NUMLOC
                         ,upper(R016ORN.NOMLOC) as NOMLOC
                         ,R034CPL.USU_NUMCAD
-                        ,CASE WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' ELSE SUPERV.NOMFUN END AS NOME_SUPERVISOR
+                        ,CASE 
+                            WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' 
+                            ELSE 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+') || ' ' || 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+\s+(\S+)', 1, 1, NULL, 1)
+                        END AS NOME_SUPERVISOR
                         ,R066APU.HORDAT 
                         ,R004HOR.DESHOR
                         ,CASE WHEN R066APU.HORDAT IN (9999,9996) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FOLGA
@@ -804,7 +809,12 @@ class RecursosHumanosRepository
                         ,R034FUN.NUMLOC
                         ,upper(R016ORN.NOMLOC) as NOMLOC
                         ,R034CPL.USU_NUMCAD
-                        ,CASE WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' ELSE SUPERV.NOMFUN END AS NOME_SUPERVISOR
+                        ,CASE 
+                            WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' 
+                            ELSE 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+') || ' ' || 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+\s+(\S+)', 1, 1, NULL, 1)
+                        END AS NOME_SUPERVISOR
                         ,R066APU.HORDAT 
                         ,R004HOR.DESHOR
                         ,CASE WHEN R066APU.HORDAT IN (9999,9996) AND MARCACAO.MARCACOES IS NOT NULL THEN 1 ELSE 0 END FLG_TRABALHOU_FOLGA
@@ -973,7 +983,12 @@ class RecursosHumanosRepository
                         ,R034FUN.DATAFA
                         ,R016ORN.NOMLOC 
                         ,R034CPL.USU_NUMCAD
-                        ,SUPERV.NOMFUN AS NOME_SUPERVISOR
+                        ,CASE 
+                            WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO' 
+                            ELSE 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+') || ' ' || 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+\s+(\S+)', 1, 1, NULL, 1)
+                        END AS NOME_SUPERVISOR
                         ,R011LAN.DATCMP
                         ,R011LAN.CODBHR
                         ,R011BHR.DESBHR
@@ -1017,6 +1032,151 @@ class RecursosHumanosRepository
                 ORDER BY DADOS.NOME_SUPERVISOR, DADOS.CMPLAN DESC 
                 ) A
                 WHERE A.RN2 = 1";  
+    }
+
+    public function getInfoBalancoDeHorasSupervisor($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codLocal = null, $codCargo = null)
+    {
+        $wheresInternos = "";
+        $wheresExternos = "";
+        $columnTipoApuracao = "";
+        if (!empty($apuracao_inicio)) {
+            $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
+            $wheresExternos .= " AND DADOS.CMPLAN BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+        }
+        if (!empty($codColaborador)) {
+            $wheresInternos .= " AND R011LAN.NUMCAD = {$codColaborador}";
+        }
+        if (!empty($codSupervisor)) {
+            $wheresInternos .= " AND R034CPL.USU_NUMCAD = {$codSupervisor}";
+        }
+        if (!empty($codLocal)) {
+            $codLocalStr = implode(',', $codLocal);
+            $wheresInternos .= " AND R034FUN.NUMLOC IN ({$codLocalStr})";
+        }
+        if (!empty($codCargo)) {
+            $codCargoStr = implode(',', $codCargo);
+            $wheresInternos .= " AND R034FUN.CODCAR IN ({$codCargoStr})";
+        }
+
+        return "SELECT * FROM (
+                SELECT 
+                    DADOS.NOME_SUPERVISOR,
+                    DADOS.CMPLAN,
+                    
+                    -- Somatório de saldo POSITIVO
+                    SUM(CASE 
+                        WHEN DADOS.SALDO > 0 THEN DADOS.SALDO 
+                        ELSE null 
+                    END) AS SALDO_POSITIVO,
+
+                    -- Somatório de saldo NEGATIVO
+                    SUM(CASE 
+                        WHEN DADOS.SALDO < 0 THEN DADOS.SALDO 
+                        ELSE null 
+                    END) AS SALDO_NEGATIVO,
+                    
+                    COUNT(DISTINCT(DADOS.NUMCAD)) QTD_FUNCIONARIO,
+                    
+                    -- Para contar quantos funcionários estão negativos
+                    COUNT(DISTINCT(DADOS.QTD_NEGATIVO)) QTD_FUNCIONARIO_NEGATIVO,
+
+                    -- Para contar quantos funcionários estão positivos
+                    COUNT(DISTINCT(DADOS.QTD_POSITIVO)) QTD_FUNCIONARIO_POSITIVO,
+
+                    ROW_NUMBER() OVER (PARTITION BY DADOS.NOME_SUPERVISOR ORDER BY DADOS.CMPLAN DESC) RN2,
+
+                    -- Formatação das horas POSITIVAS
+                    CASE 
+                        WHEN SUM(CASE WHEN DADOS.SALDO > 0 THEN DADOS.SALDO ELSE 0 END) = 0 THEN '00:00'
+                        ELSE TO_CHAR(FLOOR(SUM(CASE WHEN DADOS.SALDO > 0 THEN DADOS.SALDO ELSE 0 END) / 60), 'FM99999990') || ':' ||
+                            TO_CHAR(MOD(SUM(CASE WHEN DADOS.SALDO > 0 THEN DADOS.SALDO ELSE 0 END), 60), 'FM00')
+                    END AS SALDO_POSITIVO_FORMAT,
+
+                    -- Formatação das horas NEGATIVAS
+                    CASE 
+                        WHEN SUM(CASE WHEN DADOS.SALDO < 0 THEN ABS(DADOS.SALDO) ELSE 0 END) = 0 THEN '00:00'
+                        ELSE '-' || TO_CHAR(FLOOR(SUM(CASE WHEN DADOS.SALDO < 0 THEN ABS(DADOS.SALDO) ELSE 0 END) / 60), 'FM99999990') || ':' ||
+                            TO_CHAR(MOD(SUM(CASE WHEN DADOS.SALDO < 0 THEN ABS(DADOS.SALDO) ELSE 0 END), 60), 'FM00')
+                    END AS SALDO_NEGATIVO_FORMAT
+
+                FROM (
+                    SELECT 
+                        R011LAN.NUMEMP,
+                        R030EMP.NOMEMP,
+                        R011LAN.TIPCOL,
+                        R011LAN.NUMCAD,
+                        R034FUN.CODFIL,
+                        R030FIL.NOMFIL,
+                        R034FUN.CODCCU,
+                        R034FUN.NUMCRA,
+                        R034FUN.NOMFUN,
+                        R034FUN.DATADM,
+                        R034FUN.CODCAR,
+                        R024CAR.TITCAR,
+                        R034FUN.TABORG,
+                        R034FUN.NUMLOC,
+                        R034FUN.DATAFA,
+                        R016ORN.NOMLOC,
+                        R034CPL.USU_NUMCAD,
+                        CASE 
+                            WHEN SUPERV.NOMFUN IS NULL THEN 'SEM SUPERVISOR IMEDIATO'
+                            ELSE 
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+') || ' ' ||
+                                REGEXP_SUBSTR(SUPERV.NOMFUN, '^\S+\s+(\S+)', 1, 1, NULL, 1)
+                        END AS NOME_SUPERVISOR,
+                        R011LAN.DATCMP,
+                        R011LAN.CODBHR,
+                        R011BHR.DESBHR,
+                        R011LAN.CODSIT,
+                        R011LAN.SINLAN,
+                        R011LAN.DATLAN,
+                        R011LAN.CMPLAN,
+                        TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'MM')) AS MES_REFERENCIA,
+                        TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'YYYY')) AS ANO_REFERENCIA,
+                        SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END)
+                        OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD 
+                            ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, 
+                                        TO_CHAR(R011LAN.CMPLAN, 'MM'), TO_CHAR(R011LAN.CMPLAN, 'YYYY') 
+                            ORDER BY R011LAN.DATLAN DESC
+                        ) AS RN,
+                        CASE WHEN SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END)
+                        OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD 
+                            ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) < 0 THEN R011LAN.NUMCAD ELSE NULL END QTD_NEGATIVO,
+                        CASE WHEN SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END)
+                        OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD 
+                            ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) > 0 THEN R011LAN.NUMCAD ELSE NULL END QTD_POSITIVO
+                    FROM VETORH.R011LAN
+                    LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R011LAN.NUMEMP AND R034FUN.TIPCOL = R011LAN.TIPCOL AND R034FUN.NUMCAD = R011LAN.NUMCAD
+                    LEFT JOIN VETORH.R034CPL ON R034CPL.NUMEMP = R034FUN.NUMEMP AND R034CPL.TIPCOL = R034FUN.TIPCOL AND R034CPL.NUMCAD = R034FUN.NUMCAD
+                    LEFT JOIN VETORH.R030EMP ON R030EMP.NUMEMP = R011LAN.NUMEMP
+                    LEFT JOIN VETORH.R034FUN SUPERV ON SUPERV.NUMEMP = R034CPL.USU_NUMEMP AND SUPERV.TIPCOL = R034CPL.USU_TIPCOL AND SUPERV.NUMCAD = R034CPL.USU_NUMCAD
+                    LEFT JOIN VETORH.R011BHR ON R011BHR.CODBHR = R011LAN.CODBHR
+                    LEFT JOIN VETORH.R010SIT ON R010SIT.CODSIT = R011LAN.CODSIT
+                    LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR
+                    LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
+                    LEFT JOIN VETORH.R030FIL ON R030FIL.CODFIL = R034FUN.CODFIL AND R030FIL.NUMEMP = R011LAN.NUMEMP
+                    WHERE (R011LAN.PERREF NOT IN ('31/12/1900') OR R011LAN.CMPLAN NOT IN ('31/12/1900'))
+                    AND R011LAN.NUMEMP = 5
+                    AND SUPERV.NUMEMP = 5
+                    AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
+                    AND R011LAN.ORILAN in ('A', 'D', 'B')
+                    AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
+                    {$wheresInternos}
+                    GROUP BY R011LAN.NUMEMP, R030EMP.NOMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R034FUN.CODFIL, R030FIL.NOMFIL, 
+                            R034FUN.CODCCU, R034FUN.NUMCRA, R034FUN.NOMFUN, R034FUN.DATADM, R034FUN.CODCAR, R024CAR.TITCAR,
+                            R034FUN.TABORG, R034FUN.NUMLOC, R034FUN.DATAFA, R016ORN.NOMLOC, R034CPL.USU_NUMCAD, SUPERV.NOMFUN,
+                            R011LAN.DATCMP, R011LAN.CODBHR, R011BHR.DESBHR, R011LAN.CODSIT, R011LAN.SINLAN, R011LAN.DATLAN,
+                            R011LAN.CMPLAN, R011LAN.QTDHOR
+                    ORDER BY R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.DATLAN
+                ) DADOS
+                WHERE DADOS.RN = 1
+                {$wheresExternos}
+                GROUP BY DADOS.NOME_SUPERVISOR, DADOS.CMPLAN
+                ORDER BY DADOS.NOME_SUPERVISOR, DADOS.CMPLAN DESC
+            ) A
+            WHERE A.RN2 = 1";  
     }
     
     #endregion
