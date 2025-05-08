@@ -165,7 +165,35 @@ class IndexController extends BaseController
                         $infoGrafico6Result[] = $row;
                     }
                 }
-            #endregion
+
+                // GRAFICO 7 - Horas Positivas e Negativas por Supervisor
+                $infoGrafico7SQL = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getInfoBalancoDeHorasSupervisor($apuracao_inicio, $apuracao_fim, $colaborador, $supervisor, $local, $cargo) : null;
+
+                if ($infoGrafico7SQL) {
+                    $chunkResult7 = $this->oracleService->executeQuery($infoGrafico7SQL);
+
+                    // Processa os dados do Oracle
+                    foreach ($chunkResult7 as $key => $row) {
+                        // Convertendo as colunas de texto para UTF-8
+                        $textColumns = ['NOME_SUPERVISOR', 'SALDO_POSITIVO_FORMAT', 'SALDO_NEGATIVO_FORMAT'];
+                        foreach ($textColumns as $col) {
+                            if (isset($row[$col])) {
+                                $row[$col] = utf8_encode($row[$col]);
+                            }
+                        }
+
+                        // Convertendo as colunas numéricas
+                        $row['HORAS_POSITIVAS'] = isset($row['SALDO_POSITIVO']) ? (float)$row['SALDO_POSITIVO'] : 0;
+                        $row['HORAS_NEGATIVAS'] = isset($row['SALDO_NEGATIVO']) ? (float)abs($row['SALDO_NEGATIVO']) : 0;
+                        $row['QTD_FUNCIONARIO'] = isset($row['QTD_FUNCIONARIO']) ? (int)$row['QTD_FUNCIONARIO'] : 0;
+                        $row['QTD_POSITIVO'] = isset($row['QTD_FUNCIONARIO_POSITIVO']) ? (int)$row['QTD_FUNCIONARIO_POSITIVO'] : 0;
+                        $row['QTD_NEGATIVO'] = isset($row['QTD_FUNCIONARIO_NEGATIVO']) ? (int)$row['QTD_FUNCIONARIO_NEGATIVO'] : 0;
+
+                        // Adiciona cada linha ao array result final
+                        $infoGrafico7Result[] = $row;
+                    }
+                }
+                #endregion
             }
 
             // Retorna os dados em JSON
@@ -175,7 +203,8 @@ class IndexController extends BaseController
                     'infoCardsAtualResult' => $infoCardsAtualResult,
                     'infoGrafico1Result' => $infoGrafico1Result,
                     'infoGrafico2Result' => $infoGrafico2Result,
-                    'infoGrafico6Result' => $infoGrafico6Result
+                    'infoGrafico6Result' => $infoGrafico6Result,
+                    'infoGrafico7Result' => $infoGrafico7Result
                 ),
             ]);
         } catch (\Exception $e) {

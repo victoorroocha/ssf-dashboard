@@ -42,8 +42,9 @@
         font-size: 12px;
         font-weight: 500;
         margin-bottom: 5px;
-        white-space: nowrap;
+        /* white-space: nowrap; */
         align-self: flex-start; /* Posiciona no topo */
+        word-wrap: break-word; white-space: normal;
         width: 100%;
     }
     .indicator-value {
@@ -92,8 +93,8 @@
         margin: 0 -5px;
     }
     .card-column {
-        flex: 1 0 11.5%; /* 8 cards por linha (100%/8) */
-        max-width: 11.5%;
+        flex: 1 0 13%; /* 8 cards por linha (100%/8) */
+        max-width: 13%;
         padding: 0 5px;
         box-sizing: border-box;
     }
