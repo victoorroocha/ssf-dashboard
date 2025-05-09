@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Laminas\Mvc\Application;
 
+putenv('NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252');
+
 /**
  * This makes our life easier when dealing with paths. Everything is relative
  * to the application root now.
