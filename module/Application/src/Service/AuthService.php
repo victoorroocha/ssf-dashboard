@@ -73,7 +73,7 @@ class AuthService
     
         try {
             $client = new Client();
-            $client->setUri('http://192.168.0.54:8882/api/LoginAD');
+            $client->setUri('http://172.31.27.75:8882/api/LoginAD');
             $client->setMethod(Request::METHOD_GET);
             $client->setParameterGet([
                 'psDominio' => 'SAOFRANCISCO',
