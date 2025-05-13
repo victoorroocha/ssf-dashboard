@@ -198,8 +198,41 @@
                         ?>
                     </div>
                 <?php } else { ?>
-                    <div class="card-body">
-                        <p>Dashboard em desenvolvimento...</p>
+                    <div class="card-body p-0">
+                        <div class="tech-placeholder">
+                            <!-- Layer de partículas de sementes animadas -->
+                            <canvas id="seedCanvas"></canvas>
+
+                            <!-- Conteúdo principal -->
+                            <div class="tech-content">
+                                <!-- Logo (aplica filtro CSS para branco) -->
+                                <img src="<?= $this->basePath('img/ssf.png') ?>" alt="Logo Sementes São Francisco" class="tech-logo">
+
+                                <!-- Texto principal -->
+                                <h1>Quem planta, planta qualidade!</h1>
+                                <p>Conectando o campo à tecnologia para gerar valor em cada etapa.</p>
+
+                                <!-- Linha de ícones de planta -->
+                                <div class="icon-row">
+                                    <svg class="icon" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2">
+                                        <path d="M32 58V34M32 34C32 26 24 16 12 18C8 26 14 34 22 34H32Z"/>
+                                        <path d="M32 34C32 26 40 16 52 18C56 26 50 34 42 34H32Z"/>
+                                    </svg>
+                                    <svg class="icon" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2">
+                                        <path d="M32 58V34M32 34C32 26 24 16 12 18C8 26 14 34 22 34H32Z"/>
+                                        <path d="M32 34C32 26 40 16 52 18C56 26 50 34 42 34H32Z"/>
+                                    </svg>
+                                    <svg class="icon" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2">
+                                        <path d="M32 58V34M32 34C32 26 24 16 12 18C8 26 14 34 22 34H32Z"/>
+                                        <path d="M32 34C32 26 40 16 52 18C56 26 50 34 42 34H32Z"/>
+                                    </svg>
+                                    <svg class="icon" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2">
+                                        <path d="M32 58V34M32 34C32 26 24 16 12 18C8 26 14 34 22 34H32Z"/>
+                                        <path d="M32 34C32 26 40 16 52 18C56 26 50 34 42 34H32Z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php }  ?>
             </div>
@@ -343,5 +376,61 @@
         }).dxRangeSelector("instance");
 
     });
+
+
+
+
+
+    // COMEÇA CANVAS
+        const canvas = document.getElementById('seedCanvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, particles = [];
+
+        function resize() {
+            w = canvas.width = canvas.clientWidth;
+            h = canvas.height = canvas.clientHeight;
+        }
+
+        class Seed {
+            constructor() {
+            this.reset();
+            }
+            reset() {
+            this.x = Math.random()*w;
+            this.y = h + Math.random()*100;
+            this.vx = (Math.random()-0.5)*0.3;
+            this.vy = - (1 + Math.random()*1.5);
+            this.size = 2 + Math.random()*3;
+            this.alpha = 0.3 + Math.random()*0.5;
+            }
+            update() {
+            this.x += this.vx; this.y += this.vy;
+            this.alpha -= 0.005;
+            if (this.alpha <= 0) this.reset();
+            }
+            draw() {
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, 2*Math.PI);
+            ctx.fill();
+            }
+        }
+
+        function init() {
+            resize();
+            particles = Array.from({length: 80}, () => new Seed());
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,w,h);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+    // FINALIZA CANVAS
 </script>
 <!-- /.container-fluid -->

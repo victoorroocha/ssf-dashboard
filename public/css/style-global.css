@@ -224,7 +224,6 @@
 
 
 
-
 /* CSS LOADINGS OVERLAY */
 
 /* Animação de rotação para o spinner genérico */
@@ -304,4 +303,99 @@
     align-items: center;            /* Alinha verticalmente */
     z-index: 9999;
     flex-direction: column;         /* Empilha os elementos em coluna */
+}
+
+
+
+
+
+
+
+
+/* CSS TELA INICIAL */
+
+/* Container principal sem alterar card-body */
+.tech-placeholder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: none;
+  background: radial-gradient(circle at top left, #004d10 0%, #2e7d32 80%); /* tons do menu */ :contentReference[oaicite:1]{index=1}
+}
+
+/* Canvas de partículas de sementes */
+#seedCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Conteúdo por cima das partículas */
+.tech-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  height: 100%;
+  text-align: center;
+  color: #fff;
+}
+
+/* Logo sem distorção e filtro para branco */
+.tech-logo {
+  width: 70%;
+  /* max-height: 80px; */
+  margin-bottom: 25px;
+  filter: brightness(0) invert(1);
+  animation: fadeIn 1s ease-out;
+}
+
+/* Tipografia tecnológica */
+.tech-content h1 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.tech-content p {
+  font-size: 1.1rem;
+  font-weight: 300;
+  opacity: 0.9;
+  margin-bottom: 30px;
+}
+
+/* Linha de ícones com animação de flutuar */
+.icon-row {
+  display: flex;
+  gap: 24px;
+}
+
+.icon {
+  width: 48px; height: 48px;
+  opacity: 0.9;
+  animation: float 4s ease-in-out infinite alternate, glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 4px #ffffff66); }
+  50% { filter: drop-shadow(0 0 8px #ffffffaa); }
+}
+
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  from { transform: translateY(0) rotate(0deg); }
+  to   { transform: translateY(-12px) rotate(10deg); }
 }
