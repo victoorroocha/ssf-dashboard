@@ -1,162 +1,133 @@
-<!-- Botão para impressão (visível apenas na tela) -->
-<!-- <button onclick="" style="position: fixed; bottom: 20px; right: 50px; z-index: 1000; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-    Exportar para PDF
-</button> -->
+<!-- Botão minimalista só com ícone -->
+<button id="btnExportPDF" class="export-pdf">
+  <i class="fas fa-file-pdf" aria-hidden="true"></i>
+</button>
 
-<!-- Período de Apuração -->
-<div class="period-title" id="print-area">
-    Período de Apuração: <span id="periodo-apuracao"></span>
-</div>
+<section id="print-area">
+    <!-- Período de Apuração -->
+    <div class="period-title">
+        Período de Apuração: <span id="periodo-apuracao"></span>
+    </div>
 
-<!-- Linha de indicadores - Versão responsiva -->
-<div class="cards-container">
-    <!-- Card consolidado -->
-    <div class="dashboard-card">
-        <div class="indicator-card" style="background-color: #184223; position: relative;">
-            <div class="indicator-title">FUNCIONÁRIOS</div>
-            <div class="employee-stats">
-                <div class="employee-stat">
-                    <div class="employee-stat-value" id="totalFuncionarios">0</div>
-                    <div class="employee-stat-label">Total</div>
+    <!-- Linha de indicadores - Versão responsiva -->
+    <div class="cards-container">
+        <!-- Card consolidado -->
+        <div class="dashboard-card">
+            <div class="indicator-card" style="background-color: #184223; position: relative;">
+                <div class="indicator-title">FUNCIONÁRIOS</div>
+                <div class="employee-stats">
+                    <div class="employee-stat">
+                        <div class="employee-stat-value" id="totalFuncionarios">0</div>
+                        <div class="employee-stat-label">Total</div>
+                    </div>
+                    <div class="employee-stat">
+                        <div class="employee-stat-value" id="afastados">0</div>
+                        <div class="employee-stat-label">Afastados</div>
+                    </div>
+                    <div class="employee-stat">
+                        <div class="employee-stat-value" id="admitidos">0</div>
+                        <div class="employee-stat-label">Admitidos</div>
+                    </div>
+                    <div class="employee-stat">
+                        <div class="employee-stat-value" id="demitidos">0</div>
+                        <div class="employee-stat-label">Demitidos</div>
+                    </div>
                 </div>
-                <div class="employee-stat">
-                    <div class="employee-stat-value" id="afastados">0</div>
-                    <div class="employee-stat-label">Afastados</div>
-                </div>
-                <div class="employee-stat">
-                    <div class="employee-stat-value" id="admitidos">0</div>
-                    <div class="employee-stat-label">Admitidos</div>
-                </div>
-                <div class="employee-stat">
-                    <div class="employee-stat-value" id="demitidos">0</div>
-                    <div class="employee-stat-label">Demitidos</div>
+                <!-- Novo elemento para exibir o Turnover no centro -->
+                <div class="turnover-stat">
+                    <div class="turnover-value" id="turnoverPercent"></div>
+                    <div class="turnover-label">Turnover</div>
                 </div>
             </div>
-            <!-- Novo elemento para exibir o Turnover no centro -->
-            <div class="turnover-stat">
-                <div class="turnover-value" id="turnoverPercent"></div>
-                <div class="turnover-label">Turnover</div>
+        </div>
+        
+        <!-- Cards individuais -->
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #2e7d32;">
+                    <div class="indicator-title">FALTAS</div>
+                    <div class="indicator-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #388e3c;">
+                    <div class="indicator-title">INTRAJORNADAS</div>
+                    <div class="indicator-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #43a047;">
+                    <div class="indicator-title">INTERJORNADAS</div>
+                    <div class="indicator-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #4caf50;">
+                    <div class="indicator-title">HORA EXTRA +2H</div>
+                    <div class="indicator-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #5cb860;">
+                    <div class="indicator-title">AD. NOTURNO</div>
+                    <div class="indicator-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-column">
+            <div class="dashboard-card">
+                <div class="indicator-card" style="background-color: #8bc34a;">
+                    <div class="indicator-title">SALDO BANCO DE HORAS</div>
+                    <div class="indicator-value"></div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Cards individuais -->
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #2e7d32;">
-                <div class="indicator-title">FALTAS</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #388e3c;">
-                <div class="indicator-title">INTRAJORNADAS</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #43a047;">
-                <div class="indicator-title">INTERJORNADAS</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #4caf50;">
-                <div class="indicator-title">HORA EXTRA +2H</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #5cb860;">
-                <div class="indicator-title">AD. NOTURNO</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #7cc67f;">
-                <div class="indicator-title">MÉDIA SALARIAL</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div> -->
-    
-    <div class="card-column">
-        <div class="dashboard-card">
-            <div class="indicator-card" style="background-color: #8bc34a;">
-                <div class="indicator-title">SALDO BANCO DE HORAS</div>
-                <div class="indicator-value"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Seção do Gráfico (abaixo dos cards) -->
-<div id="chart1" id="print-area"></div>
+    <!-- Seção do Gráfico (abaixo dos cards) -->
+    <div id="chart1"></div>
 
-<div class="period-title"><span id="title-correncias-supervisor"></span></div>
+    <div class="period-title"><span id="title-correncias-supervisor"></span></div>
 
-<!-- Container para os gráficos lado a lado -->
-<div class="row" style="margin: 0 -5px;">
-    <div class="col-md-6" style="padding: 0 5px;">
-        <div id="chart2" style="width: 100%;"></div>
+    <!-- Container para os gráficos lado a lado -->
+    <div class="row" style="margin: 0 -5px;">
+        <div class="col-md-6" style="padding: 0 5px;">
+            <div id="chart2" style="width: 100%;"></div>
+        </div>
+        <div class="col-md-6" style="padding: 0 5px;">
+            <div id="chart3" style="width: 100%;"></div>
+        </div>
     </div>
-    <div class="col-md-6" style="padding: 0 5px;">
-        <div id="chart3" style="width: 100%;"></div>
+
+    <!-- Container para os gráficos lado a lado -->
+    <div class="row" style="margin: 0 -5px;">
+        <div class="col-md-6" style="padding: 0 5px;">
+            <div id="chart4" style="width: 100%;"></div>
+        </div>
+        <div class="col-md-6" style="padding: 0 5px;">
+            <div id="chart5" style="width: 100%;"></div>
+        </div>
     </div>
-</div>
 
-<!-- Container para os gráficos lado a lado -->
-<div class="row" style="margin: 0 -5px;">
-    <div class="col-md-6" style="padding: 0 5px;">
-        <div id="chart4" style="width: 100%;"></div>
-    </div>
-    <div class="col-md-6" style="padding: 0 5px;">
-        <div id="chart5" style="width: 100%;"></div>
-    </div>
-</div>
+    <div id="page2-marker" class="page-break"></div>
 
-<div id="chart7"></div>
-<div id="chart6"></div>
+    <div id="chart7"></div>
+    <div id="chart6"></div>
+<section>
 
-
-<!-- loading global -->
-<div id="globalLoading" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    flex-direction: column;">
-    <div style="
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #3498db;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 15px;"></div>
-    <div style="font-size: 18px; color: #333;">Carregando Informações...</div>
-</div>
 <script>
     var grafico1 = null;
     var grafico2 = null;
@@ -167,16 +138,110 @@
     var grafico7 = null;
 
     $(document).ready(function () {
+        document.getElementById('btnExportPDF').addEventListener('click', async function () {
+            // abre o overlay
+            const loading      = document.getElementById('globalLoading');
+            const spinnerGen   = document.getElementById('spinnerGeneric');
+            const spinnerPDF   = document.getElementById('spinnerPDF');
+            const loadingText  = document.getElementById('loadingText');
+
+            // 1) Mostrar overlay
+            loading.style.display = 'flex';
+
+            // 2) Estado PDF: ocultar spinner genérico, mostrar PDF, texto
+            spinnerGen.style.display  = 'none';
+            spinnerPDF.style.display  = 'block';
+            loadingText.textContent   = 'Gerando PDF…';
+
+            try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth  = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            // marcação e grupos (igual ao seu código atual)
+            const printArea = document.getElementById('print-area');
+            const marker    = printArea.querySelector('#page2-marker');
+            if (!marker) throw new Error('Marker não encontrado');
+            const grupo1 = [], grupo2 = [];
+            let el = marker.previousElementSibling;
+            while (el) { grupo1.unshift(el); el = el.previousElementSibling; }
+            el = marker.nextElementSibling;
+            while (el) { grupo2.push(el); el = el.nextElementSibling; }
+
+            // função para capturar
+            async function capturarEAdicionar(grupo, novaPagina, topMarginPx = 0, leftMarginPx = 0, rightMarginPx = 0) {
+                const tmp = document.createElement('div');
+                tmp.style.position = 'absolute';
+                tmp.style.left     = '-9999px';
+                tmp.style.top      = '0';
+                tmp.style.paddingLeft  = `${leftMarginPx}px`;
+                tmp.style.paddingRight = `${rightMarginPx}px`;
+                document.body.appendChild(tmp);
+
+                if (topMarginPx > 0) {
+                const spacer = document.createElement('div');
+                spacer.style.height = `${topMarginPx}px`;
+                tmp.appendChild(spacer);
+                }
+
+                grupo.forEach(node => tmp.appendChild(node.cloneNode(true)));
+                const canvas = await html2canvas(tmp, { scale: 2, useCORS: true });
+                document.body.removeChild(tmp);
+
+                const imgData = canvas.toDataURL('image/png');
+                const props   = pdf.getImageProperties(imgData);
+                const availWidthMm = pageWidth - (leftMarginPx * 25.4/96) - (rightMarginPx * 25.4/96);
+                const pdfW    = availWidthMm;
+                const pdfH    = (props.height * pdfW) / props.width;
+                if (novaPagina) pdf.addPage();
+                const leftMarginMm = leftMarginPx * 25.4 / 96;
+                pdf.addImage(imgData, 'PNG', leftMarginMm, 0, pdfW, pdfH);
+            }
+
+            // suas margens
+            const margemTopo1 = 80, margemEsq1 = 20, margemDir1 = 20;
+            const margemTopo2 = 80, margemEsq2 = 20, margemDir2 = 20;
+
+            await capturarEAdicionar(grupo1, false, margemTopo1, margemEsq1, margemDir1);
+            await capturarEAdicionar(grupo2, true,  margemTopo2, margemEsq2, margemDir2);
+
+            // 6) Gera o download
+            pdf.save('dashboard-recursos-humanos.pdf');
+
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao gerar PDF: ' + err.message);
+            } finally {
+                // 3) Reset para estado genérico
+                spinnerPDF.style.display   = 'none';
+                spinnerGen.style.display   = 'block';
+                loadingText.textContent    = 'Carregando Informações...';
+
+                // 4) Esconde overlay
+                loading.style.display = 'none';
+            }
+        });
     });
+
 
     // Função para atualizar os gráficos
     function atualizarInfosDashboad() {
          // Mostra o loading
         $('#globalLoading').show();
 
-        $('#periodo-apuracao').text(
-            moment(formSelections.dataInicio, 'YYYY-MM-DD').format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())
-        );
+        const dataInicio = moment(formSelections.dataInicio, 'YYYY-MM-DD');
+        const dataFim = moment(formSelections.dataFim, 'YYYY-MM-DD');
+
+        let textoPeriodo = '';
+
+        if (dataInicio.isSame(dataFim, 'month')) {
+            textoPeriodo = dataInicio.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase());
+        } else {
+            textoPeriodo = `${dataInicio.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())} à ${dataFim.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())}`;
+        }
+
+        $('#periodo-apuracao').text(textoPeriodo);
 
         return new Promise((resolve, reject) => {
             $.ajax({

@@ -14,6 +14,9 @@
         box-sizing: border-box;
     }
     
+
+
+
     @media (max-width: 768px) {
         .chart-half {
             flex: 0 0 100%;
@@ -84,45 +87,62 @@
         font-size: 10px;
         opacity: 0.9;
     }
-   
-    /* Ajuste responsivo */
+
+
     .cards-container {
-        display: inline-flex;
-        justify-content: center;
+        display: flex;
         flex-wrap: wrap;
-        margin: 0 -5px;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
     }
+
+    /* Tamanho base: até 7-8 cards por linha */
     .card-column {
-        flex: 1 0 13%; /* 8 cards por linha (100%/8) */
-        max-width: 13%;
-        padding: 0 5px;
+        flex: 0 1 calc(12.5% - 10px); /* 8 por linha com gap */
+        min-width: 130px;
         box-sizing: border-box;
     }
-    @media (max-width: 1280px) {
+
+    /* Até 6 por linha */
+    @media (max-width: 1400px) {
         .card-column {
-            flex: 1 0 25%; /* 4 cards por linha */
-            max-width: 25%;
+            flex: 0 1 calc(16.66% - 10px);
         }
     }
+
+    /* Até 4 por linha */
+    @media (max-width: 992px) {
+        .card-column {
+            flex: 0 1 calc(25% - 10px);
+        }
+    }
+
+    /* Exibir sempre 3 por linha */
     @media (max-width: 768px) {
         .card-column {
-            flex: 1 0 33.333%; /* 3 cards por linha */
-            max-width: 33.333%;
+            flex: 0 1 calc(33.33% - 10px);
         }
     }
+
+    /* Se a tela for muito pequena, exibe 2 por linha */
     @media (max-width: 576px) {
         .card-column {
-            flex: 1 0 50%; /* 2 cards por linha */
-            max-width: 50%;
+            flex: 0 1 calc(50% - 10px);
         }
     }
+
+    /* Apenas em telas muito estreitas (como celular em modo retrato), mostrar 1 por linha */
     @media (max-width: 400px) {
         .card-column {
-            flex: 1 0 100%; /* 1 card por linha */
-            max-width: 100%;
+            flex: 0 1 100%;
         }
     }
-    
+
+
+
+
+
     .period-title {
         text-align: center;
         width: 100%;
@@ -141,7 +161,6 @@
         text-align: center;
         color: white;
     }
-
     .turnover-value {
         font-size: 10px;
         font-weight: bold;

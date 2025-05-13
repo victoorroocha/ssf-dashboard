@@ -170,15 +170,115 @@
     }
 }
 
-
-
 .hidden {
     display: none;
 }
 
 
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+
+
+
+
+
+/* CSS IMPRESSAO */
+.page-break {
+    page-break-before: always;
+    break-before: always; /* suporte moderno */
 }
+.export-pdf {
+  position: fixed;      /* fixa ao viewport */  
+  bottom: 20px;         /* 20px acima da borda inferior */  
+  right: 50px;          /* 50px da borda direita */  
+  z-index: 1000;        /* acima de quase tudo */  
+  display: flex;        /* flex container para centralizar ícone */  
+  align-items: center;  /* verticalmente centrar */  
+  justify-content: center; /* horizontalmente centrar */  
+  width: 40px;          /* botão quadrado */  
+  height: 40px;         
+  padding: 0;           /* sem espaçamento extra */  
+  background-color: #E53E3E; /* vermelho PDF típico */  
+  color: #fff;          /* ícone branco */  
+  border: none;         
+  border-radius: 4px;   
+  cursor: pointer;      
+  transition: background-color 0.2s ease; /* suaviza o hover */  
+}
+
+.export-pdf:hover,
+.export-pdf:focus {
+  background-color: #C53030; /* tom mais escuro no hover */ */
+}
+
+/* Ícone um pouco maior para melhor legibilidade */
+.export-pdf .fa-file-pdf {
+  font-size: 18px;
+}
+@media print {
+    .export-pdf {
+        display: none;
+    }
+}
+
+
+
+
+
+
+
+/* CSS LOADINGS OVERLAY */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%     { opacity:0.6; }
+}
+@keyframes bounce {
+  to {
+    transform: translateX(10px); /* Movimenta na horizontal */
+  }
+}
+
+.loading-icon {
+  margin-bottom: 15px;
+}
+
+/* Spinner genérico */
+.loading-icon--spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px; height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-icon--pdf {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row; /* <- isso garante a disposição horizontal */
+  gap: 8px;
+  width: auto;
+  height: auto;
+}
+
+.loading-icon--pdf div {
+  width: 12px;
+  height: 12px;
+  background-color: #E53E3E;
+  border-radius: 50%;
+  animation: bounce 0.6s infinite ease-in-out alternate;
+  transform-origin: center;
+}
+
+.loading-icon--pdf div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-icon--pdf div:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+
