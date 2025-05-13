@@ -225,40 +225,50 @@
 
 
 
-
 /* CSS LOADINGS OVERLAY */
 
+/* Animação de rotação para o spinner genérico */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Animação de pulsação para os círculos do spinner PDF */
 @keyframes pulse {
   0%,100% { opacity:1; }
   50%     { opacity:0.6; }
 }
+
+/* Animação de movimento para o spinner PDF */
 @keyframes bounce {
   to {
     transform: translateX(10px); /* Movimenta na horizontal */
   }
 }
 
+/* Classe base para os ícones de loading */
 .loading-icon {
   margin-bottom: 15px;
 }
 
-/* Spinner genérico */
+/* Spinner genérico - círculo girando */
 .loading-icon--spinner {
   border: 5px solid #f3f3f3;
   border-top: 5px solid #3498db;
   border-radius: 50%;
-  width: 50px; height: 50px;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
+  display: flex;                  /* Usando Flexbox para centralização */
+  justify-content: center;        /* Centraliza horizontalmente */
+  align-items: center;            /* Centraliza verticalmente */
 }
 
+/* Spinner PDF - 3 círculos animados */
 .loading-icon--pdf {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: row; /* <- isso garante a disposição horizontal */
+  flex-direction: row;
   gap: 8px;
   width: auto;
   height: auto;
@@ -281,4 +291,17 @@
   animation-delay: 0.4s;
 }
 
-
+/* loading global */
+#globalLoading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;        /* Alinha horizontalmente */
+    align-items: center;            /* Alinha verticalmente */
+    z-index: 9999;
+    flex-direction: column;         /* Empilha os elementos em coluna */
+}
