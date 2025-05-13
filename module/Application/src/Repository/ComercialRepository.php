@@ -17,7 +17,6 @@ class ComercialRepository
                     ,CASE
                         -- 🌟 1. Raiz Forte (Clientes premium: antigos, recorrentes, ticket médio alto, e TSI > 15%. São fiéis e altamente valiosos.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 3
-                            AND TICKET_MEDIO >= 500000
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI > 15
@@ -25,7 +24,6 @@ class ComercialRepository
                     
                         -- 🌿 2. Sementes de Ouro (Clientes consistentes, com bom histórico de compra, ticket médio saudável e uso relevante de TSI. Um nível abaixo do topo, mas bem confiáveis.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 2
-                            AND TICKET_MEDIO >= 250000
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI > 10
@@ -33,27 +31,23 @@ class ComercialRepository
                     
                         -- 🌱 3. Pé de Safra (Clientes ativos, ritmo mais espaçado, mas ainda assim envolvidos. Podem crescer.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND TICKET_MEDIO > 0
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                         THEN 3
                     
                         -- 🌾 4. Terra Promissora (Clientes relativamente novos (6 meses da primeira compra), com excelente início — bom ticket, uso de TSI e já fazendo pedidos. Grande potencial de se tornarem premium.)
                         WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND TICKET_MEDIO >= 100000
                             AND PERC_TSI > 10
                             AND PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 4
                     
                         -- 🌿 5. Broto de Esperança (Clientes muito novos (até 6 meses da primeira compra), qualquer ticket.)
                         WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND TICKET_MEDIO > 0
                             AND PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 5
                     
                         -- 🌧️ 6. Chuva na Hora Errada (Clientes que pararam de comprar, ticket acima de 100k, já foram bons, mas sumiram com queda brusca nas compras. Valem contato para entender o que houve.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND TICKET_MEDIO > 100000
                             AND PERC_TSI > 10
                             AND ULTIMO_PEDIDO_DIAS > 380
                         THEN 6
@@ -68,7 +62,6 @@ class ComercialRepository
                     ,CASE
                         -- 🌟 1. Raiz Forte (Clientes premium: antigos, recorrentes, ticket médio alto, e TSI > 15%. São fiéis e altamente valiosos.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 3
-                            AND TICKET_MEDIO >= 500000
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI > 15
@@ -76,7 +69,6 @@ class ComercialRepository
                     
                         -- 🌿 2. Sementes de Ouro (Clientes consistentes, com bom histórico de compra, ticket médio saudável e uso relevante de TSI. Um nível abaixo do topo, mas bem confiáveis.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 2
-                            AND TICKET_MEDIO >= 250000
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI > 10
@@ -84,27 +76,23 @@ class ComercialRepository
                     
                         -- 🌱 3. Pé de Safra (Clientes ativos, ritmo mais espaçado, mas ainda assim envolvidos. Podem crescer.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND TICKET_MEDIO > 0
                             AND PRIMEIRO_PEDIDO_DIAS > 180
                             AND ULTIMO_PEDIDO_DIAS <= 380
                         THEN 'Pé de Safra'
                     
                         -- 🌾 4. Terra Promissora (Clientes relativamente novos (6 meses da primeira compra), com excelente início — bom ticket, uso de TSI e já fazendo pedidos. Grande potencial de se tornarem premium.)
                         WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND TICKET_MEDIO >= 100000
                             AND PERC_TSI > 10
                             AND PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 'Terra Promissora'
                     
                         -- 🌿 5. Broto de Esperança (Clientes muito novos (até 6 meses da primeira compra), ticket menor que o Terra Promissora.)
                         WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND TICKET_MEDIO > 0
                             AND PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 'Broto de Esperança'
                     
                         -- 🌧️ 6. Chuva na Hora Errada (Clientes que pararam de comprar, ticket acima de 100k, já foram bons, mas sumiram com queda brusca nas compras. Valem contato para entender o que houve.)
                         WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND TICKET_MEDIO > 100000
                             AND PERC_TSI > 10
                             AND ULTIMO_PEDIDO_DIAS > 380
                         THEN 'Chuva na Hora Errada'
@@ -119,17 +107,17 @@ class ComercialRepository
                 FROM (
                 SELECT  
                     C.*
+                    ,ROUND(nvl(C.PRECO_TOTAL_GERMOPLASMA,0)/nvl(C.PRECO_TOTAL,0)*100,2) PERC_GERMOPLASMA
+                    ,ROUND(nvl(C.PRECO_TOTAL_ROYALTIES,0)/nvl(C.PRECO_TOTAL,0)*100,2) PERC_ROYALTIES
+                    ,ROUND(nvl(C.PRECO_TOTAL_FRETE,0)/nvl(C.PRECO_TOTAL,0)*100,2) PERC_FRETE
+                    ,ROUND(nvl(C.PRECO_TOTAL_TSI,0)/nvl(C.PRECO_TOTAL,0)*100,2) PERC_TSI
                     ,round(CASE WHEN C.PRECO_TOTAL_ANO_ANTERIOR > 0 THEN (C.PRECO_TOTAL_ANO_ATUAL - C.PRECO_TOTAL_ANO_ANTERIOR) / C.PRECO_TOTAL_ANO_ANTERIOR *100 ELSE 0 END,2) AS PERC_CRESCIMENTO_QUEDA
                     ,round(C.PRECO_TOTAL/C.QTD_PEDIDOS,2) AS TICKET_MEDIO
+                    ,round(C.PRECO_TOTAL/C.QTD_TOTAL,2) AS PRECO_MEDIO_BAG
                 FROM (
                 SELECT 
-                     B.NOME_CLIENTE
+                    B.NOME_CLIENTE
                     ,B.CGCCPF_CLIENTE
-                    ,B.INSCRICAO_CLIENTE
-                    ,B.ID_CLIENTE
-                    ,B.CIDADE_CLIENTE
-                    ,B.ESTADO_CLIENTE
-                    ,CASE WHEN B.CLIENTE_REGIAO IS NULL THEN 'SEM CADASTRO' ELSE B.CLIENTE_REGIAO END AS CLIENTE_REGIAO
                     ,nvl(COUNT(DISTINCT B.ID_PEDIDO),0) AS QTD_PEDIDOS
                     ,nvl(sum(B.QTD_TOTAL),0) AS QTD_TOTAL
                     ,nvl(sum(B.QTD_B50),0) AS QTD_B50
@@ -140,9 +128,6 @@ class ComercialRepository
                     ,nvl(sum(B.PRECO_TOTAL_ROYALTIES),0) AS PRECO_TOTAL_ROYALTIES
                     ,nvl(sum(B.PRECO_TOTAL_TSI),0) AS PRECO_TOTAL_TSI
                     ,nvl(SUM(B.PRECO_TOTAL_FRETE),0) AS PRECO_TOTAL_FRETE
-                    ,ROUND(nvl(sum(B.PRECO_TOTAL_TSI),0)/nvl(sum(B.PRECO_TOTAL),0)*100,2) PERC_TSI
-                    -- ,ROUND(SUM(B.TSI_PONDERADO)/nvl(sum(B.PRECO_TOTAL),0),2) PERC_TSI_PONDERADO
-                    -- ,ROUND(AVG(B.PERC_TSI),2) AS MEDIA_TSI_PEDIDO
                     ,TO_CHAR(MIN(B.DATA_PEDIDO), 'YYYY-MM-DD') AS DATA_PRIMEIRO_PEDIDO
                     ,TRUNC(SYSDATE - MIN(CAST(B.DATA_PEDIDO AS DATE))) AS PRIMEIRO_PEDIDO_DIAS
                     ,TO_CHAR(MAX(B.DATA_PEDIDO), 'YYYY-MM-DD') AS DATA_ULTIMO_PEDIDO
@@ -150,6 +135,7 @@ class ComercialRepository
                     ,COUNT(DISTINCT B.CODIGOSAFRA) QTD_SAFRAS_PARTICIPADAS
                     ,ROUND(AVG(B.QTD_CULTIVAR_POR_PEDIDO),2) AS MEDIA_CULTIVARES_POR_PEDIDO
                     ,ROUND(nvl(COUNT(DISTINCT B.ID_PEDIDO),0) / COUNT(DISTINCT B.CODIGOSAFRA),2) AS MEDIA_PEDIDOS_P_SAFRA
+                    ,ROUND(nvl(sum(B.QTD_TOTAL),0) / COUNT(DISTINCT B.CODIGOSAFRA),2) AS MEDIA_BAGS_P_SAFRA
                     ,ROUND(AVG(B.DIAS_ENTRE_PEDIDOS),0) AS MEDIA_DIAS_ENTRE_PEDIDOS
                     ,SUM(B.PRECO_TOTAL_ANO_ATUAL) AS PRECO_TOTAL_ANO_ATUAL
                     ,SUM(B.PRECO_TOTAL_ANO_ANTERIOR) AS PRECO_TOTAL_ANO_ANTERIOR
@@ -181,8 +167,6 @@ class ComercialRepository
                     ,SUM(A.PRECO_TOTAL_ROYALTIES) AS PRECO_TOTAL_ROYALTIES
                     ,SUM(A.PRECO_TOTAL_TSI) AS PRECO_TOTAL_TSI
                     ,SUM(A.PRECO_TOTAL) AS PRECO_TOTAL
-                    ,ROUND((SUM(A.PRECO_TOTAL_TSI) / SUM(A.PRECO_TOTAL))*100,2) AS PERC_TSI
-                    ,SUM(A.PRECO_TOTAL)*ROUND((SUM(A.PRECO_TOTAL_TSI) / SUM(A.PRECO_TOTAL))*100,2) TSI_PONDERADO
                     ,CASE WHEN EXTRACT(YEAR FROM A.DATA_PEDIDO) = EXTRACT(YEAR FROM SYSDATE) THEN  A.ID_PEDIDO ELSE null END AS QTD_PEDIDO_ANO_ATUAL
                     ,CASE WHEN EXTRACT(YEAR FROM A.DATA_PEDIDO) = EXTRACT(YEAR FROM SYSDATE)-1 THEN  A.ID_PEDIDO ELSE null END AS QTD_PEDIDO_ANO_ANTERIOR
                     ,CASE WHEN EXTRACT(YEAR FROM A.DATA_PEDIDO) = EXTRACT(YEAR FROM SYSDATE) THEN  SUM(A.PRECO_TOTAL) ELSE 0 END AS PRECO_TOTAL_ANO_ATUAL
@@ -223,25 +207,25 @@ class ComercialRepository
                 AND s.CODIGOCULTURA = 1 -- apenas cultura SOJA
                 AND s.CODIGOINSCRICAO = 1
                 AND IP.CODIGOCULTIVAR IS NOT NULL
-                --AND CLI.CGC_CPF IN ('00808899000173') 
+                --AND CLI.CGC_CPF IN ('13563680004867','60498706013992','13563680002147','60498706006600')
                 ORDER BY CLI.CGC_CPF, P.CREATED_AT
                 ) A
                 GROUP BY A.ID_PEDIDO,A.CODIGO_PEDIDO,A.DATA_PEDIDO,A.CODIGOSAFRA,A.ID_CLIENTE,A.NOME_CLIENTE,A.CIDADE_CLIENTE,A.ESTADO_CLIENTE,A.CLIENTE_REGIAO,A.CGCCPF_CLIENTE,A.INSCRICAO_CLIENTE
                 ORDER BY A.CGCCPF_CLIENTE, A.DATA_PEDIDO
                 ) B
-                GROUP BY b.NOME_CLIENTE,b.CGCCPF_CLIENTE,B.INSCRICAO_CLIENTE,b.ID_CLIENTE,B.CIDADE_CLIENTE,B.ESTADO_CLIENTE,B.CLIENTE_REGIAO
+                GROUP BY b.NOME_CLIENTE,b.CGCCPF_CLIENTE
                 ORDER BY nvl(COUNT(DISTINCT b.ID_PEDIDO),0) DESC
                 ) C
                 ) D
                 ) E";  
     }
-    public function getPedidosCliente($clienteId)
+    public function getPedidosCliente($clienteCgcCpf)
     {
         $wheresInternos = "";
         $wheresExternos = "";
         $columnTipoApuracao = "";
         
-        if (!empty($clienteId)) {
+        if (!empty($clienteCgcCpf)) {
             $sql ="SELECT 
                         A.ID_PEDIDO
                         ,A.CODIGO_PEDIDO
@@ -260,8 +244,12 @@ class ComercialRepository
                         ,SUM(A.PRECO_TOTAL_GERMOPLASMA) AS PRECO_TOTAL_GERMOPLASMA
                         ,SUM(A.PRECO_TOTAL_ROYALTIES) AS PRECO_TOTAL_ROYALTIES
                         ,SUM(A.PRECO_TOTAL_TSI) AS PRECO_TOTAL_TSI
-                        ,SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE) AS PRECO_TOTAL
-                        ,ROUND((SUM(A.PRECO_TOTAL_TSI) / SUM(A.PRECO_TOTAL))*100,2) AS PERC_TSI
+                        ,(SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE)) AS PRECO_TOTAL
+                        ,round((SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE))/SUM(A.QTD_TOTAL),2) AS PRECO_MEDIO_BAG
+                        ,ROUND((SUM(A.PRECO_TOTAL_GERMOPLASMA) / (SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE)))*100,2) AS PERC_GERMOPLASMA
+                        ,ROUND((SUM(A.PRECO_TOTAL_ROYALTIES) / (SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE)))*100,2) AS PERC_ROYALTIES
+                        ,ROUND((SUM(A.PRECO_TOTAL_FRETE) / (SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE)))*100,2) AS PERC_FRETE
+                        ,ROUND((SUM(A.PRECO_TOTAL_TSI) / (SUM(A.PRECO_TOTAL) + MAX(A.PRECO_TOTAL_FRETE)))*100,2) AS PERC_TSI
                         ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || A.ID_PEDIDO || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM (
                     SELECT  
@@ -303,7 +291,7 @@ class ComercialRepository
                     AND s.CODIGOCULTURA = 1 -- apenas cultura SOJA
                     AND s.CODIGOINSCRICAO = 1
                     AND IP.CODIGOCULTIVAR IS NOT NULL
-                    AND CLI.CODIGOCLIFOR IN ({$clienteId}) 
+                    AND CLI.CGC_CPF like '{$clienteCgcCpf}'
                     ORDER BY CLI.CGC_CPF, P.CREATED_AT
                     ) A
                     GROUP BY A.ID_PEDIDO,A.CODIGO_PEDIDO,A.DATA_PEDIDO,A.CODIGOSAFRA,A.DSC_SAFRA,A.VENDEDOR_ID,A.NOME_VENDEDOR

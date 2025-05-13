@@ -16,7 +16,7 @@
     } 
     .category-card .count {
         font-size: 24px;
-        font-weight: bold;
+        font-weight: bold;  
         margin-top: 10px;
         color: #2e7d32;
     }
@@ -37,6 +37,7 @@
         border: 2px solid #388e3c; /* verde escuro */
         transform: scale(1.05);
     }
+
 </style>
 
 <!-- Begin Page Content -->
@@ -132,8 +133,10 @@
 </div>
 
 <script>
+    $('#globalLoading').show();
     let clientesData = []; // Variável global para armazenar os dados
     let clientesGrid;      // Referência à dxDataGrid
+
     
     $(document).ready(function() {
         atualizarInfosDashboad();
@@ -221,7 +224,7 @@
     function inicializarGridClientes() {
         clientesGrid = $("#clientesGrid").dxDataGrid({
             dataSource: clientesData,
-            keyExpr: "ID_CLIENTE",
+            keyExpr: "CGCCPF_CLIENTE",
             height: 600,
             width: '100%',
             columnAutoWidth: true,
@@ -315,13 +318,24 @@
                 placeholder: 'Procure...',
             },
             columns: [
-                { dataField: 'ID_CLIENTE', caption: 'ID', allowEditing: false, width: 'auto', alignment: 'center' },
+                {
+                    type: "buttons",       // define coluna de botões
+                    width: 50,             // largura adequada
+                    fixed: true,
+                    fixedPosition: "left",
+                    buttons: [
+                        {
+                            hint: "Visualizar Pedidos do Cliente",
+                            icon: "fa fa-eye",   // ícone de olho
+                            onClick: function(e) {
+                                const data = e.row.data;
+                                abrirPopupPedidos(data.CGCCPF_CLIENTE, data.NOME_CLIENTE);
+                            }
+                        }
+                    ]
+                },
                 { dataField: 'NOME_CLIENTE', caption: 'Nome', allowEditing: false, width: 400 },
-                { dataField: 'CGCCPF_CLIENTE', caption: 'CGC/CPF', allowEditing: false, width: 100, alignment: 'center' },
-                { dataField: 'INSCRICAO_CLIENTE', caption: 'Inscrição', allowEditing: false, width: 100, alignment: 'center' },
-                { dataField: 'CIDADE_CLIENTE', caption: 'Cidade', allowEditing: false, width: 'auto' },
-                { dataField: 'ESTADO_CLIENTE', caption: 'Estado', allowEditing: false, alignment: 'center', width: 100 },
-                { dataField: 'CLIENTE_REGIAO', caption: 'Região', allowEditing: false, alignment: 'center', width: 150 },
+                { dataField: 'CGCCPF_CLIENTE', caption: 'CGC/CPF', allowEditing: false, width: 150, alignment: 'center' },
                 { 
                     dataField: 'DATA_PRIMEIRO_PEDIDO', 
                     caption: 'Dt. Primeiro Pedido', 
@@ -434,6 +448,42 @@
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
                 },
                 { 
+                    dataField: 'PRECO_MEDIO_BAG', 
+                    caption: 'Preço Médio da Bag', 
+                    allowEditing: false, 
+                    alignment: 'right', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                },
+                { 
+                    dataField: 'PERC_GERMOPLASMA', 
+                    caption: '% GERMOPLASMA Total', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { precision: 2 },
+                },
+                { 
+                    dataField: 'PERC_ROYALTIES', 
+                    caption: '% ROYALTIES Total', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { precision: 2 },
+                },
+                { 
+                    dataField: 'PERC_FRETE', 
+                    caption: '% FRETE Total', 
+                    allowEditing: false, 
+                    alignment: 'center', 
+                    width: 'auto', 
+                    dataType: 'number', 
+                    format: { precision: 2 },
+                },
+                { 
                     dataField: 'PERC_TSI', 
                     caption: '% TSI Total', 
                     allowEditing: false, 
@@ -476,7 +526,7 @@
             summary: {
                 totalItems: [
                     {
-                        column: "ID_CLIENTE", 
+                        column: "CGCCPF_CLIENTE", 
                         summaryType: "count",
                         displayFormat: "{0}", 
                         customizeText: function(cellInfo) {
@@ -658,7 +708,7 @@
                 ],
                 groupItems: [
                     {
-                        column: "ID_CLIENTE", 
+                        column: "CGCCPF_CLIENTE", 
                         summaryType: "count",
                         displayFormat: "{0}", 
                         customizeText: function(cellInfo) {
@@ -856,15 +906,15 @@
                     },
                 ],
             },
-            onRowClick: function (e) {
-                if (e.rowType === "data") {
-                    // Captura o ID do cliente clicado
-                    var clienteId = e.data.ID_CLIENTE;
-                    var clienteNome = e.data.NOME_CLIENTE;
-                    // Chama a função para abrir o popup e carregar os pedidos
-                    abrirPopupPedidos(clienteId, clienteNome);
-                }
-            },
+            // onRowClick: function (e) {
+            //     if (e.rowType === "data") {
+            //         // Captura o ID do cliente clicado
+            //         var clienteCgcCpf = e.data.CGCCPF_CLIENTE;
+            //         var clienteNome = e.data.NOME_CLIENTE;
+            //         // Chama a função para abrir o popup e carregar os pedidos
+            //         abrirPopupPedidos(clienteCgcCpf, clienteNome);
+            //     }
+            // },
             onToolbarPreparing: function (e) {
                 var toolbarItems = e.toolbarOptions.items;
                 
@@ -898,17 +948,24 @@
                 $('#globalLoading').hide(); // Esconde o loading assim que a grid estiver pronta
             }
         }).dxDataGrid("instance");
+        
+        // 1) Ativa visualmente o primeiro card
+        const $primeiro = $(".category-card").first();
+        $primeiro.addClass("ativo");
+
+        // 2) Mostra o loading e aplica o filtro
+        clientesGrid.filter(["CATEGORIA_CLIENTE_ID", "=", 1]);
     }
 
-    function abrirPopupPedidos(clienteId, clienteNome) {
+    function abrirPopupPedidos(clienteCgcCpf, clienteNome) {
         // Faz a requisição AJAX para carregar os pedidos do cliente
         $.ajax({
             url: "/comercial/list-pedidos-cliente",
             method: 'GET',
-            data: { clienteId: clienteId },
+            data: { clienteCgcCpf: clienteCgcCpf },
             success: function (result) {
                 const popup = $('#popupPedidos').dxPopup({
-                    title: clienteNome + "- PEDIDOS",
+                    title: clienteNome + " - PEDIDOS",
                     visible: false,  // Inicializa o popup mas não o torna visível ainda
                     width: '80%',
                     height: '80%',
@@ -973,6 +1030,8 @@
                                 {
                                     caption: 'Abrir Pedido Softsul',
                                     allowEditing: false,
+                                    fixed: true,
+                                    fixedPosition: "left",
                                     width: 'auto',
                                     alignment: 'center',
                                     cellTemplate: function(container, options) {
@@ -1056,6 +1115,42 @@
                                     width: 'auto', 
                                     dataType: 'number', 
                                     format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PRECO_MEDIO_BAG', 
+                                    caption: 'Preço Médio da Bag', 
+                                    allowEditing: false, 
+                                    alignment: 'right', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PERC_GERMOPLASMA', 
+                                    caption: '% GERMOPLASMA Total', 
+                                    allowEditing: false, 
+                                    alignment: 'center', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PERC_ROYALTIES', 
+                                    caption: '% ROYALTIES Total', 
+                                    allowEditing: false, 
+                                    alignment: 'center', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { precision: 2 },
+                                },
+                                { 
+                                    dataField: 'PERC_FRETE', 
+                                    caption: '% FRETE Total', 
+                                    allowEditing: false, 
+                                    alignment: 'center', 
+                                    width: 'auto', 
+                                    dataType: 'number', 
+                                    format: { precision: 2 },
                                 },
                                 { 
                                     dataField: 'PERC_TSI', 
@@ -1452,8 +1547,5 @@
         });
     }
 
-
-
-    
 </script>
 

@@ -68,7 +68,7 @@ class ComercialController extends BaseController
                 // Processa os dados do Oracle
                 foreach ($listaClientes  as $key => $rowCliente) {
                     // Convertendo apenas as colunas de texto para UTF-8
-                    $textColumns = ['NOME_CLIENTE', 'CIDADE_CLIENTE', 'ESTADO_CLIENTE', 'CLIENTE_REGIAO'];
+                    $textColumns = ['NOME_CLIENTE'];
                     foreach ($textColumns as $col) {
                         if (isset($rowCliente[$col])) {
                             $rowCliente[$col] = utf8_encode($rowCliente[$col]);
@@ -97,6 +97,9 @@ class ComercialController extends BaseController
                     $rowCliente['PRECO_TOTAL_ROYALTIES'] = floatval(str_replace(',', '.', $rowCliente['PRECO_TOTAL_ROYALTIES']));
                     $rowCliente['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $rowCliente['PRECO_TOTAL_TSI']));
                     $rowCliente['PRECO_TOTAL_FRETE'] = floatval(str_replace(',', '.', $rowCliente['PRECO_TOTAL_FRETE']));
+                    $rowCliente['PERC_GERMOPLASMA'] = floatval(str_replace(',', '.', $rowCliente['PERC_GERMOPLASMA']));
+                    $rowCliente['PERC_ROYALTIES'] = floatval(str_replace(',', '.', $rowCliente['PERC_ROYALTIES']));
+                    $rowCliente['PERC_FRETE'] = floatval(str_replace(',', '.', $rowCliente['PERC_FRETE']));
                     $rowCliente['PERC_TSI'] = floatval(str_replace(',', '.', $rowCliente['PERC_TSI']));
                     $rowCliente['TICKET_MEDIO'] = floatval(str_replace(',', '.', $rowCliente['TICKET_MEDIO']));
                     $rowCliente['PERC_CRESCIMENTO_QUEDA'] = floatval(str_replace(',', '.', $rowCliente['PERC_CRESCIMENTO_QUEDA']));
@@ -143,7 +146,7 @@ class ComercialController extends BaseController
         }
 
         // Captura os parâmetros da requisição GET
-        $clienteId = $this->params()->fromQuery('clienteId', null);
+        $clienteCgcCpf = $this->params()->fromQuery('clienteCgcCpf', null);
 
         try {
             // Define o cabeçalho corretamente antes de qualquer saída
@@ -154,7 +157,7 @@ class ComercialController extends BaseController
 
             // Consulta no Softsul todos pedidos
             $result = [];
-            $sqlPedidosCliente = $this->ComercialRepository ? $this->ComercialRepository->getPedidosCliente($clienteId) : '';
+            $sqlPedidosCliente = $this->ComercialRepository ? $this->ComercialRepository->getPedidosCliente($clienteCgcCpf) : '';
 
             if ($sqlPedidosCliente) {
                 // Executa a consulta Oracle
@@ -182,6 +185,10 @@ class ComercialController extends BaseController
                     $rowPedidoCliente['PRECO_TOTAL_ROYALTIES'] = floatval(str_replace(',', '.', $rowPedidoCliente['PRECO_TOTAL_ROYALTIES']));
                     $rowPedidoCliente['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $rowPedidoCliente['PRECO_TOTAL_TSI']));
                     $rowPedidoCliente['PRECO_TOTAL_FRETE'] = floatval(str_replace(',', '.', $rowPedidoCliente['PRECO_TOTAL_FRETE']));
+                    $rowPedidoCliente['PRECO_MEDIO_BAG'] = floatval(str_replace(',', '.', $rowPedidoCliente['PRECO_MEDIO_BAG']));
+                    $rowPedidoCliente['PERC_GERMOPLASMA'] = floatval(str_replace(',', '.', $rowPedidoCliente['PERC_GERMOPLASMA']));
+                    $rowPedidoCliente['PERC_ROYALTIES'] = floatval(str_replace(',', '.', $rowPedidoCliente['PERC_ROYALTIES']));
+                    $rowPedidoCliente['PERC_FRETE'] = floatval(str_replace(',', '.', $rowPedidoCliente['PERC_FRETE']));
                     $rowPedidoCliente['PERC_TSI'] = floatval(str_replace(',', '.', $rowPedidoCliente['PERC_TSI']));
 
                     // Adiciona cada linha ao array result final
