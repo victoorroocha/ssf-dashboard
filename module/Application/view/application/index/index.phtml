@@ -147,7 +147,7 @@
         text-align: center;
         width: 100%;
         margin: 20px 0;
-        font-size: 1.2em;
+        font-size: 1.5em;
         font-weight: bold;
     }
     .turnover-stat {
@@ -385,12 +385,10 @@
         const canvas = document.getElementById('seedCanvas');
         const ctx = canvas.getContext('2d');
         let w, h, particles = [];
-
         function resize() {
             w = canvas.width = canvas.clientWidth;
             h = canvas.height = canvas.clientHeight;
         }
-
         class Seed {
             constructor() {
             this.reset();
@@ -416,19 +414,16 @@
             ctx.fill();
             }
         }
-
         function init() {
             resize();
             particles = Array.from({length: 80}, () => new Seed());
             animate();
         }
-
         function animate() {
             ctx.clearRect(0,0,w,h);
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
-
         window.addEventListener('resize', resize);
         init();
     // FINALIZA CANVAS

@@ -349,7 +349,7 @@
 
 /* Logo sem distorção e filtro para branco */
 .tech-logo {
-  width: 70%;
+  width: 50%;
   /* max-height: 80px; */
   margin-bottom: 25px;
   filter: brightness(0) invert(1);
