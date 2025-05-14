@@ -4,6 +4,42 @@
  */
 ?>
 <?= $this->doctype() ?>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        background-color: #000; /* Ou alguma cor escura para destacar o efeito */
+    }
+
+    #seedCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+    
+
+</style>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
@@ -49,6 +85,7 @@
 </head>
 
 <body class="bg-gradient-primary">
+    <canvas id="seedCanvas"></canvas>
     <!-- Outer Row -->
     <div class="row justify-content-center align-items-center vh-100">
         <div class="col-xl-3 col-lg-4 col-md-6 col-sm-8"> 
@@ -83,37 +120,35 @@
     <script src="<?= $this->basePath('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= $this->basePath('vendor/jquery-easing/jquery.easing.min.js') ?>"></script>
     <script src="<?= $this->basePath('js/sb-admin-2.min.js') ?>"></script>
-
-    <script>
-        // Configuração da localização
-        $(document).ready(function() {
-            // Carrega as mensagens em português
-            DevExpress.localization.loadMessages({
-                "Yes": "Sim",
-                "No": "Não",
-                "Cancel": "Cancelar",
-                "Close": "Fechar",
-                "Loading...": "Carregando...",
-                "Search": "Pesquisar",
-                "Delete": "Excluir",
-                "Edit": "Editar",
-                "Save": "Salvar",
-                "Add": "Adicionar",
-                "OK": "OK",
-                "dxList-pullingDownText": "Puxe para atualizar...",
-                "dxList-pulledDownText": "Solte para atualizar...",
-                "dxList-refreshingText": "Atualizando...",
-                "dxList-pageLoadingText": "Carregando...",
-                "dxList-nextButtonText": "Mais"
-            });
-            
-            // Define o locale para português
-            DevExpress.localization.locale('pt-BR');
-        });
-    </script>
 </body>
 
 <script>
+    // Configuração da localização
+    $(document).ready(function() {
+        // Carrega as mensagens em português
+        DevExpress.localization.loadMessages({
+            "Yes": "Sim",
+            "No": "Não",
+            "Cancel": "Cancelar",
+            "Close": "Fechar",
+            "Loading...": "Carregando...",
+            "Search": "Pesquisar",
+            "Delete": "Excluir",
+            "Edit": "Editar",
+            "Save": "Salvar",
+            "Add": "Adicionar",
+            "OK": "OK",
+            "dxList-pullingDownText": "Puxe para atualizar...",
+            "dxList-pulledDownText": "Solte para atualizar...",
+            "dxList-refreshingText": "Atualizando...",
+            "dxList-pageLoadingText": "Carregando...",
+            "dxList-nextButtonText": "Mais"
+        });
+        
+        // Define o locale para português
+        DevExpress.localization.locale('pt-BR');
+    });
+
     $("#loginForm").on("submit", function(event) {
         event.preventDefault();
 
@@ -141,6 +176,77 @@
             }
         });
     });
+
+
+// COMEÇA CANVAS
+const canvas = document.getElementById('seedCanvas');
+const ctx = canvas.getContext('2d');
+let w, h, particles = [];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    w = canvas.width;
+    h = canvas.height;
+}
+
+class Seed {
+    constructor() {
+        this.reset();
+    }
+    reset() {
+        this.x = Math.random() * w;
+        this.y = h + Math.random() * 100;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = - (1 + Math.random() * 1.5);
+        this.size = 2 + Math.random() * 3;
+        this.alpha = 0.3 + Math.random() * 0.5;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.005;
+        if (this.alpha <= 0) this.reset();
+    }
+    draw() {
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('resize', resize);
+window.addEventListener('load', () => {
+    resize();
+    particles = Array.from({ length: 80 }, () => new Seed());
+    animate();
+
+    // Efeito na div do formulário
+    const formCard = document.querySelector('.card');
+    if (formCard) {
+        formCard.classList.add('fade-in-up');
+    }
+});
+// FINALIZA CANVAS
+
+
+
+
+
+
+
+
 </script>
 
 </html>
