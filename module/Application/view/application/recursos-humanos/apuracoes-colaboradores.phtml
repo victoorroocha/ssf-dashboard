@@ -37,6 +37,27 @@
             items: [
                 {
                     itemType: "group",
+                    colCount: 1,
+                    items: [{
+                        dataField: "datReferencia",
+                        label: { visible: false },
+                        editorType: "dxDateBox",
+                        editorOptions: {
+                            displayFormat: "MM/yyyy",
+                            dateSerializationFormat: "yyyy-MM-dd",
+                            placeholder: "Mês/Ano Referência",
+                            type: "date",
+                            showClearButton: true,
+                            calendarOptions: {
+                                zoomLevel: "year",
+                                maxZoomLevel: "year",
+                                minZoomLevel: "month"
+                            }
+                        }
+                    }]
+                },
+                {
+                    itemType: "group",
                     colCount: 2,
                     items: [
                         {
@@ -47,11 +68,8 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd",
                                 placeholder: "Data Apuração Inicio",
-                            },
-                            validationRules: [{
-                                type: 'required',
-                                message: 'Data de Apuração é obrigatório.',
-                            }],
+                                showClearButton: true,
+                            }
                         },
                         {
                             dataField: "dataFinal",
@@ -131,6 +149,8 @@
                                     { ID: 12, DSC: "12 - Justificativa Marcação - Falha Equipamento" },
                                     { ID: 13, DSC: "13 - Justificativa Marcação - Esquecimento" },
                                     { ID: 14, DSC: "14 - Compensação" },
+                                    { ID: 15, DSC: "15 - Horas Extras 50%" },
+                                    { ID: 16, DSC: "16 - Horas Extras 100%" },
                                 ],
                                 displayExpr: "DSC",
                                 valueExpr: "ID",
@@ -367,6 +387,7 @@
                         { dataField: 'NOMFUN', caption: 'Colaborador', allowEditing: false, alignment: 'left', width: 'auto', sortIndex: 1, sortOrder: 'asc' },
                         { dataField: 'TITCAR', caption: 'Cargo', allowEditing: false, alignment: 'left', width: 'auto' },
                         { dataField: 'NOMLOC', caption: 'Local', allowEditing: false, alignment: 'left', width: 'auto' },
+                        { dataField: 'CODCCU', caption: 'Centro de Custo', allowEditing: false, alignment: 'center', width: 120 },
                         { 
                             dataField: 'DATAPU_CONVERT', 
                             caption: 'Dt. Apuração', 
@@ -383,6 +404,39 @@
                         { dataField: 'ESCALA_TROCA', caption: 'Escala Apuração', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'MARCACOES', caption: 'Horário Trabalhado', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
+                        {
+                            dataField: 'QTD_HORAS_ADICIONAL_NOTURNO',
+                            dataType: 'number',
+                            alignment: 'center',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
+                            },
+                            caption: 'Horas Adc. Noturno',
+                            width: 120
+                        },
+                        {
+                            dataField: 'QTD_HORAS_EXTRAS_50',
+                            dataType: 'number',
+                            alignment: 'center',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
+                            },
+                            caption: 'HE 50%',
+                            width: 120
+                        },
+                        {
+                            dataField: 'QTD_HORAS_EXTRAS_100',
+                            dataType: 'number',
+                            alignment: 'center',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
+                            },
+                            caption: 'HE 100%',
+                            width: 120
+                        },
                         { dataField: 'TIPO_COMPENSACAO', caption: 'Tipo Compensação', allowEditing: false, alignment: 'center', width: 150 },
                         { dataField: 'TIPO_APURACAO', caption: 'Tipo Apuração', allowEditing: false, alignment: 'center', width: 'auto', sortIndex: 3, sortOrder: 'asc' },
                         { dataField: 'DSC_SITUACAO_COLABORADOR', caption: 'Situação Colaborador', allowEditing: false, alignment: 'center', width: 150, visible: false },
@@ -410,6 +464,27 @@
                                     return cellInfo.value + " ocorrências";
                                 }
                             },
+                            {
+                                column: "QTD_HORAS_EXTRAS_50",
+                                summaryType: "sum",
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
+                                }
+                            },
+                            {
+                                column: "QTD_HORAS_EXTRAS_100",
+                                summaryType: "sum",
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
+                                }
+                            },
+                            {
+                                column: "QTD_HORAS_ADICIONAL_NOTURNO",
+                                summaryType: "sum",
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
+                                }
+                            },
                         ],
                         groupItems: [
                             {
@@ -418,6 +493,33 @@
                                 displayFormat: "Total de Registros: {0}",
                                 customizeText: function(cellInfo) {
                                     return cellInfo.value + " ocorrências";
+                                }
+                            },
+                            {
+                                column: "QTD_HORAS_EXTRAS_50",
+                                summaryType: "sum",
+                                showInGroupFooter: false,
+                                alignByColumn: true,
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
+                                }
+                            },
+                            {
+                                column: "QTD_HORAS_EXTRAS_100",
+                                summaryType: "sum",
+                                showInGroupFooter: false,
+                                alignByColumn: true,
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
+                                }
+                            },
+                            {
+                                column: "QTD_HORAS_ADICIONAL_NOTURNO",
+                                summaryType: "sum",
+                                showInGroupFooter: false,
+                                alignByColumn: true,
+                                customizeText: function(cellInfo) {
+                                    return formatHourBalance(cellInfo.value);
                                 }
                             },
                         ],
@@ -477,6 +579,23 @@
         const mes = ('0' + (date.getMonth() + 1)).slice(-2);
         const ano = date.getFullYear();
         return `${dia}/${mes}/${ano}`;
-    }    
+    } 
+    
+    function formatHourBalance(saldoHora) {
+        if (!saldoHora && saldoHora !== 0) {
+            return '00:00:00'; 
+        }
+        const saldo = saldoHora;
+        const absSaldo = Math.abs(saldo);
+        const hours = Math.floor(absSaldo / 60);
+        const minutes = absSaldo % 60;
+        
+        const formattedHours = hours.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+        
+        return (saldo < 0) 
+            ? `-${formattedHours}:${formattedMinutes}:00` 
+            : `${formattedHours}:${formattedMinutes}:00`;
+    }
 
 </script>

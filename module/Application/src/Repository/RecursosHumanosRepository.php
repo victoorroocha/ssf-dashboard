@@ -5,7 +5,7 @@ namespace Application\Repository;
 class RecursosHumanosRepository
 {
 
-    public function getLancamentosApuracoesColaboradores($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codEscala = null, $codFilial = null, $tipoApuracao = null)
+    public function getLancamentosApuracoesColaboradores($apuracao_inicio = null, $apuracao_fim = null, $codColaborador = null, $codSupervisor = null, $codCentroCusto = null, $codEscala = null, $codFilial = null, $tipoApuracao = null, $datReferencia = null)
     {
         $wheresInternos = "";
         $wheresExternos = "";
@@ -13,6 +13,10 @@ class RecursosHumanosRepository
         if (!empty($apuracao_inicio)) {
             $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
             $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+        }
+        if (!empty($datReferencia)) {
+            $wheresInternos .= " AND R066APU.PERREF = TO_DATE('{$datReferencia}', 'YYYY-MM-DD')";
             $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
@@ -89,6 +93,14 @@ class RecursosHumanosRepository
                     $wheresExternos .= " AND dadosApuracao.TIPO_COMPENSACAO IS NOT NULL";
                     $columnTipoApuracao .= "Compensação";
                 break;
+                case 15: // Horas Extras 50
+                    $wheresExternos .= " AND dadosApuracao.HORAS_EXTRAS_50 = 1";
+                    $columnTipoApuracao .= "Horas Extras 50%";
+                break;
+                case 16: // Horas Extras 100
+                    $wheresExternos .= " AND dadosApuracao.HORAS_EXTRAS_100 = 1";
+                    $columnTipoApuracao .= "Horas Extras 100%";
+                break;
             }
         }
         
@@ -104,7 +116,7 @@ class RecursosHumanosRepository
                         ,R034FUN.NOMFUN 
                         ,R034FUN.DATADM
                         ,R034FUN.SITAFA
-                        ,TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') AS DATAFA
+                        ,CASE WHEN TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') = '1900-12-31' THEN NULL ELSE TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') END AS DATAFA
                         ,SITUACAO_COLABORADOR.DESSIT AS DSC_SITUACAO_COLABORADOR
                         ,R034FUN.CODCCU 
                         ,R034FUN.CODCAR
@@ -140,6 +152,11 @@ class RecursosHumanosRepository
                         ,NVL(JUSTIFICATIVAS.TESTE,0) AS TESTE
                         ,NVL(JUSTIFICATIVAS.FALHA_EQUIPAMENTO,0) AS FALHA_EQUIPAMENTO
                         ,NVL(JUSTIFICATIVAS.ESQUECIMENTO,0) AS ESQUECIMENTO
+                        ,NVL(SITUACAO.HORAS_EXTRAS_50,0) AS HORAS_EXTRAS_50
+                        ,CASE WHEN {$tipoApuracao} = 15 THEN SITUACAO.QTD_HORAS_EXTRAS_50 ELSE NULL END AS QTD_HORAS_EXTRAS_50
+                        ,NVL(SITUACAO.HORAS_EXTRAS_100,0) AS HORAS_EXTRAS_100
+                        ,CASE WHEN {$tipoApuracao} = 16 THEN SITUACAO.QTD_HORAS_EXTRAS_100 ELSE NULL END AS QTD_HORAS_EXTRAS_100
+                        ,CASE WHEN {$tipoApuracao} = 5 THEN SITUACAO.QTD_HORAS_ADICIONAL_NOTURNO ELSE NULL END AS QTD_HORAS_ADICIONAL_NOTURNO
                         ,COMPENSACAO.DESSIT AS TIPO_COMPENSACAO
                         ,'{$columnTipoApuracao}' AS TIPO_APURACAO
                     FROM VETORH.R066APU
@@ -177,6 +194,11 @@ class RecursosHumanosRepository
                             ,MAX(CASE WHEN R066SIT.CODSIT IN (69) THEN 1 ELSE 0 END) INTERJORNADA
                             ,MAX(CASE WHEN R066SIT.CODSIT IN (16,66,301,302,303,304) AND R066SIT.QTDHOR > 120 THEN 1 ELSE 0 END) HORAS_EXTRAS_2HRS
                             ,MAX(CASE WHEN R066SIT.CODSIT IN (50) THEN 1 ELSE 0 END) ADICIONAL_NOTURNO
+                            ,SUM(CASE WHEN R066SIT.CODSIT IN (50) THEN R066SIT.QTDHOR ELSE 0 END) QTD_HORAS_ADICIONAL_NOTURNO
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (301,302) THEN 1 ELSE 0 END) HORAS_EXTRAS_50
+                            ,SUM(CASE WHEN R066SIT.CODSIT IN (301,302) THEN R066SIT.QTDHOR ELSE 0 END) QTD_HORAS_EXTRAS_50
+                            ,MAX(CASE WHEN R066SIT.CODSIT IN (303,304) THEN 1 ELSE 0 END) HORAS_EXTRAS_100
+                            ,SUM(CASE WHEN R066SIT.CODSIT IN (303,304) THEN R066SIT.QTDHOR ELSE 0 END) QTD_HORAS_EXTRAS_100
                         FROM VETORH.R066SIT 
                         WHERE R066SIT.CODSIT IN (15,65,68,69,16,66,301,302,303,304,50)
                         GROUP BY R066SIT.NUMEMP,R066SIT.TIPCOL,R066SIT.NUMCAD,R066SIT.DATAPU

@@ -52,6 +52,7 @@ class RecursosHumanosController extends BaseController
         // Captura os parâmetros da requisição GET
         $apuracao_inicio = $this->params()->fromQuery('dataInicial', null);
         $apuracao_fim = $this->params()->fromQuery('dataFinal', null);
+        $datReferencia = $this->params()->fromQuery('datReferencia', null);
         $codColaborador = $this->params()->fromQuery('colaborador', null);
         $codSupervisor = $this->params()->fromQuery('supervisor', null);
         $codCentroCusto = $this->params()->fromQuery('centroCusto', null);
@@ -70,7 +71,7 @@ class RecursosHumanosController extends BaseController
             // Consulta no Softsul todos pedidos
             $result = [];
             foreach ($tipoApuracoes as $key => $tipoApuracao) {
-                $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores($apuracao_inicio, $apuracao_fim, $codColaborador,$codSupervisor, $codCentroCusto, $codEscala, $codFilial, $tipoApuracao) : '';
+                $sql = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getLancamentosApuracoesColaboradores($apuracao_inicio, $apuracao_fim, $codColaborador,$codSupervisor, $codCentroCusto, $codEscala, $codFilial, $tipoApuracao, $datReferencia) : '';
 
                 if ($sql) {
                     // Executa a consulta Oracle
@@ -79,7 +80,7 @@ class RecursosHumanosController extends BaseController
                     // Processa os dados do Oracle
                     foreach ($chunkResult  as $key => $row) {
                         // Convertendo apenas as colunas de texto para UTF-8
-                        $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR', 'ESCALA_CADASTRO', 'ESCALA_TROCA', 'TIPO_COMPENSACAO'];
+                        $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR', 'ESCALA_CADASTRO', 'ESCALA_TROCA', 'TIPO_COMPENSACAO', 'DSC_SITUACAO_COLABORADOR'];
                         foreach ($textColumns as $col) {
                             if (isset($row[$col])) {
                                 $row[$col] = utf8_encode($row[$col]);
