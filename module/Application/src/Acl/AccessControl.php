@@ -66,32 +66,120 @@ class AccessControl
         // Diretor 
         $this->acl->allow('Diretor', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Diretor', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Diretor', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Diretor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Diretor', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Diretor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Diretor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Gerente 
         $this->acl->allow('Gerente', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Gerente', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Gerente', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Gerente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Gerente', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Gerente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Gerente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Coordenador', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Coordenador', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Coordenador', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Coordenador', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Encarregado
         $this->acl->allow('Encarregado', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Encarregado', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Encarregado', 'CreditoECobrancaController', ['controleRecebimento','getLookupSafra','listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Encarregado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Encarregado', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Encarregado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Encarregado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
@@ -99,32 +187,111 @@ class AccessControl
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Analista', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Analista', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Analista', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Analista', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Analista', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Analista', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Assistente 
         $this->acl->allow('Assistente', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Assistente', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Assistente', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
-        $this->acl->allow('Assistente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Assistente', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Assistente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Assistente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Auxiliar', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Auxiliar', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento','saveControleRecebimento','deleteControleRecebimento','controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']); 
-        $this->acl->allow('Auxiliar', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Auxiliar', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia'
+        ]);
+        $this->acl->allow('Auxiliar', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Auxiliar', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
 
         // Convidado
         $this->acl->allow('Convidado', 'IndexController', ['index', 'filtrarDados']);
         $this->acl->allow('Convidado', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
-        $this->acl->allow('Convidado', 'CreditoECobrancaController', ['controleRecebimento', 'getLookupSafra', 'listControleRecebimento', 'controleRecebimentoViewFinanceiro','listControleRecebimentoEnvioFinanceiro']);
-        $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial']);
+        $this->acl->allow('Convidado', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'cadastroGarantiasPedido',
+            'listGarantias'
+        ]);
+        $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Convidado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Convidado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
     }

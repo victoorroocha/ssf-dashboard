@@ -1,0 +1,272 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Crédito e Cobrança</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Cadastro Documentos Pedido</p>
+
+                    <div id="gridDocumentos"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let documentosGrid = $('#gridDocumentos').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                loadMode: "processed",
+                load: function(loadOptions) {
+                    let params = {
+                        skip: loadOptions.skip || 0,
+                        take: loadOptions.take || 500,
+                        sort: loadOptions.sort ? JSON.stringify(loadOptions.sort) : null,
+                    };
+
+                    return $.ajax({
+                        url: '/credito-e-cobranca/list-documentos',
+                        method: 'GET',
+                        dataType: 'json',
+                        data: params,
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(error => {
+                        if (error.responseJSON) {
+                            DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                            return { data: [], totalCount: 0 };
+                        } else {
+                            DevExpress.ui.notify("Erro ao buscar dados de documentos!", "error", 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    });
+                },
+                update: function(key, values) {
+                    return $.ajax({
+                        url: '/credito-e-cobranca/add-or-update-documento', 
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message, "success", 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON) {
+                            DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                            return {};
+                        } else {
+                            DevExpress.ui.notify("Erro ao atualizar documento!", "error", 3000);
+                            return {};
+                        }
+                    });
+                },
+                insert: function(values) {
+                    return $.ajax({
+                        url: '/credito-e-cobranca/add-or-update-documento',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message, "success", 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON) {
+                            DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                            return {};
+                        } else {
+                            DevExpress.ui.notify("Erro ao inserir documento!", "error", 3000);
+                            return {};
+                        }
+                    });
+                },
+                remove: function(key) {
+                    return $.ajax({
+                        url: '/credito-e-cobranca/excluir-documento',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message, "success", 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON) {
+                            DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
+                            return {};
+                        } else {
+                            DevExpress.ui.notify("Erro ao excluir documento!", "error", 3000);
+                            return {};
+                        }
+                    });
+                }
+            }),
+            width: '100%',
+            columnAutoWidth: true,
+            keyExpr: 'id', 
+            showBorders: true,
+            groupPanel: {
+                visible: true,
+            },
+            grouping: {
+                autoExpandAll: true
+            },
+            toolbar: {
+                items: [
+                    {
+                        name: "refresh",
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "refresh",
+                            onClick: function() {
+                                $("#gridDocumentos").dxDataGrid("instance").refresh();
+                            },
+                            text: "Atualizar"
+                        }
+                    },
+                    {
+                        name: "addRowButton",
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "plus",
+                            onClick: function() {
+                                $("#gridDocumentos").dxDataGrid("instance").addRow();
+                            },
+                            text: "Adicionar Documento"
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'batch',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: true,
+                useIcons: true,
+                texts: {
+                    confirmDeleteMessage: "Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita." 
+                }
+            },
+            selection: {
+                mode: 'multiple',
+                showCheckBoxesMode: 'none'
+            },
+            hoverStateEnabled: true,
+            pager: {
+                visible: false
+            },
+            paging: false,
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            export: {
+                enabled: true,
+                fileName: "Lista de Documentos",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            columns: [
+                {
+                    dataField: 'dsc_documento',
+                    caption: 'Descrição do Documento',
+                    validationRules: [{ type: 'required', message: 'Descrição é obrigatória' }]
+                },
+                {
+                    dataField: 'ativo',
+                    caption: 'Ativo',
+                    dataType: 'boolean',
+                    alignment: 'center', 
+                    width: 100
+                },
+                {
+                    dataField: 'flg_documento_obrigatorio',
+                    caption: 'Obrigatório',
+                    dataType: 'boolean',
+                    alignment: 'center', 
+                    width: 100
+                }
+            ],
+            onRowUpdating: function(e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            }
+        });
+
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: "raw",
+                    load: function() {
+                        return $.ajax({
+                            url: url,
+                            method: "GET",
+                            dataType: "json"
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, "error", 3000);
+                                return [];
+                            }
+                        }).catch(error => {
+                            DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+            };
+        }
+
+    });
+        
+
+    
+
+</script>

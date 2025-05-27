@@ -242,8 +242,14 @@ return [
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\DepartamentoRepository($adapter);
             },
-            CreditoECobrancaRepository::class => InvokableFactory::class, 
-            ControladoriaRepository::class => InvokableFactory::class, 
+            'Application\Repository\ControladoriaRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado
+                return new \Application\Repository\ControladoriaRepository($adapter);
+            },
+            'Application\Repository\CreditoECobrancaRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\CreditoECobrancaRepository($adapter);
+            },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 
         ],

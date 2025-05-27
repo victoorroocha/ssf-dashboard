@@ -1,0 +1,352 @@
+<style>
+    .dx-treelist .dx-treelist-expanded,
+    .dx-treelist .dx-treelist-collapsed {
+        filter: drop-shadow(0 0 1px #000);
+    }
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Controladoria</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Estrutura Contas</p>
+
+                    <div id="treeListContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+
+<script>
+    $(document).ready(function() {
+        $('#treeListContainer').dxTreeList({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                loadMode: 'processed',
+                load: function () {
+                    return $.ajax({
+                        url: '/controladoria/listar-plano-conta',
+                        method: 'GET',
+                        dataType: 'json',
+                    }).then(response => {
+                        if (response.success) {
+                            return response.data;
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return [];
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar menus!', 'error', 3000);
+                        return [];
+                    });
+                },
+                insert: function (values) {
+                    return $.ajax({
+                        url: '/controladoria/inserir-plano-conta',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json',
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        }
+                        return response;
+                    });
+                },
+                update: function (key, values) {
+                    return $.ajax({
+                        url: '/controladoria/atualizar-plano-conta',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json',
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        }
+                        return response;
+                    });
+                },
+                remove: function (key) {
+                    return $.ajax({
+                        url: '/controladoria/excluir-plano-conta',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json',
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        }
+                        return response;
+                    });
+                },
+            }),
+            keyExpr: 'id',
+            parentIdExpr: 'parent_id',
+            hoverStateEnabled: true,
+            rowAlternationEnabled: false,
+            showBorders: true,
+            columnLines: true,
+            rowLines: true,
+            wordWrapEnabled: true,
+            columnAutoWidth: true,
+            headerFilter: { visible: true },
+            searchPanel: { visible: true, width: 250, placeholder: "Buscar conta..." },
+            expandNodesOnLoading: true, 
+            autoExpandAll: false,
+            editing: {
+                allowAdding: true,
+                allowUpdating: true,
+                allowDeleting: true,
+                mode: 'batch',
+                useIcons: true,
+                texts: {
+                    confirmDeleteMessage: "Tem certeza que deseja excluir este Plano de Contas? Esta ação não pode ser desfeita."
+                }
+            },
+            rowDragging: {
+                allowDropInsideItem: true, // Permite arrastar dentro de um item
+                allowReordering: true, // Permite reordenar as linhas
+                onDragChange(e) {
+                    const visibleRows = e.component.getVisibleRows();
+                    const sourceNode = e.component.getNodeByKey(e.itemData.id);
+                    let targetNode = visibleRows[e.toIndex].node;
+
+                    // Previne a ação se tentar arrastar um item para dentro dele mesmo
+                    while (targetNode && targetNode.data) {
+                        if (targetNode.data.id === sourceNode.data.id) {
+                            e.cancel = true;
+                            break;
+                        }
+                        targetNode = targetNode.parent;
+                    }
+                },
+                onReorder(e) {
+                    const sourceData = e.itemData;
+                    const visibleRows = e.component.getVisibleRows();
+                    let targetData = visibleRows[e.toIndex].node.data;
+
+                    // Atualiza o campo parent_id com base na posição reordenada
+                    if (e.dropInsideItem) {
+                        sourceData.parent_id = targetData.id;
+                    } else {
+                        sourceData.parent_id = targetData ? targetData.parent_id : e.component.option('rootValue');
+                    }
+
+                    // Atualiza os dados no servidor ou no modelo
+                    $.ajax({
+                        url: '/controladoria/atualizar-plano-conta',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify(sourceData),
+                        dataType: 'json',
+                    }).then(response => {
+                        if (response.success) {
+                            e.component.refresh();
+                        } else {
+                            DevExpress.ui.notify('Erro ao atualizar dados após reordenar.', 'error', 3000);
+                        }
+                    });
+                },
+            },
+            toolbar: {
+                items: [
+                    'addRowButton',
+                    'searchPanel',
+                    {
+                        location: 'after',
+                        widget: 'dxButton',
+                        options: {
+                            icon: 'refresh',
+                            onClick: function () {
+                                $('#treeListContainer').dxTreeList('instance').refresh();
+                            },
+                            hint: 'Recarregar',
+                        }
+                    },
+                    {
+                        location: 'after',
+                        widget: 'dxButton',
+                        options: {
+                            icon: 'exportxlsx',
+                            onClick: function () {
+                                $('#treeListContainer').dxTreeList('instance').exportToExcel();
+                            },
+                            hint: 'Exportar para Excel',
+                        }
+                    },
+                    {
+                        location: 'after',
+                        widget: 'dxButton',
+                        options: {
+                            icon: 'exportpdf',
+                            onClick: function () {
+                                DevExpress.ui.notify('Exportação para PDF ainda não implementada.', 'info', 2000);
+                            },
+                            hint: 'Exportar para PDF',
+                        }
+                    },
+                ]
+            },
+            export: {
+                enabled: true,
+                allowExportSelectedData: true
+            },
+            columns: [
+                { dataField: 'codigo', caption: 'Código', alignment: 'left', width: 180 },
+                { dataField: 'clacta', caption: 'Classificação', width: 200 },
+                { dataField: 'ctared', caption: 'Conta', alignment: 'center', width: 100 },
+                { dataField: 'descta', caption: 'Descrição' },
+                {
+                    dataField: 'natcta',
+                    caption: 'Natureza Conta',
+                    alignment: 'center',
+                    width: 150,
+                    lookup: {
+                        dataSource: [
+                            { value: 'D', text: 'Débito' },
+                            { value: 'C', text: 'Crédito' }
+                        ],
+                        valueExpr: 'value',
+                        displayExpr: 'text'
+                    }
+                },
+                {
+                    dataField: 'anasin',
+                    caption: 'Tipo Conta',
+                    alignment: 'center',
+                    width: 150,
+                    lookup: {
+                        dataSource: [
+                            { value: 'S', text: 'Sintética' },
+                            { value: 'A', text: 'Analítica' }
+                        ],
+                        valueExpr: 'value',
+                        displayExpr: 'text'
+                    }
+                },
+                {
+                    dataField: 'ilevel',
+                    caption: 'ILevel',
+                    lookup: {
+                        dataSource: [
+                            { value: 'Gross Revenue' },
+                            { value: 'Sales Taxes' },
+                            { value: 'Devolutions' },
+                            { value: 'Others Non Recurring' },
+                            { value: 'COGS' },
+                            { value: 'G&A From Operations' },
+                            { value: 'Other Sales Expenses' },
+                            { value: 'Logistics Expenses' },
+                            { value: 'Depreciation and Amortization' },
+                            { value: 'Rent expenses' },
+                            { value: 'Financial Revenues' },
+                            { value: 'Financial Expenses - IS' }
+                        ],
+                        valueExpr: 'value',
+                        displayExpr: 'value'
+                    }
+                },
+            ],
+            onRowUpdating: function (e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+            onEditorPreparing: function (e) {
+                if (e.parentType === "dataRow") {
+                    if (e.dataField === "ilevel" && e.row && e.row.data.anasin === 'S') {
+                        e.editorOptions.disabled = true;
+                    }
+                    if (e.dataField === "clacta") {
+                        e.editorOptions.onValueChanged = function (args) {
+                            const clactaValue = args.value;
+                            const treeList = $('#treeListContainer').dxTreeList('instance');
+                            const rowIndex = e.row.rowIndex;
+
+                            treeList.cellValue(rowIndex, 'clacta', clactaValue);
+
+                            if (clactaValue) {
+                                $.ajax({
+                                    url: '/controladoria/buscar-detalhes-clacta',
+                                    method: 'GET',
+                                    data: { clacta: clactaValue },
+                                    dataType: 'json',
+                                    success: function (response) {
+                                        if (response.success) {
+                                            treeList.cellValue(rowIndex, 'ctared', response.data.CTARED);
+                                            treeList.cellValue(rowIndex, 'descta', response.data.DESCTA);
+                                            treeList.cellValue(rowIndex, 'natcta', response.data.NATCTA);
+                                            treeList.cellValue(rowIndex, 'anasin', response.data.ANASIN);
+                                        } else {
+                                            DevExpress.ui.notify(response.message, 'warning', 3000);
+                                        }
+                                    },
+                                    error: function () {
+                                        DevExpress.ui.notify('Erro ao buscar dados do Oracle', 'error', 3000);
+                                    }
+                                });
+                            }
+                        };
+                    }
+                }
+            },
+            onRowPrepared: function (e) {
+                if (e.rowType === 'data') {
+                    const anasin = (e.data.anasin || '').toUpperCase(); // Tipo de conta
+                    const natcta = (e.data.natcta || '').toUpperCase(); // Natureza da conta
+                    const codigo = e.data.codigo || ''; // Estrutura da conta (ex: 1.1.1.1)
+
+                    // Calcula o nível com base na quantidade de pontos
+                    const nivel = (codigo.match(/\./g) || []).length + 1;
+
+                    // Limpa estilos antigos
+                    e.rowElement.css({
+                        'background-color': '',
+                        'font-weight': '',
+                        'color': ''
+                    });
+
+                    if (anasin === 'S') {
+                        // Sintética: aplicar diferentes tons de cinza conforme o nível
+                        let bgColor = '#f5f5f5';
+                        if (nivel === 1) bgColor = '#d0d0d0';       
+                        else if (nivel === 2) bgColor = '#e0e0e0';  
+                        else if (nivel === 3) bgColor = '#f5f5f5';  
+                        else bgColor = '#ebebeb'; // Níveis mais profundos
+
+                        e.rowElement.css({
+                            'background-color': bgColor,
+                            'font-weight': 'bold',
+                            'color': '#000000'
+                        });
+                    } else {
+                        // Analíticas (último nível): fundo branco
+                        e.rowElement.css('background-color', '#ffffff');
+
+                        if (natcta === 'C') {
+                            e.rowElement.css('color', '#198754'); // Verde para Crédito
+                        } else if (natcta === 'D') {
+                            e.rowElement.css('color', '#dc3545'); // Vermelho para Débito
+                        } else {
+                            e.rowElement.css('color', '#000000'); // Padrão
+                        }
+                    }
+                }
+            }
+        });
+
+    });
+</script>

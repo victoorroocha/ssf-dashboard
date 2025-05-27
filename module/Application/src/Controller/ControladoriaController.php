@@ -183,4 +183,164 @@ class ControladoriaController extends BaseController
     }
 
 
+
+
+
+
+
+
+
+
+
+
+    #region Estrutura Contas
+        public function estruturaContasAction()
+        {
+            $session = new Container('auth');
+        
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listarPlanoContaAction()
+        {
+            try {
+                $planoContas = $this->ControladoriaRepository->listarPlanoContas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $planoContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function inserirPlanoContaAction()
+        {
+            if (!$this->getRequest()->isPost()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            $data['parent_id'] = $data['parent_id'] == 0 ? null : $data['parent_id'];
+
+            try {
+                $this->ControladoriaRepository->inserirPlanoConta($data);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Plano Conta inserido com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao inserir Plano Conta: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function atualizarPlanoContaAction()
+        {
+            if (!$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->ControladoriaRepository->atualizarPlanoConta($data);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Plano Conta atualizado com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar Plano Conta: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirPlanoContaAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->ControladoriaRepository->excluirPlanoConta($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Plano Conta excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir Plano Conta: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function buscarDetalhesClactaAction()
+        {
+            // Verifica se o serviço Oracle está disponível
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            // Captura o parâmetro da requisição
+            $clacta = $this->params()->fromQuery('clacta', null);
+
+            if (!$clacta) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Classificação não informada.'
+                ]);
+            }
+
+            try {
+                // Consulta no Softsul todos pedidos
+                $sql = $this->ControladoriaRepository ? $this->ControladoriaRepository->getBuscarDetalhesClactaQuery($clacta) : '';
+                $result = [];
+                if ($sql) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                    $result = $this->oracleService->executeQuery($sql);
+
+                    if (count($result)) {
+                        $result[0]['DESCTA'] = utf8_encode($result[0]['DESCTA']);
+                    }
+                }
+
+
+                // Retorna os dados como JSON
+                return new JsonModel([
+                    'success' => true,
+                    'data' => count($result) > 0 ? $result[0] : array()
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+    #endRegion
+
+
 }

@@ -19,7 +19,7 @@ class CreditoECobrancaController extends BaseController
 
     public function __construct(Adapter $pgAdapter, OracleService $oracleService = null, CreditoECobrancaRepository $creditoECobrancaRepository = null, Acl $acl)
     {
-        parent::__construct($acl); // Chama o construtor da classe base
+        parent::__construct($acl); 
         $this->pgAdapter = $pgAdapter;
         $this->oracleService = $oracleService;
         $this->creditoECobrancaRepository = $creditoECobrancaRepository;
@@ -544,5 +544,552 @@ class CreditoECobrancaController extends BaseController
             ]);
         }
     }
+
+
+
+
+    #region Controle Documentos Pedido
+        public function controleDocumentosPedidoAction()
+        {
+            $session = new Container('auth');
+
+            if (!isset($session->user)) {
+                // Redireciona o usuário para o login caso não esteja autenticado
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listPedidosAction()
+        {
+            // Verifica se o serviço Oracle está disponível
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            // Captura os parâmetros da requisição GET
+            $codigoSafra = $this->params()->fromQuery('codigosafra', null);
+            $emissao_inicio = $this->params()->fromQuery('emissao_inicio', null);
+            $emissao_fim = $this->params()->fromQuery('emissao_fim', null);
+            $skip = $this->params()->fromQuery('skip', null);
+            $take = $this->params()->fromQuery('take', null);
+
+            try {
+                // Consulta no Softsul todos pedidos
+                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
+
+                $params = [];
+                if ($codigoSafra) {
+                    $params['codigoSafra'] = $codigoSafra;
+                }
+                if ($emissao_inicio && $emissao_fim) {
+                    $params['emissao_inicio'] = $emissao_inicio;
+                    $params['emissao_fim'] = $emissao_fim;
+                }
+                $result = [];
+                if ($sql) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                    $result = $this->oracleService->executeQuery($sql, $params);
+
+                    // Processa os dados do Oracle
+                    foreach ($result as $key => $row) {
+                        // Convertendo a codificação para UTF-8
+                        $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+
+                        $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                        $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
+                    }
+                }
+
+                $totalCount = count($result); // Contagem total de registros
+                $pagedData = $result; // Aplica paginação
+
+                // Retorna os dados como JSON
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $pagedData,
+                    'totalCount' => $totalCount
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        public function listDocumentosPedidoAction()
+        {
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            if (!$this->pgAdapter) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Adaptador PostgreSQL não disponível'
+                ]);
+            }
+
+            $idPedido = $this->params()->fromQuery('idPedido', null);
+
+            try {
+                $result = [
+                    'documentos' => [],
+                    'garantias' => [],
+                    'duplicatasBoletos' => [],
+                ];
+
+                if ($idPedido) {
+                    // Busca documentos
+                    $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoQuery($idPedido);
+                    if ($sqlDocumentos) {
+                        $stmtDoc = $this->pgAdapter->query($sqlDocumentos);
+                        $resDoc = $stmtDoc->execute();
+                        foreach ($resDoc as $row) {
+                            $result['documentos'][] = $row;
+                        }
+                    }
+
+                    // Busca garantias
+                    $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoQuery($idPedido);
+                    if ($sqlGarantias) {
+                        $stmtGar = $this->pgAdapter->query($sqlGarantias);
+                        $resGar = $stmtGar->execute();
+                        foreach ($resGar as $row) {
+                            $result['garantias'][] = $row;
+                        }
+                    }
+
+                    // Busca Duplicatas e Boletos
+                    $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
+                    if ($sqlDuplicataBoleto) {
+                        $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
+                        
+                        foreach ($resDuplicataBoleto as $row) {
+                            $idParcelaPedido = $row['ID'];
+
+                            // Inicializa valores padrão
+                            $boletoRecebido = false;
+                            $duplicataRecebido = false;
+
+                            // Busca Duplicatas e Boletos no PostgreSQL
+                            $sqlDuplicatasBoletos = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoPostgresQuery($idPedido, $idParcelaPedido);
+                            if ($sqlDuplicatasBoletos) {
+                                $stmtDulpBol = $this->pgAdapter->query($sqlDuplicatasBoletos);
+                                $resDupBol = $stmtDulpBol->execute();
+                                $pgRow = $resDupBol->current();
+                                
+                                if ($pgRow) {
+                                    $boletoRecebido = $pgRow['boleto_recebido'] ?? false;
+                                    $duplicataRecebido = $pgRow['duplicata_recebido'] ?? false;
+                                }
+                            }
+
+                            // Converte campos Oracle
+                            $row['DUPLICATA_EMITIDA'] = intval($row['DUPLICATA_EMITIDA']) === 1;
+                            $row['BOLETO_EMITIDO'] = intval($row['BOLETO_EMITIDO']) === 1;
+
+                            // Adiciona campos do PostgreSQL
+                            $row['BOLETO_RECEBIDO'] = $boletoRecebido;
+                            $row['DUPLICATA_RECEBIDO'] = $duplicataRecebido;
+
+                            $result['duplicatasBoletos'][] = $row;
+                        }
+                    }
+
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        public function toggleDocumentoPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $idPedido = $body['id_pedido'] ?? null;
+            $idDocumento = $body['id_documento'] ?? null;
+            $checked = $body['checked'] ?? null;
+
+            if (!$idPedido || !$idDocumento || !isset($checked)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+
+                if ($checked) {
+                    // Insere ou atualiza para ativo = true
+                    $sql = "
+                        INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                        VALUES (:id_pedido, :id_documento, true)
+                        ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                        SET ativo = EXCLUDED.ativo
+                    ";
+                } else {
+                    // Atualiza para ativo = false
+                    $sql = "
+                        UPDATE documentos_pedido
+                        SET ativo = false
+                        WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                    ";
+                }
+
+                $statement = $this->pgAdapter->query($sql);
+                $statement->execute([
+                    'id_pedido' => $idPedido,
+                    'id_documento' => $idDocumento
+                ]);
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $checked ? 'Documento vinculado com sucesso.' : 'Documento desvinculado com sucesso.'
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function toggleGarantiaPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $idPedido = $body['id_pedido'] ?? null;
+            $idGarantia = $body['id_garantia'] ?? null;
+            $checked = $body['checked'] ?? null;
+
+            if (!$idPedido || !$idGarantia || !isset($checked)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+
+                if ($checked) {
+                    // Insere ou atualiza para ativo = true
+                    $sql = "
+                        INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                        VALUES (:id_pedido, :id_garantia, true)
+                        ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                        SET ativo = EXCLUDED.ativo
+                    ";
+                } else {
+                    // Atualiza para ativo = false
+                    $sql = "
+                        UPDATE garantias_pedido
+                        SET ativo = false
+                        WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                    ";
+                }
+
+                $statement = $this->pgAdapter->query($sql);
+                $statement->execute([
+                    'id_pedido' => $idPedido,
+                    'id_garantia' => $idGarantia
+                ]);
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $checked ? 'Garantia vinculada com sucesso.' : 'Garantia desvinculada com sucesso.'
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function toggleDuplicataBoletoPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $idPedido = $body['PEDIDO_ID'] ?? null;
+            $idParcela = $body['ID'] ?? null;
+
+            $boletoRecebido = $body['BOLETO_RECEBIDO'] ?? null;
+            $duplicataRecebido = $body['DUPLICATA_RECEBIDO'] ?? null;
+
+            unset($body['BOLETO_EMITIDO']);
+            unset($body['DUPLICATA_EMITIDA']);
+            unset($body['VENCIMENTO_PARCELA']);
+
+            if (!$idPedido || !$idParcela) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+
+                $sql = "INSERT INTO duplicata_boleto_pedido (
+                            id_pedido,
+                            id_parcela_pedido,
+                            boleto_recebido,
+                            duplicata_recebido
+                        )
+                        VALUES (
+                            :id_pedido,
+                            :id_parcela_pedido,
+                            :boleto_recebido,
+                            :duplicata_recebido
+                        )
+                        ON CONFLICT (id_pedido, id_parcela_pedido) DO UPDATE SET
+                            boleto_recebido = EXCLUDED.boleto_recebido,
+                            duplicata_recebido = EXCLUDED.duplicata_recebido
+                ";
+
+                $statement = $this->pgAdapter->query($sql);
+                $statement->execute([
+                    'id_pedido' => $idPedido,
+                    'id_parcela_pedido' => $idParcela,
+                    'boleto_recebido' => $boletoRecebido,
+                    'duplicata_recebido' => $duplicataRecebido,
+                ]);
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Dados atualizados com sucesso.',
+                    'data' => [
+                        'ID' => $idParcela,
+                        'BOLETO_RECEBIDO' => $boletoRecebido,
+                        'DUPLICATA_RECEBIDO' => $duplicataRecebido,
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
+    #endregion
+
+    #region Cadastro Documento
+        public function cadastroDocumentosPedidoAction()
+        {
+            $session = new Container('auth');
+
+            if (!isset($session->user)) {
+                // Redireciona o usuário para o login caso não esteja autenticado
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listDocumentosAction()
+        {
+            try {
+                $skip = $this->params()->fromQuery('skip', 0);
+                $take = $this->params()->fromQuery('take', 500);
+                $sort = $this->params()->fromQuery('sort', null);
+
+                $documentos = $this->creditoECobrancaRepository->listarDocumentos($skip, $take, $sort);
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $documentos['data'],
+                    'totalCount' => $documentos['totalCount'],
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar documentos: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function addOrUpdateDocumentoAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                if ($this->getRequest()->isPut()) {
+                    $this->creditoECobrancaRepository->atualizarDocumento($data);
+                    $message = 'Documento atualizado com sucesso!';
+                } else {
+                    $this->creditoECobrancaRepository->inserirDocumento($data);
+                    $message = 'Documento adicionado com sucesso!';
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar documento: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirDocumentoAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->creditoECobrancaRepository->excluirDocumento($data['id']);
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Documento excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir documento: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endregion
+
+    #region Cadastro Garantias
+        public function cadastroGarantiasPedidoAction()
+        {
+            $session = new Container('auth');
+
+            if (!isset($session->user)) {
+                // Redireciona o usuário para o login caso não esteja autenticado
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listGarantiasAction()
+        {
+            try {
+                $skip = $this->params()->fromQuery('skip', 0);
+                $take = $this->params()->fromQuery('take', 500);
+                $sort = $this->params()->fromQuery('sort', null);
+
+                $garantias = $this->creditoECobrancaRepository->listarGarantias($skip, $take, $sort);
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $garantias['data'],
+                    'totalCount' => $garantias['totalCount'],
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar garantias: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function addOrUpdateGarantiaAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                if ($this->getRequest()->isPut()) {
+                    $this->creditoECobrancaRepository->atualizarGarantia($data);
+                    $message = 'Garantia atualizada com sucesso!';
+                } else {
+                    $this->creditoECobrancaRepository->inserirGarantia($data);
+                    $message = 'Garantia adicionada com sucesso!';
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar garantia: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirGarantiaAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->creditoECobrancaRepository->excluirGarantia($data['id']);
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Garantia excluída com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir garantia: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endregion
+
+
 
 }

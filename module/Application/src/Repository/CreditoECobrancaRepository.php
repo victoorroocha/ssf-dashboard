@@ -2,9 +2,16 @@
 
 namespace Application\Repository;
 
+use Laminas\Db\Adapter\AdapterInterface;
+
 class CreditoECobrancaRepository
 {
+    private $adapter;
 
+    public function __construct(AdapterInterface $adapter)
+    {
+        $this->adapter = $adapter;
+    }
 
     public function getDadosSoftsulQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null)
     {
@@ -453,4 +460,313 @@ class CreditoECobrancaRepository
                 INNER JOIN EMPRESA.CLIFOR CLIFOR ON CLIFOR.CODIGOCLIFOR  = S.CODIGOCLIFOR 
                 ORDER BY CODIGOSAFRA"; 
     }
+
+
+
+    #region Controle Documentos
+        public function getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null)
+        {
+            $ands = "";
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            if (!empty($emissao_inicio)) {
+                $emissao_fim = !empty($emissao_fim) ? $emissao_fim : date('Y-m-d');
+                $ands .= " AND P.CREATED_AT BETWEEN TO_DATE('{$emissao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$emissao_fim}', 'YYYY-MM-DD')";
+            }
+        
+            
+            return "SELECT  
+                         P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,SUM(IP.QUANT) AS QUANTIDADE
+                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                        ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
+                        ,MAX(GM.DESCRICAO) AS PAGAMENTO_GERMOPLASTMA
+                        ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES  
+                        ,TO_CHAR(MAX(P.VENCIMENTO_ROYALTIES), 'YYYY-MM-DD') AS VENCIMENTO_ROYALTIES
+                        ,MAX(RM.DESCRICAO) AS PAGAMENTO_ROYALTIES
+                        ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI
+                        ,TO_CHAR(MAX(P.VENCIMENTO_TSI), 'YYYY-MM-DD') AS VENCIMENTO_TSI
+                        ,MAX(TM.DESCRICAO) AS PAGAMENTO_TSI
+                        ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE
+                        ,TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE
+                        ,MAX(FM.DESCRICAO) AS PAGAMENTO_FRETE
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,(  CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_ROYALTIES, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_TSI, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO) THEN MAX(NVL(P.PRECO_TOTAL_FRETE, 0)) ELSE 0 END
+                        ) AS PRECO_TOTAL_PRAZO_SAFRA
+                        ,CASE WHEN 
+                                EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO)
+                            THEN 'Prazo Safra'
+                            ELSE 'Prazo Ano'
+                        END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLI.CODIGOCLIFOR, CLI.NOME
+                    ORDER BY P.ID, P.CREATED_AT";  
+        }
+        public function getDocumentosPedidoQuery($idPedido)
+        {
+            if (!empty($idPedido)) {
+                $sql = "SELECT DISTINCT
+                            d.id AS id_documento,
+                            dp.id_pedido,
+                            d.dsc_documento,
+                            COALESCE(dp.ativo, false) AS ativo
+                        FROM documentos d
+                        LEFT JOIN documentos_pedido dp ON dp.id_documento = d.id AND dp.id_pedido = {$idPedido}
+                        WHERE d.ativo = true
+                        ORDER BY d.id
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getGarantiasPedidoQuery($idPedido)
+        {
+            if (!empty($idPedido)) {
+                $sql =" SELECT DISTINCT
+                            garantias.id as id_garantia,
+                            garantias_pedido.id_pedido,
+                            garantias.dsc_garantia,
+                            COALESCE(garantias_pedido.ativo, false) as ativo
+                        FROM garantias
+                        LEFT JOIN garantias_pedido ON garantias_pedido.id_garantia = garantias.id AND garantias_pedido.id_pedido = {$idPedido}
+                        WHERE garantias.ativo = true
+                        ORDER BY id_garantia";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getDuplicatasBoletosPedidoOracleQuery($idPedido)
+        {
+            if (!empty($idPedido)) {
+                $sql ="  SELECT
+                            ID,
+                            PEDIDO_ID,
+                            TO_CHAR(VENCIMENTO, 'YYYY-MM-DD') AS VENCIMENTO_PARCELA,
+                            CASE WHEN BOLETO_EMITIDO = 1 THEN 1 ELSE 0 END AS BOLETO_EMITIDO,
+                            CASE WHEN DUPLICATA_EMITIDA = 1 THEN 1 ELSE 0 END AS DUPLICATA_EMITIDA
+                        FROM WEB.PARCELAS_PEDIDO_V2
+                        WHERE PEDIDO_ID = {$idPedido}";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getDuplicatasBoletosPedidoPostgresQuery($idPedido, $id_parcela_pedido)
+        {
+            if (!empty($idPedido) && !empty($id_parcela_pedido)) {
+                $sql =" SELECT 
+                            id_duplicata_boleto_pedido, 
+                            id_pedido, 
+                            id_parcela_pedido, 
+                            data_insercao, boleto_recebido, 
+                            duplicata_recebido 
+                        FROM duplicata_boleto_pedido
+                        WHERE id_pedido = {$idPedido}
+                        AND id_parcela_pedido = {$id_parcela_pedido}";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+
+
+        #region Cadastro Documentos
+            public function listarDocumentos($skip, $take, $sort = null)
+            {
+                $sql = 'SELECT id, dsc_documento, ativo, flg_documento_obrigatorio FROM documentos';
+
+                if ($sort) {
+                    $sort = json_decode($sort, true);
+                    $orderBy = array_map(function ($item) {
+                        return $item['selector'] . ' ' . ($item['desc'] ? 'DESC' : 'ASC');
+                    }, $sort);
+                    $sql .= ' ORDER BY ' . implode(', ', $orderBy);
+                }
+
+                $sql .= ' LIMIT :take OFFSET :skip';
+
+                $statement = $this->adapter->createStatement($sql);
+                $result = $statement->execute([
+                    ':take' => $take,
+                    ':skip' => $skip,
+                ]);
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = $row;
+                }
+
+                $totalCount = $this->adapter->query('SELECT COUNT(*) FROM documentos')->execute()->current()['count'];
+
+                return [
+                    'data' => $data,
+                    'totalCount' => $totalCount,
+                ];
+            }
+            public function inserirDocumento(array $data)
+            {
+                if (empty($data['dsc_documento'])) {
+                    throw new \Exception('Descrição do documento é obrigatória.');
+                }
+
+                $sql = 'INSERT INTO documentos (dsc_documento, ativo, flg_documento_obrigatorio) 
+                        VALUES (:dsc_documento, :ativo, :flg_documento_obrigatorio)';
+                        
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([
+                    ':dsc_documento' => $data['dsc_documento'],
+                    ':ativo' => $data['ativo'] ?? true,
+                    ':flg_documento_obrigatorio' => $data['flg_documento_obrigatorio'] ?? false,
+                ]);
+            }
+            public function atualizarDocumento(array $data)
+            {
+                $sql = 'UPDATE documentos SET 
+                        dsc_documento = :dsc_documento, 
+                        ativo = :ativo, 
+                        flg_documento_obrigatorio = :flg_documento_obrigatorio 
+                        WHERE id = :id';
+                        
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([
+                    ':dsc_documento' => $data['dsc_documento'],
+                    ':ativo' => $data['ativo'] ?? true,
+                    ':flg_documento_obrigatorio' => $data['flg_documento_obrigatorio'] ?? false,
+                    ':id' => $data['id'],
+                ]);
+            }
+            public function excluirDocumento($id)
+            {
+                if (empty($id)) {
+                    throw new \Exception('ID do documento não fornecido.');
+                }
+
+                $sql = 'DELETE FROM documentos WHERE id = :id';
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([':id' => $id]);
+            }
+        #endregion
+        
+        #region Cadastro Garantias
+            public function listarGarantias($skip, $take, $sort = null)
+            {
+                $sql = 'SELECT id, dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio FROM garantias';
+
+                if ($sort) {
+                    $sort = json_decode($sort, true);
+                    $orderBy = array_map(function ($item) {
+                        return $item['selector'] . ' ' . ($item['desc'] ? 'DESC' : 'ASC');
+                    }, $sort);
+                    $sql .= ' ORDER BY ' . implode(', ', $orderBy);
+                }
+
+                $sql .= ' LIMIT :take OFFSET :skip';
+
+                $statement = $this->adapter->createStatement($sql);
+                $result = $statement->execute([
+                    ':take' => $take,
+                    ':skip' => $skip,
+                ]);
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = $row;
+                }
+
+                $totalCount = $this->adapter->query('SELECT COUNT(*) FROM garantias')->execute()->current()['count'];
+
+                return [
+                    'data' => $data,
+                    'totalCount' => $totalCount,
+                ];
+            }
+            public function inserirGarantia(array $data)
+            {
+                if (empty($data['dsc_garantia'])) {
+                    throw new \Exception('Descrição da garantia é obrigatória.');
+                }
+
+                $sql = 'INSERT INTO garantias 
+                        (dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio) 
+                        VALUES 
+                        (:dsc_garantia, :ativo, :flg_instrumento_fianca, :flg_confissao_divida, :flg_cpr, :flg_garantia_obrigatorio)';
+                        
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([
+                    ':dsc_garantia' => $data['dsc_garantia'],
+                    ':ativo' => $data['ativo'] ?? true,
+                    ':flg_instrumento_fianca' => $data['flg_instrumento_fianca'] ?? false,
+                    ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
+                    ':flg_cpr' => $data['flg_cpr'] ?? false,
+                    ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                ]);
+            }
+            public function atualizarGarantia(array $data)
+            {
+                $sql = 'UPDATE garantias SET 
+                        dsc_garantia = :dsc_garantia, 
+                        ativo = :ativo,
+                        flg_instrumento_fianca = :flg_instrumento_fianca,
+                        flg_confissao_divida = :flg_confissao_divida,
+                        flg_cpr = :flg_cpr,
+                        flg_garantia_obrigatorio = :flg_garantia_obrigatorio
+                        WHERE id = :id';
+                        
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([
+                    ':dsc_garantia' => $data['dsc_garantia'],
+                    ':ativo' => $data['ativo'] ?? true,
+                    ':flg_instrumento_fianca' => $data['flg_instrumento_fianca'] ?? false,
+                    ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
+                    ':flg_cpr' => $data['flg_cpr'] ?? false,
+                    ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                    ':id' => $data['id'],
+                ]);
+            }
+            public function excluirGarantia($id)
+            {
+                if (empty($id)) {
+                    throw new \Exception('ID da garantia não fornecido.');
+                }
+
+                $sql = 'DELETE FROM garantias WHERE id = :id';
+                $statement = $this->adapter->createStatement($sql);
+                $statement->execute([':id' => $id]);
+            }
+        #endregion
+
+    #endregion
+
 }

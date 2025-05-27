@@ -2,8 +2,21 @@
 
 namespace Application\Repository;
 
+use Laminas\Db\Adapter\Adapter;
+use Laminas\Db\TableGateway\TableGateway;
+
 class ControladoriaRepository
 {
+
+    private $tableGateway;
+    private $userMenuTableGateway;
+
+    public function __construct(Adapter $adapter)
+    {
+        $this->tableGateway = new TableGateway('menu', $adapter);
+        $this->userMenuTableGateway = new TableGateway('usuario_menu', $adapter);
+        $this->adapter = $adapter;
+    }
 
 
     public function getLancamentosCentrosCustoContaContas($codempresa = null, $codfilial = null, $lancamento_inicio = null, $lancamento_fim = null)
@@ -166,4 +179,124 @@ class ControladoriaRepository
                 AND CODEMP = 5
                 ORDER BY CODEMP, CODFIL";
     }
+
+
+
+
+
+
+    #region Estrutura Contas
+        public function listarPlanoContas()
+        {
+            $sql = '
+                SELECT 
+                    id, 
+                    parent_id, 
+                    clacta, 
+                    descta, 
+                    codigo, 
+                    ctared, 
+                    natcta, 
+                    anasin, 
+                    ilevel 
+                FROM 
+                    plano_contas
+                ORDER BY 
+                    (string_to_array(regexp_replace(codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
+                    (regexp_replace(codigo, \'[0-9]\', \'\', \'g\')) ASC;  -- Parte alfabética
+                ';
+
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $planoContas = [];
+            foreach ($result as $row) {
+                $planoContas[] = $row;
+            }
+
+            return $planoContas;
+        }
+        public function inserirPlanoConta(array $data)
+        {
+            $sql = 'INSERT INTO plano_contas (parent_id, clacta, descta, codigo, ctared, natcta, anasin, ilevel) 
+                    VALUES (:parent_id, :clacta, :descta, :codigo, :ctared, :natcta, :anasin, :ilevel)';
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute([
+                ':parent_id' => $data['parent_id'] ?? null,
+                ':clacta' => $data['clacta'] ?? null,
+                ':descta' => $data['descta'] ?? null,
+                ':codigo' => $data['codigo'] ?? null,
+                ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
+                ':natcta' => $data['natcta'] ?? null,
+                ':anasin' => $data['anasin'] ?? null,
+                ':ilevel' => $data['ilevel'] ?? null
+            ]);
+        }
+        public function atualizarPlanoConta(array $data)
+        {
+            $sql = 'UPDATE plano_contas 
+                        SET parent_id = :parent_id, 
+                            clacta = :clacta, 
+                            descta = :descta, 
+                            codigo = :codigo, 
+                            ctared = :ctared, 
+                            natcta = :natcta, 
+                            anasin = :anasin, 
+                            ilevel = :ilevel 
+                    WHERE id = :id';
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute([
+                ':id' => $data['id'],
+                ':parent_id' => $data['parent_id'] ?? null,
+                ':clacta' => $data['clacta'],
+                ':descta' => $data['descta'] ?? null,
+                ':codigo' => $data['codigo'] ?? null,
+                ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
+                ':natcta' => $data['natcta'] ?? null,
+                ':anasin' => $data['anasin'] ?? null,
+                ':ilevel' => $data['ilevel'] ?? null,
+            ]);
+        }
+        public function excluirPlanoConta($id)
+        {
+            $connection = $this->adapter->getDriver()->getConnection();
+            $connection->beginTransaction();
+
+            try {
+               $sql = 'WITH RECURSIVE contas_a_excluir AS (
+                            SELECT id FROM plano_contas WHERE id = :id
+                            UNION ALL
+                            SELECT p.id 
+                            FROM plano_contas p
+                            INNER JOIN contas_a_excluir c ON p.parent_id = c.id
+                        )
+                        DELETE FROM plano_contas WHERE id IN (SELECT id FROM contas_a_excluir);';
+                $statementFilhos = $this->adapter->createStatement($sql);
+                $statementFilhos->execute([':id' => $id]);
+
+                $connection->commit();
+            } catch (\Exception $e) {
+                $connection->rollback();
+                throw $e; // Deixa a exceção propagar para ser tratada no controller
+            }
+        }
+        public function getBuscarDetalhesClactaQuery($clacta = null)
+        {
+            $ands = "";
+             if (!empty($clacta)) {
+                $ands .= " AND CLACTA = '{$clacta}'";
+            }
+
+            return "SELECT 
+                        CLACTA,
+                        CTARED,
+                        DESCTA,
+                        NATCTA,
+                        ANASIN
+                    FROM E045PLA
+                    WHERE CODEMP = 5
+                    {$ands}
+                    ORDER BY CLACTA"; 
+        }
+    #endRegion
 }
