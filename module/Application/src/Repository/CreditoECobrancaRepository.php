@@ -475,8 +475,8 @@ class CreditoECobrancaRepository
                 $ands .= " AND P.CREATED_AT BETWEEN TO_DATE('{$emissao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$emissao_fim}', 'YYYY-MM-DD')";
             }
         
-            
-            return "SELECT  
+            return "SELECT * FROM (
+                    SELECT  
                          P.ID AS ID_PEDIDO
                         ,P.CODIGO AS CODIGO_PEDIDO
                         ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
@@ -484,6 +484,7 @@ class CreditoECobrancaRepository
                         ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
                         ,P.CODIGOSAFRA 
                         ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
                         ,CLI.CODIGOCLIFOR AS ID_CLIENTE
                         ,CLI.NOME AS NOME_CLIENTE
                         ,SUM(IP.QUANT) AS QUANTIDADE
@@ -523,14 +524,154 @@ class CreditoECobrancaRepository
                     LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
                     LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
                     LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
                     WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                     {$ands}
-                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLI.CODIGOCLIFOR, CLI.NOME
-                    ORDER BY P.ID, P.CREATED_AT";  
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME
+                    ORDER BY P.CREATED_AT desc
+                    ) A
+                    WHERE A.TIPO_PRAZO = 'Prazo Safra'";  
         }
-        public function getDocumentosPedidoQuery($idPedido)
+        public function getStatusDocumentoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                            count(distinct dp.id_documento) qtd
+                            ,(select count(distinct id) from documentos where documentos.flg_documento_obrigatorio = true and documentos.ativo = true AND documentos.tipo_pessoa = '{$tipoPessoa}') qtd_documentos_obrigatorios
+                        FROM documentos_pedido dp
+                        LEFT JOIN documentos d ON d.id = dp.id_documento 
+                        WHERE d.ativo = true 
+                        AND d.flg_documento_obrigatorio = true
+                        AND dp.ativo = true
+                        AND id_pedido = {$idPedido}
+                        AND d.tipo_pessoa = '{$tipoPessoa}'
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusDuplicatasQuery($idPedido)
         {
             if (!empty($idPedido)) {
+                $sql = "SELECT
+                            count(distinct dbp.id_parcela_pedido) qtd
+                        FROM duplicata_boleto_pedido dbp
+                        WHERE dbp.duplicata_recebido  = true
+                        and dbp.id_pedido = {$idPedido}
+                        GROUP by dbp.id_pedido;";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusCPRQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_cpr = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusInstrumentoFiancaQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_instrumento_fianca = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusConfissaoDividaQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_confissao_divida = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusGarantiasQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                            count(distinct gp.id_garantia) qtd
+                            ,(
+                                --Considera apenas 1 flg_instrumento_fianca
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_instrumento_fianca = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end + 
+                                --Considera apenas 1 flg_cpr
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_cpr = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end +
+                                --Considera apenas 1 flg_confissao_divida
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_confissao_divida = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end +
+                                (select count(distinct id) from garantias where garantias.ativo = true and flg_instrumento_fianca = false and flg_cpr = false and flg_confissao_divida = false AND garantias.tipo_pessoa = '{$tipoPessoa}')
+                            ) qtd_garantias
+                        FROM garantias_pedido gp
+                        LEFT JOIN garantias g ON g.id = gp.id_garantia 
+                        WHERE g.ativo = true 
+                        AND gp.ativo = true
+                        AND gp.id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+
+
+        public function getDocumentosPedidoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql = "SELECT DISTINCT
                             d.id AS id_documento,
                             dp.id_pedido,
@@ -539,6 +680,7 @@ class CreditoECobrancaRepository
                         FROM documentos d
                         LEFT JOIN documentos_pedido dp ON dp.id_documento = d.id AND dp.id_pedido = {$idPedido}
                         WHERE d.ativo = true
+                        and d.tipo_pessoa = '{$tipoPessoa}'
                         ORDER BY d.id
                 ";
             } else {
@@ -547,9 +689,9 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
-        public function getGarantiasPedidoQuery($idPedido)
+        public function getGarantiasPedidoQuery($idPedido, $tipoPessoa)
         {
-            if (!empty($idPedido)) {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql =" SELECT DISTINCT
                             garantias.id as id_garantia,
                             garantias_pedido.id_pedido,
@@ -558,6 +700,7 @@ class CreditoECobrancaRepository
                         FROM garantias
                         LEFT JOIN garantias_pedido ON garantias_pedido.id_garantia = garantias.id AND garantias_pedido.id_pedido = {$idPedido}
                         WHERE garantias.ativo = true
+                        and garantias.tipo_pessoa = '{$tipoPessoa}'
                         ORDER BY id_garantia";
             } else {
                 $sql = "";
@@ -605,7 +748,7 @@ class CreditoECobrancaRepository
         #region Cadastro Documentos
             public function listarDocumentos($skip, $take, $sort = null)
             {
-                $sql = 'SELECT id, dsc_documento, ativo, flg_documento_obrigatorio FROM documentos';
+                $sql = 'SELECT id, dsc_documento, ativo, flg_documento_obrigatorio, tipo_pessoa FROM documentos order by id';
 
                 if ($sort) {
                     $sort = json_decode($sort, true);
@@ -641,14 +784,15 @@ class CreditoECobrancaRepository
                     throw new \Exception('Descrição do documento é obrigatória.');
                 }
 
-                $sql = 'INSERT INTO documentos (dsc_documento, ativo, flg_documento_obrigatorio) 
-                        VALUES (:dsc_documento, :ativo, :flg_documento_obrigatorio)';
+                $sql = 'INSERT INTO documentos (dsc_documento, ativo, flg_documento_obrigatorio, tipo_pessoa) 
+                        VALUES (:dsc_documento, :ativo, :flg_documento_obrigatorio, :tipo_pessoa)';
                         
                 $statement = $this->adapter->createStatement($sql);
                 $statement->execute([
                     ':dsc_documento' => $data['dsc_documento'],
                     ':ativo' => $data['ativo'] ?? true,
                     ':flg_documento_obrigatorio' => $data['flg_documento_obrigatorio'] ?? false,
+                    ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                 ]);
             }
             public function atualizarDocumento(array $data)
@@ -656,7 +800,8 @@ class CreditoECobrancaRepository
                 $sql = 'UPDATE documentos SET 
                         dsc_documento = :dsc_documento, 
                         ativo = :ativo, 
-                        flg_documento_obrigatorio = :flg_documento_obrigatorio 
+                        flg_documento_obrigatorio = :flg_documento_obrigatorio,
+                        tipo_pessoa = :tipo_pessoa
                         WHERE id = :id';
                         
                 $statement = $this->adapter->createStatement($sql);
@@ -664,6 +809,7 @@ class CreditoECobrancaRepository
                     ':dsc_documento' => $data['dsc_documento'],
                     ':ativo' => $data['ativo'] ?? true,
                     ':flg_documento_obrigatorio' => $data['flg_documento_obrigatorio'] ?? false,
+                    ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                     ':id' => $data['id'],
                 ]);
             }
@@ -682,7 +828,7 @@ class CreditoECobrancaRepository
         #region Cadastro Garantias
             public function listarGarantias($skip, $take, $sort = null)
             {
-                $sql = 'SELECT id, dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio FROM garantias';
+                $sql = 'SELECT id, dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, tipo_pessoa FROM garantias order by id';
 
                 if ($sort) {
                     $sort = json_decode($sort, true);
@@ -719,9 +865,9 @@ class CreditoECobrancaRepository
                 }
 
                 $sql = 'INSERT INTO garantias 
-                        (dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio) 
+                        (dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, tipo_pessoa) 
                         VALUES 
-                        (:dsc_garantia, :ativo, :flg_instrumento_fianca, :flg_confissao_divida, :flg_cpr, :flg_garantia_obrigatorio)';
+                        (:dsc_garantia, :ativo, :flg_instrumento_fianca, :flg_confissao_divida, :flg_cpr, :flg_garantia_obrigatorio, :tipo_pessoa)';
                         
                 $statement = $this->adapter->createStatement($sql);
                 $statement->execute([
@@ -731,6 +877,7 @@ class CreditoECobrancaRepository
                     ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
                     ':flg_cpr' => $data['flg_cpr'] ?? false,
                     ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                    ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                 ]);
             }
             public function atualizarGarantia(array $data)
@@ -741,7 +888,8 @@ class CreditoECobrancaRepository
                         flg_instrumento_fianca = :flg_instrumento_fianca,
                         flg_confissao_divida = :flg_confissao_divida,
                         flg_cpr = :flg_cpr,
-                        flg_garantia_obrigatorio = :flg_garantia_obrigatorio
+                        flg_garantia_obrigatorio = :flg_garantia_obrigatorio,
+                        tipo_pessoa = :tipo_pessoa
                         WHERE id = :id';
                         
                 $statement = $this->adapter->createStatement($sql);
@@ -752,6 +900,7 @@ class CreditoECobrancaRepository
                     ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
                     ':flg_cpr' => $data['flg_cpr'] ?? false,
                     ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                    ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                     ':id' => $data['id'],
                 ]);
             }

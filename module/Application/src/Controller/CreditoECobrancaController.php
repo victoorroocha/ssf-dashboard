@@ -596,9 +596,121 @@ class CreditoECobrancaController extends BaseController
 
                     // Processa os dados do Oracle
                     foreach ($result as $key => $row) {
+                        $idPedido = $row['ID_PEDIDO'];
+                        $tipoPessoa = $row['TIPO_PESSOA'];
+
+                        // Busca Status Documentos Pedido
+                        $sqlStatusDocumentos = $this->creditoECobrancaRepository->getStatusDocumentoQuery($idPedido, $tipoPessoa);
+                        if ($sqlStatusDocumentos) {
+                            $stmtStatusDoc = $this->pgAdapter->query($sqlStatusDocumentos);
+                            $resStatusDoc = $stmtStatusDoc->execute();
+                            $statusDocumentosPedido = $resStatusDoc->current();
+                            
+                            $totalDocumentos = $statusDocumentosPedido['qtd_documentos_obrigatorios']; 
+                            $documentosRecebidos = $statusDocumentosPedido['qtd']; 
+
+                            if ($documentosRecebidos === 0) {
+                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Pendente';
+                            } elseif ($documentosRecebidos < $totalDocumentos) {
+                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido Parcial';
+                            } else {
+                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
+                        // Busca Status Duplicatas
+                        $sqlStatusDuplicatas = $this->creditoECobrancaRepository->getStatusDuplicatasQuery($idPedido);
+                        if ($sqlStatusDuplicatas) {
+                            $stmtStatusDuplicata = $this->pgAdapter->query($sqlStatusDuplicatas);
+                            $resStatusDuplicata = $stmtStatusDuplicata->execute();
+                            $statusDuplicatasPedido = $resStatusDuplicata->current();
+
+                            // Busca Total Duplicatas e Boletos
+                            $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
+                            if ($sqlDuplicataBoleto) {
+                                $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
+                            }
+                            $totalDuplicatas = count($resDuplicataBoleto);
+                            $duplicatasRecebidos = isset($statusDuplicatasPedido['qtd']) ? $statusDuplicatasPedido['qtd'] : 0; 
+                            
+                            if ($duplicatasRecebidos === 0) {
+                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Pendente';
+                            } elseif ($duplicatasRecebidos < $totalDuplicatas) {
+                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido Parcial';
+                            } else {
+                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
+                        // Busca Status CPR Pedido
+                        $sqlStatusCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);
+                        if ($sqlStatusCPR) {
+                            $stmtStatusCPR = $this->pgAdapter->query($sqlStatusCPR);
+                            $resStatusCPR = $stmtStatusCPR->execute();
+                            $statusCPRPedido = $resStatusCPR->current();
+                            
+                            $CPRRecebidos = $statusCPRPedido['qtd']; 
+
+                            if ($CPRRecebidos === 0) {
+                                $result[$key]['STATUS_CPR_PEDIDO'] = 'Pendente';
+                            } else {
+                                $result[$key]['STATUS_CPR_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
+                        // Busca Status Instrumento Fiança Pedido
+                        $sqlStatusInstrumentoFianca = $this->creditoECobrancaRepository->getStatusInstrumentoFiancaQuery($idPedido, $tipoPessoa);
+                        if ($sqlStatusInstrumentoFianca) {
+                            $stmtStatusInstrumentoFianca = $this->pgAdapter->query($sqlStatusInstrumentoFianca);
+                            $resStatusInstrumentoFianca = $stmtStatusInstrumentoFianca->execute();
+                            $statusInstrumentoFiancaPedido = $resStatusInstrumentoFianca->current();
+                            
+                            $instrumentoFiancaRecebidos = $statusInstrumentoFiancaPedido['qtd']; 
+
+                            if ($instrumentoFiancaRecebidos === 0) {
+                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Pendente';
+                            } else {
+                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Recebido';
+                            }
+                        }
+                        
+                        // Busca Status Confissão Divida Pedido
+                        $sqlConfissaoDivida = $this->creditoECobrancaRepository->getStatusConfissaoDividaQuery($idPedido, $tipoPessoa);
+                        if ($sqlConfissaoDivida) {
+                            $stmtStatusConfissaoDivida = $this->pgAdapter->query($sqlConfissaoDivida);
+                            $resStatusConfissaoDivida = $stmtStatusConfissaoDivida->execute();
+                            $statusConfissaoDividaPedido = $resStatusConfissaoDivida->current();
+                            
+                            $confissaoDividaRecebidos = $statusConfissaoDividaPedido['qtd']; 
+
+                            if ($confissaoDividaRecebidos === 0) {
+                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Pendente';
+                            } else {
+                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
+                        // Busca Status Recebimentos Garantias Pedido
+                        $sqlGarantias = $this->creditoECobrancaRepository->getStatusGarantiasQuery($idPedido, $tipoPessoa);
+                        if ($sqlGarantias) {
+                            $stmtStatusGarantias = $this->pgAdapter->query($sqlGarantias);
+                            $resStatusGarantias = $stmtStatusGarantias->execute();
+                            $statusGarantiasPedido = $resStatusGarantias->current();
+                            
+                            $totalGarantias = $statusGarantiasPedido['qtd_garantias']; 
+                            $garantiasRecebidos = $statusGarantiasPedido['qtd']; 
+
+                            if ($garantiasRecebidos === 0) {
+                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Pendente';
+                            } elseif ($garantiasRecebidos < $totalGarantias) {
+                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido Parcial';
+                            } else {
+                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
                         // Convertendo a codificação para UTF-8
                         $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
-
                         $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
                         $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
                     }
@@ -637,6 +749,7 @@ class CreditoECobrancaController extends BaseController
             }
 
             $idPedido = $this->params()->fromQuery('idPedido', null);
+            $tipoPessoa = $this->params()->fromQuery('tipoPessoa', null);
 
             try {
                 $result = [
@@ -647,7 +760,7 @@ class CreditoECobrancaController extends BaseController
 
                 if ($idPedido) {
                     // Busca documentos
-                    $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoQuery($idPedido);
+                    $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoQuery($idPedido, $tipoPessoa);
                     if ($sqlDocumentos) {
                         $stmtDoc = $this->pgAdapter->query($sqlDocumentos);
                         $resDoc = $stmtDoc->execute();
@@ -657,7 +770,7 @@ class CreditoECobrancaController extends BaseController
                     }
 
                     // Busca garantias
-                    $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoQuery($idPedido);
+                    $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoQuery($idPedido, $tipoPessoa);
                     if ($sqlGarantias) {
                         $stmtGar = $this->pgAdapter->query($sqlGarantias);
                         $resGar = $stmtGar->execute();

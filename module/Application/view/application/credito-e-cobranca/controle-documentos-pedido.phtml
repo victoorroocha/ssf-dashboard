@@ -11,7 +11,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Controle Documentos Pedidoo</p>
+                    <p>Controle Documentos Pedido</p>
 
                     <div id="form-container">
                         <div id="form-filtro"></div>
@@ -98,14 +98,14 @@
                         valueExpr: "codigosafra", 
                         placeholder: "Selecione a safra",
                         searchEnabled: true,
-                        isRequired: false // Marca como obrigatório
+                        isRequired: true // Marca como obrigatório
                     },
-                    isRequired: false,
+                    isRequired: true,
                     colSpan: 2 // Ocupa toda a linha
                 },
                 {
                     itemType: "group",
-                    colCount: 2, // Duas colunas para as datas ficarem lado a lado
+                    colCount: 2,
                     items: [
                         {
                             dataField: "emissao_inicio",
@@ -115,6 +115,12 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd"
                             },
+                            validationRules: [
+                                {
+                                    type: "required",
+                                    message: "Data de início é obrigatória"
+                                }
+                            ]
                         },
                         {
                             dataField: "emissao_fim",
@@ -124,8 +130,13 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd"
                             },
+                            // validationRules: [
+                            //     {
+                            //         type: "required",
+                            //         message: "Data de fim é obrigatória"
+                            //     }
+                            // ]
                         },
-                        
                     ]
                 },
                 {
@@ -312,17 +323,45 @@
                                                     icon: "fa fa-eye",   // ícone de olho
                                                     onClick: function(e) {
                                                         const data = e.row.data;
-                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO);
+                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA);
                                                     }
                                                 }
                                             ]
                                         },
                                         { dataField: 'ID_PEDIDO', caption: 'Pedido ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                         { dataField: 'CODIGO_PEDIDO', caption: 'Pedido', allowEditing: false, alignment: 'center', width: 150 },
+                                        { 
+                                            dataField: 'DATA_PEDIDO', 
+                                            caption: 'Emissão', 
+                                            allowEditing: true, 
+                                            alignment: 'center', 
+                                            width: 130, 
+                                            dataType: 'date', 
+                                            format: 'dd/MM/yyyy',
+                                            editorOptions: {
+                                                displayFormat: 'dd/MM/yyyy' 
+                                            },
+                                        },
                                         { dataField: 'MAE_PEDIDO_ID', caption: 'Pedido Mãe', allowEditing: false, alignment: 'center', width: 150, visible: false  },
                                         { dataField: 'ORIGEM_PEDIDO_ID', caption: 'Pedido Origem', allowEditing: false, alignment: 'center', width: 150, visible: false  },
                                         { dataField: 'ID_CLIENTE', caption: 'Cliente ID', allowEditing: false, alignment: 'center', width: 100 },
                                         { dataField: 'NOME_CLIENTE', caption: 'Cliente', allowEditing: false, width: 'auto' },
+                                        {
+                                            dataField: 'TIPO_PESSOA',
+                                            caption: 'Tipo Pessoa',
+                                            alignment: 'center',
+                                            lookup: {
+                                                dataSource: [
+                                                    { value: 'PF', name: 'Pessoa Física' },
+                                                    { value: 'PJ', name: 'Pessoa Jurídica' }
+                                                ],
+                                                valueExpr: 'value',
+                                                displayExpr: 'name'
+                                            },
+                                            validationRules: [
+                                                { type: 'required', message: 'Tipo Pessoa é obrigatório' }
+                                            ]
+                                        },
                                         { dataField: 'QUANTIDADE', caption: 'Quantidade', allowEditing: false, alignment: 'center' },
                                         { 
                                             dataField: 'PRECO_TOTAL_GERMOPLASMA', 
@@ -425,6 +464,12 @@
                                             format: { type: 'currency', currency: 'BRL', precision: 2 },  
                                         },
                                         { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_DOCUMENTO_PEDIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_DUPLICATA_PEDIDO', caption: 'Status Duplicatas', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_CPR_PEDIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_INST_FIANCA_PEDIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_PEDIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
 
                                     ],
                                     summary: {
@@ -627,7 +672,7 @@
                                                     }
                                                     return '';
                                                 }
-                                            }
+                                            },
                                             {
                                                 column: 'PRECO_TOTAL_PRAZO_SAFRA',
                                                 summaryType: 'sum',
@@ -664,11 +709,11 @@
         });
 
 
-        function abrirPopupDocumentosPedido(idPedido) {
+        function abrirPopupDocumentosPedido(idPedido, tipoPessoa) {
             $.ajax({
                 url: "/credito-e-cobranca/list-documentos-pedido",
                 method: 'GET',
-                data: { idPedido: idPedido },
+                data: { idPedido: idPedido, tipoPessoa: tipoPessoa },
                 success: function (response) {
                     if (response.data) {
                         const popup = $('#popupDocumentosPedido').dxPopup({
@@ -794,7 +839,7 @@
                                                                 data: response.data.duplicatasBoletos
                                                             }),
                                                             editing: {
-                                                                mode: 'batch',
+                                                                mode: 'batch', 
                                                                 allowUpdating: true,
                                                                 allowDeleting: false,
                                                                 useIcons: true,
@@ -921,7 +966,12 @@
                                 scrollableContent.find('.dx-scrollview-content').append(formContainer);
                                 contentElement.append(scrollableContent);
 
-                            }
+                            },
+                            onHidden: function () {
+                                if (typeof dataGrid !== 'undefined') {
+                                    dataGrid.refresh();
+                                }
+                            },
                         }).dxPopup('instance');
 
                         popup.show();
@@ -932,27 +982,16 @@
                 }
             });
         }
-
-
-
-
-
-
-
-       
-
-
-
     });
     
-    // Função para formatar a data
-    function formatarData(data) {
-        const date = new Date(data);
-        const dia = ('0' + date.getDate()).slice(-2);
-        const mes = ('0' + (date.getMonth() + 1)).slice(-2);
-        const ano = date.getFullYear();
-        return `${dia}/${mes}/${ano}`;
-    }
+    // // Função para formatar a data
+    // function formatarData(data) {
+    //     const date = new Date(data);
+    //     const dia = ('0' + date.getDate()).slice(-2);
+    //     const mes = ('0' + (date.getMonth() + 1)).slice(-2);
+    //     const ano = date.getFullYear();
+    //     return `${dia}/${mes}/${ano}`;
+    // }
 
     // function showLegend() {
     //     const legend = document.querySelector('.legend');

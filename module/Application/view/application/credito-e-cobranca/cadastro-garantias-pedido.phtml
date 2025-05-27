@@ -12,7 +12,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Cadastro Garantias Pedidoo</p>
+                    <p>Cadastro Garantias</p>
 
                     <div id="gridGarantias"></div>
                 </div>
@@ -209,6 +209,21 @@
             },
             columns: [
                 {
+                    dataField: 'tipo_pessoa',
+                    caption: 'Tipo Pessoa',
+                    lookup: {
+                        dataSource: [
+                            { value: 'PF', name: 'Pessoa Física' },
+                            { value: 'PJ', name: 'Pessoa Jurídica' }
+                        ],
+                        valueExpr: 'value',
+                        displayExpr: 'name'
+                    },
+                    validationRules: [
+                        { type: 'required', message: 'Tipo Pessoa é obrigatório' }
+                    ]
+                },
+                {
                     dataField: 'dsc_garantia',
                     caption: 'Descrição da Garantia',
                     validationRules: [{ type: 'required', message: 'Descrição é obrigatória' }]
@@ -218,6 +233,8 @@
                     caption: 'Instrumento de Fiança',
                     dataType: 'boolean',
                     alignment: 'center', 
+                    sortIndex: 0,
+                    sortOrder: "asc",
                     width: 'auto'
                 },
                 {
@@ -225,6 +242,8 @@
                     caption: 'Confissão de Dívida',
                     dataType: 'boolean',
                     alignment: 'center', 
+                    sortIndex: 1,
+                    sortOrder: "asc",
                     width: 'auto'
                 },
                 {
@@ -232,6 +251,8 @@
                     caption: 'CPR',
                     dataType: 'boolean',
                     alignment: 'center', 
+                    sortIndex: 2,
+                    sortOrder: "asc",
                     width: 'auto'
                 },
                 {

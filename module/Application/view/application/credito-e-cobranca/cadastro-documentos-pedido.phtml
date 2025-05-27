@@ -12,7 +12,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Cadastro Documentos Pedido</p>
+                    <p>Cadastro Documentos</p>
 
                     <div id="gridDocumentos"></div>
                 </div>
@@ -208,6 +208,21 @@
                 placeholder: 'Procure...',
             },
             columns: [
+                {
+                    dataField: 'tipo_pessoa',
+                    caption: 'Tipo Pessoa',
+                    lookup: {
+                        dataSource: [
+                            { value: 'PF', name: 'Pessoa Física' },
+                            { value: 'PJ', name: 'Pessoa Jurídica' }
+                        ],
+                        valueExpr: 'value',
+                        displayExpr: 'name'
+                    },
+                    validationRules: [
+                        { type: 'required', message: 'Tipo Pessoa é obrigatório' }
+                    ]
+                },
                 {
                     dataField: 'dsc_documento',
                     caption: 'Descrição do Documento',
