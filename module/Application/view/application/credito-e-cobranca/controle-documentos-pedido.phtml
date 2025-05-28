@@ -1,3 +1,11 @@
+<style>
+  .dx-datagrid .dx-header-row {
+      background-color: #002060;
+      color: white;
+      font-weight: bold;
+  }
+</style>
+
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Page Heading -->
@@ -329,7 +337,7 @@
                                             ]
                                         },
                                         { dataField: 'ID_PEDIDO', caption: 'Pedido ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'CODIGO_PEDIDO', caption: 'Pedido', allowEditing: false, alignment: 'center', width: 150 },
+                                        { dataField: 'CODIGO_PEDIDO', caption: 'Pedido', allowEditing: false, alignment: 'center', width: 150, fixed: true, fixedPosition: "left" },
                                         { 
                                             dataField: 'DATA_PEDIDO', 
                                             caption: 'Emissão', 

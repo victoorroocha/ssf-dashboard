@@ -354,9 +354,8 @@ class RecursosHumanosRepository
         $wheresExternos = "";
         $columnTipoApuracao = "";
         if (!empty($apuracao_inicio)) {
-            $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
-            $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
-             $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
+            $wheresInternos .= " AND R066APU.PERREF = TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
             $wheresInternos .= " AND R066APU.NUMCAD = {$codColaborador}";
@@ -601,8 +600,7 @@ class RecursosHumanosRepository
         $wheresExternos = "";
         $columnTipoApuracao = "";
         if (!empty($apuracao_inicio)) {
-            $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
-            $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND R066APU.PERREF = TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD')";
             $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {
@@ -779,8 +777,7 @@ class RecursosHumanosRepository
         $wheresExternos = "";
         $columnTipoApuracao = "";
         if (!empty($apuracao_inicio)) {
-            $apuracao_fim = !empty($apuracao_fim) ? $apuracao_fim : date('Y-m-d');
-            $wheresInternos .= " AND R066APU.DATAPU BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')";
+            $wheresInternos .= " AND R066APU.PERREF = TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD')";
             $wheresInternos .= " AND CASE WHEN SITUACAO_COLABORADOR.TIPSIT = 7 AND R034FUN.DATAFA < R066APU.DATAPU THEN 1 ELSE 0 END = 0"; // não listar usuários demitidos DE ACORDO COM A DATA APURAÇÃO
         }
         if (!empty($codColaborador)) {

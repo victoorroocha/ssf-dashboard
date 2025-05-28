@@ -34,7 +34,7 @@ class IndexController extends BaseController
         }
         $dashboard = null;
         // Determina qual dashboard carregar baseado em departamento
-        if ((isset($session->user['id_departamento']) && $session->user['id_departamento'] == 5)) { // dashboard Recursos Humanos || $session->user['role'] == 'Administrador'
+        if ((isset($session->user['id_departamento']) && $session->user['id_departamento'] == 5) || $session->user['role'] == 'Administrador') { // dashboard Recursos Humanos 
             $dashboard = 'recursos-humanos1';
         } 
 
