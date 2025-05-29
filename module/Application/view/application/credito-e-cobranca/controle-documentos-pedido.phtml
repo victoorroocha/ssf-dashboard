@@ -76,7 +76,7 @@
         var filtros = {};  // Variável para armazenar os filtros globais
         $("#form-filtro").dxForm({
             formData: {
-                codigosafra: null,
+                codigosafra: '163',
                 emissao_inicio: null,
                 emissao_fim: null,
             },
@@ -86,7 +86,6 @@
                     label: { text: "Safra" },
                     editorType: "dxSelectBox",
                     editorOptions: {
-                        value: 163,
                         dataSource: new DevExpress.data.CustomStore({
                             loadMode: "raw",
                             load: function() {
@@ -133,12 +132,6 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd"
                             },
-                            // validationRules: [
-                            //     {
-                            //         type: "required",
-                            //         message: "Data de início é obrigatória"
-                            //     }
-                            // ]
                         },
                         {
                             dataField: "emissao_fim",
@@ -148,12 +141,6 @@
                                 displayFormat: "dd/MM/yyyy", 
                                 dateSerializationFormat: "yyyy-MM-dd"
                             },
-                            // validationRules: [
-                            //     {
-                            //         type: "required",
-                            //         message: "Data de fim é obrigatória"
-                            //     }
-                            // ]
                         },
                     ]
                 },
