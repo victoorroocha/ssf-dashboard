@@ -652,7 +652,7 @@ class CreditoECobrancaController extends BaseController
                             $CPRRecebidos = $statusCPRPedido['qtd']; 
 
                             if ($CPRRecebidos === 0) {
-                                $result[$key]['STATUS_CPR_PEDIDO'] = 'Pendente';
+                                $result[$key]['STATUS_CPR_PEDIDO'] = '-';
                             } else {
                                 $result[$key]['STATUS_CPR_PEDIDO'] = 'Recebido';
                             }
@@ -668,7 +668,7 @@ class CreditoECobrancaController extends BaseController
                             $instrumentoFiancaRecebidos = $statusInstrumentoFiancaPedido['qtd']; 
 
                             if ($instrumentoFiancaRecebidos === 0) {
-                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Pendente';
+                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = '-';
                             } else {
                                 $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Recebido';
                             }
@@ -684,7 +684,7 @@ class CreditoECobrancaController extends BaseController
                             $confissaoDividaRecebidos = $statusConfissaoDividaPedido['qtd']; 
 
                             if ($confissaoDividaRecebidos === 0) {
-                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Pendente';
+                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = '-';
                             } else {
                                 $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Recebido';
                             }
@@ -752,12 +752,15 @@ class CreditoECobrancaController extends BaseController
 
             $idPedido = $this->params()->fromQuery('idPedido', null);
             $tipoPessoa = $this->params()->fromQuery('tipoPessoa', null);
+            $grupoClienteID = $this->params()->fromQuery('grupoClienteID', null);
+            $codigoSafra = $this->params()->fromQuery('codigoSafra', null);
 
             try {
                 $result = [
                     'documentos' => [],
                     'garantias' => [],
                     'duplicatasBoletos' => [],
+                    'observacaoPedido' => [],
                 ];
 
                 if ($idPedido) {
@@ -818,6 +821,17 @@ class CreditoECobrancaController extends BaseController
                         }
                     }
 
+                    // Busca observações (última inserida, por exemplo)
+                    $sqlObservacoes = $this->creditoECobrancaRepository->getObservacoesPedidoQuery($idPedido);
+                    if ($sqlObservacoes) {
+                        $stmtObs = $this->pgAdapter->query($sqlObservacoes);
+                        $resObs = $stmtObs->execute();
+                        $pgRowObs = $resObs->current();
+
+                        if ($pgRowObs) {
+                            $result['observacaoPedido'] = $pgRowObs;
+                        }
+                    }
                 }
 
                 return new JsonModel([
@@ -840,8 +854,10 @@ class CreditoECobrancaController extends BaseController
             $idPedido = $body['id_pedido'] ?? null;
             $idDocumento = $body['id_documento'] ?? null;
             $checked = $body['checked'] ?? null;
+            $grupoClienteID = $body['grupoClienteID'] ?? null;
+            $codigoSafra = $body['codigoSafra'] ?? null;
 
-            if (!$idPedido || !$idDocumento || !isset($checked)) {
+            if (!$idDocumento || !isset($checked) || !$grupoClienteID || !$codigoSafra) {
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Parâmetros obrigatórios ausentes.'
@@ -855,29 +871,48 @@ class CreditoECobrancaController extends BaseController
                         'message' => 'Adaptador PostgreSQL não disponível.'
                     ]);
                 }
-
-                if ($checked) {
-                    // Insere ou atualiza para ativo = true
-                    $sql = "
-                        INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
-                        VALUES (:id_pedido, :id_documento, true)
-                        ON CONFLICT (id_pedido, id_documento) DO UPDATE
-                        SET ativo = EXCLUDED.ativo
-                    ";
-                } else {
-                    // Atualiza para ativo = false
-                    $sql = "
-                        UPDATE documentos_pedido
-                        SET ativo = false
-                        WHERE id_pedido = :id_pedido AND id_documento = :id_documento
-                    ";
+                 // Verifica se o serviço Oracle está disponível
+                if (!$this->oracleService) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Serviço Oracle não disponível'
+                    ]);
                 }
 
-                $statement = $this->pgAdapter->query($sql);
-                $statement->execute([
-                    'id_pedido' => $idPedido,
-                    'id_documento' => $idDocumento
-                ]);
+                // Busca Pedidos GrupoCliente e Safra
+                $params = [];
+                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                if ($sqlPedidosGrupoCliente) {
+                   // Executa a consulta Oracle, caso tenha uma consulta
+                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
+                }
+                
+                if (count($resPedidosGrupoCliente) > 0) {
+                    foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                        if ($checked) {
+                            // Insere ou atualiza para ativo = true
+                            $sql = "
+                                INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                                VALUES (:id_pedido, :id_documento, true)
+                                ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                                SET ativo = EXCLUDED.ativo
+                            ";
+                        } else {
+                            // Atualiza para ativo = false
+                            $sql = "
+                                UPDATE documentos_pedido
+                                SET ativo = false
+                                WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                            ";
+                        }
+
+                        $statement = $this->pgAdapter->query($sql);
+                        $statement->execute([
+                            'id_pedido' => $pedido['ID_PEDIDO'],
+                            'id_documento' => $idDocumento
+                        ]);
+                    }
+                }
 
                 return new JsonModel([
                     'success' => true,
@@ -899,8 +934,94 @@ class CreditoECobrancaController extends BaseController
             $idPedido = $body['id_pedido'] ?? null;
             $idGarantia = $body['id_garantia'] ?? null;
             $checked = $body['checked'] ?? null;
+            $grupoClienteID = $body['grupoClienteID'] ?? null;
+            $codigoSafra = $body['codigoSafra'] ?? null;
 
-            if (!$idPedido || !$idGarantia || !isset($checked)) {
+            if (!$idGarantia || !isset($checked) || !$grupoClienteID || !$codigoSafra) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+                // Verifica se o serviço Oracle está disponível
+                if (!$this->oracleService) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Serviço Oracle não disponível'
+                    ]);
+                }
+
+                // Busca Pedidos GrupoCliente e Safra
+                $params = [];
+                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                if ($sqlPedidosGrupoCliente) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
+                }
+
+                if (count($resPedidosGrupoCliente) > 0) {
+                    foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                        if ($checked) {
+                            // Insere ou atualiza para ativo = true
+                            $sql = "
+                                INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                                VALUES (:id_pedido, :id_garantia, true)
+                                ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                                SET ativo = EXCLUDED.ativo
+                            ";
+                        } else {
+                            // Atualiza para ativo = false
+                            $sql = "
+                                UPDATE garantias_pedido
+                                SET ativo = false
+                                WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                            ";
+                        }
+
+                        $statement = $this->pgAdapter->query($sql);
+                        $statement->execute([
+                            'id_pedido' => $pedido['ID_PEDIDO'],
+                            'id_garantia' => $idGarantia
+                        ]);
+                    }
+                } else {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Nenhum pedido encontrado para o grupo cliente e safra informados. Nada foi atualizado!'
+                    ]);
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $checked ? 'Garantia vinculada com sucesso.' : 'Garantia desvinculada com sucesso.'
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+        public function salvarObservacaoPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $observacao = $body['observacao'] ?? null;
+            $grupoClienteID = $body['grupoClienteID'] ?? null;
+            $codigoSafra = $body['codigoSafra'] ?? null;
+
+            if ($observacao === null || !$grupoClienteID || !$codigoSafra) {
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Parâmetros obrigatórios ausentes.'
@@ -915,37 +1036,45 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 }
 
-                if ($checked) {
-                    // Insere ou atualiza para ativo = true
-                    $sql = "
-                        INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
-                        VALUES (:id_pedido, :id_garantia, true)
-                        ON CONFLICT (id_pedido, id_garantia) DO UPDATE
-                        SET ativo = EXCLUDED.ativo
-                    ";
-                } else {
-                    // Atualiza para ativo = false
-                    $sql = "
-                        UPDATE garantias_pedido
-                        SET ativo = false
-                        WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
-                    ";
+                if (!$this->oracleService) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Serviço Oracle não disponível'
+                    ]);
                 }
 
-                $statement = $this->pgAdapter->query($sql);
-                $statement->execute([
-                    'id_pedido' => $idPedido,
-                    'id_garantia' => $idGarantia
-                ]);
+                // Busca Pedidos GrupoCliente e Safra
+                $params = [];
+                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                if ($sqlPedidosGrupoCliente) {
+                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
+                }
+
+                if (count($resPedidosGrupoCliente) > 0) {
+                    foreach ($resPedidosGrupoCliente as $pedido) {
+                        $sql = "
+                            INSERT INTO observacoes_pedido (id_pedido, observacao)
+                            VALUES (:id_pedido, :observacao)
+                            ON CONFLICT (id_pedido) DO UPDATE
+                            SET observacao = EXCLUDED.observacao
+                        ";
+
+                        $statement = $this->pgAdapter->query($sql);
+                        $statement->execute([
+                            'id_pedido' => $pedido['ID_PEDIDO'],
+                            'observacao' => $observacao
+                        ]);
+                    }
+                }
 
                 return new JsonModel([
                     'success' => true,
-                    'message' => $checked ? 'Garantia vinculada com sucesso.' : 'Garantia desvinculada com sucesso.'
+                    'message' => 'Observações salvas com sucesso.'
                 ]);
             } catch (\Exception $e) {
                 return new JsonModel([
                     'success' => false,
-                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                    'message' => 'Erro ao salvar observações: ' . $e->getMessage()
                 ]);
             }
         }

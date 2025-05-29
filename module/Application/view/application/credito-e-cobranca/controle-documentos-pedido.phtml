@@ -1,9 +1,18 @@
 <style>
-  .dx-datagrid .dx-header-row {
-      background-color: #002060;
-      color: white;
-      font-weight: bold;
-  }
+    .dx-datagrid .dx-header-row {
+        background-color: #002060;
+        color: white;
+        font-weight: bold;
+    }
+
+    .observacao-field .dx-field-label {
+        font-weight: bold;
+    }
+    .custom-textarea textarea {
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        color: #333;
+    }
 </style>
 
 <!-- Begin Page Content -->
@@ -77,6 +86,7 @@
                     label: { text: "Safra" },
                     editorType: "dxSelectBox",
                     editorOptions: {
+                        value: 163,
                         dataSource: new DevExpress.data.CustomStore({
                             loadMode: "raw",
                             load: function() {
@@ -331,7 +341,7 @@
                                                     icon: "fa fa-eye",   // ícone de olho
                                                     onClick: function(e) {
                                                         const data = e.row.data;
-                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA);
+                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA, data.GRUPO_CLIENTE, data.CODIGOSAFRA);
                                                     }
                                                 }
                                             ]
@@ -480,7 +490,8 @@
                                         { dataField: 'STATUS_INST_FIANCA_PEDIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_CONFISSAO_DIVIDA_PEDIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
-
+                                        { dataField: 'GRUPO_CLIENTE', caption: 'Grupo Cliente ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'CODIGOSAFRA', caption: 'Safra Pedido', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                     ],
                                     summary: {
                                         totalItems: [
@@ -763,19 +774,19 @@
         });
 
 
-        function abrirPopupDocumentosPedido(idPedido, tipoPessoa) {
+        function abrirPopupDocumentosPedido(idPedido, tipoPessoa, grupoClienteID, codigoSafra) {
             $.ajax({
                 url: "/credito-e-cobranca/list-documentos-pedido",
                 method: 'GET',
-                data: { idPedido: idPedido, tipoPessoa: tipoPessoa },
+                data: { idPedido: idPedido, tipoPessoa: tipoPessoa, grupoClienteID: grupoClienteID, codigoSafra: codigoSafra },
                 success: function (response) {
                     if (response.data) {
                         const popup = $('#popupDocumentosPedido').dxPopup({
                             title: "Detalhes Pedido",
                             visible: false,
                             width: '80%',
-                            height: '100%',
-                            maxHeight: '90vh',
+                            height: 'auto',
+                            // maxHeight: '90vh',
                             showTitle: true,
                             scrollingEnabled: true,
                             contentTemplate: function (contentElement) {
@@ -793,6 +804,9 @@
                                     formData[`garantia_${gar.id_garantia}`] = !!gar.ativo;
                                 });
 
+                                // Preenche observação do pedido
+                                formData.observacao = response.data.observacaoPedido.observacao || '';
+
                                 const documentosItems = documentos.map(doc => ({
                                     dataField: `documento_${doc.id_documento}`,
                                     editorType: "dxCheckBox",
@@ -808,7 +822,9 @@
                                                 data: JSON.stringify({
                                                     id_pedido: idPedido,
                                                     id_documento: doc.id_documento,
-                                                    checked: e.value
+                                                    checked: e.value,
+                                                    grupoClienteID: grupoClienteID,
+                                                    codigoSafra: codigoSafra
                                                 }),
                                                 success: function () {
                                                     DevExpress.ui.notify(
@@ -843,7 +859,9 @@
                                                 data: JSON.stringify({
                                                     id_pedido: idPedido,
                                                     id_garantia: gar.id_garantia,
-                                                    checked: e.value
+                                                    checked: e.value,
+                                                    grupoClienteID: grupoClienteID,
+                                                    codigoSafra: codigoSafra
                                                 }),
                                                 success: function () {
                                                     DevExpress.ui.notify(
@@ -1006,6 +1024,54 @@
                                                     }
                                                 }
                                             ]
+                                        },
+                                        {
+                                            dataField: 'observacao',
+                                            editorType: 'dxTextArea',
+                                            editorOptions: {
+                                                height: 150,
+                                                onValueChanged: function (e) {
+                                                    const observacao = e.value;
+
+                                                    if (!idPedido) {
+                                                        DevExpress.ui.notify('ID do pedido não está definido.', 'error', 3000);
+                                                        return;
+                                                    }
+
+                                                    $.ajax({
+                                                        url: '/credito-e-cobranca/salvar-observacao-pedido', // ajuste aqui o controller real
+                                                        method: 'POST',
+                                                        contentType: 'application/json',
+                                                        data: JSON.stringify({
+                                                            id_pedido: idPedido,
+                                                            observacao: observacao,
+                                                            grupoClienteID: grupoClienteID,
+                                                            codigoSafra: codigoSafra
+                                                        }),
+                                                        success: function (res) {
+                                                            if (res.success) {
+                                                                DevExpress.ui.notify(res.message, 'success', 2000);
+                                                            } else {
+                                                                DevExpress.ui.notify(res.message, 'error', 3000);
+                                                            }
+                                                        },
+                                                        error: function () {
+                                                            DevExpress.ui.notify('Erro ao salvar observação.', 'error', 3000);
+                                                        }
+                                                    });
+                                                },
+                                                stylingMode: "outlined", // dá um contorno
+                                                placeholder: "Digite a observação aqui...",
+                                                elementAttr: {
+                                                    class: "custom-textarea"
+                                                }
+                                            },
+                                            label: {
+                                                text: 'Observação do Pedido',
+                                                location: 'top',
+                                                visible: true
+                                            },
+                                            cssClass: "observacao-field"
                                         }
                                     ]
                                 });
