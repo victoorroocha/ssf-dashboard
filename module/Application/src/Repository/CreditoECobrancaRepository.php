@@ -487,6 +487,8 @@ class CreditoECobrancaRepository
                         ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
                         ,CLI.CODIGOCLIFOR AS ID_CLIENTE
                         ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+		                ,vend.NAME AS NOME_VENDEDOR
                         ,SUM(IP.QUANT) AS QUANTIDADE
                         ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
                         ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
@@ -524,11 +526,12 @@ class CreditoECobrancaRepository
                     LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
                     LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
                     LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
-                    LEFT JOIN E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
                     WHERE IP.CODIGOCULTIVAR IS NOT NULL
                     AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                     {$ands}
-                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                     ORDER BY P.CREATED_AT desc
                     ) A
                     WHERE A.TIPO_PRAZO = 'Prazo Safra'";  

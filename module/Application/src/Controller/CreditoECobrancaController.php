@@ -711,6 +711,7 @@ class CreditoECobrancaController extends BaseController
 
                         // Convertendo a codificação para UTF-8
                         $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                        $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
                         $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
                         $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
                     }
@@ -726,6 +727,7 @@ class CreditoECobrancaController extends BaseController
                     'totalCount' => $totalCount
                 ]);
             } catch (\Exception $e) {
+
                 return new JsonModel([
                     'success' => false,
                     'message' => $e->getMessage()
