@@ -354,6 +354,8 @@
                                         { dataField: 'ORIGEM_PEDIDO_ID', caption: 'Pedido Origem', allowEditing: false, alignment: 'center', width: 150, visible: false  },
                                         { dataField: 'ID_CLIENTE', caption: 'Cliente ID', allowEditing: false, alignment: 'center', width: 100 },
                                         { dataField: 'NOME_CLIENTE', caption: 'Cliente', allowEditing: false, width: 'auto' },
+                                        { dataField: 'VENDEDOR_ID', caption: 'Vendedor ID', allowEditing: false, alignment: 'center', width: 100 },
+                                        { dataField: 'NOME_VENDEDOR', caption: 'Vendedor', allowEditing: false, width: 'auto' },
                                         {
                                             dataField: 'TIPO_PESSOA',
                                             caption: 'Tipo Pessoa',
@@ -704,7 +706,51 @@
                                     },
                                     onRowUpdating: function(e) {
                                         e.newData = { ...e.oldData, ...e.newData };
-                                    }
+                                    },
+                                    onToolbarPreparing: function (e) {
+                                        // Aqui você pode personalizar ainda mais a barra de ferramentas
+                                        var toolbarItems = e.toolbarOptions.items;
+                                        // Adicionar os botões de expandir/colapsar
+                                        toolbarItems.push({
+                                            location: "after",
+                                            widget: "dxButton",
+                                            options: {
+                                                icon: "fa fa-expand",
+                                                text: "",
+                                                onClick: function () {
+                                                    var grid = e.component;
+                                                    grid.expandAll(); // Expande todos os grupos
+                                                }
+                                            }
+                                        });
+
+                                        toolbarItems.push({
+                                            location: "after",
+                                            widget: "dxButton",
+                                            options: {
+                                                icon: "fa fa-compress",
+                                                text: "",
+                                                onClick: function () {
+                                                    var grid = e.component;
+                                                    grid.collapseAll(); // Colapsa todos os grupos
+                                                }
+                                            }
+                                        });
+
+                                        e.toolbarOptions.items.push({
+                                            name: "refresh", // Adiciona o botão refresh na toolbar
+                                            location: "after", // Coloca depois dos outros itens
+                                            widget: "dxButton",
+                                            options: {
+                                                icon: "refresh", // Ícone do botão (ícone de atualização)
+                                                onClick: function() {
+                                                    // Recarrega os dados da grid
+                                                    e.component.refresh(); // Atualiza a grid
+                                                },
+                                                text: "Atualizar" 
+                                            }
+                                        });
+                                    },
                                 }).dxDataGrid('instance');
                             } else {
                                 // Se o formulário for inválido
