@@ -546,8 +546,6 @@ class CreditoECobrancaController extends BaseController
     }
 
 
-
-
     #region Controle Documentos Pedido
         public function controleDocumentosPedidoAction()
         {
@@ -857,7 +855,7 @@ class CreditoECobrancaController extends BaseController
             $grupoClienteID = $body['grupoClienteID'] ?? null;
             $codigoSafra = $body['codigoSafra'] ?? null;
 
-            if (!$idDocumento || !isset($checked) || !$grupoClienteID || !$codigoSafra) {
+            if (!$idDocumento || !isset($checked)) {
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Parâmetros obrigatórios ausentes.'
@@ -879,39 +877,64 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 }
 
-                // Busca Pedidos GrupoCliente e Safra
-                $params = [];
-                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
-                if ($sqlPedidosGrupoCliente) {
-                   // Executa a consulta Oracle, caso tenha uma consulta
-                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
-                }
-                
-                if (count($resPedidosGrupoCliente) > 0) {
-                    foreach ($resPedidosGrupoCliente as $key => $pedido) {
-                        if ($checked) {
-                            // Insere ou atualiza para ativo = true
-                            $sql = "
-                                INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
-                                VALUES (:id_pedido, :id_documento, true)
-                                ON CONFLICT (id_pedido, id_documento) DO UPDATE
-                                SET ativo = EXCLUDED.ativo
-                            ";
-                        } else {
-                            // Atualiza para ativo = false
-                            $sql = "
-                                UPDATE documentos_pedido
-                                SET ativo = false
-                                WHERE id_pedido = :id_pedido AND id_documento = :id_documento
-                            ";
-                        }
-
-                        $statement = $this->pgAdapter->query($sql);
-                        $statement->execute([
-                            'id_pedido' => $pedido['ID_PEDIDO'],
-                            'id_documento' => $idDocumento
-                        ]);
+                if (intval($grupoClienteID) > 0 && intval($codigoSafra) > 0) {
+                    // Busca Pedidos GrupoCliente e Safra
+                    $params = [];
+                    $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                    if ($sqlPedidosGrupoCliente) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                        $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
                     }
+                    
+                    if (count($resPedidosGrupoCliente) > 0) {
+                        foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                            if ($checked) {
+                                // Insere ou atualiza para ativo = true
+                                $sql = "
+                                    INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                                    VALUES (:id_pedido, :id_documento, true)
+                                    ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                                    SET ativo = EXCLUDED.ativo
+                                ";
+                            } else {
+                                // Atualiza para ativo = false
+                                $sql = "
+                                    UPDATE documentos_pedido
+                                    SET ativo = false
+                                    WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                                ";
+                            }
+
+                            $statement = $this->pgAdapter->query($sql);
+                            $statement->execute([
+                                'id_pedido' => $pedido['ID_PEDIDO'],
+                                'id_documento' => $idDocumento
+                            ]);
+                        }
+                    } 
+                } else {
+                    if ($checked) {
+                        // Insere ou atualiza para ativo = true
+                        $sql = "
+                            INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                            VALUES (:id_pedido, :id_documento, true)
+                            ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                            SET ativo = EXCLUDED.ativo
+                        ";
+                    } else {
+                        // Atualiza para ativo = false
+                        $sql = "
+                            UPDATE documentos_pedido
+                            SET ativo = false
+                            WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                        ";
+                    }
+
+                    $statement = $this->pgAdapter->query($sql);
+                    $statement->execute([
+                        'id_pedido' => $idPedido,
+                        'id_documento' => $idDocumento
+                    ]);
                 }
 
                 return new JsonModel([
@@ -937,7 +960,7 @@ class CreditoECobrancaController extends BaseController
             $grupoClienteID = $body['grupoClienteID'] ?? null;
             $codigoSafra = $body['codigoSafra'] ?? null;
 
-            if (!$idGarantia || !isset($checked) || !$grupoClienteID || !$codigoSafra) {
+            if (!$idGarantia || !isset($checked)) {
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Parâmetros obrigatórios ausentes.'
@@ -959,43 +982,62 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 }
 
-                // Busca Pedidos GrupoCliente e Safra
-                $params = [];
-                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
-                if ($sqlPedidosGrupoCliente) {
-                    // Executa a consulta Oracle, caso tenha uma consulta
-                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
-                }
-
-                if (count($resPedidosGrupoCliente) > 0) {
-                    foreach ($resPedidosGrupoCliente as $key => $pedido) {
-                        if ($checked) {
-                            // Insere ou atualiza para ativo = true
-                            $sql = "
-                                INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
-                                VALUES (:id_pedido, :id_garantia, true)
-                                ON CONFLICT (id_pedido, id_garantia) DO UPDATE
-                                SET ativo = EXCLUDED.ativo
-                            ";
-                        } else {
-                            // Atualiza para ativo = false
-                            $sql = "
-                                UPDATE garantias_pedido
-                                SET ativo = false
-                                WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
-                            ";
-                        }
-
-                        $statement = $this->pgAdapter->query($sql);
-                        $statement->execute([
-                            'id_pedido' => $pedido['ID_PEDIDO'],
-                            'id_garantia' => $idGarantia
-                        ]);
+                if (intval($grupoClienteID) > 0 && intval($codigoSafra) > 0) {
+                    // Busca Pedidos GrupoCliente e Safra
+                    $params = [];
+                    $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                    if ($sqlPedidosGrupoCliente) {
+                        // Executa a consulta Oracle, caso tenha uma consulta
+                        $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
                     }
+
+                    if (count($resPedidosGrupoCliente) > 0) {
+                        foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                            if ($checked) {
+                                // Insere ou atualiza para ativo = true
+                                $sql = "
+                                    INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                                    VALUES (:id_pedido, :id_garantia, true)
+                                    ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                                    SET ativo = EXCLUDED.ativo
+                                ";
+                            } else {
+                                // Atualiza para ativo = false
+                                $sql = "
+                                    UPDATE garantias_pedido
+                                    SET ativo = false
+                                    WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                                ";
+                            }
+
+                            $statement = $this->pgAdapter->query($sql);
+                            $statement->execute([
+                                'id_pedido' => $pedido['ID_PEDIDO'],
+                                'id_garantia' => $idGarantia
+                            ]);
+                        }
+                    } 
                 } else {
-                    return new JsonModel([
-                        'success' => false,
-                        'message' => 'Nenhum pedido encontrado para o grupo cliente e safra informados. Nada foi atualizado!'
+                    if ($checked) {
+                        // Insere ou atualiza para ativo = true
+                        $sql = "
+                            INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                            VALUES (:id_pedido, :id_garantia, true)
+                            ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                            SET ativo = EXCLUDED.ativo
+                        ";
+                    } else {
+                        // Atualiza para ativo = false
+                        $sql = "
+                            UPDATE garantias_pedido
+                            SET ativo = false
+                            WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                        ";
+                    }
+                    $statement = $this->pgAdapter->query($sql);
+                    $statement->execute([
+                        'id_pedido' => $idPedido,
+                        'id_garantia' => $idGarantia
                     ]);
                 }
 
@@ -1010,18 +1052,19 @@ class CreditoECobrancaController extends BaseController
                 ]);
             }
         }
-
         public function salvarObservacaoPedidoAction()
         {
             $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
 
             $body = json_decode($this->getRequest()->getContent(), true);
-
+            
+            
+            $idPedido = $body['idPedido'] ?? null;
             $observacao = $body['observacao'] ?? null;
             $grupoClienteID = $body['grupoClienteID'] ?? null;
             $codigoSafra = $body['codigoSafra'] ?? null;
 
-            if ($observacao === null || !$grupoClienteID || !$codigoSafra) {
+            if ($observacao === null) {
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Parâmetros obrigatórios ausentes.'
@@ -1043,34 +1086,55 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 }
 
-                // Busca Pedidos GrupoCliente e Safra
-                $params = [];
-                $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
-                if ($sqlPedidosGrupoCliente) {
-                    $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
-                }
-
-                if (count($resPedidosGrupoCliente) > 0) {
-                    foreach ($resPedidosGrupoCliente as $pedido) {
-                        $sql = "
-                            INSERT INTO observacoes_pedido (id_pedido, observacao)
-                            VALUES (:id_pedido, :observacao)
-                            ON CONFLICT (id_pedido) DO UPDATE
-                            SET observacao = EXCLUDED.observacao
-                        ";
-
-                        $statement = $this->pgAdapter->query($sql);
-                        $statement->execute([
-                            'id_pedido' => $pedido['ID_PEDIDO'],
-                            'observacao' => $observacao
-                        ]);
+                if (intval($grupoClienteID) > 0 && intval($codigoSafra) > 0) {
+                    // Busca Pedidos GrupoCliente e Safra
+                    $params = [];
+                    $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                    if ($sqlPedidosGrupoCliente) {
+                        $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
                     }
+
+                    if (count($resPedidosGrupoCliente) > 0) {
+                        foreach ($resPedidosGrupoCliente as $pedido) {
+                            $sql = "
+                                INSERT INTO observacoes_pedido (id_pedido, observacao)
+                                VALUES (:id_pedido, :observacao)
+                                ON CONFLICT (id_pedido) DO UPDATE
+                                SET observacao = EXCLUDED.observacao
+                            ";
+
+                            $statement = $this->pgAdapter->query($sql);
+                            $statement->execute([
+                                'id_pedido' => $pedido['ID_PEDIDO'],
+                                'observacao' => $observacao
+                            ]);
+                        }
+                    }
+
+                    return new JsonModel([
+                        'success' => true,
+                        'message' => 'Observações salvas com sucesso.'
+                    ]);
+                } else {
+                    $sql = "
+                        INSERT INTO observacoes_pedido (id_pedido, observacao)
+                        VALUES (:id_pedido, :observacao)
+                        ON CONFLICT (id_pedido) DO UPDATE
+                        SET observacao = EXCLUDED.observacao
+                    ";
+                    $statement = $this->pgAdapter->query($sql);
+                    $statement->execute([
+                        'id_pedido' => $idPedido,
+                        'observacao' => $observacao
+                    ]);
+
+                    return new JsonModel([
+                        'success' => true,
+                        'message' => 'Observação salva com sucesso.'
+                    ]);
                 }
 
-                return new JsonModel([
-                    'success' => true,
-                    'message' => 'Observações salvas com sucesso.'
-                ]);
+                
             } catch (\Exception $e) {
                 return new JsonModel([
                     'success' => false,
