@@ -527,7 +527,7 @@ class CreditoECobrancaRepository
                     LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
                     LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
                     LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
-                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.CODIGOCLIFOR
                     LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
                     WHERE IP.CODIGOCULTIVAR IS NOT NULL
                     AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)

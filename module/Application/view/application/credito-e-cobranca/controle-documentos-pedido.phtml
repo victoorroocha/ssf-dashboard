@@ -1014,52 +1014,59 @@
                                             ]
                                         },
                                         {
-                                            dataField: 'observacao',
-                                            editorType: 'dxTextArea',
-                                            editorOptions: {
-                                                height: 150,
-                                                onValueChanged: function (e) {
-                                                    const observacao = e.value;
+                                            itemType: "group",
+                                            caption: "Observação do Pedido",
+                                            colCount: 1,
+                                            items: [
+                                                {
+                                                    dataField: 'observacao',
+                                                    editorType: 'dxTextArea',
+                                                    editorOptions: {
+                                                        height: 150,
+                                                        onValueChanged: function (e) {
+                                                            const observacao = e.value;
 
-                                                    if (!idPedido) {
-                                                        DevExpress.ui.notify('ID do pedido não está definido.', 'error', 3000);
-                                                        return;
-                                                    }
-
-                                                    $.ajax({
-                                                        url: '/credito-e-cobranca/salvar-observacao-pedido', // ajuste aqui o controller real
-                                                        method: 'POST',
-                                                        contentType: 'application/json',
-                                                        data: JSON.stringify({
-                                                            idPedido: idPedido,
-                                                            observacao: observacao,
-                                                            grupoClienteID: grupoClienteID,
-                                                            codigoSafra: codigoSafra
-                                                        }),
-                                                        success: function (res) {
-                                                            if (res.success) {
-                                                                DevExpress.ui.notify(res.message, 'success', 2000);
-                                                            } else {
-                                                                DevExpress.ui.notify(res.message, 'error', 3000);
+                                                            if (!idPedido) {
+                                                                DevExpress.ui.notify('ID do pedido não está definido.', 'error', 3000);
+                                                                return;
                                                             }
+
+                                                            $.ajax({
+                                                                url: '/credito-e-cobranca/salvar-observacao-pedido',
+                                                                method: 'POST',
+                                                                contentType: 'application/json',
+                                                                data: JSON.stringify({
+                                                                    idPedido: idPedido,
+                                                                    observacao: observacao,
+                                                                    grupoClienteID: grupoClienteID,
+                                                                    codigoSafra: codigoSafra
+                                                                }),
+                                                                success: function (res) {
+                                                                    if (res.success) {
+                                                                        DevExpress.ui.notify(res.message, 'success', 2000);
+                                                                    } else {
+                                                                        DevExpress.ui.notify(res.message, 'error', 3000);
+                                                                    }
+                                                                },
+                                                                error: function () {
+                                                                    DevExpress.ui.notify('Erro ao salvar observação.', 'error', 3000);
+                                                                }
+                                                            });
                                                         },
-                                                        error: function () {
-                                                            DevExpress.ui.notify('Erro ao salvar observação.', 'error', 3000);
+                                                        stylingMode: "outlined",
+                                                        placeholder: "Digite a observação aqui...",
+                                                        elementAttr: {
+                                                            class: "custom-textarea"
                                                         }
-                                                    });
-                                                },
-                                                stylingMode: "outlined", // dá um contorno
-                                                placeholder: "Digite a observação aqui...",
-                                                elementAttr: {
-                                                    class: "custom-textarea"
+                                                    },
+                                                    label: {
+                                                        text: 'Observação do Pedido',
+                                                        location: 'top',
+                                                        visible: false
+                                                    },
+                                                    cssClass: "observacao-field"
                                                 }
-                                            },
-                                            label: {
-                                                text: 'Observação do Pedido',
-                                                location: 'top',
-                                                visible: true
-                                            },
-                                            cssClass: "observacao-field"
+                                            ]
                                         }
                                     ]
                                 });
