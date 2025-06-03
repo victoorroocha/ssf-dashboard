@@ -346,9 +346,6 @@ class CreditoECobrancaController extends BaseController
         }
     }
 
-
-
-
     public function controleRecebimentoViewFinanceiroAction()
     {
         $session = new Container('auth');
@@ -1398,6 +1395,73 @@ class CreditoECobrancaController extends BaseController
         }
     #endregion
 
+    #region Dashboard Monitoramento Pedidos Safra
 
+    public function dashboardMonitoramentoPedidosSafraAction()
+    {
+        $session = new Container('auth');
+
+        if (!isset($session->user)) {
+            // Redireciona o usuário para o login caso não esteja autenticado
+            return $this->redirect()->toRoute('login');
+        }
+
+        return new ViewModel();
+    }
+    public function listarDadosMonitoramentoPedidosSafraAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+
+        // Captura os parâmetros da requisição GET
+        $apuracao_inicio = $this->params()->fromQuery('dataInicio', null);
+        $apuracao_fim = $this->params()->fromQuery('dataFim', null);
+        $codigoSafra = $this->params()->fromQuery('codigoSafra', null);
+
+        try {
+            // Define o cabeçalho corretamente antes de qualquer saída
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                              ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                              ->addHeaderLine('Pragma', 'no-cache')
+                                              ->addHeaderLine('Expires', '0');
+
+            $infoCardsResult = null;
+            if (!empty($apuracao_inicio) && !empty($apuracao_fim)) {
+                #region CARDS MES ATUAL
+                    // Informações Cards
+                    $infoCardsSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoCardsMonitoramentoPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    // echo '<pre>';print_r($infoCardsSQL);exit;
+                    if ($infoCardsSQL) {
+                        $infoCardsMonitoramentoPedidos = $this->oracleService->executeQuery($infoCardsSQL)[0];
+                    }
+
+                    $infoCardsMonitoramentoPedidos['TOTAL_EMITIDO'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_EMITIDO']));
+                    $infoCardsMonitoramentoPedidos['TOTAL_PAGO'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_PAGO']));
+                    $infoCardsMonitoramentoPedidos['TOTAL_VENCIDO'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_VENCIDO']));
+                    $infoCardsMonitoramentoPedidos['TOTAL_A_VENCER'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_A_VENCER']));
+                    $infoCardsMonitoramentoPedidos['TOTAL_PERMUTA'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_PERMUTA']));
+                #endregion
+            }
+
+            // Retorna os dados em JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => array(
+                    'infoCardsMonitoramentoPedidos' => $infoCardsMonitoramentoPedidos,
+                ),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    #endregion
 
 }
