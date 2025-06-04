@@ -1496,5 +1496,301 @@ class CreditoECobrancaRepository
                     ORDER BY 3 desc
                     FETCH FIRST 10 ROWS ONLY";  
         }
+
+
+
+        public function getDetalhesPedidosEmitidosPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT  
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        p.RTV_USER_ID AS VENDEDOR_ID,
+                        vend.NAME AS NOME_VENDEDOR,
+                        SUM(IP.QUANT) AS QUANTIDADE,
+                        SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA,
+                        TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA,
+                        SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES,
+                        TO_CHAR(MAX(P.VENCIMENTO_ROYALTIES), 'YYYY-MM-DD') AS VENCIMENTO_ROYALTIES,
+                        SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI,
+                        TO_CHAR(MAX(P.VENCIMENTO_TSI), 'YYYY-MM-DD') AS VENCIMENTO_TSI,
+                        MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE,
+                        TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE,
+                        SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND P.CREATED_AT BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME";  
+        }
+        public function getDetalhesPedidosPagosPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        P.RTV_USER_ID AS VENDEDOR_ID,
+                        VEND.NAME AS NOME_VENDEDOR,
+                        TO_CHAR(R.RECEBIDO_EM, 'YYYY-MM-DD') AS RECEBIDO_EM,
+                        SUM(R.DESCONTO) AS DESCONTO,
+                        SUM(R.JUROS) AS JUROS,
+                        SUM(R.VALOR) AS VALOR_RECEBIDO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN WEB.RECEBIMENTOS R ON R.PEDIDO_ID = P.ID
+                    LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
+                    LEFT JOIN WEB.USERS VEND ON VEND.ID = P.RTV_USER_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    AND R.RECEBIDO_EM BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    GROUP BY
+                        P.ID,
+                        P.CODIGO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD'),
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END,
+                        CLI.CODIGOCLIFOR,
+                        CLI.NOME,
+                        P.RTV_USER_ID,
+                        VEND.NAME,
+                        TO_CHAR(R.RECEBIDO_EM, 'YYYY-MM-DD')";
+        }
+        public function getDetalhesPedidosVencidosPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT  
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        P.RTV_USER_ID AS VENDEDOR_ID,
+                        VEND.NAME AS NOME_VENDEDOR,
+                        TO_CHAR(PARC.VENCIMENTO_PARCELA, 'YYYY-MM-DD') as VENCIMENTO_PARCELA,
+                        SUM(PARC.PRECO_PARCELA) AS PRECO_PARCELA
+                    FROM web.view_vencimentos_por_data parc
+                    LEFT JOIN web.pedidos_v2 p ON P.ID = PARC.PEDIDO_ID 
+                    LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
+                    LEFT JOIN WEB.USERS VEND ON VEND.ID = P.RTV_USER_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
+                    AND parc.VENCIMENTO_PARCELA < cast(SYSDATE AS DATE)
+                    GROUP BY
+                        P.ID,
+                        P.CODIGO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD'),
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END,
+                        CLI.CODIGOCLIFOR,
+                        CLI.NOME,
+                        P.RTV_USER_ID,
+                        VEND.NAME,
+                        PARC.VENCIMENTO_PARCELA";
+        }
+        public function getDetalhesPedidosAVencerPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        P.RTV_USER_ID AS VENDEDOR_ID,
+                        VEND.NAME AS NOME_VENDEDOR,
+                        PARC.VENCIMENTO_PARCELA,
+                        SUM(parc.PRECO_PARCELA) AS PRECO_PARCELA
+                    FROM web.view_vencimentos_por_data parc
+                    LEFT JOIN web.pedidos_v2 p ON P.ID = PARC.PEDIDO_ID 
+                    LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
+                    LEFT JOIN WEB.USERS VEND ON VEND.ID = P.RTV_USER_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND P.CODIGOSAFRA = 163
+                    AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
+                    AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE) AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    GROUP BY
+                        P.ID,
+                        P.CODIGO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD'),
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END,
+                        CLI.CODIGOCLIFOR,
+                        CLI.NOME,
+                        P.RTV_USER_ID,
+                        VEND.NAME,
+                        PARC.VENCIMENTO_PARCELA";
+        }
+        public function getDetalhesPedidosPermuta($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT  
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        p.RTV_USER_ID AS VENDEDOR_ID,
+                        vend.NAME AS NOME_VENDEDOR,
+                        SUM(IP.QUANT) AS QUANTIDADE,
+                        SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA,
+                        TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA,
+                        SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    AND GM.CODIGOMODALIDADE = 2 -- PERMUTA SOJA
+                    AND P.CREATED_AT BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME";  
+        }
+        public function getDetalhesTodosPedidosSafra($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT  
+                        P.ID AS ID_PEDIDO,
+                        P.CODIGO AS CODIGO_PEDIDO,
+                        TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
+                        P.CODIGOSAFRA,
+                        CASE 
+                            WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' 
+                            WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' 
+                            ELSE NULL 
+                        END AS TIPO_PESSOA,
+                        CLI.CODIGOCLIFOR AS ID_CLIENTE,
+                        CLI.NOME AS NOME_CLIENTE,
+                        p.RTV_USER_ID AS VENDEDOR_ID,
+                        vend.NAME AS NOME_VENDEDOR,
+                        SUM(IP.QUANT) AS QUANTIDADE,
+                        SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA,
+                        TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA,
+                        SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES,
+                        TO_CHAR(MAX(P.VENCIMENTO_ROYALTIES), 'YYYY-MM-DD') AS VENCIMENTO_ROYALTIES,
+                        SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI,
+                        TO_CHAR(MAX(P.VENCIMENTO_TSI), 'YYYY-MM-DD') AS VENCIMENTO_TSI,
+                        MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE,
+                        TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE,
+                        SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME";  
+        }
+
     #endregion
 }

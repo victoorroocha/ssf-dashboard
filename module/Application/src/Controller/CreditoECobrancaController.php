@@ -1548,6 +1548,964 @@ class CreditoECobrancaController extends BaseController
             ]);
         }
     }
+    public function detalhesCardsMonitoramentoPedidosSafraAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+
+        // Captura os parâmetros da requisição GET
+        $apuracao_inicio = $this->params()->fromQuery('dataInicio', null);
+        $apuracao_fim = $this->params()->fromQuery('dataFim', null);
+        $codigoSafra = $this->params()->fromQuery('codigoSafra', null);
+        $tipo = $this->params()->fromQuery('tipo', null);
+
+        try {
+            // Define o cabeçalho corretamente antes de qualquer saída
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                              ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                              ->addHeaderLine('Pragma', 'no-cache')
+                                              ->addHeaderLine('Expires', '0');
+
+            $dataSource = null;
+            $collumns = [];
+            if (!empty($apuracao_inicio) && !empty($apuracao_fim)) {
+
+                if ($tipo == "EMITIDOS") {
+                    #region Detalhamento Emitidos
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesPedidosEmitidosPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                            $dataSource[$key]['PRECO_TOTAL_ROYALTIES'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_ROYALTIES']));
+                            $dataSource[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
+                            $dataSource[$key]['PRECO_TOTAL_FRETE'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_FRETE']));
+                            $dataSource[$key]['PRECO_TOTAL'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'QUANTIDADE',
+                                'caption' => 'Quantidade',
+                                'allowEditing' => false,
+                                'alignment' => 'center'
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_GERMOPLASMA',
+                                'caption' => 'Germoplasma',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_GERMOPLASMA',
+                                'caption' => 'Venc. Germoplasma',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_ROYALTIES',
+                                'caption' => 'Royalties',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_ROYALTIES',
+                                'caption' => 'Venc. Royalties',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_TSI',
+                                'caption' => 'TSI',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_TSI',
+                                'caption' => 'Venc. TSI',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_FRETE',
+                                'caption' => 'Frete',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_FRETE',
+                                'caption' => 'Venc. Frete',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL',
+                                'caption' => 'Valor Total Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                } else if ($tipo == "PAGOS") {
+                    #region Detalhamento Pagos
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesPedidosPagosPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['DESCONTO'] = floatval(str_replace(',', '.', $row['DESCONTO']));
+                            $dataSource[$key]['JUROS'] = floatval(str_replace(',', '.', $row['JUROS']));
+                            $dataSource[$key]['VALOR_RECEBIDO'] = floatval(str_replace(',', '.', $row['VALOR_RECEBIDO']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'RECEBIDO_EM',
+                                'caption' => 'Recebido Em',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'DESCONTO',
+                                'caption' => 'Desconto',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'JUROS',
+                                'caption' => 'Juros',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VALOR_RECEBIDO',
+                                'caption' => 'Vlr. Recebido',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                } else if ($tipo == "VENCIDOS") {
+                    #region Detalhamento Vencidos
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesPedidosVencidosPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['PRECO_PARCELA'] = floatval(str_replace(',', '.', $row['PRECO_PARCELA']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_PARCELA',
+                                'caption' => 'Vencimento da Parcela',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_PARCELA',
+                                'caption' => 'Vlr. Parcela',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                }  else if ($tipo == "A_VENCER") {
+                    #region Detalhamento A Vencer
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesPedidosAVencerPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['PRECO_PARCELA'] = floatval(str_replace(',', '.', $row['PRECO_PARCELA']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_PARCELA',
+                                'caption' => 'Vencimento da Parcela',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_PARCELA',
+                                'caption' => 'Vlr. Parcela',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                } else if ($tipo == "PERMUTA") {
+                    #region Detalhamento Permuta
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesPedidosPermuta($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                            $dataSource[$key]['PRECO_TOTAL_ROYALTIES'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_ROYALTIES']));
+                            $dataSource[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
+                            $dataSource[$key]['PRECO_TOTAL_FRETE'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_FRETE']));
+                            $dataSource[$key]['PRECO_TOTAL'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'QUANTIDADE',
+                                'caption' => 'Quantidade',
+                                'allowEditing' => false,
+                                'alignment' => 'center'
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_GERMOPLASMA',
+                                'caption' => 'Germoplasma',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_GERMOPLASMA',
+                                'caption' => 'Venc. Germoplasma',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL',
+                                'caption' => 'Valor Total Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                } else if ($tipo == "TOTAL_PEDIDOS_SAFRA") {
+                    #region Detalhamento Todos Pedidos Safra
+                        $dataSourceSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDetalhesTodosPedidosSafra($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                        if ($dataSourceSQL) {
+                            $dataSource = $this->oracleService->executeQuery($dataSourceSQL);
+                        }
+                        foreach ($dataSource as $key => $row) {
+                            $dataSource[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                            $dataSource[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                            $dataSource[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                            $dataSource[$key]['PRECO_TOTAL_ROYALTIES'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_ROYALTIES']));
+                            $dataSource[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
+                            $dataSource[$key]['PRECO_TOTAL_FRETE'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_FRETE']));
+                            $dataSource[$key]['PRECO_TOTAL'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL']));
+                        }
+
+                        $collumns = [
+                            [
+                                'dataField' => 'ID_PEDIDO',
+                                'caption' => 'Pedido ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 60,
+                                'visible' => false
+                            ],
+                            [
+                                'dataField' => 'CODIGO_PEDIDO',
+                                'caption' => 'Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 150,
+                                'fixed' => true,
+                                'fixedPosition' => "left"
+                            ],
+                            [
+                                'dataField' => 'DATA_PEDIDO',
+                                'caption' => 'Emissão',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'ID_CLIENTE',
+                                'caption' => 'Cliente ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_CLIENTE',
+                                'caption' => 'Cliente',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'VENDEDOR_ID',
+                                'caption' => 'Vendedor ID',
+                                'allowEditing' => false,
+                                'alignment' => 'center',
+                                'width' => 100
+                            ],
+                            [
+                                'dataField' => 'NOME_VENDEDOR',
+                                'caption' => 'Vendedor',
+                                'allowEditing' => false,
+                                'width' => 'auto'
+                            ],
+                            [
+                                'dataField' => 'TIPO_PESSOA',
+                                'caption' => 'Tipo Pessoa',
+                                'alignment' => 'center',
+                                'lookup' => [
+                                    'dataSource' => [
+                                        ['value' => 'PF', 'name' => 'Pessoa Física'],
+                                        ['value' => 'PJ', 'name' => 'Pessoa Jurídica']
+                                    ],
+                                    'valueExpr' => 'value',
+                                    'displayExpr' => 'name'
+                                ],
+                                'validationRules' => [
+                                    ['type' => 'required', 'message' => 'Tipo Pessoa é obrigatório']
+                                ]
+                            ],
+                            [
+                                'dataField' => 'QUANTIDADE',
+                                'caption' => 'Quantidade',
+                                'allowEditing' => false,
+                                'alignment' => 'center'
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_GERMOPLASMA',
+                                'caption' => 'Germoplasma',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_GERMOPLASMA',
+                                'caption' => 'Venc. Germoplasma',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_ROYALTIES',
+                                'caption' => 'Royalties',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_ROYALTIES',
+                                'caption' => 'Venc. Royalties',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_TSI',
+                                'caption' => 'TSI',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_TSI',
+                                'caption' => 'Venc. TSI',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL_FRETE',
+                                'caption' => 'Frete',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ],
+                            [
+                                'dataField' => 'VENCIMENTO_FRETE',
+                                'caption' => 'Venc. Frete',
+                                'allowEditing' => true,
+                                'alignment' => 'center',
+                                'width' => 130,
+                                'dataType' => 'date',
+                                'format' => 'dd/MM/yyyy',
+                                'editorOptions' => [
+                                    'displayFormat' => 'dd/MM/yyyy'
+                                ]
+                            ],
+                            [
+                                'dataField' => 'PRECO_TOTAL',
+                                'caption' => 'Valor Total Pedido',
+                                'allowEditing' => false,
+                                'alignment' => 'right',
+                                'width' => 'auto',
+                                'dataType' => 'number',
+                                'format' => [
+                                    'type' => 'currency',
+                                    'currency' => 'BRL',
+                                    'precision' => 2
+                                ]
+                            ]
+                        ];
+                    #endregion
+                }
+            }
+
+            // Retorna os dados em JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => array(
+                    'dataSource' => $dataSource,
+                    'collumns' => $collumns,
+                ),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
     #endregion
 
 }

@@ -36,6 +36,13 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between; /* Distribui o espaço verticalmente */
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .indicator-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        opacity: 0.95;
     }
     .indicator-title {
         font-size: 12px;
@@ -157,14 +164,14 @@
         filter: brightness(0) invert(1); /* deixa logo branca */
         width: 100%;         /* ocupa 100% da largura disponível */
         height: auto;        /* mantém proporção */
-        max-height: 120px;    /* evita que fique muito alto */
+        max-height: 100px;    /* evita que fique muito alto */
         object-fit: contain; /* garante que a imagem não distorça */
         margin-bottom: 5px;  /* espaço abaixo da imagem */
     }
 
     .cabecalho-logo-div {
         width: 100%;
-        height: 130px;
+        height: 100px;
         background-image: url('<?= $this->basePath('img/ssf_branco.png') ?>');
         background-repeat: no-repeat;
         background-position: center;
@@ -228,7 +235,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Dashboard Monitoramento Pedidos Safra</p>
+                    <p>Dashboard Monitoramento Pedidos Safraa</p>
 
                     <div id="form-container"></div>
 
@@ -264,7 +271,7 @@
                         <div class="cards-container">
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #0D3B1A;">
+                                    <div class="indicator-card" style="background-color: #0D3B1A;" onclick="abrirPopup('EMITIDOS')">
                                         <div class="indicator-title">
                                             EMITIDOS
                                             <span class="custom-tooltip">
@@ -282,7 +289,7 @@
 
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #1B5E20;">
+                                    <div class="indicator-card" style="background-color: #1B5E20;" onclick="abrirPopup('PAGOS')">
                                         <div class="indicator-title">
                                             PAGOS
                                             <span class="custom-tooltip">
@@ -299,7 +306,7 @@
                             
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #B71C1C;">
+                                    <div class="indicator-card" style="background-color: #B71C1C;" onclick="abrirPopup('VENCIDOS')">
                                         <div class="indicator-title">
                                             VENCIDOS
                                             <span class="custom-tooltip">
@@ -316,7 +323,7 @@
                             
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #E65100;">
+                                    <div class="indicator-card" style="background-color: #E65100;" onclick="abrirPopup('A_VENCER')">
                                         <div class="indicator-title">
                                             À VENCER
                                             <span class="custom-tooltip">
@@ -333,7 +340,7 @@
                             
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #0277BD;">
+                                    <div class="indicator-card" style="background-color: #0277BD;" onclick="abrirPopup('PERMUTA')">
                                         <div class="indicator-title">
                                             PERMUTA GERMO
                                             <span class="custom-tooltip">
@@ -350,7 +357,7 @@
                             
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #263238;">
+                                    <div class="indicator-card" style="background-color: #263238;" onclick="abrirPopup('TOTAL_PEDIDOS_SAFRA')">
                                         <div class="indicator-title">
                                             TOTAL PEDIDOS SAFRA
                                             <span class="custom-tooltip">
@@ -366,7 +373,7 @@
                             </div>
                         </div>
 
-                        <div class="period-title"><h2><b>Totais por Componente - Safra</b></h2></div>
+                        <div class="period-title"><h3><b>Totais por Componente - Safra</b></h3></div>
 
                         <!-- Grids e Detalhes -->
                         <div class="grid-section">
@@ -451,6 +458,10 @@
 
                         <div id="page2-marker" class="page-break"></div>
                     <section>
+
+
+                    <div id="popup-container"></div>
+
                 </div>
             </div>
         </div>
@@ -482,8 +493,12 @@
             try {
                 const printArea = document.getElementById('print-area');
 
+                // Detecta o zoom do navegador para compensar a escala
+                const zoom = window.devicePixelRatio || 1;
+                const scale = 2 / zoom; // seu scale original 2 dividido pelo zoom atual
+
                 const canvas = await html2canvas(printArea, {
-                    scale: 2,
+                    scale: scale,
                     useCORS: true,
                     logging: true,
                     allowTaint: true,
@@ -510,32 +525,24 @@
                 const props = pdf.getImageProperties(imgData);
 
                 const pdfWidth = pageWidth - 2 * margemMm;
-                const pdfHeight = (props.height * pdfWidth) / props.width;
+                const maxPdfHeight = pageHeight - 2 * margemMm;
 
-                let heightLeft = pdfHeight;
-                let position = 0;
-                let pageNumber = 1;
-
-                while (heightLeft > 0) {
-                    if (pageNumber > 1) {
-                        pdf.addPage();
-                    }
-
-                    pdf.addImage(
-                        imgData,
-                        'PNG',
-                        margemMm,
-                        margemMm - position,
-                        pdfWidth,
-                        pdfHeight,
-                        undefined,
-                        'FAST'
-                    );
-
-                    heightLeft -= pageHeight - 2 * margemMm;
-                    position += pageHeight - 2 * margemMm;
-                    pageNumber++;
+                // Ajusta a altura para caber na página, mantendo a proporção
+                let pdfHeight = (props.height * pdfWidth) / props.width;
+                if (pdfHeight > maxPdfHeight) {
+                    pdfHeight = maxPdfHeight;
                 }
+
+                pdf.addImage(
+                    imgData,
+                    'PNG',
+                    margemMm,
+                    margemMm,
+                    pdfWidth,
+                    pdfHeight,
+                    undefined,
+                    'FAST'
+                );
 
                 pdf.save('dashboard-monitoramento-pedidos.pdf');
             } catch (err) {
@@ -829,7 +836,7 @@
                                     }
                                 },
                                 size: {
-                                    height: 500 
+                                    height: 350 
                                 }
                             }).dxChart("instance");
                         // FIM GRAFICO 1
@@ -1012,4 +1019,141 @@
         });
     }
 
+
+    function obterDadosPedidos(tipo) {
+        $('#globalLoading').show();
+
+        formSelections.tipo = tipo;
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/credito-e-cobranca/detalhes-cards-monitoramento-pedidos-safra',
+                method: 'GET',
+                dataType: 'json',
+                data: formSelections,
+                success: function(response) {
+                    if (response.success) {
+                        const result = response.data;
+
+                        // Resolve a Promise com os dados filtrados
+                        resolve(result || []);
+                    } else {
+                        reject(new Error("Resposta da API não foi bem-sucedida"));
+                    }
+                },
+                error: function(error) {
+                    DevExpress.ui.notify("Erro na requisição dos Detalhes", "error", 3000);
+                    reject(error);
+                },
+                complete: function() {
+                    // Esconde o loading quando tudo estiver pronto
+                    $('#globalLoading').hide();
+                }
+            });
+        });
+    }
+    async function abrirPopup(tipo) {
+        try {
+            const result = await obterDadosPedidos(tipo);
+            
+            $("#popup-container").dxPopup({
+                width: '80%',
+                height: 800,
+                showTitle: true,
+                title: `Detalhes - ${tipo}`,
+                visible: true,
+                dragEnabled: true,
+                closeOnOutsideClick: true,
+                contentTemplate: function () {
+                    return $("<div>").dxDataGrid({
+                        dataSource: result.dataSource,
+                        height: '100%',
+                        width: '100%',
+                        columnAutoWidth: true,
+                        elementAttr: {
+                            class: "grid-personalizada"
+                        },
+                        showBorders: true,
+                        columnChooser: {
+                            enabled: true,
+                            mode: "dragAndDrop",
+                            position: { 
+                                my: "right", 
+                                at: "right", 
+                                of: ".dx-datagrid-column-chooser-button" 
+                            }
+                        },
+                        groupPanel: {
+                            visible: true,
+                        },
+                        editing: {
+                            mode: 'batch',
+                            allowUpdating: false,
+                            allowDeleting: false,
+                        },
+                        selection: {
+                            mode: 'multiple',
+                            showCheckBoxesMode: 'none'
+                        },
+                        hoverStateEnabled: true,
+                        pager: {
+                            visible: true
+                        },
+                        paging: {
+                            pageSize: 500
+                        },
+                        headerFilter: {
+                            visible: true,
+                        },
+                        filterRow: {
+                            visible: true,
+                            applyFilter: 'auto',
+                        },
+                        export: {
+                            enabled: true,
+                            fileName: "Detalhes " + tipo,
+                            allowExportSelectedData: false,
+                        },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Procure...',
+                        },
+                        columns: result.collumns,
+                        onToolbarPreparing: function (e) {
+                            var toolbarItems = e.toolbarOptions.items;
+                            
+                            toolbarItems.push({
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-expand",
+                                    text: "Expandir",
+                                    onClick: function () {
+                                        var grid = e.component;
+                                        grid.expandAll();
+                                    }
+                                }
+                            });
+
+                            toolbarItems.push({
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-compress",
+                                    text: "Colapsar",
+                                    onClick: function () {
+                                        var grid = e.component;
+                                        grid.collapseAll();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao obter dados de detalhe ' + tipo + ':', error);
+        }
+    }
 </script>
