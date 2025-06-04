@@ -1531,6 +1531,7 @@ class CreditoECobrancaRepository
                         MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE,
                         TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE,
                         SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.pedidos_v2 p
                     LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
                     LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
@@ -1575,6 +1576,7 @@ class CreditoECobrancaRepository
                         SUM(R.DESCONTO) AS DESCONTO,
                         SUM(R.JUROS) AS JUROS,
                         SUM(R.VALOR) AS VALOR_RECEBIDO
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.pedidos_v2 p
                     LEFT JOIN WEB.RECEBIMENTOS R ON R.PEDIDO_ID = P.ID
                     LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
@@ -1623,6 +1625,7 @@ class CreditoECobrancaRepository
                         VEND.NAME AS NOME_VENDEDOR,
                         TO_CHAR(PARC.VENCIMENTO_PARCELA, 'YYYY-MM-DD') as VENCIMENTO_PARCELA,
                         SUM(PARC.PRECO_PARCELA) AS PRECO_PARCELA
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.view_vencimentos_por_data parc
                     LEFT JOIN web.pedidos_v2 p ON P.ID = PARC.PEDIDO_ID 
                     LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
@@ -1672,6 +1675,7 @@ class CreditoECobrancaRepository
                         VEND.NAME AS NOME_VENDEDOR,
                         PARC.VENCIMENTO_PARCELA,
                         SUM(parc.PRECO_PARCELA) AS PRECO_PARCELA
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.view_vencimentos_por_data parc
                     LEFT JOIN web.pedidos_v2 p ON P.ID = PARC.PEDIDO_ID 
                     LEFT JOIN EMPRESA.CLIFOR CLI ON CLI.CODIGOCLIFOR = P.CODIGOLOCAL
@@ -1723,6 +1727,7 @@ class CreditoECobrancaRepository
                         SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA,
                         TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA,
                         SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.pedidos_v2 p
                     LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
                     LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
@@ -1774,6 +1779,7 @@ class CreditoECobrancaRepository
                         MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE,
                         TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE,
                         SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.pedidos_v2 p
                     LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
                     LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 

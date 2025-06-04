@@ -1056,6 +1056,29 @@
         try {
             const result = await obterDadosPedidos(tipo);
             
+            // Processa as colunas para converter a string em função
+            const processedColumns = result.collumns.map(column => {
+                if (column.caption === 'Abrir Pedido Softsul') {
+                    return {
+                        ...column,
+                        cellTemplate: function(container, options) {
+                            if (options.data.LINK_REDIRECT_SOFTSUL) {
+                                $('<a>')
+                                    .attr('href', options.data.LINK_REDIRECT_SOFTSUL)
+                                    .attr('target', '_blank')
+                                    .attr('title', 'Abrir pedido no sistema')
+                                    .addClass('dx-link')
+                                    .html('<i class="fa fa-link"></i>')
+                                    .appendTo(container);
+                            } else {
+                                container.text('N/A');
+                            }
+                        }
+                    };
+                }
+                return column;
+            });
+
             $("#popup-container").dxPopup({
                 width: '80%',
                 height: 800,
@@ -1119,7 +1142,7 @@
                             width: 240,
                             placeholder: 'Procure...',
                         },
-                        columns: result.collumns,
+                        columns: processedColumns,  // Usa as colunas processadas
                         onToolbarPreparing: function (e) {
                             var toolbarItems = e.toolbarOptions.items;
                             

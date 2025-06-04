@@ -1593,6 +1593,15 @@ class CreditoECobrancaController extends BaseController
 
                         $collumns = [
                             [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
+                            [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
                                 'allowEditing' => false,
@@ -1800,6 +1809,15 @@ class CreditoECobrancaController extends BaseController
 
                         $collumns = [
                             [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
+                            [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
                                 'allowEditing' => false,
@@ -1937,6 +1955,15 @@ class CreditoECobrancaController extends BaseController
 
                         $collumns = [
                             [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
+                            [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
                                 'allowEditing' => false,
@@ -2047,6 +2074,15 @@ class CreditoECobrancaController extends BaseController
                         }
 
                         $collumns = [
+                            [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
                             [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
@@ -2162,6 +2198,15 @@ class CreditoECobrancaController extends BaseController
                         }
 
                         $collumns = [
+                            [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
                             [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
@@ -2296,6 +2341,15 @@ class CreditoECobrancaController extends BaseController
                         }
 
                         $collumns = [
+                            [
+                                'caption' => 'Abrir Pedido Softsul',
+                                'allowEditing' => false,
+                                'allowExporting'=> false,
+                                'fixed' => true,
+                                'fixedPosition' => "left",
+                                'width' => 'auto',
+                                'alignment' => 'center',
+                            ],
                             [
                                 'dataField' => 'ID_PEDIDO',
                                 'caption' => 'Pedido ID',
