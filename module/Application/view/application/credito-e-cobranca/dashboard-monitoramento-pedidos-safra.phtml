@@ -968,7 +968,35 @@
                                             return `${valorFormatado} (${percentual})`;
                                         }
                                     }
-                                }]
+                                }],
+                                centerTemplate: function(pieChart, container) {
+                                    // Soma total dos valores visíveis (a receber + recebido)
+                                    const total = pieChart.getAllSeries()[0]
+                                        .getVisiblePoints()
+                                        .reduce((sum, point) => sum + point.originalValue, 0);
+                                    
+                                    // Cria um texto SVG centralizado com o valor total formatado
+                                    const svgNamespace = "http://www.w3.org/2000/svg";
+
+                                    // Círculo de fundo branco para "limpar" o centro
+                                    const circle = document.createElementNS(svgNamespace, "circle");
+                                    circle.setAttribute("cx", 100);
+                                    circle.setAttribute("cy", 100);
+                                    circle.setAttribute("r", pieChart.getInnerRadius() - 6);
+                                    circle.setAttribute("fill", "#fff");
+                                    container.appendChild(circle);
+
+                                    // Texto do valor total, centralizado
+                                    const text = document.createElementNS(svgNamespace, "text");
+                                    text.setAttribute("x", 100);
+                                    text.setAttribute("y", 110);
+                                    text.setAttribute("fill", "#333");
+                                    text.setAttribute("font-size", "12");
+                                    text.setAttribute("font-weight", "bold");
+                                    text.setAttribute("text-anchor", "middle");
+                                    text.textContent = moedaBRL.format(total);
+                                    container.appendChild(text);
+                                }
                             });
                         // Fim Grafico Receber e A Receber
                     }
