@@ -1106,7 +1106,7 @@ class CreditoECobrancaRepository
                             WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                             {$ands}
                             AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
-                            AND parc.VENCIMENTO_PARCELA >= cast(SYSDATE AS DATE)
+                            AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE) AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
                         ) AS TOTAL_A_VENCER,
                         (   SELECT 
                                 SUM(A.PRECO_TOTAL_GERMOPLASMA)  
@@ -1148,9 +1148,353 @@ class CreditoECobrancaRepository
                                 GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                                 ORDER BY P.CREATED_AT DESC
                             ) A
-                        ) AS TOTAL_PERMUTA
+                        ) AS TOTAL_PERMUTA,
+                        (   SELECT sum(a.PRECO_TOTAL) 
+                            FROM (
+                                SELECT  
+                                    P.ID AS ID_PEDIDO
+                                    ,P.CODIGO AS CODIGO_PEDIDO
+                                    ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                                    ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                                    ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                                    ,P.CODIGOSAFRA 
+                                    ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                                    ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                                    ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                                    ,CLI.NOME AS NOME_CLIENTE
+                                    ,p.RTV_USER_ID AS VENDEDOR_ID
+                                    ,vend.NAME AS NOME_VENDEDOR
+                                    ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
+                                    ,SUM(IP.QUANT) AS QUANTIDADE
+                                    ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                                    ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
+                                    ,MAX(GM.DESCRICAO) AS PAGAMENTO_GERMOPLASTMA
+                                    ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES  
+                                    ,TO_CHAR(MAX(P.VENCIMENTO_ROYALTIES), 'YYYY-MM-DD') AS VENCIMENTO_ROYALTIES
+                                    ,MAX(RM.DESCRICAO) AS PAGAMENTO_ROYALTIES
+                                    ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI
+                                    ,TO_CHAR(MAX(P.VENCIMENTO_TSI), 'YYYY-MM-DD') AS VENCIMENTO_TSI
+                                    ,MAX(TM.DESCRICAO) AS PAGAMENTO_TSI
+                                    ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE
+                                    ,TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE
+                                    ,MAX(FM.DESCRICAO) AS PAGAMENTO_FRETE
+                                    ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                                    ,(  CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA, 0)) ELSE 0 END +
+                                        CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_ROYALTIES, 0)) ELSE 0 END +
+                                        CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_TSI, 0)) ELSE 0 END +
+                                        CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO) THEN MAX(NVL(P.PRECO_TOTAL_FRETE, 0)) ELSE 0 END
+                                    ) AS PRECO_TOTAL_PRAZO_SAFRA
+                                    ,CASE WHEN 
+                                            EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO)
+                                        OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO)
+                                        OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO)
+                                        OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO)
+                                        THEN 'Prazo Safra'
+                                        ELSE 'Prazo Ano'
+                                    END AS TIPO_PRAZO
+                                FROM web.pedidos_v2 p
+                                LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                                LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                                LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                                LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                                LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                                LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                                LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                                LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                                LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                                LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                                LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                                WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                                AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                                {$ands}
+                                GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                                ORDER BY P.CREATED_AT DESC
+                            ) A
+                        ) AS TOTAL_SAFRA
                     FROM DUAL";  
         }
-
+        public function getInfoGermoplasmaTipoPrazo($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Ano' THEN PRECO_TOTAL_GERMOPLASMA ELSE 0 END) AS PRAZO_ANO_GERMOPLASMA,
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Safra' THEN PRECO_TOTAL_GERMOPLASMA ELSE 0 END) AS PRAZO_SAFRA_GERMOPLASMA
+                    FROM (
+                    SELECT  
+                        P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA))
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                ) A";  
+        }
+        public function getInfoRoyaltiesTipoPrazo($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Ano' THEN PRECO_TOTAL_ROYALTIES ELSE 0 END) AS PRAZO_ANO_ROYALTIES,
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Safra' THEN PRECO_TOTAL_ROYALTIES ELSE 0 END) AS PRAZO_SAFRA_ROYALTIES
+                    FROM (
+                    SELECT  
+                        P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES))
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                ) A";  
+        }
+        public function getInfoTSITipoPrazo($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Ano' THEN PRECO_TOTAL_TSI ELSE 0 END) AS PRAZO_ANO_TSI,
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Safra' THEN PRECO_TOTAL_TSI ELSE 0 END) AS PRAZO_SAFRA_TSI
+                    FROM (
+                    SELECT  
+                        P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI))
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                ) A";  
+        }
+        public function getInfoFreteTipoPrazo($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Ano' THEN PRECO_TOTAL_FRETE ELSE 0 END) AS PRAZO_ANO_FRETE,
+                        SUM(CASE WHEN TIPO_PRAZO = 'Prazo Safra' THEN PRECO_TOTAL_FRETE ELSE 0 END) AS PRAZO_SAFRA_FRETE
+                    FROM (
+                    SELECT  
+                        P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE
+                        ,TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE
+                        ,MAX(FM.DESCRICAO) AS PAGAMENTO_FRETE
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,CASE WHEN 
+                                EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO)
+                            THEN 'Prazo Safra'
+                            ELSE 'Prazo Ano'
+                        END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                    ORDER BY P.CREATED_AT DESC
+                    ) A";  
+        }
+        public function getInfoRecebimentoPorDataPagamento($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        TO_CHAR(R.RECEBIDO_EM, 'YYYY-MM-DD') AS DATA_PAGAMENTO,
+                        SUM(NVL(R.VALOR, 0)) + SUM(NVL(R.JUROS, 0)) - SUM(NVL(R.DESCONTO, 0)) AS VALOR_RECEBIDO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN WEB.RECEBIMENTOS R ON R.PEDIDO_ID = P.ID
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND R.RECEBIDO_EM BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    {$ands}
+                    GROUP BY TO_CHAR(R.RECEBIDO_EM, 'YYYY-MM-DD')
+                    ORDER BY MIN(R.RECEBIDO_EM)";  
+        }
+        public function getInfoAReceberRecebido($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        SUM(VALOR_A_RECEBER) - SUM(VALOR_RECEBIDO) as VALOR_A_RECEBER, 
+                        SUM(VALOR_RECEBIDO) VALOR_RECEBIDO 
+                    FROM (
+                    SELECT
+                        PEDIDO_ID
+                        ,parc.PRECO_PARCELA AS VALOR_A_RECEBER
+                        ,parc.valor_recebido
+                    FROM web.view_vencimentos_por_data parc
+                    LEFT JOIN web.pedidos_v2 p ON P.ID = PARC.PEDIDO_ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    AND parc.VENCIMENTO_PARCELA BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    )  A";  
+        }
+        public function getInfoTopClientes($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                         CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,SUM(NVL(R.VALOR, 0)) + SUM(NVL(R.JUROS, 0)) - SUM(NVL(R.DESCONTO, 0)) AS VALOR
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN WEB.RECEBIMENTOS R ON R.PEDIDO_ID = P.ID
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND R.RECEBIDO_EM BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    {$ands}
+                    GROUP BY CLI.CODIGOCLIFOR, CLI.NOME
+                    ORDER BY 3 desc
+                    FETCH FIRST 10 ROWS ONLY";  
+        }
+        public function getInfoTopVendedores($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT 
+                        p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,SUM(NVL(R.VALOR, 0)) + SUM(NVL(R.JUROS, 0)) - SUM(NVL(R.DESCONTO, 0)) AS VALOR
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN WEB.RECEBIMENTOS R ON R.PEDIDO_ID = P.ID
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND R.RECEBIDO_EM BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    {$ands}
+                    GROUP BY p.RTV_USER_ID, vend.NAME
+                    ORDER BY 3 desc
+                    FETCH FIRST 10 ROWS ONLY";  
+        }
     #endregion
 }

@@ -1445,6 +1445,84 @@ class CreditoECobrancaController extends BaseController
                     $infoCardsMonitoramentoPedidos['TOTAL_VENCIDO'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_VENCIDO']));
                     $infoCardsMonitoramentoPedidos['TOTAL_A_VENCER'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_A_VENCER']));
                     $infoCardsMonitoramentoPedidos['TOTAL_PERMUTA'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_PERMUTA']));
+                    $infoCardsMonitoramentoPedidos['TOTAL_SAFRA'] = floatval(str_replace(',', '.', $infoCardsMonitoramentoPedidos['TOTAL_SAFRA']));
+                #endregion
+
+                #region CARDS TIPO PRAZO    
+                    // Germoplasma Tipo Prazo
+                    $infoGermoplasmaTipoPrazoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoGermoplasmaTipoPrazo($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoGermoplasmaTipoPrazoSQL) {
+                        $infoGermoplasmaTipoPrazo = $this->oracleService->executeQuery($infoGermoplasmaTipoPrazoSQL)[0];
+                    }
+                    $infoGermoplasmaTipoPrazo['PRAZO_ANO_GERMOPLASMA'] = floatval(str_replace(',', '.', $infoGermoplasmaTipoPrazo['PRAZO_ANO_GERMOPLASMA']));
+                    $infoGermoplasmaTipoPrazo['PRAZO_SAFRA_GERMOPLASMA'] = floatval(str_replace(',', '.', $infoGermoplasmaTipoPrazo['PRAZO_SAFRA_GERMOPLASMA']));
+
+
+                    // Royalties Tipo Prazo
+                    $infoRoyaltiesTipoPrazoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoRoyaltiesTipoPrazo($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoRoyaltiesTipoPrazoSQL) {
+                        $infoRoyaltiesTipoPrazo = $this->oracleService->executeQuery($infoRoyaltiesTipoPrazoSQL)[0];
+                    }
+                    $infoRoyaltiesTipoPrazo['PRAZO_ANO_ROYALTIES'] = floatval(str_replace(',', '.', $infoRoyaltiesTipoPrazo['PRAZO_ANO_ROYALTIES']));
+                    $infoRoyaltiesTipoPrazo['PRAZO_SAFRA_ROYALTIES'] = floatval(str_replace(',', '.', $infoRoyaltiesTipoPrazo['PRAZO_SAFRA_ROYALTIES']));
+
+                    // TSI Tipo Prazo
+                    $infoTSITipoPrazoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoTSITipoPrazo($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoTSITipoPrazoSQL) {
+                        $infoTSITipoPrazo = $this->oracleService->executeQuery($infoTSITipoPrazoSQL)[0];
+                    }
+                    $infoTSITipoPrazo['PRAZO_ANO_TSI'] = floatval(str_replace(',', '.', $infoTSITipoPrazo['PRAZO_ANO_TSI']));
+                    $infoTSITipoPrazo['PRAZO_SAFRA_TSI'] = floatval(str_replace(',', '.', $infoTSITipoPrazo['PRAZO_SAFRA_TSI']));
+
+                    // Frete Tipo Prazo
+                    $infoFreteTipoPrazoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoFreteTipoPrazo($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoFreteTipoPrazoSQL) {
+                        $infoFreteTipoPrazo = $this->oracleService->executeQuery($infoFreteTipoPrazoSQL)[0];
+                    }
+                    $infoFreteTipoPrazo['PRAZO_ANO_FRETE'] = floatval(str_replace(',', '.', $infoFreteTipoPrazo['PRAZO_ANO_FRETE']));
+                    $infoFreteTipoPrazo['PRAZO_SAFRA_FRETE'] = floatval(str_replace(',', '.', $infoFreteTipoPrazo['PRAZO_SAFRA_FRETE']));
+
+                #endregion
+
+                #region Grafico Recebimento por Data de Pagamento
+                    $infoRecebimentoPgtoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoRecebimentoPorDataPagamento($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoRecebimentoPgtoSQL) {
+                        $infoRecebimentoDataPagamento = $this->oracleService->executeQuery($infoRecebimentoPgtoSQL);
+                    }
+                    foreach ($infoRecebimentoDataPagamento as $key => $rowRecebimento) {
+                        $infoRecebimentoDataPagamento[$key]['VALOR_RECEBIDO'] = floatval(str_replace(',', '.', $rowRecebimento['VALOR_RECEBIDO']));
+                    }
+                #endregion
+
+                #region Top Clientes
+                    $infoTopClientesSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoTopClientes($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoTopClientesSQL) {
+                        $infoTopClientes = $this->oracleService->executeQuery($infoTopClientesSQL);
+                    }
+                    foreach ($infoTopClientes as $key => $rowTopClientes) {
+                        $infoTopClientes[$key]['NOME_CLIENTE'] = utf8_encode($rowTopClientes['NOME_CLIENTE']);
+                        $infoTopClientes[$key]['VALOR'] = floatval(str_replace(',', '.', $rowTopClientes['VALOR']));
+                    }
+                #endregion
+
+                #region Top Vendedores
+                    $infoTopVendedoresSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoTopVendedores($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoTopVendedoresSQL) {
+                        $infoTopVendedores = $this->oracleService->executeQuery($infoTopVendedoresSQL);
+                    }
+                    foreach ($infoTopVendedores as $key => $rowTopVendedores) {
+                        $infoTopVendedores[$key]['NOME_VENDEDOR'] = utf8_encode($rowTopVendedores['NOME_VENDEDOR']);
+                        $infoTopVendedores[$key]['VALOR'] = floatval(str_replace(',', '.', $rowTopVendedores['VALOR']));
+                    }
+                #endregion
+
+                #region Grafico a Receber e Recebido
+                    $infoReceberRecebidoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoAReceberRecebido($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                    if ($infoReceberRecebidoSQL) {
+                        $infoReceberRecebido = $this->oracleService->executeQuery($infoReceberRecebidoSQL)[0];
+                    }
+                     $infoReceberRecebido['VALOR_A_RECEBER'] = floatval(str_replace(',', '.', $infoReceberRecebido['VALOR_A_RECEBER']));
+                     $infoReceberRecebido['VALOR_RECEBIDO'] = floatval(str_replace(',', '.', $infoReceberRecebido['VALOR_RECEBIDO']));
                 #endregion
             }
 
@@ -1453,6 +1531,14 @@ class CreditoECobrancaController extends BaseController
                 'success' => true,
                 'data' => array(
                     'infoCardsMonitoramentoPedidos' => $infoCardsMonitoramentoPedidos,
+                    'infoGermoplasmaTipoPrazo' => $infoGermoplasmaTipoPrazo,
+                    'infoRoyaltiesTipoPrazo' => $infoRoyaltiesTipoPrazo,
+                    'infoTSITipoPrazo' => $infoTSITipoPrazo,
+                    'infoFreteTipoPrazo' => $infoFreteTipoPrazo,
+                    'infoRecebimentoDataPagamento' => $infoRecebimentoDataPagamento,
+                    'infoReceberRecebido' => $infoReceberRecebido,
+                    'infoTopClientes' => $infoTopClientes,
+                    'infoTopVendedores' => $infoTopVendedores,
                 ),
             ]);
         } catch (\Exception $e) {
