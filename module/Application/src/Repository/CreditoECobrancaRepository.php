@@ -1097,7 +1097,7 @@ class CreditoECobrancaRepository
                             WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                             {$ands}
                             AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
-                            AND parc.VENCIMENTO_PARCELA < cast(SYSDATE AS DATE) -- DATA ATUAL PRA TRAZ
+                            AND parc.VENCIMENTO_PARCELA <= cast(SYSDATE AS DATE)-1 -- DATA ATUAL PRA TRAZ
                         ) AS TOTAL_VENCIDO,
                         (   SELECT 
                                 SUM(parc.PRECO_PARCELA)
@@ -1106,7 +1106,7 @@ class CreditoECobrancaRepository
                             WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                             {$ands}
                             AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
-                            AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE) AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                            AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE)-1 AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
                         ) AS TOTAL_A_VENCER,
                         (   SELECT 
                                 SUM(A.PRECO_TOTAL_GERMOPLASMA)  
@@ -1634,7 +1634,7 @@ class CreditoECobrancaRepository
                     WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                     {$ands}
                     AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
-                    AND parc.VENCIMENTO_PARCELA < cast(SYSDATE AS DATE)
+                    AND parc.VENCIMENTO_PARCELA <= cast(SYSDATE AS DATE)-1
                     GROUP BY
                         P.ID,
                         P.CODIGO,
@@ -1684,7 +1684,7 @@ class CreditoECobrancaRepository
                     WHERE P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                     AND P.CODIGOSAFRA = 163
                     AND (PARC.VALOR_RECEBIDO IS NULL OR PARC.VALOR_RECEBIDO = 0)
-                    AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE) AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE)-1 AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
                     GROUP BY
                         P.ID,
                         P.CODIGO,

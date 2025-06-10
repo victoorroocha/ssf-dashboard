@@ -1,0 +1,930 @@
+<style>
+    :root {
+        --primary-color: #2e7d32;
+        --primary-light: #60ad5e;
+        --primary-dark: #005005;
+        --secondary-color: #ff8f00;
+        --secondary-light: #ffc046;
+        --secondary-dark: #c56000;
+        --text-color: #2e7d32;
+        --text-light: #2e7d32;
+        --border-color: #e0e0e0;
+        --positive-color: #4caf50;
+        --negative-color: #f44336;
+        --warning-color: #ff9800;
+        --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .export-pdf {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: var(--card-shadow);
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .export-pdf:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    /* Cabeçalho do Perfil - Estilo Agro */
+    .profile-header-agro {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+        padding: 25px;
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header-agro::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 40%;
+        height: 100%;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="rgba(255,255,255,0.05)"><path d="M20,20 Q30,10 40,20 T60,20 Q70,10 80,20 T100,20 Q90,30 100,40 T100,60 Q90,70 100,80 T100,100 Q80,90 60,100 T20,100 Q10,90 20,80 T20,60 Q10,50 20,40 T20,20"/></svg>');
+        background-size: 120px;
+    }
+
+    .profile-info-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-avatar {
+        position: relative;
+        margin-right: 25px;
+    }
+
+    .avatar-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.3);
+        object-fit: cover;
+    }
+
+    .online-status {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #4caf50;
+        border: 2px solid var(--primary-dark);
+    }
+
+    .profile-info h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+    .profile-meta i {
+        margin-right: 5px;
+        color: rgba(255,255,255,0.8);
+    }
+
+    .performance-summary {
+        text-align: center;
+    }
+
+    .performance-badge {
+        background-color: rgba(255,255,255,0.15);
+        backdrop-filter: blur(5px);
+        padding: 15px 20px;
+        border-radius: 10px;
+        display: inline-block;
+    }
+
+    .performance-value {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .performance-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 5px;
+    }
+
+    /* Período de Apuração */
+    .period-title {
+        background-color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-left: 4px solid var(--primary-color);
+        text-align: center;
+    }
+
+    .period-title i {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+
+    .period-title-agro {
+        background-color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .period-title-agro i {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+
+    .period-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Títulos de Seção */
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin: 30px 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: var(--primary-color);
+    }
+
+    /* Grid de Indicadores */
+    .indicators-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .indicator-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .indicator-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .sales-card {
+        border-top: 4px solid var(--primary-color);
+    }
+
+    .goal-card {
+        border-top: 4px solid var(--secondary-color);
+    }
+
+    .evolution-card {
+        border-top: 4px solid #2196f3;
+    }
+
+    .indicator-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .sales-card .indicator-icon {
+        background-color: rgba(46, 125, 50, 0.1);
+        color: var(--primary-color);
+    }
+
+    .goal-card .indicator-icon {
+        background-color: rgba(255, 143, 0, 0.1);
+        color: var(--secondary-color);
+    }
+
+    .evolution-card .indicator-icon {
+        background-color: rgba(33, 150, 243, 0.1);
+        color: #2196f3;
+    }
+
+    .indicator-content {
+        flex: 1;
+    }
+
+    .indicator-content h3 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-light);
+    }
+
+    .indicator-main-value {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .indicator-secondary-value {
+        font-size: 14px;
+        color: var(--text-light);
+        margin-bottom: 10px;
+    }
+
+    .indicator-comparison {
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .positive {
+        background-color: rgba(76, 175, 80, 0.1);
+        color: var(--positive-color);
+    }
+
+    .negative {
+        background-color: rgba(244, 67, 54, 0.1);
+        color: var(--negative-color);
+    }
+
+    .progress-container {
+        height: 8px;
+        background-color: #eee;
+        border-radius: 4px;
+        margin: 10px 0;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--secondary-color), var(--secondary-light));
+        border-radius: 4px;
+    }
+
+    .mini-chart {
+        height: 80px;
+        margin-top: 10px;
+    }
+
+    /* Layout de Colunas */
+    .two-column-layout, .three-column-layout {
+        display: grid;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .two-column-layout {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    }
+
+    .three-column-layout {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .column-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-header i {
+        color: var(--primary-color);
+    }
+
+    .chart-container, .table-container, .map-container {
+        padding: 15px;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+
+    /* Mix de Produtos - Tabela */
+    #products-table {
+        padding: 0;
+    }
+
+    .dx-datagrid {
+        border: none !important;
+    }
+
+    /* Clientes - Estilos Específicos */
+    .card-footer {
+        display: flex;
+        justify-content: space-around;
+        padding: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .footer-item {
+        text-align: center;
+    }
+
+    .footer-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .footer-label {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 5px;
+    }
+
+    .ticket-container {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .ticket-value {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .ticket-comparison {
+        font-size: 14px;
+        margin: 10px 0;
+    }
+
+    .region-list {
+        padding: 0 15px 15px 15px;
+    }
+
+    .region-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .region-item:last-child {
+        border-bottom: none;
+    }
+
+    .region-name {
+        color: var(--text-color);
+    }
+
+    .region-percent {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    /* Cobrança e Recebimentos */
+    .receivables-summary {
+        display: flex;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .receivable-item {
+        flex: 1;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .received {
+        background-color: rgba(76, 175, 80, 0.1);
+        border-top: 3px solid var(--positive-color);
+    }
+
+    .pending {
+        background-color: rgba(255, 152, 0, 0.1);
+        border-top: 3px solid var(--warning-color);
+    }
+
+    .receivable-label {
+        font-size: 14px;
+        color: var(--text-light);
+        margin-bottom: 5px;
+    }
+
+    .receivable-value {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .receivable-percent {
+        font-size: 13px;
+    }
+
+    .late-payments {
+        padding: 15px;
+    }
+
+    .late-payment-item {
+        margin-bottom: 15px;
+    }
+
+    .late-payment-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .late-payment-label {
+        font-size: 14px;
+        margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .late-payment-value {
+        font-weight: 600;
+    }
+
+    .late-payment-bar {
+        height: 6px;
+        background-color: #eee;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .bar-fill {
+        height: 100%;
+    }
+
+    .on-time .late-payment-value {
+        color: var(--positive-color);
+    }
+
+    .on-time .bar-fill {
+        background-color: var(--positive-color);
+    }
+
+    .delayed .late-payment-value {
+        color: var(--warning-color);
+    }
+
+    .delayed .bar-fill {
+        background-color: var(--warning-color);
+    }
+
+    .overdue .late-payment-value {
+        color: var(--negative-color);
+    }
+
+    .overdue .bar-fill {
+        background-color: var(--negative-color);
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+        .profile-header-agro {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-info-container {
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .profile-avatar {
+            margin-right: 0;
+            margin-bottom: 15px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .two-column-layout, .three-column-layout {
+            grid-template-columns: 1fr;
+        }
+        
+        .indicators-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .receivables-summary {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<!-- Botão minimalista só com ícone -->
+<button id="btnExportPDF" class="export-pdf">
+  <i class="fas fa-file-pdf" aria-hidden="true"></i>
+</button>
+
+<section id="print-area">
+    <!-- Cabeçalho do Perfil -->
+    <div class="profile-header-agro">
+        <div class="profile-info-container">
+            <div class="profile-avatar">
+                <img src="<?= $this->basePath('img/vendedor.jpg') ?>" alt="Foto do Vendedor" class="avatar-img">
+                <div class="online-status"></div>
+            </div>
+            <div class="profile-info">
+                <h1 id="vendedor-nome"><?php echo $this->nomeUsuario; ?></h1>
+                <div class="profile-meta">
+                    <span><i class="fas fa-id-badge"></i> Código: <span id="vendedor-codigo">AG-7890</span></span>
+                    <span><i class="fas fa-map-marked-alt"></i> Região: <span id="vendedor-regiao">Sul (PR/SC/RS)</span></span>
+                    <span><i class="fas fa-calendar-alt"></i> Período Ativo: <span id="vendedor-experiencia">5 safras</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="performance-summary">
+            <div class="performance-badge">
+                <div class="performance-value"><span id="percentual-meta">87</span>%</div>
+                <div class="performance-label">Meta Atingida</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Período de Apuração -->
+    <div class="period-title">
+        <i class="fas fa-calendar-week"></i> Período: <span id="periodo-apuracao">Junho de 2023</span>
+        <div class="period-actions">
+            <div id="period-selector"></div>
+        </div>
+    </div>
+
+    <!-- Seção 1: Vendas e Metas -->
+    <div class="section-title">
+        <i class="fas fa-bullseye"></i> Vendas e Metas
+    </div>
+    
+    <div class="indicators-grid">
+        <!-- Card Total Vendido -->
+        <div class="indicator-card sales-card">
+            <div class="indicator-icon">
+                <i class="fas fa-sack-dollar"></i>
+            </div>
+            <div class="indicator-content">
+                <h3>Total Vendido</h3>
+                <div class="indicator-main-value">R$ <span id="total-vendido">1.245.680,00</span></div>
+                <div class="indicator-secondary-value"><span id="total-sacas">24.580</span> sacas</div>
+                <div class="indicator-comparison positive">
+                    <i class="fas fa-arrow-up"></i> <span id="variacao-vendas">12%</span> vs último período
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card Meta Individual -->
+        <div class="indicator-card goal-card">
+            <div class="indicator-icon">
+                <i class="fas fa-flag-checkered"></i>
+            </div>
+            <div class="indicator-content">
+                <h3>Meta Individual</h3>
+                <div class="indicator-main-value">R$ <span id="meta-individual">1.430.000,00</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-meta" style="width: 87%"></div>
+                </div>
+                <div class="indicator-secondary-value"><span id="percentual-atingido">87%</span> atingido</div>
+            </div>
+        </div>
+        
+        <!-- Card Evolução Mensal -->
+        <div class="indicator-card evolution-card">
+            <div class="indicator-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="indicator-content">
+                <h3>Evolução Mensal</h3>
+                <div id="monthly-evolution-chart" class="mini-chart"></div>
+                <div class="indicator-comparison">
+                    <span id="melhor-mes">Maio</span> foi o melhor mês
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 2: Mix de Produtos -->
+    <div class="section-title">
+        <i class="fas fa-seedling"></i> Mix de Produtos
+    </div>
+    
+    <div class="two-column-layout">
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-wheat"></i> Cultivares Vendidos</h3>
+            </div>
+            <div id="products-mix-chart" class="chart-container"></div>
+        </div>
+        
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-percentage"></i> Participação e Margem</h3>
+            </div>
+            <div id="products-table" class="table-container"></div>
+        </div>
+    </div>
+
+    <!-- Seção 3: Clientes Atendidos -->
+    <div class="section-title">
+        <i class="fas fa-users"></i> Clientes Atendidos
+    </div>
+    
+    <div class="three-column-layout">
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user-plus"></i> Novos vs Recorrentes</h3>
+            </div>
+            <div id="clients-type-chart" class="chart-container"></div>
+            <div class="card-footer">
+                <div class="footer-item">
+                    <div class="footer-value"><span id="novos-clientes">12</span></div>
+                    <div class="footer-label">Novos</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-value"><span id="recorrentes-clientes">34</span></div>
+                    <div class="footer-label">Recorrentes</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-ticket-alt"></i> Ticket Médio</h3>
+            </div>
+            <div class="ticket-container">
+                <div class="ticket-value">R$ <span id="ticket-medio">32.150,00</span></div>
+                <div class="ticket-comparison positive">
+                    <i class="fas fa-arrow-up"></i> <span id="variacao-ticket">8%</span> vs período anterior
+                </div>
+            </div>
+            <div id="ticket-distribution-chart" class="mini-chart"></div>
+        </div>
+        
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-map-marked-alt"></i> Regiões de Atendimento</h3>
+            </div>
+            <div class="region-list">
+                <div class="region-item">
+                    <div class="region-name">Norte do PR</div>
+                    <div class="region-percent">42%</div>
+                </div>
+                <div class="region-item">
+                    <div class="region-name">Oeste de SC</div>
+                    <div class="region-percent">35%</div>
+                </div>
+                <div class="region-item">
+                    <div class="region-name">Sul do PR</div>
+                    <div class="region-percent">23%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 4: Cobrança e Recebimentos -->
+    <div class="section-title">
+        <i class="fas fa-money-bill-wave"></i> Cobrança e Recebimentos
+    </div>
+    
+    <div class="two-column-layout">
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-cash-register"></i> Recebimentos</h3>
+            </div>
+            <div class="receivables-summary">
+                <div class="receivable-item received">
+                    <div class="receivable-label">Recebido</div>
+                    <div class="receivable-value">R$ <span id="valor-recebido">984.320,00</span></div>
+                    <div class="receivable-percent"><span id="percent-recebido">79%</span> do total</div>
+                </div>
+                <div class="receivable-item pending">
+                    <div class="receivable-label">A Receber</div>
+                    <div class="receivable-value">R$ <span id="valor-pendente">261.360,00</span></div>
+                    <div class="receivable-percent"><span id="percent-pendente">21%</span> do total</div>
+                </div>
+            </div>
+            <div id="receivables-chart" class="chart-container"></div>
+        </div>
+        
+        <div class="column-card">
+            <div class="card-header">
+                <h3><i class="fas fa-clock"></i> Inadimplência</h3>
+            </div>
+            <div class="late-payments">
+                <div class="late-payment-item on-time">
+                    <div class="late-payment-label">Pagamentos em dia</div>
+                    <div class="late-payment-value"><span id="pagamentos-dia">78%</span></div>
+                    <div class="late-payment-bar">
+                        <div class="bar-fill" style="width: 78%"></div>
+                    </div>
+                </div>
+                <div class="late-payment-item delayed">
+                    <div class="late-payment-label">Pagamentos atrasados</div>
+                    <div class="late-payment-value"><span id="pagamentos-atrasados">15%</span></div>
+                    <div class="late-payment-bar">
+                        <div class="bar-fill" style="width: 15%"></div>
+                    </div>
+                </div>
+                <div class="late-payment-item overdue">
+                    <div class="late-payment-label">Inadimplência</div>
+                    <div class="late-payment-value"><span id="inadimplencia">7%</span></div>
+                    <div class="late-payment-bar">
+                        <div class="bar-fill" style="width: 7%"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="delayed-payments-chart" class="chart-container"></div>
+        </div>
+    </div>
+</section>
+
+
+
+
+<script>
+    var grafico1 = null;
+
+    $(document).ready(function () {
+        document.getElementById('btnExportPDF').addEventListener('click', async function () {
+            // abre o overlay
+            const loading      = document.getElementById('globalLoading');
+            const spinnerGen   = document.getElementById('spinnerGeneric');
+            const spinnerPDF   = document.getElementById('spinnerPDF');
+            const loadingText  = document.getElementById('loadingText');
+
+            // 1) Mostrar overlay
+            loading.style.display = 'flex';
+
+            // 2) Estado PDF: ocultar spinner genérico, mostrar PDF, texto
+            spinnerGen.style.display  = 'none';
+            spinnerPDF.style.display  = 'block';
+            loadingText.textContent   = 'Gerando PDF…';
+
+            try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth  = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            // marcação e grupos (igual ao seu código atual)
+            const printArea = document.getElementById('print-area');
+            const marker    = printArea.querySelector('#page2-marker');
+            if (!marker) throw new Error('Marker não encontrado');
+            const grupo1 = [], grupo2 = [];
+            let el = marker.previousElementSibling;
+            while (el) { grupo1.unshift(el); el = el.previousElementSibling; }
+            el = marker.nextElementSibling;
+            while (el) { grupo2.push(el); el = el.nextElementSibling; }
+
+            // função para capturar
+            async function capturarEAdicionar(grupo, novaPagina, topMarginPx = 0, leftMarginPx = 0, rightMarginPx = 0) {
+                const tmp = document.createElement('div');
+                tmp.style.position = 'absolute';
+                tmp.style.left     = '-9999px';
+                tmp.style.top      = '0';
+                tmp.style.paddingLeft  = `${leftMarginPx}px`;
+                tmp.style.paddingRight = `${rightMarginPx}px`;
+                document.body.appendChild(tmp);
+
+                if (topMarginPx > 0) {
+                const spacer = document.createElement('div');
+                spacer.style.height = `${topMarginPx}px`;
+                tmp.appendChild(spacer);
+                }
+
+                grupo.forEach(node => tmp.appendChild(node.cloneNode(true)));
+                const canvas = await html2canvas(tmp, { scale: 2, useCORS: true });
+                document.body.removeChild(tmp);
+
+                const imgData = canvas.toDataURL('image/png');
+                const props   = pdf.getImageProperties(imgData);
+                const availWidthMm = pageWidth - (leftMarginPx * 25.4/96) - (rightMarginPx * 25.4/96);
+                const pdfW    = availWidthMm;
+                const pdfH    = (props.height * pdfW) / props.width;
+                if (novaPagina) pdf.addPage();
+                const leftMarginMm = leftMarginPx * 25.4 / 96;
+                pdf.addImage(imgData, 'PNG', leftMarginMm, 0, pdfW, pdfH);
+            }
+
+            // suas margens
+            const margemTopo1 = 80, margemEsq1 = 20, margemDir1 = 20;
+            const margemTopo2 = 80, margemEsq2 = 20, margemDir2 = 20;
+
+            await capturarEAdicionar(grupo1, false, margemTopo1, margemEsq1, margemDir1);
+            await capturarEAdicionar(grupo2, true,  margemTopo2, margemEsq2, margemDir2);
+
+            // 6) Gera o download
+            pdf.save('dashboard-recursos-humanos.pdf');
+
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao gerar PDF: ' + err.message);
+            } finally {
+                // 3) Reset para estado genérico
+                spinnerPDF.style.display   = 'none';
+                spinnerGen.style.display   = 'block';
+                loadingText.textContent    = 'Carregando Informações...';
+
+                // 4) Esconde overlay
+                loading.style.display = 'none';
+            }
+        });
+    });
+
+
+    // Função para atualizar os gráficos
+    function atualizarInfosDashboad() {
+         // Mostra o loading
+        // $('#globalLoading').show();
+
+        const dataInicio = moment(formSelections.dataInicio, 'YYYY-MM-DD');
+        const dataFim = moment(formSelections.dataFim, 'YYYY-MM-DD');
+
+        let textoPeriodo = '';
+
+        if (dataInicio.isSame(dataFim, 'month')) {
+            textoPeriodo = dataInicio.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase());
+        } else {
+            textoPeriodo = `${dataInicio.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())} à ${dataFim.format('MMMM [de] YYYY').replace(/^\w/, c => c.toUpperCase())}`;
+        }
+
+        $('#periodo-apuracao').text(textoPeriodo);
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/filtrar-dados',
+                method: 'GET',
+                dataType: 'json',
+                data: formSelections,
+                success: function(response) {
+                    if (response.success) {
+                    } else {
+                        DevExpress.ui.notify("Erro ao carregar dados", "error", 3000);
+                    }
+                },
+                error: function(error) {
+                    DevExpress.ui.notify("Erro na requisição", "error", 3000);
+                },
+                complete: function() {
+                    // Esconde o loading quando tudo estiver pronto
+                    // $('#globalLoading').hide();
+                }
+            });
+        });
+    }
+
+    
+</script>

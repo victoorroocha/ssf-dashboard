@@ -27,6 +27,7 @@ class AccessControl
     private function defineRoles()
     {
         $this->acl->addRole(new Role('Convidado'))
+                  ->addRole(new Role('Vendedor'))
                   ->addRole(new Role('Auxiliar'))
                   ->addRole(new Role('Assistente'))
                   ->addRole(new Role('Analista'))
@@ -318,6 +319,40 @@ class AccessControl
         $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Convidado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Convidado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+
+
+        // Vendedor 
+        $this->acl->allow('Vendedor', 'IndexController', ['index', 'filtrarDados']);
+        $this->acl->allow('Vendedor', 'UsuarioController', ['perfilUsuario', 'atualizaPerfil']);
+        $this->acl->allow('Vendedor', 'CreditoECobrancaController', [
+            'controleRecebimento',
+            'getLookupSafra',
+            'listControleRecebimento',
+            'saveControleRecebimento',
+            'deleteControleRecebimento',
+            'controleRecebimentoViewFinanceiro',
+            'listControleRecebimentoEnvioFinanceiro',
+            'controleDocumentosPedido',
+            'listPedidos',
+            'listDocumentosPedido',
+            'toggleDocumentoPedido',
+            'toggleGarantiaPedido',
+            'toggleDuplicataBoletoPedido',
+            'cadastroDocumentosPedido',
+            'listDocumentos',
+            'addOrUpdateDocumento',
+            'excluirDocumento',
+            'cadastroGarantiasPedido',
+            'listGarantias',
+            'addOrUpdateGarantia',
+            'excluirGarantia',
+            'dashboardMonitoramentoPedidosSafra',
+            'listarDadosMonitoramentoPedidosSafra',
+            'detalhesCardsMonitoramentoPedidosSafra'
+        ]);
+        $this->acl->allow('Vendedor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
+        $this->acl->allow('Vendedor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Vendedor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
     }
 
     public function getAcl()

@@ -87,12 +87,22 @@
     }
 
 
+    /* Período de Apuração */
     .period-title {
+        background-color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-left: 4px solid var(--primary-color);
         text-align: center;
-        width: 100%;
-        margin: 20px 0;
-        font-size: 1.5em;
-        font-weight: bold;
+    }
+
+    .period-title i {
+        color: var(--primary-color);
+        margin-right: 10px;
     }
 
     .detalhes-container {
@@ -261,10 +271,9 @@
                         </div>
 
                         <div class="period-title"><h2><b>Monitoramento dos Pedidos</b></h2></div>
-
                         <!-- Período de Apuração -->
                         <div class="period-title">
-                            Período: <span id="periodo-apuracao"></span> / Safra: <span id="safra-apuracao"></span>
+                            <i class="fas fa-calendar-week"></i> Período: <span id="periodo-apuracao"></span> / Safra: <span id="safra-apuracao"></span>
                         </div>
 
                         <!-- Linha de indicadores - Versão responsiva -->

@@ -11,6 +11,7 @@ use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
 use Application\Repository\ControladoriaRepository;  // Importar repositório
 use Application\Repository\RecursosHumanosRepository;  // Importar repositório
 use Application\Repository\ComercialRepository;  // Importar repositório
+use Application\Repository\VendasRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
@@ -170,6 +171,21 @@ return [
                     ],
                 ],
             ],
+            // Vendas
+            'vendas' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/vendas[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\VendasController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -192,6 +208,7 @@ return [
             Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
             Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
             Controller\ComercialController::class => Factory\GenericControllerFactory::class,
+            Controller\VendasController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -252,6 +269,7 @@ return [
             },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 
+            VendasRepository::class => InvokableFactory::class, 
         ],
     ],
     'view_manager' => [

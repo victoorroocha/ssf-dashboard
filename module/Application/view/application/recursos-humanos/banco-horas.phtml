@@ -4,7 +4,6 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Recursos Humanos</h1>
     </div>
-
     <!-- Content Row -->
     <div class="row">
         <div class="col-lg-12 mb-4">
@@ -42,48 +41,6 @@
             formData: {},
             colCount: 1,
             items: [
-                // {
-                //     itemType: "group",
-                //     colCount: 2,
-                //     items: [
-                //         {
-                //             dataField: "colaborador",
-                //             editorType: "dxSelectBox",
-                //             label: { visible: false },
-                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-colaborador", "DSC", "ID", "Selecione o Colaborador")
-                //         },
-                //         {
-                //             dataField: "supervisor",
-                //             editorType: "dxSelectBox",
-                //             label: { visible: false },
-                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-supervisor", "DSC", "ID", "Selecione o Supervisor")
-                //         }
-                //     ]
-                // },
-                // {
-                //     itemType: "group",
-                //     colCount: 3,
-                //     items: [
-                //         {
-                //             dataField: "centroCusto",
-                //             editorType: "dxSelectBox",
-                //             label: { visible: false },
-                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-centro-custo", "DSC", "ID", "Selecione o Centro de Custo")
-                //         },
-                //         {
-                //             dataField: "filial",
-                //             editorType: "dxSelectBox",
-                //             label: { visible: false },
-                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-filial", "DSC", "ID", "Selecione a Filial")
-                //         },  
-                //         {
-                //             dataField: "local",
-                //             editorType: "dxSelectBox",
-                //             label: { visible: false },
-                //             editorOptions: getSelectBoxOptions("/recursos-humanos/get-lookup-local", "DSC", "ID", "Selecione a Local")
-                //         }
-                //     ]
-                // },
                 {
                     itemType: "group",
                     colCount: 2,
@@ -197,7 +154,6 @@
                 showClearButton: true,
             };
         }
-
         // Função que será chamada ao clicar no botão FILTRAR
         function atualizarGrid(filtros) {
             // Destroi sempre a grid antes de inicia-la novamente.
@@ -209,7 +165,6 @@
             if (totalsGrid != null && totalsGrid.instance) {
                 totalsGrid.dispose();
             }
-
             return new Promise((resolve, reject) => {
                 dataGrid = $('#gridContainer').dxDataGrid({
                     dataSource: new DevExpress.data.CustomStore({
@@ -372,6 +327,20 @@
                         enabled: true,
                         fileName: "Saldo Banco de Horas",
                         allowExportSelectedData: false,
+                        customizeExcelCell: function(options) {
+                            // Formata as colunas de hora para o Excel
+                            if (options.gridCell.column.dataField === 'SALDO' || options.gridCell.column.dataField === 'MEDIA_HORAS_DIA') {
+                                options.value = formatHourBalance(options.gridCell.value);
+                                
+                                // Configura o formato de hora no Excel (para que seja reconhecido como tempo)
+                                options.numFmt = '[h]:mm:ss';
+                                
+                                // Se o valor for negativo, adiciona o sinal de menos
+                                if (options.gridCell.value < 0) {
+                                    options.value = '-' + options.value;
+                                }
+                            }
+                        }
                     },
                     searchPanel: {
                         visible: true,
@@ -566,8 +535,6 @@
                 }).dxDataGrid('instance');
             });
         }
-
-       
         function formatHourBalance(saldoHora) {
             if (!saldoHora && saldoHora !== 0) {
                 return '00:00:00'; 
@@ -586,7 +553,6 @@
         }
     });
 
-
     // Função para formatar a data
     function formatarData(data) {
         const date = new Date(data);
@@ -595,5 +561,4 @@
         const ano = date.getFullYear();
         return `${dia}/${mes}/${ano}`;
     }    
-
 </script>

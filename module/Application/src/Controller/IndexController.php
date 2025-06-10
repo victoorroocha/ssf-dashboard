@@ -16,13 +16,19 @@ class IndexController extends BaseController
     private $pgAdapter;
     private $oracleService;
     private $RecursosHumanosRepository;
+    private $VendasRepository;
 
-    public function __construct(Adapter $pgAdapter, OracleService $oracleService = null, RecursosHumanosRepository $RecursosHumanosRepository = null, Acl $acl)
+    public function __construct(Adapter $pgAdapter, OracleService $oracleService = null, 
+        RecursosHumanosRepository $RecursosHumanosRepository = null, 
+        VendasRepository $VendasRepository = null, 
+        Acl $acl
+    )
     {
         parent::__construct($acl); 
         $this->pgAdapter = $pgAdapter;
         $this->oracleService = $oracleService;
         $this->RecursosHumanosRepository = $RecursosHumanosRepository;
+        $this->VendasRepository = $VendasRepository;
     }
 
     public function indexAction()
@@ -37,10 +43,15 @@ class IndexController extends BaseController
         if ((isset($session->user['id_departamento']) && $session->user['id_departamento'] == 5)) { // dashboard Recursos Humanos  || $session->user['role'] == 'Administrador'
             $dashboard = 'recursos-humanos1';
         } 
+        //Vendedor
+        if ((isset($session->user['id_departamento']) && $session->user['id_departamento'] == 12)) {
+            $dashboard = 'perfil-vendedor';
+        }
 
         return new ViewModel([
             'idUsuario' => $session->user['id'],
             'nomeUsuario' => $session->user['nome'],
+            'idDepartamento' => $session->user['id_departamento'],
             'dashboard' => $dashboard,
         ]);
     }
