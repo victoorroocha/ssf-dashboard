@@ -91,7 +91,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Diretor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -124,7 +127,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Gerente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -157,7 +163,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -190,7 +199,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Encarregado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -224,7 +236,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Analista', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -257,7 +272,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Assistente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -290,7 +308,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Auxiliar', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -314,7 +335,10 @@ class AccessControl
             'listGarantias',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Convidado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
@@ -348,7 +372,10 @@ class AccessControl
             'excluirGarantia',
             'dashboardMonitoramentoPedidosSafra',
             'listarDadosMonitoramentoPedidosSafra',
-            'detalhesCardsMonitoramentoPedidosSafra'
+            'detalhesCardsMonitoramentoPedidosSafra',
+            'dashboardPropostasDocumentos',
+            'listarDadosPropostasDocumentos',
+            'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Vendedor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Vendedor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
