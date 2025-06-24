@@ -706,6 +706,7 @@ class CreditoECobrancaController extends BaseController
 
                         // Convertendo a codificação para UTF-8
                         $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                        $result[$key]['NOME_GRUPO_CLIENTE'] = utf8_encode($row['NOME_GRUPO_CLIENTE']);
                         $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
                         $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
                         $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
@@ -2694,16 +2695,257 @@ class CreditoECobrancaController extends BaseController
                     $totaisPorPrazo['PRAZO_SAFRA_FRETE_DOCUMENTOS'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_FRETE_DOCUMENTOS']));
                 }
 
-            }
+                // Carrega Todos Pedidos do Controle Documentos com seus Status de Documento, Garantias, Duplicatas e CPR
+                $dadosPedidos = $this->fetchPedidosStatusControleDocumentosAction($codigoSafra);
+                $totaisPorStatus = [];
+                $tiposStatus = [
+                    'STATUS_GARANTIA_PEDIDO',
+                    'STATUS_DOCUMENTO_PEDIDO',
+                ];
+                foreach ($dadosPedidos as $pedido) {
+                    $valor = floatval(str_replace(',', '.', $pedido['PRECO_TOTAL_PRAZO_SAFRA']));
 
+                    foreach ($tiposStatus as $tipo) {
+                        $status = isset($pedido[$tipo]) ? trim($pedido[$tipo]) : '-';
+
+                        if (!isset($totaisPorStatus[$tipo])) {
+                            $totaisPorStatus[$tipo] = [];
+                        }
+
+                        if (!isset($totaisPorStatus[$tipo][$status])) {
+                            $totaisPorStatus[$tipo][$status] = 0;
+                        }
+
+                        $totaisPorStatus[$tipo][$status] += $valor;
+                    }
+                }
+
+                // 2. Totais por vendedor (pendente e recebido)
+                $totaisPorVendedor = [];
+                foreach ($dadosPedidos as $pedido) {
+                    $vendedor = $pedido['NOME_VENDEDOR'] ?? 'SEM VENDEDOR';
+                    $statusDocumento = trim($pedido['STATUS_DOCUMENTO_PEDIDO'] ?? '-');
+                    $statusGarantia = trim($pedido['STATUS_GARANTIA_PEDIDO'] ?? '-');
+                    $valor = floatval(str_replace(',', '.', $pedido['PRECO_TOTAL_PRAZO_SAFRA']));
+
+                    if (!isset($totaisPorVendedor[$vendedor])) {
+                        $totaisPorVendedor[$vendedor] = [
+                            'recebido' => 0,
+                            'total' => 0
+                        ];
+                    }
+                    if ($statusDocumento !== 'Pendente' || $statusGarantia !== 'Pendente') {
+                        $totaisPorVendedor[$vendedor]['recebido'] += $valor;
+                    }
+                    $totaisPorVendedor[$vendedor]['total'] += $valor;
+                }
+
+                // Totais por grupo cliente (pendente e recebido)
+                $totaisPorGrupoCliente = [];
+                foreach ($dadosPedidos as $pedido) {
+                    // Pega o nome do grupo cliente (ou 'SEM GRUPO' se não existir)
+                    $grupoCliente = $pedido['NOME_GRUPO_CLIENTE'] ?? 'SEM GRUPO';
+                    $statusDocumento = trim($pedido['STATUS_DOCUMENTO_PEDIDO'] ?? '-');
+                    $statusGarantia = trim($pedido['STATUS_GARANTIA_PEDIDO'] ?? '-');
+                    $valor = floatval(str_replace(',', '.', $pedido['PRECO_TOTAL_PRAZO_SAFRA'] ?? '0'));
+
+                    if (!isset($totaisPorGrupoCliente[$grupoCliente])) {
+                        $totaisPorGrupoCliente[$grupoCliente] = [
+                            'recebido' => 0,
+                            'total' => 0
+                        ];
+                    }
+                    if ($statusDocumento !== 'Pendente' || $statusGarantia !== 'Pendente') {
+                        $totaisPorGrupoCliente[$grupoCliente]['recebido'] += $valor;
+                    }
+                    $totaisPorGrupoCliente[$grupoCliente]['total'] += $valor;
+                }
+
+
+            }
             // Retorna os dados em JSON
             return new JsonModel([
                 'success' => true,
                 'data' => array(
                     'totaisPorPrazo' => $totaisPorPrazo,
+                    'totaisPorStatus' => $totaisPorStatus,
+                    'totaisPorVendedor' => $totaisPorVendedor,
+                    'totaisPorGrupoCliente' => $totaisPorGrupoCliente
                 ),
             ]);
         } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function fetchPedidosStatusControleDocumentosAction($codigoSafra = null)
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+
+        // Captura os parâmetros da requisição GET
+        $emissao_inicio = $this->params()->fromQuery('emissao_inicio', null);
+        $emissao_fim = $this->params()->fromQuery('emissao_fim', null);
+        $skip = $this->params()->fromQuery('skip', null);
+        $take = $this->params()->fromQuery('take', null);
+
+        try {
+            // Consulta no Softsul todos pedidos
+            $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
+
+            $params = [];
+            if ($codigoSafra) {
+                $params['codigoSafra'] = $codigoSafra;
+            }
+            if ($emissao_inicio && $emissao_fim) {
+                $params['emissao_inicio'] = $emissao_inicio;
+                $params['emissao_fim'] = $emissao_fim;
+            }
+            $result = [];
+            if ($sql) {
+                // Executa a consulta Oracle, caso tenha uma consulta
+                $result = $this->oracleService->executeQuery($sql, $params);
+
+                // Processa os dados do Oracle
+                foreach ($result as $key => $row) {
+                    $idPedido = $row['ID_PEDIDO'];
+                    $tipoPessoa = $row['TIPO_PESSOA'];
+
+                    // Busca Status Documentos Pedido
+                    $sqlStatusDocumentos = $this->creditoECobrancaRepository->getStatusDocumentoQuery($idPedido, $tipoPessoa);
+                    if ($sqlStatusDocumentos) {
+                        $stmtStatusDoc = $this->pgAdapter->query($sqlStatusDocumentos);
+                        $resStatusDoc = $stmtStatusDoc->execute();
+                        $statusDocumentosPedido = $resStatusDoc->current();
+                        
+                        $totalDocumentos = $statusDocumentosPedido['qtd_documentos_obrigatorios']; 
+                        $documentosRecebidos = $statusDocumentosPedido['qtd']; 
+
+                        if ($documentosRecebidos === 0) {
+                            $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Pendente';
+                        } elseif ($documentosRecebidos < $totalDocumentos) {
+                            $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido Parcial';
+                        } else {
+                            $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido';
+                        }
+                    }
+
+                    // Busca Status Duplicatas
+                    $sqlStatusDuplicatas = $this->creditoECobrancaRepository->getStatusDuplicatasQuery($idPedido);
+                    if ($sqlStatusDuplicatas) {
+                        $stmtStatusDuplicata = $this->pgAdapter->query($sqlStatusDuplicatas);
+                        $resStatusDuplicata = $stmtStatusDuplicata->execute();
+                        $statusDuplicatasPedido = $resStatusDuplicata->current();
+
+                        // Busca Total Duplicatas e Boletos
+                        $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
+                        if ($sqlDuplicataBoleto) {
+                            $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
+                        }
+                        $totalDuplicatas = count($resDuplicataBoleto);
+                        $duplicatasRecebidos = isset($statusDuplicatasPedido['qtd']) ? $statusDuplicatasPedido['qtd'] : 0; 
+                        
+                        if ($duplicatasRecebidos === 0) {
+                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Pendente';
+                        } elseif ($duplicatasRecebidos < $totalDuplicatas) {
+                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido Parcial';
+                        } else {
+                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido';
+                        }
+                    }
+
+                    // Busca Status CPR Pedido
+                    $sqlStatusCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);
+                    if ($sqlStatusCPR) {
+                        $stmtStatusCPR = $this->pgAdapter->query($sqlStatusCPR);
+                        $resStatusCPR = $stmtStatusCPR->execute();
+                        $statusCPRPedido = $resStatusCPR->current();
+                        
+                        $CPRRecebidos = $statusCPRPedido['qtd']; 
+
+                        if ($CPRRecebidos === 0) {
+                            $result[$key]['STATUS_CPR_PEDIDO'] = '-';
+                        } else {
+                            $result[$key]['STATUS_CPR_PEDIDO'] = 'Recebido';
+                        }
+                    }
+
+                    // Busca Status Instrumento Fiança Pedido
+                    $sqlStatusInstrumentoFianca = $this->creditoECobrancaRepository->getStatusInstrumentoFiancaQuery($idPedido, $tipoPessoa);
+                    if ($sqlStatusInstrumentoFianca) {
+                        $stmtStatusInstrumentoFianca = $this->pgAdapter->query($sqlStatusInstrumentoFianca);
+                        $resStatusInstrumentoFianca = $stmtStatusInstrumentoFianca->execute();
+                        $statusInstrumentoFiancaPedido = $resStatusInstrumentoFianca->current();
+                        
+                        $instrumentoFiancaRecebidos = $statusInstrumentoFiancaPedido['qtd']; 
+
+                        if ($instrumentoFiancaRecebidos === 0) {
+                            $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = '-';
+                        } else {
+                            $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Recebido';
+                        }
+                    }
+                    
+                    // Busca Status Confissão Divida Pedido
+                    $sqlConfissaoDivida = $this->creditoECobrancaRepository->getStatusConfissaoDividaQuery($idPedido, $tipoPessoa);
+                    if ($sqlConfissaoDivida) {
+                        $stmtStatusConfissaoDivida = $this->pgAdapter->query($sqlConfissaoDivida);
+                        $resStatusConfissaoDivida = $stmtStatusConfissaoDivida->execute();
+                        $statusConfissaoDividaPedido = $resStatusConfissaoDivida->current();
+                        
+                        $confissaoDividaRecebidos = $statusConfissaoDividaPedido['qtd']; 
+
+                        if ($confissaoDividaRecebidos === 0) {
+                            $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = '-';
+                        } else {
+                            $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Recebido';
+                        }
+                    }
+
+                    // Busca Status Recebimentos Garantias Pedido
+                    $sqlGarantias = $this->creditoECobrancaRepository->getStatusGarantiasQuery($idPedido, $tipoPessoa);
+                    if ($sqlGarantias) {
+                        $stmtStatusGarantias = $this->pgAdapter->query($sqlGarantias);
+                        $resStatusGarantias = $stmtStatusGarantias->execute();
+                        $statusGarantiasPedido = $resStatusGarantias->current();
+                        
+                        $totalGarantias = $statusGarantiasPedido['qtd_garantias']; 
+                        $garantiasRecebidos = $statusGarantiasPedido['qtd']; 
+
+                        if ($garantiasRecebidos === 0) {
+                            $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Pendente';
+                        } elseif ($garantiasRecebidos < $totalGarantias) {
+                            $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido Parcial';
+                        } else {
+                            $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido';
+                        }
+                    }
+
+                    // Convertendo a codificação para UTF-8
+                    $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                    $result[$key]['NOME_GRUPO_CLIENTE'] = utf8_encode($row['NOME_GRUPO_CLIENTE']);
+                    $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                    $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                    $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
+                }
+            }
+
+            $totalCount = count($result); // Contagem total de registros
+            $pagedData = $result; // Aplica paginação
+
+            // Retorna os dados como JSON
+            return $pagedData;
+
+
+        } catch (\Exception $e) {
+
             return new JsonModel([
                 'success' => false,
                 'message' => $e->getMessage()

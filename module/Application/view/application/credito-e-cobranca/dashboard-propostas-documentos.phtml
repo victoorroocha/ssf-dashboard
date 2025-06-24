@@ -228,7 +228,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Dashboard Propostas de Crédito X Documentossss</p>
+                    <p>Dashboard Propostas de Crédito X Documentos</p>
 
                     <div id="form-container"></div>
 
@@ -252,7 +252,9 @@
                             <!-- Texto principal -->
                             <h3>Quem planta, planta qualidade!</h3>
                         </div>
-
+                        
+                        <br />
+                        
                         <div class="period-title"><h3><b>Propostas de Crédito X Documentos</b></h3></div>
                         <!-- Período de Apuração -->
                         <!-- <div class="period-title">
@@ -264,33 +266,56 @@
                             <div class="detalhes-container">
 
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-dna"></i> GERMOPLASMA</h4>
+                                    <h4><i class="lucide lucide-dna"></i> <b>GERMOPLASMA</b></h4>
                                     <div id="germoAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
                                     <div id="germoSafraBar" style="height: 40px;"></div>
                                 </div>
 
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-crown"></i> ROYALTIES</h4>
+                                    <h4><i class="lucide lucide-crown"></i> <b>ROYALTIES</b></h4>
                                     <div id="royaltiesAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
                                     <div id="royaltiesSafraBar" style="height: 40px;"></div>
                                 </div>
 
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-flask-round"></i> TSI</h4>
+                                    <h4><i class="lucide lucide-flask-round"></i> <b>TSI</b></h4>
                                     <div id="tsiAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
                                     <div id="tsiSafraBar" style="height: 40px;"></div>
                                 </div>
 
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-truck"></i> FRETE</h4>
+                                    <h4><i class="lucide lucide-truck"></i> <b>FRETE</b></h4>
                                     <div id="freteAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
                                     <div id="freteSafraBar" style="height: 40px;"></div>
                                 </div>
-
                             </div>
                         </div>
 
                         <br /><br />
+
+                        <div class="grid-section">
+                            <div class="detalhes-container">
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-dna"></i> <b>STATUS GARANTIAS</b></h4>
+                                    <div id="graficoStatusGarantiasContainer"></div>
+                                </div>
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-dna"></i> <b>STATUS DOCUMENTOS</b></h4>
+                                    <div id="graficoStatusDocumentosContainer"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br />
+
+                        <div class="grid-section">
+                            <div class="detalhes-container">
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-dna"></i> <b>STATUS VENDEDORES</b></h4>
+                                    <div id="graficoStatusVendedoresContainer" style="height: 600px;"></div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div id="page2-marker" class="page-break"></div>
                     <section>
@@ -518,6 +543,13 @@
                 data: formSelections,
                 success: function(response) {
                     if (response.success) {
+                        const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+
                         let totaisPorPrazo = response.data.totaisPorPrazo;
 
                         renderBar("germoAnoBar", 0, totaisPorPrazo.PRAZO_ANO_GERMOPLASMA_TOTAL, "PRAZO ANO");
@@ -531,7 +563,156 @@
 
                         renderBar("freteAnoBar", 0, totaisPorPrazo.PRAZO_ANO_FRETE_TOTAL, "PRAZO ANO");
                         renderBar("freteSafraBar", totaisPorPrazo.PRAZO_SAFRA_FRETE_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_FRETE_TOTAL, "PRAZO SAFRA");
-                            
+
+                        let totaisPorStatus = response.data.totaisPorStatus;
+
+                        renderSingleStatusBar("graficoStatusGarantiasContainer", "STATUS_GARANTIA_PEDIDO", totaisPorStatus.STATUS_GARANTIA_PEDIDO);
+                        renderSingleStatusBar("graficoStatusDocumentosContainer", "STATUS_DOCUMENTO_PEDIDO", totaisPorStatus.STATUS_DOCUMENTO_PEDIDO);
+
+                        let totaisPorVendedor = response.data.totaisPorVendedor;
+
+                        const statusVendedoresDataSource = Object.entries(totaisPorVendedor).map(([nome, valores]) => ({
+                            vendedor: nome,
+                            recebido: valores.recebido,
+                            restante: valores.total - valores.recebido,
+                            total: valores.total
+                        }))
+                        .sort((a, b) => a.total - b.total); 
+
+                        $("#graficoStatusVendedoresContainer").dxChart({
+                            dataSource: statusVendedoresDataSource,
+                            rotated: true,
+                            commonSeriesSettings: {
+                                argumentField: "vendedor",
+                                type: "stackedBar",
+                                label: {
+                                    visible: true,
+                                    backgroundColor: 'transparent',
+                                    font: { color: "#000", size: 12, weight: "bold" },
+                                    position: "outside"
+                                }
+                            },
+                            series: [
+                                {
+                                    valueField: "recebido",
+                                    name: "Recebido",
+                                    color: "#3b8610",
+                                    label: {
+                                        visible: true,
+                                        customizeText: function (pointInfo) {
+                                            const data = statusVendedoresDataSource.find(d => d.vendedor === pointInfo.argument);
+                                            return new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(data.total);
+                                        }
+                                    }
+                                },
+                                {
+                                    valueField: "restante",
+                                    name: "Pendente",
+                                    color: "#d9ead3",
+                                    label: {
+                                        visible: false
+                                    }
+                                }
+                            ],
+                            tooltip: {
+                                enabled: true,
+                                customizeTooltip(arg) {
+                                    const data = statusVendedoresDataSource.find(d => d.vendedor === arg.argument);
+                                    return {
+                                        text:
+                                            `<b>${arg.argument}</b><br />` +
+                                            `Recebeu Documento ou Garantia: ${data.recebido.toLocaleString("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL"
+                                            })}<br />` +
+                                            `Pendente: ${data.restante.toLocaleString("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL"
+                                            })}`
+                                    };
+                                }
+                            },
+                            legend: {
+                                verticalAlignment: "bottom",
+                                horizontalAlignment: "center"
+                            }
+                        });
+
+                        let totaisPorGrupoCliente = response.data.totaisPorGrupoCliente;
+                        const statusClientesDataSource = Object.entries(totaisPorGrupoCliente).map(([nome, valores]) => ({
+                            cliente: nome,
+                            recebido: valores.recebido,
+                            restante: valores.total - valores.recebido,
+                            total: valores.total
+                        }))
+                        .sort((a, b) => a.total - b.total); 
+                        
+                        $("#graficoStatusClientesContainer").dxChart({
+                            dataSource: statusClientesDataSource,
+                            rotated: true,
+                            commonSeriesSettings: {
+                                argumentField: "cliente",
+                                type: "stackedBar",
+                                label: {
+                                    visible: true,
+                                    backgroundColor: 'transparent',
+                                    font: { color: "#000", size: 12, weight: "bold" },
+                                    position: "outside"
+                                }
+                            },
+                            series: [
+                                {
+                                    valueField: "recebido",
+                                    name: "Recebido",
+                                    color: "#3b8610",
+                                    label: {
+                                        visible: true,
+                                        customizeText: function (pointInfo) {
+                                            const data = statusClientesDataSource.find(d => d.cliente === pointInfo.argument);
+                                            return new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(data.total);
+                                        }
+                                    }
+                                },
+                                {
+                                    valueField: "restante",
+                                    name: "Pendente",
+                                    color: "#d9ead3",
+                                    label: {
+                                        visible: false
+                                    }
+                                }
+                            ],
+                            tooltip: {
+                                enabled: true,
+                                customizeTooltip(arg) {
+                                    const data = statusClientesDataSource.find(d => d.cliente === arg.argument);
+                                    return {
+                                        text:
+                                            `<b>${arg.argument}</b><br />` +
+                                            `Recebeu Documento ou Garantia: ${data.recebido.toLocaleString("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL"
+                                            })}<br />` +
+                                            `Pendente: ${data.restante.toLocaleString("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL"
+                                            })}`
+                                    };
+                                }
+                            },
+                            legend: {
+                                verticalAlignment: "bottom",
+                                horizontalAlignment: "center"
+                            }
+                        });                        
+
+
                     }
                 },
                 error: function(error) {
@@ -544,7 +725,6 @@
             });
         });
     }
-
 
     function renderBar(containerId, documentos, total, tipo) {
         const restante = total - documentos;
@@ -573,20 +753,13 @@
                         visible: true,
                         backgroundColor: 'transparent',
                         border: { visible: false },
-                        font: { color: "#000", size: 8, weight: "bold" },
+                        font: { color: "#000", size: 10,  weight: "bold"  },
                         position: "inside",
-                        customizeLabel: function (pointInfo) {
-                            const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                        customizeText: function (pointInfo) {
+                            return new Intl.NumberFormat('pt-BR', {
                                 style: 'currency',
-                                currency: 'BRL',
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                            
-                            return {
-                                text: formatadorMoeda.format(pointInfo.value ?? 0),
-                                horizontalOffset: -20 // Alinha mais à esquerda da barra
-                            };
+                                currency: 'BRL'
+                            }).format(pointInfo.value);
                         }
                     }
                 },
@@ -597,13 +770,14 @@
                         visible: true,
                         backgroundColor: 'transparent',
                         border: { visible: false },
-                        font: { color: "#000", size: 8, weight: "bold" },
+                        font: { color: "#000", size: 10,  weight: "bold"  },
                         position: "outside",
-                        customizeLabel: function (pointInfo) {
-                            return {
-                                text: formatadorMoeda.format(pointInfo.point.data.total ?? 0),
-                                horizontalOffset: 20 // Alinha mais à direita da barra
-                            };
+                        verticalOffset: -100,
+                        customizeText: function (pointInfo) {
+                            return new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(pointInfo.point.data.total);
                         }
                     }
                 }
@@ -639,6 +813,98 @@
             customizePoint: () => ({ hoverStyle: null })
         });
     }
+    function renderSingleStatusBar(containerId, tipoStatus, statusValores) {
+        const chartData = [];
+
+        for (let status in statusValores) {
+            const valor = statusValores[status];
+            chartData.push({
+                tipo: status,
+                documentos: valor,
+                restante: 0,
+                total: valor
+            });
+        }
+
+        const chartId = `${containerId}_${tipoStatus}`;
+        const container = $(`<div id="${chartId}" style="height: 100px; margin-bottom: 10px;"></div>`);
+        $(`#${containerId}`).append(container);
+
+        $(`#${chartId}`).dxChart({
+            dataSource: chartData,
+            rotated: true,
+            commonSeriesSettings: {
+                argumentField: "tipo",
+                type: "stackedBar",
+                barPadding: 0.1,
+                barWidth: 20
+            },
+            series: [
+                {
+                    valueField: "documentos",
+                    label: {
+                        visible: true,
+                        backgroundColor: 'transparent',
+                        border: { visible: false },
+                        font: { color: "#000", size: 12, weight: "bold" },
+                        position: "inside",
+                        customizeText: function (pointInfo) {
+                            return new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(pointInfo.value);
+                        }
+                    }
+                },
+                {
+                    valueField: "restante",
+                    color: "#d9ead3",
+                    label: { visible: false }
+                }
+            ],
+            legend: { visible: false },
+            tooltip: { enabled: false },
+            argumentAxis: {
+                visible: true,
+                label: {
+                    visible: true,
+                    font: { size: 12 },
+                    indentFromAxis: 5,
+                    customizeText: function (arg) {
+                        return arg.value.padEnd(12, ' ');
+                    }
+                },
+                tick: { visible: false },
+                grid: { visible: false },
+                axisDivisionFactor: 100,
+                constantLines: [],
+                stripStyle: {},
+                minorTick: { visible: false },
+                minorGrid: { visible: false },
+                title: { visible: false },
+                axisLine: { visible: false }
+            },
+            valueAxis: {
+                visible: false,
+                grid: { visible: false },
+                tick: { visible: false },
+                axisLine: { visible: false }
+            },
+            customizePoint: function (point) {
+                const status = point.argument;
+                let color = "#3b8610"; // padrão
+
+                if (status === "Pendente") color = "#e6b800";          // amarelo escuro
+                else if (status === "Recebido Parcial") color = "#3c78d8"; // azul escuro
+                else if (status === "Recebido") color = "#38761d";      // verde escuro
+
+                return { color: color };
+            }
+        });
+    }
+
+
+
 
 
 
