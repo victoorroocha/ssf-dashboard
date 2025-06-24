@@ -328,17 +328,18 @@
                         fileName: "Saldo Banco de Horas",
                         allowExportSelectedData: false,
                         customizeExcelCell: function(options) {
+
+                            // Verifica se é um cabeçalho (header)
+                            if (options.gridCell.rowType === "header") {
+                                // Mantém o texto original do cabeçalho
+                                return;
+                            }
                             // Formata as colunas de hora para o Excel
                             if (options.gridCell.column.dataField === 'SALDO' || options.gridCell.column.dataField === 'MEDIA_HORAS_DIA') {
                                 options.value = formatHourBalance(options.gridCell.value);
                                 
                                 // Configura o formato de hora no Excel (para que seja reconhecido como tempo)
                                 options.numFmt = '[h]:mm:ss';
-                                
-                                // Se o valor for negativo, adiciona o sinal de menos
-                                if (options.gridCell.value < 0) {
-                                    options.value = '-' + options.value;
-                                }
                             }
                         }
                     },

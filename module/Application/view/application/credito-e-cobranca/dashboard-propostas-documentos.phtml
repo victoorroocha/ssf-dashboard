@@ -1,0 +1,805 @@
+<style>
+    /* Adicione isso ao seu CSS existente */
+    .chart-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -5px;
+        width: 100%;
+    }
+    .chart-half {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding: 0 5px;
+        box-sizing: border-box;
+    }
+    
+    @media (max-width: 768px) {
+        .chart-half {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 5px;
+        margin-bottom: 20px;
+        height: 85%;
+    }
+    .indicator-card {
+        padding: 12px 8px;
+        border-radius: 8px;
+        text-align: center;
+        height: 100%;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Distribui o espaço verticalmente */
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .indicator-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        opacity: 0.95;
+    }
+    .indicator-title {
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 5px;
+        /* white-space: nowrap; */
+        align-self: flex-start; /* Posiciona no topo */
+        word-wrap: break-word; white-space: normal;
+        width: 100%;
+    }
+    .indicator-value {
+        font-size: 18px;
+        font-weight: bold;
+        margin: auto 0; /* Centraliza verticalmente */
+        text-align: center;
+        width: 100%;
+    }
+    .indicator-change {
+        font-size: 12px;
+        background-color: rgba(255,255,255,0.2);
+        border-radius: 12px;
+        padding: 2px 6px;
+        display: inline-block;
+        align-self: flex-end; /* Posiciona na base */
+        width: 100%;
+        margin-top: auto; /* Empurra para baixo */
+        text-align: center;
+    }
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* 6 cards por linha */
+    .card-column {
+        flex: 0 1 calc(16.66% - 10px);
+        min-width: 130px;
+        box-sizing: border-box;
+    }
+
+
+    /* Período de Apuração */
+    .period-title {
+        background-color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-left: 4px solid var(--primary-color);
+        text-align: center;
+    }
+
+    .period-title i {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+
+    .detalhes-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .bloco-info {
+        flex: 1 1 200px;
+        padding: 16px;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    .bloco-info h4 {
+        margin-top: 0;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    /* Mini-cards internos de valores */
+    .valor-box {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        border-left: 4px solid currentColor;
+    }
+    .valor-titulo {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 2px;
+        font-weight: 600;
+    }
+    .valor-montante {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .cabecalho-content {
+        background-color: #006400;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+    }
+    .cabecalho-logo {
+        filter: brightness(0) invert(1); /* deixa logo branca */
+        width: 100%;         /* ocupa 100% da largura disponível */
+        height: auto;        /* mantém proporção */
+        max-height: 100px;    /* evita que fique muito alto */
+        object-fit: contain; /* garante que a imagem não distorça */
+        margin-bottom: 5px;  /* espaço abaixo da imagem */
+    }
+
+    .cabecalho-logo-div {
+        width: 100%;
+        height: 100px;
+        background-image: url('<?= $this->basePath('img/ssf_branco.png') ?>');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        margin-bottom: 5px;
+    }
+
+
+    .hidden-print {
+        display: none !important;
+    }
+    .custom-tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        margin-left: 5px;
+        color: #fff;
+    }
+
+    .custom-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 220px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 8px 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* acima do ícone */
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        box-shadow: 0 4px 10px rgba(182, 182, 182, 0.3);
+        transition: opacity 0.3s;
+        font-size: 13px;
+    }
+
+    .custom-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%; /* seta na parte inferior do tooltip */
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+    }
+
+    .custom-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Dashboard Propostas de Crédito X Documentossss</p>
+
+                    <div id="form-container"></div>
+
+                    <!-- Container centralizado para o Range Selector -->
+                    <div class="d-flex justify-content-center mb-4">
+                        <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
+                            <div id="range-selector"></div>
+                        </div>
+                    </div>
+
+                    <!-- Botão minimalista só com ícone -->
+                    <button id="btnExportPDF" class="export-pdf">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                    </button>
+
+                    <section id="print-area">
+                        <!-- Cabeçalho -->
+                        <div class="cabecalho-content hidden-print">
+                            <!-- Logo (aplica filtro CSS para branco) -->
+                            <div class="cabecalho-logo-div"></div>
+                            <!-- Texto principal -->
+                            <h3>Quem planta, planta qualidade!</h3>
+                        </div>
+
+                        <div class="period-title"><h3><b>Propostas de Crédito X Documentos</b></h3></div>
+                        <!-- Período de Apuração -->
+                        <!-- <div class="period-title">
+                            <i class="fas fa-calendar-week"></i> Safra: <span id="safra-apuracao"></span>
+                        </div> -->
+
+                        <!-- Grids e Detalhes -->
+                        <div class="grid-section">
+                            <div class="detalhes-container">
+
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-dna"></i> GERMOPLASMA</h4>
+                                    <div id="germoAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
+                                    <div id="germoSafraBar" style="height: 40px;"></div>
+                                </div>
+
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-crown"></i> ROYALTIES</h4>
+                                    <div id="royaltiesAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
+                                    <div id="royaltiesSafraBar" style="height: 40px;"></div>
+                                </div>
+
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-flask-round"></i> TSI</h4>
+                                    <div id="tsiAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
+                                    <div id="tsiSafraBar" style="height: 40px;"></div>
+                                </div>
+
+                                <div class="bloco-info">
+                                    <h4><i class="lucide lucide-truck"></i> FRETE</h4>
+                                    <div id="freteAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
+                                    <div id="freteSafraBar" style="height: 40px;"></div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <br /><br />
+
+                        <div id="page2-marker" class="page-break"></div>
+                    <section>
+
+
+                    <div id="popup-container"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Variáveis globais para armazenar os valores selecionados
+    const formSelections = {
+        codigoSafra: "163",
+    };
+
+    $(document).ready(function() {
+        // BTN Exportar PDF - Versão corrigida
+        document.getElementById('btnExportPDF').addEventListener('click', async function () {
+            const loading = document.getElementById('globalLoading');
+            const spinnerGen = document.getElementById('spinnerGeneric');
+            const spinnerPDF = document.getElementById('spinnerPDF');
+            const loadingText = document.getElementById('loadingText');
+
+            loading.style.display = 'flex';
+            spinnerGen.style.display = 'none';
+            spinnerPDF.style.display = 'block';
+            loadingText.textContent = 'Gerando PDF…';
+
+            try {
+                const printArea = document.getElementById('print-area');
+
+                // Detecta o zoom do navegador para compensar a escala
+                const zoom = window.devicePixelRatio || 1;
+                const scale = 2 / zoom; // seu scale original 2 dividido pelo zoom atual
+
+                const canvas = await html2canvas(printArea, {
+                    scale: scale,
+                    useCORS: true,
+                    logging: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    onclone: (clonedDoc) => {
+                        const cabecalho = clonedDoc.querySelector('.cabecalho-content');
+                        if (cabecalho) {
+                            cabecalho.classList.remove('hidden-print');
+                            cabecalho.style.backgroundColor = '#006400';
+                            cabecalho.style.color = 'white';
+                            cabecalho.style.padding = '10px 20px';
+                            cabecalho.style.textAlign = 'center';
+                        }
+                    }
+                });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margemMm = 30 * 0.264583;
+
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                const props = pdf.getImageProperties(imgData);
+
+                const pdfWidth = pageWidth - 2 * margemMm;
+                const maxPdfHeight = pageHeight - 2 * margemMm;
+
+                // Ajusta a altura para caber na página, mantendo a proporção
+                let pdfHeight = (props.height * pdfWidth) / props.width;
+                if (pdfHeight > maxPdfHeight) {
+                    pdfHeight = maxPdfHeight;
+                }
+
+                pdf.addImage(
+                    imgData,
+                    'PNG',
+                    margemMm,
+                    margemMm,
+                    pdfWidth,
+                    pdfHeight,
+                    undefined,
+                    'FAST'
+                );
+
+                pdf.save('dashboard-monitoramento-pedidos.pdf');
+            } catch (err) {
+                console.error('Erro ao gerar PDF:', err);
+                alert('Erro ao gerar PDF. Verifique o console para detalhes.');
+            } finally {
+                spinnerPDF.style.display = 'none';
+                spinnerGen.style.display = 'block';
+                loadingText.textContent = 'Carregando Informações...';
+                loading.style.display = 'none';
+            }
+        });
+
+        // Inicializa o formulário e rangeSelector
+        const formInstance = $("#form-container").dxForm({
+            formData: {
+                codigoSafra: "163"
+            },
+            colCount: 1,
+            items: [
+                {
+                    itemType: "group",
+                    colCount: 1,
+                    items: [
+                        {
+                            dataField: "codigoSafra",
+                            editorType: "dxSelectBox",
+                            label: { visible: false },
+                            editorOptions: getSelectBoxOptions("/credito-e-cobranca/get-lookup-safra", "dsc", "codigosafra", "Selecione a Safra")
+                        }
+                    ]
+                },
+            ],
+            onContentReady: function(e) {
+                // Garante que todos os valores iniciais do formulário sejam capturados
+                const formData = e.component.option('formData');
+                for (let field in formData) {
+                    formSelections[field] = formData[field];
+                }
+            },
+            onFieldDataChanged: function(e) {
+                // Atualiza a variável global quando um campo é alterado
+                formSelections[e.dataField] = e.value;
+                
+            }
+        }).dxForm("instance");
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: "raw",
+                    load: function() {
+                        return $.ajax({
+                            url: url,
+                            method: "GET",
+                            dataType: "json"
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, "error", 3000);
+                                return [];
+                            }
+                        }).catch(error => {
+                            DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+                onInitialized: function(e) {
+                    atualizarInfosDashboad();
+                },
+                onValueChanged: function(e) {
+                    atualizarInfosDashboad();
+                }
+            };
+        }
+
+        // Inicializa o Range Selector
+        // const today = moment();
+        // const startYear = 2023; // definido para pegar historico de 2023 pra k.
+        // const startOfMonth = today.clone().startOf('month');  // Primeiro dia do mês atual
+        // const endOfMonth = today.clone().endOf('month');     // Último dia do mês atual
+
+        // Define valores iniciais nas variáveis globais
+        // formSelections.dataInicio = moment(startOfMonth.toDate()).format("YYYY-MM-DD"); 
+        // formSelections.dataFim = moment(endOfMonth.toDate()).format("YYYY-MM-DD");
+
+        // const rangeSelectorInstance = $("#range-selector").dxRangeSelector({
+        //     width: '100%',
+        //     scale: {
+        //         startValue: moment(`${startYear}-01-01`).toDate(),
+        //         endValue: today.clone().endOf('year').toDate(),
+        //         minorTickInterval: "month",
+        //         tickInterval: "month",
+        //         useTicks: true,
+        //         label: { format: "MMM yyyy" }
+        //     },
+        //     value: [startOfMonth.toDate(), endOfMonth.toDate()],  // Intervalo: primeiro dia do mês até o último dia
+        //     sliderMarker: { format: "monthAndYear" },
+        //     behavior: { callValueChanged: "onMovingComplete" }, // Alterado para "onMovingComplete"
+        //     applyValueMode: "onHandleRelease",
+        //     onInitialized: function(e) {
+        //         atualizarInfosDashboad();
+        //     },
+        //     onValueChanged: function(e) {
+        //         const startDate = moment(e.value[0]);
+        //         const endDate = moment(e.value[1]).subtract(1, 'days'); // quando faz o changed sempre pega dia 01 do proximo mes ao selecionado. Tratei pra subtrair um dia, pegando o ultimo dia do mes selecionado.
+
+        //         formSelections.dataInicio = moment(startDate.toDate()).format("YYYY-MM-DD");
+        //         formSelections.dataFim = moment(endDate.toDate()).format("YYYY-MM-DD");
+                
+        //         atualizarInfosDashboad();
+        //     }
+        // }).dxRangeSelector("instance");
+
+    });
+
+    // Função para atualizar informações do dashboard
+    function atualizarInfosDashboad() {
+        // Mostra o loading
+        $('#globalLoading').show();
+
+        // const dataInicio = moment(formSelections.dataInicio, 'YYYY-MM-DD');
+        // const dataFim = moment(formSelections.dataFim, 'YYYY-MM-DD');
+        const codigoSafra = formSelections.codigoSafra;
+        // $('#safra-apuracao').text(codigoSafra);
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/credito-e-cobranca/listar-dados-propostas-documentos',
+                method: 'GET',
+                dataType: 'json',
+                data: formSelections,
+                success: function(response) {
+                    if (response.success) {
+                        let totaisPorPrazo = response.data.totaisPorPrazo;
+
+                        renderBar("germoAnoBar", 0, totaisPorPrazo.PRAZO_ANO_GERMOPLASMA_TOTAL, "PRAZO ANO");
+                        renderBar("germoSafraBar", totaisPorPrazo.PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_GERMOPLASMA_TOTAL, "PRAZO SAFRA");
+
+                        renderBar("royaltiesAnoBar", 0, totaisPorPrazo.PRAZO_ANO_ROYALTIES_TOTAL, "PRAZO ANO");
+                        renderBar("royaltiesSafraBar", totaisPorPrazo.PRAZO_SAFRA_ROYALTIES_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_ROYALTIES_TOTAL, "PRAZO SAFRA");
+
+                        renderBar("tsiAnoBar", 0, totaisPorPrazo.PRAZO_ANO_TSI_TOTAL, "PRAZO ANO");
+                        renderBar("tsiSafraBar", totaisPorPrazo.PRAZO_SAFRA_TSI_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_TSI_TOTAL, "PRAZO SAFRA");
+
+                        renderBar("freteAnoBar", 0, totaisPorPrazo.PRAZO_ANO_FRETE_TOTAL, "PRAZO ANO");
+                        renderBar("freteSafraBar", totaisPorPrazo.PRAZO_SAFRA_FRETE_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_FRETE_TOTAL, "PRAZO SAFRA");
+                            
+                    }
+                },
+                error: function(error) {
+                    DevExpress.ui.notify("Erro na requisição", "error", 3000);
+                },
+                complete: function() {
+                    // Esconde o loading quando tudo estiver pronto
+                    $('#globalLoading').hide();
+                }
+            });
+        });
+    }
+
+
+    function renderBar(containerId, documentos, total, tipo) {
+        const restante = total - documentos;
+
+        const chartData = [{
+            tipo: tipo,
+            documentos: documentos,
+            restante: restante,
+            total: total 
+        }];
+
+        $(`#${containerId}`).dxChart({
+            dataSource: chartData,
+            rotated: true,
+            commonSeriesSettings: {
+                argumentField: "tipo",
+                type: "stackedBar",
+                barPadding: 0.1,
+                barWidth: 20
+            },
+            series: [
+                {
+                    valueField: "documentos",
+                    color: "#3b8610",
+                    label: {
+                        visible: true,
+                        backgroundColor: 'transparent',
+                        border: { visible: false },
+                        font: { color: "#000", size: 8, weight: "bold" },
+                        position: "inside",
+                        customizeLabel: function (pointInfo) {
+                            const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            
+                            return {
+                                text: formatadorMoeda.format(pointInfo.value ?? 0),
+                                horizontalOffset: -20 // Alinha mais à esquerda da barra
+                            };
+                        }
+                    }
+                },
+                {
+                    valueField: "restante",
+                    color: "#d9ead3",
+                    label: {
+                        visible: true,
+                        backgroundColor: 'transparent',
+                        border: { visible: false },
+                        font: { color: "#000", size: 8, weight: "bold" },
+                        position: "outside",
+                        customizeLabel: function (pointInfo) {
+                            return {
+                                text: formatadorMoeda.format(pointInfo.point.data.total ?? 0),
+                                horizontalOffset: 20 // Alinha mais à direita da barra
+                            };
+                        }
+                    }
+                }
+            ],
+            legend: { visible: false },
+            tooltip: { enabled: false },
+            argumentAxis: {
+                visible: true,
+                label: {
+                    visible: true,
+                    font: { size: 12 },
+                    indentFromAxis: 5,
+                    customizeText: function (arg) {
+                        return arg.value.padEnd(12, ' ');
+                    }
+                },
+                tick: { visible: false },
+                grid: { visible: false },
+                axisDivisionFactor: 100,
+                constantLines: [],
+                stripStyle: {},
+                minorTick: { visible: false },
+                minorGrid: { visible: false },
+                title: { visible: false },
+                axisLine: { visible: false }
+            },
+            valueAxis: {
+                visible: false,
+                grid: { visible: false },
+                tick: { visible: false },
+                axisLine: { visible: false }
+            },
+            customizePoint: () => ({ hoverStyle: null })
+        });
+    }
+
+
+
+
+    // function obterDadosPedidos(tipo) {
+    //     $('#globalLoading').show();
+
+    //     formSelections.tipo = tipo;
+
+    //     return new Promise((resolve, reject) => {
+    //         $.ajax({
+    //             url: '/credito-e-cobranca/detalhes-cards-monitoramento-pedidos-safra',
+    //             method: 'GET',
+    //             dataType: 'json',
+    //             data: formSelections,
+    //             success: function(response) {
+    //                 if (response.success) {
+    //                     const result = response.data;
+
+    //                     // Resolve a Promise com os dados filtrados
+    //                     resolve(result || []);
+    //                 } else {
+    //                     reject(new Error("Resposta da API não foi bem-sucedida"));
+    //                 }
+    //             },
+    //             error: function(error) {
+    //                 DevExpress.ui.notify("Erro na requisição dos Detalhes", "error", 3000);
+    //                 reject(error);
+    //             },
+    //             complete: function() {
+    //                 // Esconde o loading quando tudo estiver pronto
+    //                 $('#globalLoading').hide();
+    //             }
+    //         });
+    //     });
+    // }
+    // async function abrirPopup(tipo) {
+    //     try {
+    //         const result = await obterDadosPedidos(tipo);
+            
+    //         // Processa as colunas para converter a string em função
+    //         const processedColumns = result.collumns.map(column => {
+    //             if (column.caption === 'Abrir Pedido Softsul') {
+    //                 return {
+    //                     ...column,
+    //                     cellTemplate: function(container, options) {
+    //                         if (options.data.LINK_REDIRECT_SOFTSUL) {
+    //                             $('<a>')
+    //                                 .attr('href', options.data.LINK_REDIRECT_SOFTSUL)
+    //                                 .attr('target', '_blank')
+    //                                 .attr('title', 'Abrir pedido no sistema')
+    //                                 .addClass('dx-link')
+    //                                 .html('<i class="fa fa-link"></i>')
+    //                                 .appendTo(container);
+    //                         } else {
+    //                             container.text('N/A');
+    //                         }
+    //                     }
+    //                 };
+    //             }
+    //             return column;
+    //         });
+
+    //         $("#popup-container").dxPopup({
+    //             width: '80%',
+    //             height: 800,
+    //             showTitle: true,
+    //             title: `Detalhes - ${tipo}`,
+    //             visible: true,
+    //             dragEnabled: true,
+    //             closeOnOutsideClick: true,
+    //             contentTemplate: function () {
+    //                 return $("<div>").dxDataGrid({
+    //                     dataSource: result.dataSource,
+    //                     height: '100%',
+    //                     width: '100%',
+    //                     columnAutoWidth: true,
+    //                     elementAttr: {
+    //                         class: "grid-personalizada"
+    //                     },
+    //                     showBorders: true,
+    //                     columnChooser: {
+    //                         enabled: true,
+    //                         mode: "dragAndDrop",
+    //                         position: { 
+    //                             my: "right", 
+    //                             at: "right", 
+    //                             of: ".dx-datagrid-column-chooser-button" 
+    //                         }
+    //                     },
+    //                     groupPanel: {
+    //                         visible: true,
+    //                     },
+    //                     editing: {
+    //                         mode: 'batch',
+    //                         allowUpdating: false,
+    //                         allowDeleting: false,
+    //                     },
+    //                     selection: {
+    //                         mode: 'multiple',
+    //                         showCheckBoxesMode: 'none'
+    //                     },
+    //                     hoverStateEnabled: true,
+    //                     pager: {
+    //                         visible: true
+    //                     },
+    //                     paging: {
+    //                         pageSize: 500
+    //                     },
+    //                     headerFilter: {
+    //                         visible: true,
+    //                     },
+    //                     filterRow: {
+    //                         visible: true,
+    //                         applyFilter: 'auto',
+    //                     },
+    //                     export: {
+    //                         enabled: true,
+    //                         fileName: "Detalhes " + tipo,
+    //                         allowExportSelectedData: false,
+    //                     },
+    //                     searchPanel: {
+    //                         visible: true,
+    //                         width: 240,
+    //                         placeholder: 'Procure...',
+    //                     },
+    //                     columns: processedColumns,
+    //                     onToolbarPreparing: function (e) {
+    //                         var toolbarItems = e.toolbarOptions.items;
+                            
+    //                         toolbarItems.push({
+    //                             location: "after",
+    //                             widget: "dxButton",
+    //                             options: {
+    //                                 icon: "fa fa-expand",
+    //                                 text: "Expandir",
+    //                                 onClick: function () {
+    //                                     var grid = e.component;
+    //                                     grid.expandAll();
+    //                                 }
+    //                             }
+    //                         });
+
+    //                         toolbarItems.push({
+    //                             location: "after",
+    //                             widget: "dxButton",
+    //                             options: {
+    //                                 icon: "fa fa-compress",
+    //                                 text: "Colapsar",
+    //                                 onClick: function () {
+    //                                     var grid = e.component;
+    //                                     grid.collapseAll();
+    //                                 }
+    //                             }
+    //                         });
+    //                     }
+    //                 });
+    //             }
+    //         });
+    //     } catch (error) {
+    //         console.error('Erro ao obter dados de detalhe ' + tipo + ':', error);
+    //     }
+    // }
+</script>

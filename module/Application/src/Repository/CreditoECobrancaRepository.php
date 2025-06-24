@@ -1797,6 +1797,65 @@ class CreditoECobrancaRepository
                     {$ands}
                     GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME";  
         }
+    #endregion
+
+    #region Dashboard Propostas Crédito x Documentos
+        public function getInfoComponentesTipoPrazo($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
+        {
+            $ands = "";
+           
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            
+            return "SELECT  
+                        P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                        ,vend.NAME AS NOME_VENDEDOR
+                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                        ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES
+                        ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI
+                        ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA))
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO_GERMOPLASMA
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO_ROYALTIES
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO_TSI
+                        ,CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO) THEN 'Prazo Safra' ELSE 'Prazo Ano' END AS TIPO_PRAZO_FRETE
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    AND P.CODIGOSAFRA = 163
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME";  
+        }
+        public function getInfoDocumentosGarantiasAtivosPedido()
+        {
+            return "SELECT DISTINCT id_pedido FROM (
+                        SELECT id_pedido FROM documentos_pedido dp WHERE ativo = true
+                        UNION ALL
+                        SELECT id_pedido FROM garantias_pedido gp WHERE ativo = true
+                    ) A";  
+        }
 
     #endregion
 }

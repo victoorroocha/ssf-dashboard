@@ -2562,4 +2562,153 @@ class CreditoECobrancaController extends BaseController
     }
     #endregion
 
+    #region Dashboard Propostas Crédito x Documentos
+    public function dashboardPropostasDocumentosAction()
+    {
+        $session = new Container('auth');
+
+        if (!isset($session->user)) {
+            // Redireciona o usuário para o login caso não esteja autenticado
+            return $this->redirect()->toRoute('login');
+        }
+
+        return new ViewModel();
+    }
+    public function listarDadosPropostasDocumentosAction()
+    {
+        // Verifica se o serviço Oracle está disponível
+        if (!$this->oracleService) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Serviço Oracle não disponível'
+            ]);
+        }
+
+        // Captura os parâmetros da requisição GET
+        $apuracao_inicio = $this->params()->fromQuery('dataInicio', null);
+        $apuracao_fim = $this->params()->fromQuery('dataFim', null);
+        $codigoSafra = $this->params()->fromQuery('codigoSafra', null);
+
+        try {
+            // Define o cabeçalho corretamente antes de qualquer saída
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                              ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                              ->addHeaderLine('Pragma', 'no-cache')
+                                              ->addHeaderLine('Expires', '0');
+
+            if ((!empty($apuracao_inicio) && !empty($apuracao_fim)) || !empty($codigoSafra)) {
+                // Busca Pedidos por Componentes e Tipo Prazo
+                $infoComponentesTipoPrazoSQL = $this->creditoECobrancaRepository  ? $this->creditoECobrancaRepository->getInfoComponentesTipoPrazo($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+                
+                $totaisPorPrazo = [
+                    'PRAZO_ANO_GERMOPLASMA_TOTAL' => 0,
+                    'PRAZO_SAFRA_GERMOPLASMA_TOTAL' => 0,
+                    'PRAZO_ANO_ROYALTIES_TOTAL' => 0,
+                    'PRAZO_SAFRA_ROYALTIES_TOTAL' => 0,
+                    'PRAZO_ANO_TSI_TOTAL' => 0,
+                    'PRAZO_SAFRA_TSI_TOTAL' => 0,
+                    'PRAZO_ANO_FRETE_TOTAL' => 0,
+                    'PRAZO_SAFRA_FRETE_TOTAL' => 0,
+
+                    // Totais com documento de garantia
+                    'PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS' => 0,
+                    'PRAZO_SAFRA_ROYALTIES_DOCUMENTOS' => 0,
+                    'PRAZO_SAFRA_TSI_DOCUMENTOS' => 0,
+                    'PRAZO_SAFRA_FRETE_DOCUMENTOS' => 0
+                ];
+
+                if ($infoComponentesTipoPrazoSQL) {
+                    $resultComponentesTipoPrazo = $this->oracleService->executeQuery($infoComponentesTipoPrazoSQL);
+
+                    // Busca Documentos x Garantias Ativos por Pedido 
+                    $sqlStatusDocumentosGarantias = $this->creditoECobrancaRepository->getInfoDocumentosGarantiasAtivosPedido();
+                    $flgPedidosDocumentoGarantia = [];
+
+                    if ($sqlStatusDocumentosGarantias) {
+                        $stmtStatusDoc = $this->pgAdapter->query($sqlStatusDocumentosGarantias);
+                        $resStatusDoc = $stmtStatusDoc->execute();
+                        foreach ($resStatusDoc as $linha) {
+                            $flgPedidosDocumentoGarantia[$linha['id_pedido']] = true;
+                        }
+                    }
+       
+                    // Enriquecer os dados do Oracle com a informação do postgres
+                    foreach ($resultComponentesTipoPrazo as $key => $row) {
+                        $idPedido = $row['ID_PEDIDO'];
+                        $flgPossuiDocumentoGarantia = isset($flgPedidosDocumentoGarantia[$idPedido]);
+
+                        $resultComponentesTipoPrazo[$key]['FLG_DOCUMENTO_GARANTIA'] = $flgPossuiDocumentoGarantia;
+
+                        // Soma por tipo e prazo
+                        if ($row['TIPO_PRAZO_GERMOPLASMA'] === 'Prazo Ano') {
+                            $totaisPorPrazo['PRAZO_ANO_GERMOPLASMA_TOTAL'] += $row['PRECO_TOTAL_GERMOPLASMA'];
+                        } elseif ($row['TIPO_PRAZO_GERMOPLASMA'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_TOTAL'] += $row['PRECO_TOTAL_GERMOPLASMA'];
+                        }
+
+                        if ($row['TIPO_PRAZO_ROYALTIES'] === 'Prazo Ano') {
+                            $totaisPorPrazo['PRAZO_ANO_ROYALTIES_TOTAL'] += $row['PRECO_TOTAL_ROYALTIES'];
+                        } elseif ($row['TIPO_PRAZO_ROYALTIES'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_TOTAL'] += $row['PRECO_TOTAL_ROYALTIES'];
+                        }
+
+                        if ($row['TIPO_PRAZO_TSI'] === 'Prazo Ano') {
+                            $totaisPorPrazo['PRAZO_ANO_TSI_TOTAL'] += $row['PRECO_TOTAL_TSI'];
+                        } elseif ($row['TIPO_PRAZO_TSI'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_TSI_TOTAL'] += $row['PRECO_TOTAL_TSI'];
+                        }
+
+                        if ($row['TIPO_PRAZO_FRETE'] === 'Prazo Ano') {
+                            $totaisPorPrazo['PRAZO_ANO_FRETE_TOTAL'] += $row['PRECO_TOTAL_FRETE'];
+                        } elseif ($row['TIPO_PRAZO_FRETE'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_FRETE_TOTAL'] += $row['PRECO_TOTAL_FRETE'];
+                        }
+
+                        // Totais por componente com garantia
+                        if ($flgPossuiDocumentoGarantia && $row['TIPO_PRAZO_GERMOPLASMA'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS'] += $row['PRECO_TOTAL_GERMOPLASMA'];
+                        }
+                        if ($flgPossuiDocumentoGarantia && $row['TIPO_PRAZO_ROYALTIES'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_DOCUMENTOS'] += $row['PRECO_TOTAL_ROYALTIES'];
+                        }
+                        if ($flgPossuiDocumentoGarantia && $row['TIPO_PRAZO_TSI'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_TSI_DOCUMENTOS'] += $row['PRECO_TOTAL_TSI'];
+                        }
+                        if ($flgPossuiDocumentoGarantia && $row['TIPO_PRAZO_FRETE'] === 'Prazo Safra') {
+                            $totaisPorPrazo['PRAZO_SAFRA_FRETE_DOCUMENTOS'] += $row['PRECO_TOTAL_FRETE'];
+                        }
+                    }
+
+                    $totaisPorPrazo['PRAZO_ANO_GERMOPLASMA_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_ANO_GERMOPLASMA_TOTAL']));
+                    $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_TOTAL']));
+                    $totaisPorPrazo['PRAZO_ANO_ROYALTIES_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_ANO_ROYALTIES_TOTAL']));
+                    $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_TOTAL']));
+                    $totaisPorPrazo['PRAZO_ANO_TSI_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_ANO_TSI_TOTAL']));
+                    $totaisPorPrazo['PRAZO_SAFRA_TSI_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_TSI_TOTAL']));
+                    $totaisPorPrazo['PRAZO_ANO_FRETE_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_ANO_FRETE_TOTAL']));
+                    $totaisPorPrazo['PRAZO_SAFRA_FRETE_TOTAL'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_FRETE_TOTAL']));
+                    
+                    $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS']));
+                    $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_DOCUMENTOS'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_ROYALTIES_DOCUMENTOS']));
+                    $totaisPorPrazo['PRAZO_SAFRA_TSI_DOCUMENTOS'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_TSI_DOCUMENTOS']));
+                    $totaisPorPrazo['PRAZO_SAFRA_FRETE_DOCUMENTOS'] = floatval(str_replace(',', '.', $totaisPorPrazo['PRAZO_SAFRA_FRETE_DOCUMENTOS']));
+                }
+
+            }
+
+            // Retorna os dados em JSON
+            return new JsonModel([
+                'success' => true,
+                'data' => array(
+                    'totaisPorPrazo' => $totaisPorPrazo,
+                ),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    #endregion
 }
