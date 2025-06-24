@@ -64,39 +64,45 @@
         let menusSelecionados = [];
 
         // Lista de usuários
-        const usuariosSelectBox = $('#usuariosSelectBox').dxSelectBox({
-            dataSource: new DevExpress.data.DataSource({
-                load: function () {
-                    return $.ajax({
-                        url: '/usuario/list-usuarios',
-                        method: 'GET',
-                        dataType: 'json',
-                    }).then(response => {
-                        if (response.success) {
-                            // Filtra os usuários que não são administradores
-                            return response.data
-                                .filter(usuario => usuario.role !== 'Administrador')
-                                .map(usuario => ({
-                                    id: usuario.id,
-                                    nome: usuario.nome,
-                                }));
-                        } else {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                            return [];
-                        }
-                    });
-                },
-            }),
-            displayExpr: 'nome',
-            valueExpr: 'id',
-            placeholder: 'Selecione um usuário',
-            onValueChanged: function (e) {
-                usuarioSelecionado = e.value;
-                if (usuarioSelecionado) {
-                    carregarMenusDoUsuario(usuarioSelecionado);
+const usuariosSelectBox = $('#usuariosSelectBox').dxSelectBox({
+    dataSource: new DevExpress.data.CustomStore({
+        loadMode: "raw", // permite usar array diretamente
+        load: function () {
+            return $.ajax({
+                url: '/usuario/list-usuarios',
+                method: 'GET',
+                dataType: 'json'
+            }).then(response => {
+                if (response.success) {
+                    return response.data
+                        .filter(usuario => usuario.role !== 'Administrador')
+                        .map(usuario => ({
+                            id: usuario.id,
+                            nome: usuario.nome
+                        }));
+                } else {
+                    DevExpress.ui.notify(response.message, 'error', 3000);
+                    return [];
                 }
-            },
-        }).dxSelectBox('instance');
+            }).catch(() => {
+                DevExpress.ui.notify("Erro ao carregar usuários", "error", 3000);
+                return [];
+            });
+        }
+    }),
+    displayExpr: 'nome',
+    valueExpr: 'id',
+    placeholder: 'Selecione o usuário',
+    searchEnabled: true,
+    searchExpr: 'nome',
+    showClearButton: true,
+    onValueChanged: function (e) {
+        usuarioSelecionado = e.value;
+        if (usuarioSelecionado) {
+            carregarMenusDoUsuario(usuarioSelecionado);
+        }
+    }
+}).dxSelectBox('instance');
 
         // TreeList de Menus
         const menusTreeList = $('#menusTreeList').dxTreeList({
