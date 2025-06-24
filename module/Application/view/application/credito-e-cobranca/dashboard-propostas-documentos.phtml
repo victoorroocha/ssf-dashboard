@@ -125,6 +125,42 @@
         align-items: center;
         gap: 8px;
     }
+
+    .bloco-info1 {
+        flex: 1 1 200px;
+        padding: 16px;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    .bloco-info1 h4 {
+        margin-top: 0;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Cores específicas de fundo e borda */
+    .bloco-info:nth-child(1) {
+        border-left: 6px solid #AED581;
+        background-color: #F1F8E9;
+    }
+    .bloco-info:nth-child(2) {
+        border-left: 6px solid #FFD54F;
+        background-color: #FFFDE7;
+    }
+    .bloco-info:nth-child(3) {
+        border-left: 6px solid #4FC3F7;
+        background-color: #E1F5FE;
+    }
+    .bloco-info:nth-child(4) {
+        border-left: 6px solid #BCAAA4;
+        background-color: #EFEBE9;
+    }
+
+    
     /* Mini-cards internos de valores */
     .valor-box {
         display: flex;
@@ -257,36 +293,72 @@
                         
                         <div class="period-title"><h3><b>Propostas de Crédito X Documentos</b></h3></div>
                         <!-- Período de Apuração -->
-                        <!-- <div class="period-title">
+                        <div class="period-title">
                             <i class="fas fa-calendar-week"></i> Safra: <span id="safra-apuracao"></span>
-                        </div> -->
+                        </div>
 
                         <!-- Grids e Detalhes -->
                         <div class="grid-section">
                             <div class="detalhes-container">
-
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-dna"></i> <b>GERMOPLASMA</b></h4>
-                                    <div id="germoAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
-                                    <div id="germoSafraBar" style="height: 40px;"></div>
+                                    <h4><i class="lucide lucide-dna"></i> GERMOPLASMA</h4>
+                                    <div class="valor-box" style="color: #33691E;">
+                                        <span class="valor-titulo">PRAZO ANO</span>
+                                        <span class="valor-montante" id="germoAno">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #33691E;">
+                                        <span class="valor-titulo">PRAZO SAFRA</span>
+                                        <span class="valor-montante" id="germoSafra">R$ 0,00</span>
+                                    </div> 
+                                    <div class="valor-box" style="color: #33691E; background-color:rgb(239, 241, 240);">
+                                        <span class="valor-titulo" style="font-weight: bold;">TOTAL GERAL</span>
+                                        <span class="valor-montante" id="germoTotal">R$ 0,00</span>
+                                    </div>
                                 </div>
-
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-crown"></i> <b>ROYALTIES</b></h4>
-                                    <div id="royaltiesAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
-                                    <div id="royaltiesSafraBar" style="height: 40px;"></div>
+                                    <h4><i class="lucide lucide-crown"></i> ROYALTIES</h4>
+                                    <div class="valor-box" style="color: #FF8F00;">
+                                        <span class="valor-titulo">PRAZO ANO</span>
+                                        <span class="valor-montante" id="royAno">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #FF8F00;">
+                                        <span class="valor-titulo">PRAZO SAFRA</span>
+                                        <span class="valor-montante" id="roySafra">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #FF8F00; background-color:rgb(239, 241, 240);">
+                                        <span class="valor-titulo" style="font-weight: bold;">TOTAL GERAL</span>
+                                        <span class="valor-montante" id="royTotal">R$ 0,00</span>
+                                    </div>
                                 </div>
-
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-flask-round"></i> <b>TSI</b></h4>
-                                    <div id="tsiAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
-                                    <div id="tsiSafraBar" style="height: 40px;"></div>
+                                    <h4><i class="lucide lucide-flask-round"></i> TSI</h4>
+                                    <div class="valor-box" style="color: #0277BD;">
+                                        <span class="valor-titulo">PRAZO ANO</span>
+                                        <span class="valor-montante" id="tsiAno">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #0277BD;">
+                                        <span class="valor-titulo">PRAZO SAFRA</span>
+                                        <span class="valor-montante" id="tsiSafra">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #0277BD; background-color:rgb(239, 241, 240) ">
+                                        <span class="valor-titulo" style="font-weight: bold;">TOTAL GERAL</span>
+                                        <span class="valor-montante" id="tsiTotal">R$ 0,00</span>
+                                    </div>
                                 </div>
-
                                 <div class="bloco-info">
-                                    <h4><i class="lucide lucide-truck"></i> <b>FRETE</b></h4>
-                                    <div id="freteAnoBar" style="height: 40px; margin-bottom: 6px;"></div>
-                                    <div id="freteSafraBar" style="height: 40px;"></div>
+                                    <h4><i class="lucide lucide-truck"></i> FRETE</h4>
+                                    <div class="valor-box" style="color: #5D4037;">
+                                        <span class="valor-titulo">PRAZO ANO</span>
+                                        <span class="valor-montante" id="freteAno">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #5D4037;">
+                                        <span class="valor-titulo">PRAZO SAFRA</span>
+                                        <span class="valor-montante" id="freteSafra">R$ 0,00</span>
+                                    </div>
+                                    <div class="valor-box" style="color: #5D4037; background-color:rgb(239, 241, 240)">
+                                        <span class="valor-titulo" style="font-weight: bold;">TOTAL GERAL</span>
+                                        <span class="valor-montante" id="freteTotal">R$ 0,00</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -295,11 +367,11 @@
 
                         <div class="grid-section">
                             <div class="detalhes-container">
-                                <div class="bloco-info">
+                                <div class="bloco-info1">
                                     <h4><i class="lucide lucide-dna"></i> <b>STATUS GARANTIAS</b></h4>
                                     <div id="graficoStatusGarantiasContainer"></div>
                                 </div>
-                                <div class="bloco-info">
+                                <div class="bloco-info1">
                                     <h4><i class="lucide lucide-dna"></i> <b>STATUS DOCUMENTOS</b></h4>
                                     <div id="graficoStatusDocumentosContainer"></div>
                                 </div>
@@ -310,12 +382,32 @@
 
                         <div class="grid-section">
                             <div class="detalhes-container">
-                                <div class="bloco-info">
-                                    <h4><i class="lucide lucide-dna"></i> <b>STATUS VENDEDORES</b></h4>
-                                    <div id="graficoStatusVendedoresContainer" style="height: 600px;"></div>
+                                <div class="bloco-info1">
+                                    <h4><i class="lucide lucide-dna"></i> <b>DOCUMENTOS E GARANTIAS POR VENDEDORES</b></h4>
+                                    <div id="graficoStatusVendedoresContainer" style="height: 400px;"></div>
                                 </div>
                             </div>
                         </div>
+
+                        <br />
+
+                        <div class="grid-section">
+                            <div class="detalhes-container">
+                                <div class="bloco-info1">
+                                    <h4><i class="lucide lucide-dna"></i> <b>DOCUMENTOS E GARANTIAS POR GRUPO CLIENTES</b></h4>
+                                    <div id="graficoStatusClientesContainer" style="height: 400px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br /><br />
+                        
+
+                        <div id="graficosContainer" style="display: flex; justify-content: center; gap: 20px;">
+                            <div id="chartDonutStatusDocumentos" style="flex: 1; max-width: 600px; height: 400px;"></div>
+                            <div id="chartDonutStatusGarantias" style="flex: 1; max-width: 600px; height: 400px;"></div>
+                        </div>
+
 
                         <div id="page2-marker" class="page-break"></div>
                     <section>
@@ -484,45 +576,6 @@
                 }
             };
         }
-
-        // Inicializa o Range Selector
-        // const today = moment();
-        // const startYear = 2023; // definido para pegar historico de 2023 pra k.
-        // const startOfMonth = today.clone().startOf('month');  // Primeiro dia do mês atual
-        // const endOfMonth = today.clone().endOf('month');     // Último dia do mês atual
-
-        // Define valores iniciais nas variáveis globais
-        // formSelections.dataInicio = moment(startOfMonth.toDate()).format("YYYY-MM-DD"); 
-        // formSelections.dataFim = moment(endOfMonth.toDate()).format("YYYY-MM-DD");
-
-        // const rangeSelectorInstance = $("#range-selector").dxRangeSelector({
-        //     width: '100%',
-        //     scale: {
-        //         startValue: moment(`${startYear}-01-01`).toDate(),
-        //         endValue: today.clone().endOf('year').toDate(),
-        //         minorTickInterval: "month",
-        //         tickInterval: "month",
-        //         useTicks: true,
-        //         label: { format: "MMM yyyy" }
-        //     },
-        //     value: [startOfMonth.toDate(), endOfMonth.toDate()],  // Intervalo: primeiro dia do mês até o último dia
-        //     sliderMarker: { format: "monthAndYear" },
-        //     behavior: { callValueChanged: "onMovingComplete" }, // Alterado para "onMovingComplete"
-        //     applyValueMode: "onHandleRelease",
-        //     onInitialized: function(e) {
-        //         atualizarInfosDashboad();
-        //     },
-        //     onValueChanged: function(e) {
-        //         const startDate = moment(e.value[0]);
-        //         const endDate = moment(e.value[1]).subtract(1, 'days'); // quando faz o changed sempre pega dia 01 do proximo mes ao selecionado. Tratei pra subtrair um dia, pegando o ultimo dia do mes selecionado.
-
-        //         formSelections.dataInicio = moment(startDate.toDate()).format("YYYY-MM-DD");
-        //         formSelections.dataFim = moment(endDate.toDate()).format("YYYY-MM-DD");
-                
-        //         atualizarInfosDashboad();
-        //     }
-        // }).dxRangeSelector("instance");
-
     });
 
     // Função para atualizar informações do dashboard
@@ -530,10 +583,8 @@
         // Mostra o loading
         $('#globalLoading').show();
 
-        // const dataInicio = moment(formSelections.dataInicio, 'YYYY-MM-DD');
-        // const dataFim = moment(formSelections.dataFim, 'YYYY-MM-DD');
         const codigoSafra = formSelections.codigoSafra;
-        // $('#safra-apuracao').text(codigoSafra);
+        $('#safra-apuracao').text(codigoSafra);
 
         return new Promise((resolve, reject) => {
             $.ajax({
@@ -550,38 +601,72 @@
                             maximumFractionDigits: 2
                         });
 
-                        let totaisPorPrazo = response.data.totaisPorPrazo;
+                        // INICIO GRIDS E DETALHES
+                            // Acessar os dados do objeto
+                            const infoGermoplasmaTipoPrazo = response.data.infoGermoplasmaTipoPrazo;
+                            const infoRoyaltiesTipoPrazo = response.data.infoRoyaltiesTipoPrazo;
+                            const infoTSITipoPrazo = response.data.infoTSITipoPrazo;
+                            const infoFreteTipoPrazo = response.data.infoFreteTipoPrazo;
 
-                        renderBar("germoAnoBar", 0, totaisPorPrazo.PRAZO_ANO_GERMOPLASMA_TOTAL, "PRAZO ANO");
-                        renderBar("germoSafraBar", totaisPorPrazo.PRAZO_SAFRA_GERMOPLASMA_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_GERMOPLASMA_TOTAL, "PRAZO SAFRA");
+                            // Germoplasma
+                            const germoAno = formatadorMoeda.format(infoGermoplasmaTipoPrazo.PRAZO_ANO_GERMOPLASMA ?? 0);
+                            document.getElementById('germoAno').textContent = germoAno;
 
-                        renderBar("royaltiesAnoBar", 0, totaisPorPrazo.PRAZO_ANO_ROYALTIES_TOTAL, "PRAZO ANO");
-                        renderBar("royaltiesSafraBar", totaisPorPrazo.PRAZO_SAFRA_ROYALTIES_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_ROYALTIES_TOTAL, "PRAZO SAFRA");
+                            const germoSafra = formatadorMoeda.format(infoGermoplasmaTipoPrazo.PRAZO_SAFRA_GERMOPLASMA ?? 0);
+                            document.getElementById('germoSafra').textContent = germoSafra;
 
-                        renderBar("tsiAnoBar", 0, totaisPorPrazo.PRAZO_ANO_TSI_TOTAL, "PRAZO ANO");
-                        renderBar("tsiSafraBar", totaisPorPrazo.PRAZO_SAFRA_TSI_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_TSI_TOTAL, "PRAZO SAFRA");
+                            const totalGermoplasma = (infoGermoplasmaTipoPrazo.PRAZO_ANO_GERMOPLASMA + infoGermoplasmaTipoPrazo.PRAZO_SAFRA_GERMOPLASMA) ?? 0;
+                            document.getElementById('germoTotal').textContent = formatadorMoeda.format(totalGermoplasma);
 
-                        renderBar("freteAnoBar", 0, totaisPorPrazo.PRAZO_ANO_FRETE_TOTAL, "PRAZO ANO");
-                        renderBar("freteSafraBar", totaisPorPrazo.PRAZO_SAFRA_FRETE_DOCUMENTOS, totaisPorPrazo.PRAZO_SAFRA_FRETE_TOTAL, "PRAZO SAFRA");
+                            // Royalties
+                            const royAno = formatadorMoeda.format(infoRoyaltiesTipoPrazo.PRAZO_ANO_ROYALTIES  ?? 0);
+                            document.getElementById('royAno').textContent = royAno;
+
+                            const roySafra = formatadorMoeda.format(infoRoyaltiesTipoPrazo.PRAZO_SAFRA_ROYALTIES  ?? 0);
+                            document.getElementById('roySafra').textContent = roySafra;
+
+                            const totalRoyalties = (infoRoyaltiesTipoPrazo.PRAZO_ANO_ROYALTIES + infoRoyaltiesTipoPrazo.PRAZO_SAFRA_ROYALTIES) ?? 0;
+                            document.getElementById('royTotal').textContent = formatadorMoeda.format(totalRoyalties);
+
+                            // TSI
+                            const tsiAno = formatadorMoeda.format(infoTSITipoPrazo.PRAZO_ANO_TSI ?? 0);
+                            document.getElementById('tsiAno').textContent = tsiAno;
+
+                            const tsiSafra = formatadorMoeda.format(infoTSITipoPrazo.PRAZO_SAFRA_TSI ?? 0);
+                            document.getElementById('tsiSafra').textContent = tsiSafra;
+
+                            const totalTSI = (infoTSITipoPrazo.PRAZO_ANO_TSI + infoTSITipoPrazo.PRAZO_SAFRA_TSI) ?? 0;
+                            document.getElementById('tsiTotal').textContent = formatadorMoeda.format(totalTSI);
+
+                            // Frete
+                            const freteAno = formatadorMoeda.format(infoFreteTipoPrazo.PRAZO_ANO_FRETE ?? 0);
+                            document.getElementById('freteAno').textContent = freteAno;
+
+                            const freteSafra = formatadorMoeda.format(infoFreteTipoPrazo.PRAZO_SAFRA_FRETE ?? 0);
+                            document.getElementById('freteSafra').textContent = freteSafra;
+
+                            const totalFrete = (infoFreteTipoPrazo.PRAZO_ANO_FRETE + infoFreteTipoPrazo.PRAZO_SAFRA_FRETE) ?? 0;
+                            document.getElementById('freteTotal').textContent = formatadorMoeda.format(totalFrete);
+                        // FIM GRIDS E DETALHES
 
                         let totaisPorStatus = response.data.totaisPorStatus;
-
                         renderSingleStatusBar("graficoStatusGarantiasContainer", "STATUS_GARANTIA_PEDIDO", totaisPorStatus.STATUS_GARANTIA_PEDIDO);
                         renderSingleStatusBar("graficoStatusDocumentosContainer", "STATUS_DOCUMENTO_PEDIDO", totaisPorStatus.STATUS_DOCUMENTO_PEDIDO);
 
                         let totaisPorVendedor = response.data.totaisPorVendedor;
-
                         const statusVendedoresDataSource = Object.entries(totaisPorVendedor).map(([nome, valores]) => ({
                             vendedor: nome,
                             recebido: valores.recebido,
                             restante: valores.total - valores.recebido,
                             total: valores.total
-                        }))
-                        .sort((a, b) => a.total - b.total); 
+                        })).sort((a, b) => a.total - b.total);
 
                         $("#graficoStatusVendedoresContainer").dxChart({
                             dataSource: statusVendedoresDataSource,
                             rotated: true,
+                            size: {
+                                height: 400
+                            },
                             commonSeriesSettings: {
                                 argumentField: "vendedor",
                                 type: "stackedBar",
@@ -590,7 +675,9 @@
                                     backgroundColor: 'transparent',
                                     font: { color: "#000", size: 12, weight: "bold" },
                                     position: "outside"
-                                }
+                                },
+                                barGroupPadding: 0.3,
+                                barWidth: 30,
                             },
                             series: [
                                 {
@@ -599,12 +686,22 @@
                                     color: "#3b8610",
                                     label: {
                                         visible: true,
+                                        position: "inside",
+                                        horizontalOffset: -10, // empurra um pouco para a esquerda
+                                        alignment: "left",     // alinha o texto à esquerda
                                         customizeText: function (pointInfo) {
                                             const data = statusVendedoresDataSource.find(d => d.vendedor === pointInfo.argument);
-                                            return new Intl.NumberFormat('pt-BR', {
+                                            const formatador = new Intl.NumberFormat('pt-BR', {
                                                 style: 'currency',
                                                 currency: 'BRL'
-                                            }).format(data.total);
+                                            });
+
+                                            return `${formatador.format(data.recebido)}`;
+                                        },
+                                        font: {
+                                            color: "#000", // cor do texto para aparecer sobre fundo verde
+                                            size: 12,
+                                            weight: "bold"
                                         }
                                     }
                                 },
@@ -614,6 +711,28 @@
                                     color: "#d9ead3",
                                     label: {
                                         visible: false
+                                    }
+                                },
+                                {
+                                    valueField: "total",
+                                    name: "Total",
+                                    color: "transparent",
+                                    label: {
+                                        visible: true,
+                                        position: "inside",
+                                        customizeText: function (pointInfo) {
+                                            const formatador = new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            });
+                                            return formatador.format(pointInfo.value);
+                                        },
+                                        customizeLabel: function (pointInfo) {
+                                            return {
+                                                horizontalOffset: pointInfo.value < 1000 ? 150 : 120
+                                            };
+                                        },
+                                        font: { color: "#b0b0b0", size: 12, weight: "bold" }
                                     }
                                 }
                             ],
@@ -636,23 +755,25 @@
                                 }
                             },
                             legend: {
-                                verticalAlignment: "bottom",
-                                horizontalAlignment: "center"
+                                visible: false
                             }
                         });
 
-                        let totaisPorGrupoCliente = response.data.totaisPorGrupoCliente;
-                        const statusClientesDataSource = Object.entries(totaisPorGrupoCliente).map(([nome, valores]) => ({
+
+                        let top10GruposCliente = response.data.top10GruposCliente;
+                        const statusClientesDataSource = Object.entries(top10GruposCliente).map(([nome, valores]) => ({
                             cliente: nome,
                             recebido: valores.recebido,
                             restante: valores.total - valores.recebido,
                             total: valores.total
-                        }))
-                        .sort((a, b) => a.total - b.total); 
+                        })).sort((a, b) => a.total - b.total); 
                         
                         $("#graficoStatusClientesContainer").dxChart({
                             dataSource: statusClientesDataSource,
                             rotated: true,
+                            size: {
+                                height: 400
+                            },
                             commonSeriesSettings: {
                                 argumentField: "cliente",
                                 type: "stackedBar",
@@ -661,7 +782,9 @@
                                     backgroundColor: 'transparent',
                                     font: { color: "#000", size: 12, weight: "bold" },
                                     position: "outside"
-                                }
+                                },
+                                barGroupPadding: 0.3,
+                                barWidth: 30,
                             },
                             series: [
                                 {
@@ -670,12 +793,22 @@
                                     color: "#3b8610",
                                     label: {
                                         visible: true,
+                                        position: "inside",
+                                        horizontalOffset: -10, // empurra um pouco para a esquerda
+                                        alignment: "left",     // alinha o texto à esquerda
                                         customizeText: function (pointInfo) {
                                             const data = statusClientesDataSource.find(d => d.cliente === pointInfo.argument);
-                                            return new Intl.NumberFormat('pt-BR', {
+                                            const formatador = new Intl.NumberFormat('pt-BR', {
                                                 style: 'currency',
                                                 currency: 'BRL'
-                                            }).format(data.total);
+                                            });
+
+                                            return `${formatador.format(data.recebido)}`;
+                                        },
+                                        font: {
+                                            color: "#000", // cor do texto para aparecer sobre fundo verde
+                                            size: 12,
+                                            weight: "bold"
                                         }
                                     }
                                 },
@@ -685,6 +818,28 @@
                                     color: "#d9ead3",
                                     label: {
                                         visible: false
+                                    }
+                                },
+                                {
+                                    valueField: "total",
+                                    name: "Total",
+                                    color: "transparent", // invisível
+                                    label: {
+                                        visible: true,
+                                        position: "inside",
+                                        customizeText: function (pointInfo) {
+                                            const formatador = new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            });
+                                            return formatador.format(pointInfo.value);
+                                        },
+                                        customizeLabel: function (pointInfo) {
+                                            return {
+                                                horizontalOffset: pointInfo.value < 1000 ? 150 : 120
+                                            };
+                                        },
+                                        font: { color: "#b0b0b0", size: 12, weight: "bold" }
                                     }
                                 }
                             ],
@@ -707,10 +862,173 @@
                                 }
                             },
                             legend: {
-                                verticalAlignment: "bottom",
-                                horizontalAlignment: "center"
+                                visible: false
                             }
-                        });                        
+                        });  
+
+                        // Inicio Donuts Status Documentos por STATUS_DOCUMENTO_PEDIDO
+                            var rawStatusDocumento = response.data.totaisPorStatusDocumento || {};
+                            var dataDonut = Object.entries(rawStatusDocumento).map(([status, valor]) => ({
+                                status: status,
+                                valor: valor
+                            }));
+                            var moedaBRL = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            });
+                            $("#chartDonutStatusDocumentos").dxPieChart({
+                                type: "doughnut",
+                                palette: ["#e6b800", "#3c78d8", "#38761d"],
+                                dataSource: dataDonut,
+                                size: {
+                                    height: 400
+                                },
+                                title: {
+                                    text: 'Status dos Documentos',
+                                    font: {
+                                        size: 20
+                                    }
+                                },
+                                legend: {
+                                    visible: true,
+                                    horizontalAlignment: "center",
+                                    verticalAlignment: "bottom",
+                                    itemTextPosition: "right"
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    customizeTooltip: function (arg) {
+                                        return {
+                                            text: `${moedaBRL.format(arg.value)}`
+                                        };
+                                    }
+                                },
+                                series: [{
+                                    argumentField: "status",
+                                    valueField: "valor",
+                                    label: {
+                                        visible: true,
+                                        format: "fixedPoint",
+                                        precision: 2,
+                                        connector: {
+                                            visible: true
+                                        },
+                                        customizeText: function (arg) {
+                                            const valorFormatado = moedaBRL.format(arg.value);
+                                            const percentual = (arg.percent * 100).toFixed(1).replace('.', ',') + '%';
+                                            return `${valorFormatado} (${percentual})`;
+                                        }
+                                    }
+                                }],
+                                centerTemplate: function(pieChart, container) {
+                                    const total = pieChart.getAllSeries()[0]
+                                        .getVisiblePoints()
+                                        .reduce((sum, point) => sum + point.originalValue, 0);
+
+                                    const svgNamespace = "http://www.w3.org/2000/svg";
+
+                                    const circle = document.createElementNS(svgNamespace, "circle");
+                                    circle.setAttribute("cx", 100);
+                                    circle.setAttribute("cy", 100);
+                                    circle.setAttribute("r", pieChart.getInnerRadius() - 6);
+                                    circle.setAttribute("fill", "#fff");
+                                    container.appendChild(circle);
+
+                                    const text = document.createElementNS(svgNamespace, "text");
+                                    text.setAttribute("x", 100);
+                                    text.setAttribute("y", 110);
+                                    text.setAttribute("fill", "#333");
+                                    text.setAttribute("font-size", "10");
+                                    text.setAttribute("font-weight", "bold");
+                                    text.setAttribute("text-anchor", "middle");
+                                    text.textContent = moedaBRL.format(total);
+                                    container.appendChild(text);
+                                }
+                            });
+                        // Fim Donuts Status Documentos
+
+                        // Início Donuts Status Garantias por STATUS_GARANTIA_PEDIDO
+                            var rawStatusGarantia = response.data.totaisPorStatusGarantia || {};
+                            var dataDonutGarantias = Object.entries(rawStatusGarantia).map(([status, valor]) => ({
+                                status: status,
+                                valor: valor
+                            }));
+
+                            var moedaBRL = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            });
+
+                            $("#chartDonutStatusGarantias").dxPieChart({
+                                type: "doughnut",
+                                palette: ["#e6b800", "#3c78d8", "#38761d"],
+                                dataSource: dataDonutGarantias,
+                                size: {
+                                    height: 400
+                                },
+                                title: {
+                                    text: 'Status das Garantias',
+                                    font: {
+                                        size: 20
+                                    }
+                                },
+                                legend: {
+                                    visible: true,
+                                    horizontalAlignment: "center",
+                                    verticalAlignment: "bottom",
+                                    itemTextPosition: "right"
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    customizeTooltip: function (arg) {
+                                        return {
+                                            text: `${moedaBRL.format(arg.value)}`
+                                        };
+                                    }
+                                },
+                                series: [{
+                                    argumentField: "status",
+                                    valueField: "valor",
+                                    label: {
+                                        visible: true,
+                                        format: "fixedPoint",
+                                        precision: 2,
+                                        connector: {
+                                            visible: true
+                                        },
+                                        customizeText: function (arg) {
+                                            const valorFormatado = moedaBRL.format(arg.value);
+                                            const percentual = (arg.percent * 100).toFixed(1).replace('.', ',') + '%';
+                                            return `${valorFormatado} (${percentual})`;
+                                        }
+                                    }
+                                }],
+                                centerTemplate: function(pieChart, container) {
+                                    const total = pieChart.getAllSeries()[0]
+                                        .getVisiblePoints()
+                                        .reduce((sum, point) => sum + point.originalValue, 0);
+
+                                    const svgNamespace = "http://www.w3.org/2000/svg";
+
+                                    const circle = document.createElementNS(svgNamespace, "circle");
+                                    circle.setAttribute("cx", 100);
+                                    circle.setAttribute("cy", 100);
+                                    circle.setAttribute("r", pieChart.getInnerRadius() - 6);
+                                    circle.setAttribute("fill", "#fff");
+                                    container.appendChild(circle);
+
+                                    const text = document.createElementNS(svgNamespace, "text");
+                                    text.setAttribute("x", 100);
+                                    text.setAttribute("y", 110);
+                                    text.setAttribute("fill", "#333");
+                                    text.setAttribute("font-size", "10");
+                                    text.setAttribute("font-weight", "bold");
+                                    text.setAttribute("text-anchor", "middle");
+                                    text.textContent = moedaBRL.format(total);
+                                    container.appendChild(text);
+                                }
+                            });
+                        // Fim Donuts Status Garantias
 
 
                     }
@@ -908,164 +1226,4 @@
 
 
 
-
-    // function obterDadosPedidos(tipo) {
-    //     $('#globalLoading').show();
-
-    //     formSelections.tipo = tipo;
-
-    //     return new Promise((resolve, reject) => {
-    //         $.ajax({
-    //             url: '/credito-e-cobranca/detalhes-cards-monitoramento-pedidos-safra',
-    //             method: 'GET',
-    //             dataType: 'json',
-    //             data: formSelections,
-    //             success: function(response) {
-    //                 if (response.success) {
-    //                     const result = response.data;
-
-    //                     // Resolve a Promise com os dados filtrados
-    //                     resolve(result || []);
-    //                 } else {
-    //                     reject(new Error("Resposta da API não foi bem-sucedida"));
-    //                 }
-    //             },
-    //             error: function(error) {
-    //                 DevExpress.ui.notify("Erro na requisição dos Detalhes", "error", 3000);
-    //                 reject(error);
-    //             },
-    //             complete: function() {
-    //                 // Esconde o loading quando tudo estiver pronto
-    //                 $('#globalLoading').hide();
-    //             }
-    //         });
-    //     });
-    // }
-    // async function abrirPopup(tipo) {
-    //     try {
-    //         const result = await obterDadosPedidos(tipo);
-            
-    //         // Processa as colunas para converter a string em função
-    //         const processedColumns = result.collumns.map(column => {
-    //             if (column.caption === 'Abrir Pedido Softsul') {
-    //                 return {
-    //                     ...column,
-    //                     cellTemplate: function(container, options) {
-    //                         if (options.data.LINK_REDIRECT_SOFTSUL) {
-    //                             $('<a>')
-    //                                 .attr('href', options.data.LINK_REDIRECT_SOFTSUL)
-    //                                 .attr('target', '_blank')
-    //                                 .attr('title', 'Abrir pedido no sistema')
-    //                                 .addClass('dx-link')
-    //                                 .html('<i class="fa fa-link"></i>')
-    //                                 .appendTo(container);
-    //                         } else {
-    //                             container.text('N/A');
-    //                         }
-    //                     }
-    //                 };
-    //             }
-    //             return column;
-    //         });
-
-    //         $("#popup-container").dxPopup({
-    //             width: '80%',
-    //             height: 800,
-    //             showTitle: true,
-    //             title: `Detalhes - ${tipo}`,
-    //             visible: true,
-    //             dragEnabled: true,
-    //             closeOnOutsideClick: true,
-    //             contentTemplate: function () {
-    //                 return $("<div>").dxDataGrid({
-    //                     dataSource: result.dataSource,
-    //                     height: '100%',
-    //                     width: '100%',
-    //                     columnAutoWidth: true,
-    //                     elementAttr: {
-    //                         class: "grid-personalizada"
-    //                     },
-    //                     showBorders: true,
-    //                     columnChooser: {
-    //                         enabled: true,
-    //                         mode: "dragAndDrop",
-    //                         position: { 
-    //                             my: "right", 
-    //                             at: "right", 
-    //                             of: ".dx-datagrid-column-chooser-button" 
-    //                         }
-    //                     },
-    //                     groupPanel: {
-    //                         visible: true,
-    //                     },
-    //                     editing: {
-    //                         mode: 'batch',
-    //                         allowUpdating: false,
-    //                         allowDeleting: false,
-    //                     },
-    //                     selection: {
-    //                         mode: 'multiple',
-    //                         showCheckBoxesMode: 'none'
-    //                     },
-    //                     hoverStateEnabled: true,
-    //                     pager: {
-    //                         visible: true
-    //                     },
-    //                     paging: {
-    //                         pageSize: 500
-    //                     },
-    //                     headerFilter: {
-    //                         visible: true,
-    //                     },
-    //                     filterRow: {
-    //                         visible: true,
-    //                         applyFilter: 'auto',
-    //                     },
-    //                     export: {
-    //                         enabled: true,
-    //                         fileName: "Detalhes " + tipo,
-    //                         allowExportSelectedData: false,
-    //                     },
-    //                     searchPanel: {
-    //                         visible: true,
-    //                         width: 240,
-    //                         placeholder: 'Procure...',
-    //                     },
-    //                     columns: processedColumns,
-    //                     onToolbarPreparing: function (e) {
-    //                         var toolbarItems = e.toolbarOptions.items;
-                            
-    //                         toolbarItems.push({
-    //                             location: "after",
-    //                             widget: "dxButton",
-    //                             options: {
-    //                                 icon: "fa fa-expand",
-    //                                 text: "Expandir",
-    //                                 onClick: function () {
-    //                                     var grid = e.component;
-    //                                     grid.expandAll();
-    //                                 }
-    //                             }
-    //                         });
-
-    //                         toolbarItems.push({
-    //                             location: "after",
-    //                             widget: "dxButton",
-    //                             options: {
-    //                                 icon: "fa fa-compress",
-    //                                 text: "Colapsar",
-    //                                 onClick: function () {
-    //                                     var grid = e.component;
-    //                                     grid.collapseAll();
-    //                                 }
-    //                             }
-    //                         });
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //     } catch (error) {
-    //         console.error('Erro ao obter dados de detalhe ' + tipo + ':', error);
-    //     }
-    // }
 </script>
