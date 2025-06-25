@@ -487,6 +487,15 @@ class CreditoECobrancaRepository
                         ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
                         ,CLI.CODIGOCLIFOR AS ID_CLIENTE
                         ,CLI.NOME AS NOME_CLIENTE
+                        ,max(CLISENIOR.CGCCPF) CGC_CPF_CLIENTE
+                        ,max(CLISENIOR.ENDCLI) ENDERECO_CLIENTE
+                        ,max(CLISENIOR.CPLEND) CPL_ENDERECO_CLIENTE
+                        ,max(CLISENIOR.CEPCLI) CEP_CLIENTE
+                        ,max(CLISENIOR.BAICLI) BAIRRO_CLIENTE
+                        ,max(CLISENIOR.CIDCLI) CIDADE_CLIENTE
+                        ,max(CLISENIOR.SIGUFS) ESTADO_CLIENTE
+                        ,max(CLISENIOR.FONCLI) FONE1_CLIENTE
+                        ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE

@@ -706,6 +706,11 @@ class CreditoECobrancaController extends BaseController
 
                         // Convertendo a codificação para UTF-8
                         $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                        $result[$key]['ENDERECO_CLIENTE'] = utf8_encode($row['ENDERECO_CLIENTE']);
+                        $result[$key]['BAIRRO_CLIENTE'] = utf8_encode($row['BAIRRO_CLIENTE']);
+                        $result[$key]['CIDADE_CLIENTE'] = utf8_encode($row['CIDADE_CLIENTE']);
+                        $result[$key]['ESTADO_CLIENTE'] = utf8_encode($row['ESTADO_CLIENTE']);
+                        $result[$key]['CPL_ENDERECO_CLIENTE'] = utf8_encode($row['CPL_ENDERECO_CLIENTE']);
                         $result[$key]['NOME_GRUPO_CLIENTE'] = utf8_encode($row['NOME_GRUPO_CLIENTE']);
                         $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
                         $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));

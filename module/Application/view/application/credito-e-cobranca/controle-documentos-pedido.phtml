@@ -13,6 +13,34 @@
         border: 1px solid #ccc;
         color: #333;
     }
+    .cabecalho-content {
+        background-color: #006400;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+    }
+    .cabecalho-logo {
+        filter: brightness(0) invert(1); /* deixa logo branca */
+        width: 100%;         /* ocupa 100% da largura disponível */
+        height: auto;        /* mantém proporção */
+        max-height: 100px;    /* evita que fique muito alto */
+        object-fit: contain; /* garante que a imagem não distorça */
+        margin-bottom: 5px;  /* espaço abaixo da imagem */
+    }
+    .cabecalho-logo-div {
+        width: 100%;
+        height: 100px;
+        background-image: url('<?= $this->basePath('img/ssf_branco.png') ?>');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        margin-bottom: 5px;
+    }
+    .hidden-print {
+        display: none !important;
+    }
+
+    
 </style>
 
 <!-- Begin Page Content -->
@@ -32,32 +60,6 @@
 
                     <div id="form-container">
                         <div id="form-filtro"></div>
-                        <!-- <div class="legend hidden">
-                            <div class="legend-item">
-                                <span class="circle vencidos"></span><span>Vencidos</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle futuros"></span><span>Futuros</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle recebidos-total"></span><span>Recebidos Total</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle recebidos-parte"></span><span>Recebido Parte</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle bonificacao-desenvolvimento"></span><span>Bonificação/Desenv.</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle pago-devolvido"></span><span>Pgto. Devolvido</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle pago-sem-forma-pagamento"></span><span>Falta Forma Pgto</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="circle pedido-inconsistente"></span><span>Pedido Inconsistente</span>
-                            </div>
-                        </div> -->
                     </div>
 
                     <!-- Grid Container for the DataGrid -->
@@ -67,6 +69,17 @@
             </div>
         </div>
     </div>
+
+
+    <section id="print-area">
+        <!-- <div class="cabecalho-content hidden-print">
+            <div class="cabecalho-logo-div"></div>
+            <h3>Quem planta, planta qualidade!</h3>
+        </div>
+        
+        <br /> -->
+
+    </section>
 </div>
 <!-- /.container-fluid -->
 
@@ -320,7 +333,7 @@
                                         // Visiveis
                                         {
                                             type: "buttons",       // define coluna de botões
-                                            width: 50,             // largura adequada
+                                            width: 100,             // largura adequada
                                             fixed: true,
                                             fixedPosition: "left",
                                             buttons: [
@@ -330,6 +343,14 @@
                                                     onClick: function(e) {
                                                         const data = e.row.data;
                                                         abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA, data.GRUPO_CLIENTE, data.CODIGOSAFRA);
+                                                    }
+                                                },
+                                                {
+                                                    hint: "Imprimir Documentos",
+                                                    icon: "fa fa-print", // ícone de impressora
+                                                    onClick: function(e) {
+                                                        const data = e.row.data;
+                                                        imprimirDocumentosPedido(data);
                                                     }
                                                 }
                                             ]
@@ -480,6 +501,15 @@
                                         { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'GRUPO_CLIENTE', caption: 'Grupo Cliente ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                         { dataField: 'CODIGOSAFRA', caption: 'Safra Pedido', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'CGC_CPF_CLIENTE', caption: 'CPF/CNPJ', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'ENDERECO_CLIENTE', caption: 'Cliente Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'CPL_ENDERECO_CLIENTE', caption: 'Cliente Complemento Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'CEP_CLIENTE', caption: 'Cliente CEP', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'BAIRRO_CLIENTE', caption: 'Cliente Bairro', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'CIDADE_CLIENTE', caption: 'Cliente Cidade', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'ESTADO_CLIENTE', caption: 'Cliente Estado', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'FONE1_CLIENTE', caption: 'Cliente Fone 1', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'FONE2_CLIENTE', caption: 'Cliente Fone 2', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                     ],
                                     summary: {
                                         totalItems: [
@@ -1097,23 +1127,428 @@
                 }
             });
         }
+
+        async function imprimirDocumentosPedido(data) {
+            let idPedido = data.ID_PEDIDO;
+            let tipoPessoa = data.TIPO_PESSOA;
+            let grupoClienteID = data.GRUPO_CLIENTE;
+            let codigoSafra = data.CODIGOSAFRA;
+
+            if (!idPedido) {
+                DevExpress.ui.notify('ID do pedido não está definido.', 'error', 3000);
+                return;
+            } 
+            if (!tipoPessoa) {
+                DevExpress.ui.notify('Tipo de pessoa não está definido.', 'error', 3000);
+                return;
+            }
+            if (!grupoClienteID) {
+                DevExpress.ui.notify('Grupo de cliente não está definido.', 'error', 3000);
+                return;
+            }
+            if (!codigoSafra) {
+                DevExpress.ui.notify('Código da safra não está definido.', 'error', 3000);
+                return;
+            }
+
+            // Dados do cliente
+            const dadosCliente = data;
+
+            console.log('dadosCliente', dadosCliente);
+
+            $.ajax({
+                url: "/credito-e-cobranca/list-documentos-pedido",
+                method: 'GET',
+                data: {
+                    idPedido: idPedido,
+                    tipoPessoa: tipoPessoa,
+                    grupoClienteID: grupoClienteID,
+                    codigoSafra: codigoSafra
+                },
+                success: async function(response) {
+                    try {
+                        if (!response.data) {
+                            throw new Error('Dados de resposta inválidos');
+                        }
+
+                        // Limpa a section antes de inserir conteúdo novo
+                        $("#print-area").empty();
+
+                        // Cria cabeçalho
+                        const cabecalho = $(`
+                            <div class="cabecalho-content hidden-print">
+                                <div class="cabecalho-logo-div"></div>
+                                <h3>Quem planta, planta qualidade!</h3>
+                            </div>
+                            <br />
+                        `);
+
+                        // Adiciona cabeçalho à section
+                        $("#print-area").append(cabecalho);
+
+                        const formData = {};
+                        const documentos = response.data.documentos || [];
+                        const garantias = response.data.garantias || [];
+                        
+
+                        // region CABEÇALHO
+                            $("#print-area").append(`
+                                <div class="hidden-print checklist-cadastro" style="font-family: Arial, sans-serif; font-size: 14px; color: #000;">
+                                    <div style="border: 2px solid #444; border-radius: 6px; padding: 0; margin-bottom: 16px; overflow: hidden;">
+                                        <div style="background-color: #006400; color: white; text-align: center; font-size: 18px; font-weight: bold; padding: 10px;">
+                                            CHECK LIST DOCUMENTOS CADASTRO
+                                        </div>
+                                        <table style="width: 100%; border-collapse: collapse;">
+                                            <tr>
+                                               <td style="padding: 4px 8px;"><strong>Cliente:</strong> ${dadosCliente.NOME_CLIENTE?.trim() || "-"}</td>
+                                                <td style="padding: 4px 8px;"><strong>Cód. do Cliente:</strong> ${dadosCliente.ID_CLIENTE || "-"}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;"><strong>CNPJ/CPF:</strong> ${dadosCliente.CGC_CPF_CLIENTE}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;"><strong>Endereço:</strong> 
+                                                    ${[
+                                                        dadosCliente.ENDERECO_CLIENTE,
+                                                        dadosCliente.CPL_ENDERECO_CLIENTE,
+                                                        dadosCliente.BAIRRO_CLIENTE
+                                                    ].filter(Boolean).join(' ') || "-"}
+                                                </td>
+                                                <td style="padding: 4px 8px;"><strong>CEP:</strong> ${dadosCliente.CEP_CLIENTE?.trim() || "-"}</td>
+                                                <td style="padding: 4px 8px;"><strong>UF:</strong> ${dadosCliente.ESTADO_CLIENTE?.trim() || "-"}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;"><strong>Cidade:</strong> ${dadosCliente.CIDADE_CLIENTE?.trim() || "-"}</td>
+                                                <td style="padding: 4px 8px;">
+                                                    <strong>Telefone:</strong> 
+                                                    ${[dadosCliente.FONE1_CLIENTE, dadosCliente.FONE2_CLIENTE].filter(Boolean).join(' / ') || "-"}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;"><strong>Vendedor:</strong> ${dadosCliente.NOME_VENDEDOR?.trim() || "-"}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            `);
+                        //#endregion
+
+                        // region DOCUMENTOS
+                             $(".checklist-cadastro").append(`
+                                <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
+
+                                <div id="grupo-documentos">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                        01. Documentos
+                                    </div>
+                                </div>
+                            `);
+                            const listaDocumentos = $("<ul>").css({
+                                listStyle: "none",
+                                paddingLeft: "15px",
+                                marginBottom: "16px",
+                                marginTop: "12px"  // ⬅ margem de parágrafo abaixo do título
+                            });
+                            (documentos || []).forEach(doc => {
+                                const checked = doc.ativo ? "checked" : "";
+                                const item = $(`
+                                    <li style="margin-bottom: 6px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                            <input type="checkbox" ${checked} disabled />
+                                            ${doc.dsc_documento}
+                                        </label>
+                                    </li>
+                                `);
+                                listaDocumentos.append(item);
+                            });
+                            $("#print-area #grupo-documentos").append(listaDocumentos);
+                        //#endregion
+
+                        // region GARANTIAS
+                            $(".checklist-cadastro").append(`
+                                <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
+
+                                <div id="grupo-garantias">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                        02. Garantias 
+                                    </div>
+                                </div>
+                            `);
+                            const listaGarantias = $("<ul>").css({
+                                listStyle: "none",
+                                paddingLeft: "15px",
+                                marginBottom: "16px",
+                                marginTop: "12px"
+                            });
+                            (garantias || []).forEach(gar => {
+                                const checked = gar.ativo ? "checked" : "";
+                                const item = $(`
+                                    <li style="margin-bottom: 6px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                            <input type="checkbox" ${checked} disabled />
+                                            ${gar.dsc_garantia}
+                                        </label>
+                                    </li>
+                                `);
+                                listaGarantias.append(item);
+                            });
+                            $("#print-area #grupo-garantias").append(listaGarantias);
+                        //#endregion
+
+                        // region DUPLICATAS E BOLETOS
+                            $(".checklist-cadastro").append(`
+                                <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
+
+                                <div id="grupo-duplicatas-boletos">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                        03. Duplicatas e Boletos 
+                                    </div>
+                                    <br />
+                                </div>
+                            `);
+                            if (!response.data.duplicatasBoletos || response.data.duplicatasBoletos.length === 0) {
+                                $("#grupo-duplicatas-boletos").append(`<p style="padding: 12px; font-style: italic; font-size: 12px;">Não há informações de Duplicatas e Boletos.</p>`);
+                            } else {
+                                const tabela = criarTabelaDuplicatasBoletos(response.data.duplicatasBoletos);
+                                $("#grupo-duplicatas-boletos").append(tabela);
+                            }
+                        //#endregion
+
+                        // region OBSERVACAO DO PEDIDO
+                            $(".checklist-cadastro").append(`
+                                <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
+
+                                <div id="grupo-observacao-pedido" style="margin-bottom: 24px;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                        04. Observação do Pedido
+                                    </div>
+                                    <textarea id="observacaoPedido" 
+                                        style="width: 100%; padding: 8px; font-size: 14px; border-radius: 0 0 6px 6px; border: 1px solid #ccc; resize: none; margin: 0 auto; display: block;"
+                                        placeholder="Não há observações..."></textarea>
+                                </div>
+                            `);
+                            // Preenche o textarea com o valor da observação, ou vazio se não houver
+                            const obs = response.data.observacaoPedido?.observacao || '';
+                            const $textarea = $("#observacaoPedido");
+                            $textarea.val(obs);
+
+                            // Ajusta a altura para caber todo o texto
+                            $textarea.css('height', 'auto');
+                            $textarea.css('height', $textarea[0].scrollHeight + 'px');
+                        //#endregion
+
+                        //#region IMPRIMIR E GERAR PDF - Versão Corrigida
+                            const loading = document.getElementById('globalLoading');
+                            const spinnerGen = document.getElementById('spinnerGeneric');
+                            const spinnerPDF = document.getElementById('spinnerPDF');
+                            const loadingText = document.getElementById('loadingText');
+
+                            loading.style.display = 'flex';
+                            spinnerGen.style.display = 'none';
+                            spinnerPDF.style.display = 'block';
+                            loadingText.textContent = 'Gerando PDF…';
+
+                            try {
+                                const printArea = document.getElementById('print-area');
+                                
+                                // Adiciona timeout para garantir renderização
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                
+                                const canvas = await html2canvas(printArea, {
+                                    scale: 1.5,
+                                    useCORS: true,
+                                    logging: true,
+                                    allowTaint: true,
+                                    backgroundColor: '#fff',
+                                    onclone: (clonedDoc) => {
+                                        // Mostrar cabeçalho
+                                        const cabecalho = clonedDoc.querySelector('.cabecalho-content');
+                                        if (cabecalho) {
+                                            cabecalho.classList.remove('hidden-print');
+                                            cabecalho.style.backgroundColor = '#006400';
+                                            cabecalho.style.color = 'white';
+                                            cabecalho.style.padding = '10px 20px';
+                                            cabecalho.style.textAlign = 'center';
+                                        }
+                                        
+                                        // Mostrar todos os elementos que devem aparecer no PDF
+                                        const elementsToShow = clonedDoc.querySelectorAll('.hidden-print');
+                                        elementsToShow.forEach(el => el.classList.remove('hidden-print'));
+
+                                            // Substituir textarea por div com texto para impressão
+                                            const obsTextarea = clonedDoc.querySelector('#observacaoPedido');
+                                            if (obsTextarea) {
+                                                const texto = obsTextarea.value || obsTextarea.placeholder || '';
+                                                const divObs = clonedDoc.createElement('div');
+
+                                                divObs.style.width = '100%';
+                                                divObs.style.padding = '8px';
+                                                divObs.style.fontSize = '14px';
+                                                divObs.style.border = '1px solid #ccc';
+                                                divObs.style.borderRadius = '0 0 6px 6px';
+                                                divObs.style.whiteSpace = 'pre-wrap';  // preserva quebras de linha
+                                                divObs.style.minHeight = '50px';
+                                                divObs.textContent = texto;
+
+                                                obsTextarea.parentNode.replaceChild(divObs, obsTextarea);
+                                            }
+                                    }
+                                });
+
+                                const { jsPDF } = window.jspdf;
+                                const pdf = new jsPDF('p', 'mm', 'a4');
+                                const pageWidth = pdf.internal.pageSize.getWidth();
+                                const pageHeight = pdf.internal.pageSize.getHeight();
+                                const margemMm = 30 * 0.264583;
+
+                                const imgData = canvas.toDataURL('image/png', 1.0);
+                                const props = pdf.getImageProperties(imgData);
+
+                                const pdfWidth = pageWidth - 2 * margemMm;
+                                const maxPdfHeight = pageHeight - 2 * margemMm;
+
+                                let pdfHeight = (props.height * pdfWidth) / props.width;
+                                if (pdfHeight > maxPdfHeight) {
+                                    pdfHeight = maxPdfHeight;
+                                }
+
+                                pdf.addImage(
+                                    imgData,
+                                    'PNG',
+                                    margemMm,
+                                    margemMm,
+                                    pdfWidth,
+                                    pdfHeight,
+                                    undefined,
+                                    'FAST'
+                                );
+
+                                pdf.save('informacoes-documentos-pedido.pdf');
+                            } catch (err) {
+                                console.error('Erro ao gerar PDF:', err);
+                                alert('Erro ao gerar PDF. Verifique o console para detalhes.');
+                            } finally {
+                                spinnerPDF.style.display = 'none';
+                                spinnerGen.style.display = 'block';
+                                loadingText.textContent = 'Carregando Informações...';
+                                loading.style.display = 'none';
+                            }                            
+                        //#endregion
+
+                    } catch (error) {
+                        console.error('Erro no processamento:', error);
+                        DevExpress.ui.notify('Erro ao processar documentos: ' + error.message, 'error', 5000);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro na requisição:', status, error);
+                    DevExpress.ui.notify('Falha na requisição: ' + error, 'error', 5000);
+                }
+            });
+        }
+
+        function criarTabelaDuplicatasBoletos(data) {
+            // Cria tabela
+            const $table = $('<table>').css({
+                width: '95%',
+                margin: '0 auto',
+                borderCollapse: 'collapse',
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '14px',
+                border: '1px solid #ddd'
+            });
+
+            // Cria cabeçalho
+            const $thead = $('<thead>').appendTo($table);
+            const $headerRow = $('<tr>').appendTo($thead);
+            const colunas = [
+                // id escondido (não exibe)
+                // { field: 'ID', visible: false }
+                { caption: 'Venc. Parcela', field: 'VENCIMENTO_PARCELA' },
+                { caption: 'Boleto Emitido', field: 'BOLETO_EMITIDO' },
+                { caption: 'Duplicata Emitida', field: 'DUPLICATA_EMITIDA' },
+                { caption: 'Boleto Recebido', field: 'BOLETO_RECEBIDO', editable: true },
+                { caption: 'Duplicata Recebida', field: 'DUPLICATA_RECEBIDO', editable: true }
+            ];
+
+            colunas.forEach(col => {
+                $('<th>').text(col.caption).css({
+                border: '1px solid #ddd',
+                padding: '8px',
+                backgroundColor: '#006400',
+                color: 'white',
+                textAlign: 'center',
+                fontSize: '12px'
+                }).appendTo($headerRow);
+            });
+
+            // Cria corpo da tabela
+            const $tbody = $('<tbody>').appendTo($table);
+
+            data.forEach(row => {
+                const $tr = $('<tr>').appendTo($tbody);
+
+                colunas.forEach(col => {
+                const valor = row[col.field];
+
+                const $td = $('<td>').css({
+                    border: '1px solid #ddd',
+                    padding: '8px',
+                    textAlign: col.field === 'VENCIMENTO_PARCELA' ? 'center' : 'left',
+                    backgroundColor: (col.editable) ? '#fff' : '#f5f5f5',
+                    fontSize: '12px'
+                }).appendTo($tr);
+
+                if (col.field === 'VENCIMENTO_PARCELA') {
+                    // Formata data dd/MM/yyyy
+                    const dataFormatada = new Date(valor).toLocaleDateString('pt-BR');
+                    $td.text(dataFormatada);
+                } else if (typeof valor === 'boolean') {
+                    // Checkbox, somente editável se permitido
+                    const $checkbox = $('<input type="checkbox">').prop('checked', valor);
+
+                    if (!col.editable) {
+                    $checkbox.prop('disabled', true);
+                    }
+
+                    $checkbox.appendTo($td);
+
+                    if (col.editable) {
+                    // Evento ao mudar checkbox editável
+                    $checkbox.on('change', () => {
+                        const novoValor = $checkbox.prop('checked');
+                        // Envia update via AJAX
+                        $.ajax({
+                        url: '/credito-e-cobranca/toggle-duplicata-boleto-pedido',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            ID: row.ID,
+                            [col.field]: novoValor
+                        }),
+                        dataType: 'json'
+                        }).done(response => {
+                        if (response.success) {
+                            DevExpress.ui.notify(response.message, "success", 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message, "error", 3000);
+                            // Reverte checkbox
+                            $checkbox.prop('checked', !novoValor);
+                        }
+                        }).fail(() => {
+                        DevExpress.ui.notify("Erro ao atualizar dados!", "error", 3000);
+                        $checkbox.prop('checked', !novoValor);
+                        });
+                    });
+                    }
+                } else {
+                    $td.text(valor);
+                }
+                });
+            });
+
+            return $table;
+        }
     });
     
-    // // Função para formatar a data
-    // function formatarData(data) {
-    //     const date = new Date(data);
-    //     const dia = ('0' + date.getDate()).slice(-2);
-    //     const mes = ('0' + (date.getMonth() + 1)).slice(-2);
-    //     const ano = date.getFullYear();
-    //     return `${dia}/${mes}/${ano}`;
-    // }
-
-    // function showLegend() {
-    //     const legend = document.querySelector('.legend');
-    //     legend.classList.remove('hidden'); // Remove a classe 'hidden' para mostrar a legenda
-    // }
-        
-
-    
-
 </script>
