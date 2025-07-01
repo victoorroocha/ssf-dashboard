@@ -1,0 +1,294 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Cadastro Setores</p>
+
+                    <div id="gridSetores"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let setoresGrid = $('#gridSetores').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function() {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/listar-setores',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(error => {
+                        DevExpress.ui.notify('Erro ao carregar setores!', 'error', 3000);
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function(values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-setor',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Técnico salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao salvar técnico!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                update: function(key, values) {
+                    console.log('VALORES PARA UPDATE:', values);
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-setor',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            id: key,
+                            ...values,
+                            responsavel_completo: values.responsavel_completo
+                        }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Setor atualizado com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar setor!', 'error', 3000);
+                        return {};
+                    });
+                },
+                remove: function(key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/excluir-setor',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Setor excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir setor!', 'error', 3000);
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            width: '100%',
+            columnAutoWidth: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            paging: {
+                pageSize: 20
+            },
+            pager: {
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 20, 50],
+                showInfo: true
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto'
+            },
+            headerFilter: {
+                visible: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Pesquisar...'
+            },
+            grouping: {
+                autoExpandAll: false
+            },
+            groupPanel: {
+                visible: false,
+                emptyPanelText: 'Arraste uma coluna aqui para agrupar'
+            },
+            export: {
+                enabled: true,
+                fileName: 'Setores',
+                allowExportSelectedData: false
+            },
+            toolbar: {
+                items: [
+                    'groupPanel',
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#gridSetores').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'plus',
+                            hint: 'Adicionar Setor',
+                            onClick: function () {
+                                $('#gridSetores').dxDataGrid('instance').addRow();
+                            }
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: false,
+                useIcons: true,
+                popup: {
+                    title: 'Setor / Local',
+                    showTitle: true,
+                    width: 450,
+                    height: 'auto',
+                    position: {
+                        my: 'center',
+                        at: 'center',
+                        of: window
+                    }
+                },
+                form: {
+                    colCount: 1,
+                    labelLocation: 'top',
+                    items: [
+                        {
+                            dataField: 'nome',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Nome do Setor' },
+                            editorOptions: { width: '100%' },
+                            validationRules: [{ type: 'required', message: 'Nome é obrigatório' }]
+                        },
+                        {
+                            dataField: 'descricao',
+                            editorType: 'dxTextArea',
+                            label: { text: 'Descrição' },
+                            editorOptions: { height: 100, width: '100%' }
+                        },
+                        {
+                            dataField: 'flg_ativo',
+                            editorType: 'dxSwitch',
+                            label: { text: 'Ativo?' },
+                            editorOptions: {
+                                switchedOnText: 'Sim',
+                                switchedOffText: 'Não',
+                            }
+                        }
+                    ]
+                },
+                texts: {
+                    confirmDeleteMessage: 'Tem certeza que deseja excluir este setor? Esta ação não pode ser desfeita.'
+                }
+            },
+            columns: [
+                {
+                    dataField: 'nome',
+                    caption: 'Nome do Setor',
+                    validationRules: [{ type: 'required', message: 'Nome é obrigatório' }]
+                },
+                {
+                    dataField: 'descricao',
+                    caption: 'Descrição'
+                },
+                {
+                    dataField: 'flg_ativo',
+                    caption: 'Ativo?',
+                    dataType: 'boolean',
+                    alignment: 'center',
+                    width: 120
+                }
+            ],
+            onRowUpdating: function(e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+            onInitNewRow: function(e) {
+                e.data.flg_ativo = true;
+            },
+        });
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: 'raw',
+                    load: function () {
+                        return $.ajax({
+                            url: url,
+                            method: 'GET',
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, 'error', 3000);
+                                return [];
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+                onInitialized: function(e) {
+                    const val = e.component.option('value');
+                    e.component.option('value', val);
+                },
+            };
+        }
+    });
+</script>
+
+

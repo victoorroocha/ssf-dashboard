@@ -52,6 +52,7 @@ class AccessControl
             'ControladoriaController',
             'RecursosHumanosController',
             'ComercialController',
+            'PlanejamentoControleManutencaoController',
         ];
 
         foreach ($controllers as $controller) {
@@ -99,6 +100,31 @@ class AccessControl
         $this->acl->allow('Diretor', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Diretor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Diretor', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
+
 
         // Gerente 
         $this->acl->allow('Gerente', 'IndexController', ['index', 'filtrarDados']);
@@ -135,6 +161,26 @@ class AccessControl
         $this->acl->allow('Gerente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Gerente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Gerente', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'IndexController', ['index', 'filtrarDados']);
@@ -171,6 +217,26 @@ class AccessControl
         $this->acl->allow('Coordenador', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Coordenador', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Coordenador', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
 
         // Encarregado
         $this->acl->allow('Encarregado', 'IndexController', ['index', 'filtrarDados']);
@@ -207,7 +273,47 @@ class AccessControl
         $this->acl->allow('Encarregado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Encarregado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
-
+        $this->acl->allow('Encarregado', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'excluirProgramacaoPreventiva',
+            'aprovarProgramacaoPreventiva',
+            'reprovarProgramacaoPreventiva',
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'finalizarManutencao',
+            'getInfoOrdemServico',
+            'getUsuariosSeniorLookup',
+            'getLookupAreas',
+            'getLookupSetores',
+            'getLookupTecnicos',
+            'getLookupTiposManutencao',
+            'getLookupEquipamentos',
+            'getCentroCustoLookup',
+        ]);
 
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index', 'filtrarDados']);
@@ -244,6 +350,26 @@ class AccessControl
         $this->acl->allow('Analista', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Analista', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Analista', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
 
         // Assistente 
         $this->acl->allow('Assistente', 'IndexController', ['index', 'filtrarDados']);
@@ -280,6 +406,26 @@ class AccessControl
         $this->acl->allow('Assistente', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Assistente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Assistente', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'IndexController', ['index', 'filtrarDados']);
@@ -316,6 +462,26 @@ class AccessControl
         $this->acl->allow('Auxiliar', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Auxiliar', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
+        $this->acl->allow('Auxiliar', 'PlanejamentoControleManutencaoController', [
+            'cadastroArea', 
+            'listarAreas', 
+            'salvarArea', 
+            'excluirArea', 
+            'cadastroSetor', 
+            'listarSetores',
+            'salvarSetor',
+            'excluirSetor', 
+            'getUsuariosSeniorLookup',
+            'cadastroTipoManutencao',
+            'listarTiposManutencao',
+            'salvarTipoManutencao',
+            'excluirTipoManutencao',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getCentroCustoLookup'
+        ]);
 
         // Convidado
         $this->acl->allow('Convidado', 'IndexController', ['index', 'filtrarDados']);
@@ -343,7 +509,6 @@ class AccessControl
         $this->acl->allow('Convidado', 'ControladoriaController', ['divergenciasCentrosCustoContas', 'listDivergenciasCentrosCustoContas', 'getLookupEmpresa', 'getLookupFilial', 'estruturaContas', 'listarPlanoConta']);
         $this->acl->allow('Convidado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Convidado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
-
 
         // Vendedor 
         $this->acl->allow('Vendedor', 'IndexController', ['index', 'filtrarDados']);

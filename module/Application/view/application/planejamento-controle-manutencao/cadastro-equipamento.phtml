@@ -1,0 +1,330 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Cadastro Equipamentos</p>
+
+                    <div id="gridEquipamentos"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let isNovoRegistro = false;
+        let equipamentosGrid = $('#gridEquipamentos').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function(loadOptions) {
+                    // Opcional: você pode adicionar paginação, filtros, ordenação aqui, se quiser
+                    // Por enquanto, só chama o endpoint direto sem params para simplificar
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/listar-equipamentos',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length // se não tiver totalCount, usa length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao carregar equipamentos!', 'error', 3000);
+                        }
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function(values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-equipamento',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Equipamento salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao salvar equipamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                update: function(key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-equipamento',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Equipamento atualizado com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao atualizar equipamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                remove: function(key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/excluir-equipamento',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Equipamento excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao excluir equipamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            width: '100%',
+            columnAutoWidth: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            paging: {
+                pageSize: 20
+            },
+            pager: {
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 20, 50],
+                showInfo: true
+            },
+            filterRow: { visible: true, applyFilter: 'auto' },
+            headerFilter: { visible: true },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Pesquisar...'
+            },
+            export: {
+                enabled: true,
+                fileName: 'Equipamentos',
+                allowExportSelectedData: false
+            },
+            toolbar: {
+                items: [
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#gridEquipamentos').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'plus',
+                            hint: 'Adicionar Equipamento',
+                            onClick: function () {
+                                $('#gridEquipamentos').dxDataGrid('instance').addRow();
+                            }
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: false,
+                useIcons: true,
+                popup: {
+                    title: 'Cadastro de Equipamento',
+                    showTitle: true,
+                    width: 600,
+                    height: 'auto',
+                    position: { my: 'center', at: 'center', of: window }
+                },
+                form: {
+                    colCount: 2,
+                    labelLocation: 'top',
+                    items: [
+                        { dataField: 'nome', colSpan: 2, editorType: 'dxTextBox', label: { text: 'Nome do Equipamento' }, editorOptions: { width: '100%' }, validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                        { 
+                            dataField: 'codigo', 
+                            editorType: 'dxTextBox', 
+                            label: { text: 'Código (TAG)' }, 
+                            editorOptions: { width: '100%' }, 
+                            validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
+                        },
+                        {
+                            dataField: 'status',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Status' },
+                            editorOptions: {
+                                items: ['Ativo', 'Inativo', 'Em Manutenção'],
+                                placeholder: 'Selecione o status',
+                                searchEnabled: true,
+                                showClearButton: true,
+                                value: 'Ativo',
+                                onInitialized: function(e) {
+                                    // tornar readonly se for novo registro
+                                    if (isNovoRegistro) {
+                                        e.component.option('disabled', true);
+                                    }
+                                }
+                            }
+                        },
+                        { dataField: 'setor_id', editorType: 'dxSelectBox', label: { text: 'Setor' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/listar-setores', 'nome', 'id', 'Selecione o setor') },
+                        { dataField: 'centro_custo', colSpan: 2, editorType: 'dxSelectBox', label: { text: 'Centro de Custo' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') },
+                        { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } }
+                    ]
+                },
+                texts: {
+                    confirmDeleteMessage: 'Deseja excluir este equipamento?'
+                }
+            },
+            columns: [
+                { dataField: 'nome', caption: 'Nome do Equipamento', validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                { dataField: 'codigo', caption: 'Código (TAG)', validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                {
+                    dataField: 'status',
+                    caption: 'Status',
+                    sortIndex: 0,
+                    sortOrder: 'asc',
+                    calculateSortValue: function(rowData) {
+                        const ordem = {
+                            'ativo': 0,
+                            'em manutenção': 1,
+                            'inativo': 2
+                        };
+                        return ordem[(rowData.status || '').toLowerCase()] ?? 99;
+                    }
+                },
+                {
+                    dataField: 'setor_id',
+                    caption: 'Setor',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores')
+                        }),
+                        displayExpr: 'nome',
+                        valueExpr: 'id'
+                    }
+                },
+                {
+                    dataField: 'centro_custo',
+                    caption: 'Centro de Custo',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
+                        }),
+                        displayExpr: 'DSC',
+                        valueExpr: 'ID'
+                    }
+                },
+                { dataField: 'observacoes', caption: 'Observações' }
+            ],
+            onInitNewRow: function(e) {
+                isNovoRegistro = true;
+                e.data.status = 'Ativo';
+            },
+            onEditingStart: function(e) {
+                isNovoRegistro = false;
+            },
+            onRowUpdating: function(e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+            onRowPrepared: function (e) {
+                if (e.rowType === 'data') {
+                    const status = (e.data.status || '').toLowerCase();
+                    if (status === 'inativo') {
+                        e.rowElement.css({ backgroundColor: '#f8d7da', color: '#721c24' }); // vermelho clarinho e texto escuro
+                    }
+                    if (status === 'em manutenção') {
+                        e.rowElement.css({ backgroundColor: '#FFB347', color: '#5C3700' }); 
+                    }
+                }
+            },
+        });
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: "raw",
+                    load: function() {
+                        return $.ajax({
+                            url: url,
+                            method: "GET",
+                            dataType: "json"
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, "error", 3000);
+                                return [];
+                            }
+                        }).catch(error => {
+                            DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+                onInitialized: function(e) {
+                    const val = e.component.option("value");
+                    e.component.option("value", val);
+                }
+            };
+        }
+    });
+</script>

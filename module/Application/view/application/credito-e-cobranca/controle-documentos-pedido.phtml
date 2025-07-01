@@ -39,7 +39,12 @@
     .hidden-print {
         display: none !important;
     }
-
+    #print-area {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
     
 </style>
 
@@ -56,7 +61,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Controle Documentos Pedido</p>
+                    <p>Controle Documentos Pedidos</p>
 
                     <div id="form-container">
                         <div id="form-filtro"></div>
@@ -72,12 +77,6 @@
 
 
     <section id="print-area">
-        <!-- <div class="cabecalho-content hidden-print">
-            <div class="cabecalho-logo-div"></div>
-            <h3>Quem planta, planta qualidade!</h3>
-        </div>
-        
-        <br /> -->
 
     </section>
 </div>
@@ -348,6 +347,11 @@
                                                 {
                                                     hint: "Imprimir Documentos",
                                                     icon: "fa fa-print", // ícone de impressora
+                                                    visible: function(e) {
+                                                        const docStatus = e.row?.data?.STATUS_DOCUMENTO_PEDIDO;
+                                                        const garStatus = e.row?.data?.STATUS_GARANTIA_PEDIDO;
+                                                        return docStatus !== 'Pendente' || garStatus !== 'Pendente';
+                                                    },
                                                     onClick: function(e) {
                                                         const data = e.row.data;
                                                         imprimirDocumentosPedido(data);
@@ -500,6 +504,7 @@
                                         { dataField: 'STATUS_CONFISSAO_DIVIDA_PEDIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'GRUPO_CLIENTE', caption: 'Grupo Cliente ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'NOME_GRUPO_CLIENTE', caption: 'Grupo Cliente Nome', allowEditing: false, alignment: 'center', visible: false },
                                         { dataField: 'CODIGOSAFRA', caption: 'Safra Pedido', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                         { dataField: 'CGC_CPF_CLIENTE', caption: 'CPF/CNPJ', allowEditing: false, alignment: 'center', width: 60, visible: false },
                                         { dataField: 'ENDERECO_CLIENTE', caption: 'Cliente Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false },
@@ -1154,8 +1159,6 @@
             // Dados do cliente
             const dadosCliente = data;
 
-            console.log('dadosCliente', dadosCliente);
-
             $.ajax({
                 url: "/credito-e-cobranca/list-documentos-pedido",
                 method: 'GET',
@@ -1193,12 +1196,12 @@
 
                         // region CABEÇALHO
                             $("#print-area").append(`
-                                <div class="hidden-print checklist-cadastro" style="font-family: Arial, sans-serif; font-size: 14px; color: #000;">
+                                <div class="hidden-print checklist-cadastro" style="font-family: Arial, sans-serif; color: #000;">
                                     <div style="border: 2px solid #444; border-radius: 6px; padding: 0; margin-bottom: 16px; overflow: hidden;">
-                                        <div style="background-color: #006400; color: white; text-align: center; font-size: 18px; font-weight: bold; padding: 10px;">
+                                        <div style="background-color: #006400; color: white; text-align: center; font-size: 26px; font-weight: bold; padding: 10px;">
                                             CHECK LIST DOCUMENTOS CADASTRO
                                         </div>
-                                        <table style="width: 100%; border-collapse: collapse;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 26px;">
                                             <tr>
                                                <td style="padding: 4px 8px;"><strong>Cliente:</strong> ${dadosCliente.NOME_CLIENTE?.trim() || "-"}</td>
                                                 <td style="padding: 4px 8px;"><strong>Cód. do Cliente:</strong> ${dadosCliente.ID_CLIENTE || "-"}</td>
@@ -1214,11 +1217,17 @@
                                                         dadosCliente.BAIRRO_CLIENTE
                                                     ].filter(Boolean).join(' ') || "-"}
                                                 </td>
+                                            </tr>
+                                            <tr>
                                                 <td style="padding: 4px 8px;"><strong>CEP:</strong> ${dadosCliente.CEP_CLIENTE?.trim() || "-"}</td>
+                                            </tr>
+                                            <tr>
                                                 <td style="padding: 4px 8px;"><strong>UF:</strong> ${dadosCliente.ESTADO_CLIENTE?.trim() || "-"}</td>
                                             </tr>
                                             <tr>
                                                 <td style="padding: 4px 8px;"><strong>Cidade:</strong> ${dadosCliente.CIDADE_CLIENTE?.trim() || "-"}</td>
+                                            </tr>
+                                            <tr>
                                                 <td style="padding: 4px 8px;">
                                                     <strong>Telefone:</strong> 
                                                     ${[dadosCliente.FONE1_CLIENTE, dadosCliente.FONE2_CLIENTE].filter(Boolean).join(' / ') || "-"}
@@ -1226,6 +1235,22 @@
                                             </tr>
                                             <tr>
                                                 <td style="padding: 4px 8px;"><strong>Vendedor:</strong> ${dadosCliente.NOME_VENDEDOR?.trim() || "-"}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;" colspan="2">
+                                                    <strong>Responsável pela Proposta:</strong> 
+                                                    [&nbsp;&nbsp;&nbsp;] Kamilla &nbsp;&nbsp;
+                                                    [&nbsp;&nbsp;&nbsp;] Juliana &nbsp;&nbsp;
+                                                    [&nbsp;&nbsp;&nbsp;] Jennifer &nbsp;&nbsp;
+                                                    [&nbsp;&nbsp;&nbsp;] Ivone Gomes
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 8px;" colspan="2">
+                                                    <strong>Regional:</strong> 
+                                                    [&nbsp;&nbsp;&nbsp;] Leste &nbsp;&nbsp;
+                                                    [&nbsp;&nbsp;&nbsp;] Oeste
+                                                </td>
                                             </tr>
                                         </table>
                                     </div>
@@ -1238,7 +1263,7 @@
                                 <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
 
                                 <div id="grupo-documentos">
-                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 26px; font-weight: bold;">
                                         01. Documentos
                                     </div>
                                 </div>
@@ -1253,7 +1278,7 @@
                                 const checked = doc.ativo ? "checked" : "";
                                 const item = $(`
                                     <li style="margin-bottom: 6px;">
-                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 22px;">
                                             <input type="checkbox" ${checked} disabled />
                                             ${doc.dsc_documento}
                                         </label>
@@ -1269,7 +1294,7 @@
                                 <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
 
                                 <div id="grupo-garantias">
-                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 26px; font-weight: bold;">
                                         02. Garantias 
                                     </div>
                                 </div>
@@ -1284,7 +1309,7 @@
                                 const checked = gar.ativo ? "checked" : "";
                                 const item = $(`
                                     <li style="margin-bottom: 6px;">
-                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 22px;">
                                             <input type="checkbox" ${checked} disabled />
                                             ${gar.dsc_garantia}
                                         </label>
@@ -1300,14 +1325,14 @@
                                 <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
 
                                 <div id="grupo-duplicatas-boletos">
-                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 26px; font-weight: bold;">
                                         03. Duplicatas e Boletos 
                                     </div>
                                     <br />
                                 </div>
                             `);
                             if (!response.data.duplicatasBoletos || response.data.duplicatasBoletos.length === 0) {
-                                $("#grupo-duplicatas-boletos").append(`<p style="padding: 12px; font-style: italic; font-size: 12px;">Não há informações de Duplicatas e Boletos.</p>`);
+                                $("#grupo-duplicatas-boletos").append(`<p style="padding: 12px; font-style: italic; font-size: 22px;">Não há informações de Duplicatas e Boletos.</p>`);
                             } else {
                                 const tabela = criarTabelaDuplicatasBoletos(response.data.duplicatasBoletos);
                                 $("#grupo-duplicatas-boletos").append(tabela);
@@ -1319,11 +1344,11 @@
                                 <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
 
                                 <div id="grupo-observacao-pedido" style="margin-bottom: 24px;">
-                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 18px; font-weight: bold;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 26px; font-weight: bold;">
                                         04. Observação do Pedido
                                     </div>
                                     <textarea id="observacaoPedido" 
-                                        style="width: 100%; padding: 8px; font-size: 14px; border-radius: 0 0 6px 6px; border: 1px solid #ccc; resize: none; margin: 0 auto; display: block;"
+                                        style="width: 100%; padding: 8px; font-size: 22px; border-radius: 0 0 6px 6px; border: 1px solid #ccc; resize: none; margin: 0 auto; display: block;"
                                         placeholder="Não há observações..."></textarea>
                                 </div>
                             `);
@@ -1350,16 +1375,17 @@
 
                             try {
                                 const printArea = document.getElementById('print-area');
-                                
-                                // Adiciona timeout para garantir renderização
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                                
+
+                                // Detecta o zoom do navegador para compensar a escala
+                                const zoom = window.devicePixelRatio || 1;
+                                const scale = 2 / zoom; // seu scale original 2 dividido pelo zoom atual
+
                                 const canvas = await html2canvas(printArea, {
-                                    scale: 1.5,
+                                    scale: scale,
                                     useCORS: true,
                                     logging: true,
                                     allowTaint: true,
-                                    backgroundColor: '#fff',
+                                    backgroundColor: null,
                                     onclone: (clonedDoc) => {
                                         // Mostrar cabeçalho
                                         const cabecalho = clonedDoc.querySelector('.cabecalho-content');
@@ -1383,7 +1409,7 @@
 
                                                 divObs.style.width = '100%';
                                                 divObs.style.padding = '8px';
-                                                divObs.style.fontSize = '14px';
+                                                divObs.style.fontSize = '22px';
                                                 divObs.style.border = '1px solid #ccc';
                                                 divObs.style.borderRadius = '0 0 6px 6px';
                                                 divObs.style.whiteSpace = 'pre-wrap';  // preserva quebras de linha
@@ -1407,6 +1433,7 @@
                                 const pdfWidth = pageWidth - 2 * margemMm;
                                 const maxPdfHeight = pageHeight - 2 * margemMm;
 
+                                // Ajusta a altura para caber na página, mantendo a proporção
                                 let pdfHeight = (props.height * pdfWidth) / props.width;
                                 if (pdfHeight > maxPdfHeight) {
                                     pdfHeight = maxPdfHeight;
@@ -1423,7 +1450,7 @@
                                     'FAST'
                                 );
 
-                                pdf.save('informacoes-documentos-pedido.pdf');
+                                pdf.save(`informacoes-documentos-pedido-${dadosCliente.ID_CLIENTE}.pdf`);
                             } catch (err) {
                                 console.error('Erro ao gerar PDF:', err);
                                 alert('Erro ao gerar PDF. Verifique o console para detalhes.');
@@ -1432,7 +1459,113 @@
                                 spinnerGen.style.display = 'block';
                                 loadingText.textContent = 'Carregando Informações...';
                                 loading.style.display = 'none';
-                            }                            
+                            }
+                            // const loading = document.getElementById('globalLoading');
+                            // const spinnerGen = document.getElementById('spinnerGeneric');
+                            // const spinnerPDF = document.getElementById('spinnerPDF');
+                            // const loadingText = document.getElementById('loadingText');
+
+                            // loading.style.display = 'flex';
+                            // spinnerGen.style.display = 'none';
+                            // spinnerPDF.style.display = 'block';
+                            // loadingText.textContent = 'Gerando PDF…';
+
+                            // try {
+                            //     const printArea = document.getElementById('print-area');
+
+                            //     // 🔒 Congela o layout com tamanho fixo para evitar distorções
+                            //     printArea.style.width = '100vw'; // largura da janela do navegador
+                            //     printArea.style.maxWidth = '100vw';
+                            //     printArea.style.minWidth = '100vw';
+                            //     printArea.style.overflowX = 'hidden'; // previne barra horizontal
+                            //     printArea.style.boxSizing = 'border-box';
+
+                            //     // Aguarda renderização e fontes
+                            //     await document.fonts.ready;
+                            //     printArea.offsetHeight; // força reflow
+                                
+                            //     // Adiciona timeout para garantir renderização
+                            //     await new Promise(resolve => setTimeout(resolve, 150));
+                                
+                            //     const canvas = await html2canvas(printArea, {
+                            //         scale: 1.5,
+                            //         useCORS: true,
+                            //         logging: true,
+                            //         allowTaint: true,
+                            //         backgroundColor: '#fff',
+                            //         onclone: (clonedDoc) => {
+                            //             // Mostrar cabeçalho
+                            //             const cabecalho = clonedDoc.querySelector('.cabecalho-content');
+                            //             if (cabecalho) {
+                            //                 cabecalho.classList.remove('hidden-print');
+                            //                 cabecalho.style.backgroundColor = '#006400';
+                            //                 cabecalho.style.color = 'white';
+                            //                 cabecalho.style.padding = '10px 20px';
+                            //                 cabecalho.style.textAlign = 'center';
+                            //             }
+                                        
+                            //             // Mostrar todos os elementos que devem aparecer no PDF
+                            //             const elementsToShow = clonedDoc.querySelectorAll('.hidden-print');
+                            //             elementsToShow.forEach(el => el.classList.remove('hidden-print'));
+
+                            //                 // Substituir textarea por div com texto para impressão
+                            //                 const obsTextarea = clonedDoc.querySelector('#observacaoPedido');
+                            //                 if (obsTextarea) {
+                            //                     const texto = obsTextarea.value || obsTextarea.placeholder || '';
+                            //                     const divObs = clonedDoc.createElement('div');
+
+                            //                     divObs.style.width = '100%';
+                            //                     divObs.style.padding = '8px';
+                            //                     divObs.style.fontSize = '22px';
+                            //                     divObs.style.border = '1px solid #ccc';
+                            //                     divObs.style.borderRadius = '0 0 6px 6px';
+                            //                     divObs.style.whiteSpace = 'pre-wrap';  // preserva quebras de linha
+                            //                     divObs.style.minHeight = '50px';
+                            //                     divObs.textContent = texto;
+
+                            //                     obsTextarea.parentNode.replaceChild(divObs, obsTextarea);
+                            //                 }
+                            //         }
+                            //     });
+
+                            //     const { jsPDF } = window.jspdf;
+                            //     const pdf = new jsPDF('p', 'mm', 'a4');
+                            //     const pageWidth = pdf.internal.pageSize.getWidth();
+                            //     const pageHeight = pdf.internal.pageSize.getHeight();
+                            //     const margemMm = 30 * 0.264583;
+
+                            //     const imgData = canvas.toDataURL('image/png', 1.0);
+                            //     const props = pdf.getImageProperties(imgData);
+
+                            //     const pdfWidth = pageWidth - 2 * margemMm;
+                            //     const maxPdfHeight = pageHeight - 2 * margemMm;
+
+                            //     let pdfHeight = (props.height * pdfWidth) / props.width;
+                            //     if (pdfHeight > maxPdfHeight) {
+                            //         pdfHeight = maxPdfHeight;
+                            //     }
+
+                            //     pdf.addImage(
+                            //         imgData,
+                            //         'PNG',
+                            //         margemMm,
+                            //         margemMm,
+                            //         pdfWidth,
+                            //         pdfHeight,
+                            //         undefined,
+                            //         'FAST'
+                            //     );
+
+                            //     pdf.save(`informacoes-documentos-pedido-${dadosCliente.ID_CLIENTE}.pdf`);
+                            // } catch (err) {
+                            //     console.error('Erro ao gerar PDF:', err);
+                            //     alert('Erro ao gerar PDF. Verifique o console para detalhes.');
+                            // } finally {
+                            //     spinnerPDF.style.display = 'none';
+                            //     spinnerGen.style.display = 'block';
+                            //     loadingText.textContent = 'Carregando Informações...';
+                            //     loading.style.display = 'none';
+                            // }                            
                         //#endregion
 
                     } catch (error) {
@@ -1454,7 +1587,7 @@
                 margin: '0 auto',
                 borderCollapse: 'collapse',
                 fontFamily: 'Arial, sans-serif',
-                fontSize: '14px',
+                fontSize: '26px',
                 border: '1px solid #ddd'
             });
 
@@ -1478,7 +1611,7 @@
                 backgroundColor: '#006400',
                 color: 'white',
                 textAlign: 'center',
-                fontSize: '12px'
+                fontSize: '22px'
                 }).appendTo($headerRow);
             });
 
@@ -1496,7 +1629,7 @@
                     padding: '8px',
                     textAlign: col.field === 'VENCIMENTO_PARCELA' ? 'center' : 'left',
                     backgroundColor: (col.editable) ? '#fff' : '#f5f5f5',
-                    fontSize: '12px'
+                    fontSize: '22px'
                 }).appendTo($tr);
 
                 if (col.field === 'VENCIMENTO_PARCELA') {

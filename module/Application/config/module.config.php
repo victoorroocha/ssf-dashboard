@@ -12,6 +12,7 @@ use Application\Repository\ControladoriaRepository;  // Importar repositório
 use Application\Repository\RecursosHumanosRepository;  // Importar repositório
 use Application\Repository\ComercialRepository;  // Importar repositório
 use Application\Repository\VendasRepository;  // Importar repositório
+use Application\Repository\PlanejamentoControleManutencaoRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
@@ -186,6 +187,21 @@ return [
                     ],
                 ],
             ],
+            // Planejamento Controle Manutenção
+            'planejamento-controle-manutencao' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/planejamento-controle-manutencao[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\PlanejamentoControleManutencaoController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -209,6 +225,7 @@ return [
             Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
             Controller\ComercialController::class => Factory\GenericControllerFactory::class,
             Controller\VendasController::class => Factory\GenericControllerFactory::class,
+            Controller\PlanejamentoControleManutencaoController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -267,9 +284,13 @@ return [
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\CreditoECobrancaRepository($adapter);
             },
+            'Application\Repository\PlanejamentoControleManutencaoRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\PlanejamentoControleManutencaoRepository($adapter);
+            },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 
-            VendasRepository::class => InvokableFactory::class, 
+            VendasRepository::class => InvokableFactory::class,  
         ],
     ],
     'view_manager' => [

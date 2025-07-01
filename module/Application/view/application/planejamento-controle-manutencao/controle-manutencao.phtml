@@ -1,0 +1,836 @@
+<style>
+    #print-area {
+        background: white;
+        width: 100%;
+        max-width: 100%; /* Alterado para ocupar toda a largura disponível */
+        margin: 0 auto; /* Centralizado */
+        padding: 15px; /* Reduzido para economizar espaço */
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 0.9em; /* Tamanho de fonte base reduzido */
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 8px; /* Reduzido */
+        margin-bottom: 15px; /* Reduzido */
+        flex-wrap: wrap;
+    }
+
+    .header h1 {
+        font-size: 1.25em; /* Usando em para escalabilidade */
+        margin: 0;
+        color: #0f172a;
+        font-weight: 600; /* Mais semântico que bold */
+    }
+
+    .header .numero-os {
+        font-size: 18px;
+        color: #ef4444;
+        font-weight: 500;
+    }
+
+    .section {
+        margin-bottom: 15px; /* Reduzido */
+    }
+
+    .section-title {
+        font-weight: 600;
+        background: #0f172a;
+        color: white;
+        padding: 5px 8px; /* Reduzido */
+        font-size: 0.95em; /* Reduzido */
+        border-radius: 3px; /* Adicionado para suavizar */
+        margin-bottom: 8px; /* Adicionado espaçamento */
+    }
+
+    .field-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px; /* Reduzido para economizar espaço */
+    }
+
+    .field {
+        flex: 1 1 calc(50% - 8px); /* Ajustado para o novo gap */
+        padding: 6px; /* Reduzido */
+        border: 1px solid #e2e8f0; /* Cor mais suave */
+        border-radius: 4px;
+        box-sizing: border-box;
+        background-color: #f8fafc; /* Fundo sutil para melhor legibilidade */
+    }
+    .field.third {
+        flex: 1 1 calc(33.333% - 8px); /* para 3 colunas com gap de 8px */
+    }
+
+    .field.full {
+        flex: 1 1 100%;
+    }
+
+    .label {
+        font-weight: 500; /* Mais suave que bold */
+        display: block;
+        margin-bottom: 2px; /* Reduzido */
+        font-size: 0.85em;
+        color: #475569; /* Cor mais suave */
+    }
+
+    .value {
+        font-size: 0.9em;
+        min-height: 1.2em; /* Baseado em em para escalabilidade */
+        word-break: break-word;
+        color: #1e293b; /* Cor mais escura para melhor contraste */
+        padding: 2px 0; /* Pequeno espaçamento interno */
+    }
+
+    .signature {
+        margin-top: 30px; /* Reduzido */
+        border-top: 1px dashed #cbd5e1; /* Cor mais suave */
+        text-align: center;
+        padding-top: 8px;
+        font-size: 0.9em;
+        color: #64748b; /* Cor mais suave */
+    }
+
+    /* Adicionando responsividade para telas menores */
+    @media (max-width: 600px) {
+        .field {
+            flex: 1 1 100%; /* Em telas pequenas, campos ocupam linha inteira */
+        }
+        
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .header .numero-os {
+            align-self: flex-end;
+        }
+    }
+
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Controle das Manutenções</p>
+
+                    <div id="gridControleManutencao"></div>
+                    <div id="popupFinalizar"></div>
+                    <div id="popupOS"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        let controleManutencaoGrid = $('#gridControleManutencao').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function () {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/listar-controles-manutencao',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar controles!', 'error', 3000);
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function (values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-controle-manutencao',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao salvar controle!', 'error', 3000);
+                        return {};
+                    });
+                },
+                update: function (key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-controle-manutencao',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle atualizado com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar controle!', 'error', 3000);
+                        return {};
+                    });
+                },
+                remove: function (key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/excluir-controle-manutencao',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir controle!', 'error', 3000);
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            width: '100%',
+            columnAutoWidth: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            paging: { pageSize: 20 },
+            pager: {
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 20, 50],
+                showInfo: true
+            },
+            filterRow: { visible: true, applyFilter: 'auto' },
+            headerFilter: { visible: true },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Pesquisar...'
+            },
+            export: {
+                enabled: true,
+                fileName: 'Controle de Manutenção',
+                allowExportSelectedData: false
+            },
+            toolbar: {
+                items: [
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#gridControleManutencao').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'plus',
+                            hint: 'Adicionar Controle',
+                            onClick: function () {
+                                $('#gridControleManutencao').dxDataGrid('instance').addRow();
+                            }
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: true,
+                useIcons: true,
+                popup: {
+                    title: 'Cadastro de Controle de Manutenção',
+                    showTitle: true,
+                    width: 1000,
+                    maxWidth: '100vw',
+                    maxHeight: '100vh',
+                    height: 'auto',
+                    position: { my: 'center', at: 'center', of: window }
+                },
+                form: {
+                    colCount: 3,
+                    labelLocation: 'top',
+                    items: [
+                        { dataField: 'data_solicitacao', label: { text: 'Data Solicitação' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
+                        {
+                            dataField: 'data_programada',
+                            editorType: 'dxDateBox',
+                            label: { text: 'Data Programada' },
+                            editorOptions: { type: 'date', min: new Date() },
+                            validationRules: [{ type: 'required', message: 'Data programada é obrigatória' }]
+                        },
+                        { dataField: 'data_inicio', label: { text: 'Data Início' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
+                        {
+                            dataField: 'nome_solicitante',
+                            label: { text: 'Nome do Solicitante' },
+                            editorType: 'dxSelectBox',
+                            colSpan: 2,
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
+                            validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
+                        },
+                        { 
+                            dataField: 'setor_id', 
+                            label: { text: 'Setor' }, 
+                            editorType: 'dxSelectBox', 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/listar-setores', 'nome', 'id', 'Selecione o setor') 
+                        },
+                        { 
+                            dataField: 'equipamento_id', 
+                            label: { text: 'Equipamento' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 3, 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
+                        },
+                        {
+                            dataField: 'prioridade',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Prioridade' },
+                            colSpan: 1,
+                            editorOptions: {
+                                items: ['Baixa', 'Média', 'Alta'],
+                                placeholder: 'Selecione a prioridade',
+                                width: '100%'
+                            },
+                            validationRules: [{ type: 'required' }]
+                        },
+                        { 
+                            dataField: 'tipo_manutencao_id', 
+                            label: { text: 'Tipo Manutenção' }, 
+                            editorType: 'dxSelectBox', editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tipos-manutencao', 'nome', 'id', 'Selecione o tipo') 
+                        },
+                        { 
+                            dataField: 'area_tecnica_id', 
+                            label: { text: 'Área Técnica' }, 
+                            editorType: 'dxSelectBox', 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica') 
+                        },
+                        { dataField: 'descricao_defeito', label: { text: 'Descrição do Defeito' }, editorType: 'dxTextArea', colSpan: 3, editorOptions: { height: 60 } },
+                        { 
+                            dataField: 'tecnico_id', 
+                            colSpan: 3, 
+                            label: { text: 'Técnico' }, 
+                            editorType: 'dxSelectBox', 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') 
+                        },
+                    ]
+                }
+            },
+            columns: [
+                {
+                    type: 'buttons',
+                    width: 60,
+                    alignment: 'center',
+                    buttons: [
+                        {
+                            hint: "Ordem de Serviço",
+                            icon: "doc",
+                            onClick: function(e) {
+                                const data = e.row.data;
+                                openOrdemServicoPopup(data);
+                            }
+                        }
+                    ]
+                },
+                { dataField: 'data_solicitacao', caption: 'Dt. Solicitação', dataType: 'date', alignment: 'center', width: 110 },
+                {
+                    dataField: 'data_programada',
+                    caption: 'Data Programada',
+                    dataType: 'date',
+                    alignment: 'center', 
+                    width: 110,
+                },
+                { 
+                    dataField: 'data_inicio', 
+                    caption: 'Dt. Início', 
+                    dataType: 'date', 
+                    alignment: 'center', 
+                    width: 110,
+                    sortIndex: 1, 
+                    sortOrder: 'asc',
+                    calculateSortValue: function (rowData) {
+                        return rowData.data_inicio ? new Date(rowData.data_inicio) : new Date(8640000000000000); 
+                    }
+                },
+                { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
+                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/get-lookup-equipamentos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { 
+                    dataField: 'setor_id', 
+                    caption: 'Setor', 
+                    lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores') }), displayExpr: 'nome', valueExpr: 'id' }, 
+                    width: 120
+                },
+                {
+                    dataField: 'tipo_manutencao_id',
+                    caption: 'Tipo Manutenção',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-tipos-manutencao')
+                        }),
+                        displayExpr: 'nome',
+                        valueExpr: 'id'
+                    }, 
+                    width: 120
+                },
+                {
+                    dataField: 'area_tecnica_id',
+                    caption: 'Área Técnica',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-areas')
+                        }),
+                        displayExpr: 'nome',
+                        valueExpr: 'id'
+                    }
+                },
+                { dataField: 'descricao_defeito', caption: 'Descrição do Defeito', visible: false },
+                { dataField: 'tecnico_id', caption: 'Técnico', lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'custo_total', caption: 'Custo (R$)', format: { type: 'fixedPoint', precision: 2 }, visible: false },
+                { dataField: 'prioridade', caption: 'Prioridade' },
+                {
+                    dataField: 'status',
+                    caption: 'Status',
+                    sortIndex: 0, 
+                    sortOrder: 'asc',
+                    calculateSortValue: function(rowData) {
+                        // Forçar a ordem: Pendente < Finalizada
+                        const order = { 'pendente': 0, 'finalizada': 1 };
+                        return order[(rowData.status || '').toLowerCase()] ?? 99;
+                    }
+                },
+                {
+                    type: 'buttons',
+                    width: 120,
+                    alignment: 'center',
+                    buttons: [
+                        'edit',
+                        'delete',
+                        {
+                            hint: 'Finalizar Manutenção',
+                            icon: 'check',
+                             visible: function (e) {
+                                return e.row.data.status !== 'Finalizada';
+                            },
+                            onClick: function (e) {
+                                openFinalizarManutencaoPopup(e.row.data);
+                            }
+                        },
+                    ]
+                },
+            ],
+            onEditorPreparing: function(e) {
+                if (e.dataField === 'equipamento_id') {
+                    // Se estiver editando (e.row existe), desabilita o campo
+                    if (e.row && e.row.isNewRow !== true) {
+                        e.editorOptions.readOnly = true;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = true;
+                        }
+                    } else {
+                        // Está adicionando, libera o campo
+                        e.editorOptions.readOnly = false;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = false;
+                        }
+                    }
+                }
+                if (e.dataField === 'data_programada' || e.dataField === 'data_solicitacao') {
+                    const tipoPreventivaId = 1; 
+                    const isPreventiva = e.row?.data?.tipo_manutencao_id === tipoPreventivaId;
+
+                    if (isPreventiva) {
+                        e.editorOptions.readOnly = true;
+                        e.editorOptions.disabled = true;
+                    }
+                }
+            },
+            onRowPrepared: function (e) {
+                if (e.rowType === 'data') {
+                    const status = (e.data.status || '').toLowerCase();
+                    const hoje = new Date();
+                    const dataInicio = e.data.data_inicio ? new Date(e.data.data_inicio) : null;
+                    const dataFim = e.data.data_fim ? new Date(e.data.data_fim) : null;
+
+                    const emExecucao = dataInicio && dataInicio <= hoje && status !== 'finalizada';
+
+                    if (emExecucao) {
+                        e.rowElement.css({ backgroundColor: '#F4A261', color: '#000' }); 
+                        return;
+                    }
+
+                    switch (status) {
+                        case 'finalizada':
+                            e.rowElement.css({ backgroundColor: '#D4EDDA', color: '#155724' });
+                            break;
+                    }
+                }
+            },
+            onRowUpdating: function (e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+        });
+
+        function openFinalizarManutencaoPopup(data) {
+            let finalizarPopup = $('#popupFinalizar').dxPopup({
+                width: 600,
+                height: 'auto',
+                title: 'Finalizar Manutenção',
+                visible: false,
+                showTitle: true,
+                dragEnabled: true,
+                closeOnOutsideClick: false,
+                onInitialized: function (e) {
+                    const contentElement = e.component.content();
+                    const formElement = $('<div>').attr('id', 'formFinalizar');
+                    contentElement.append(formElement);
+
+                    formElement.dxForm({
+                        formData: {},
+                        labelLocation: 'top',
+                        minColWidth: 300,
+                        colCount: 2,
+                        items: [
+                            {
+                                dataField: 'data_final',
+                                editorType: 'dxDateBox',
+                                label: { text: 'Data de Conclusão' },
+                                colSpan: 2,
+                                editorOptions: { width: '100%' },
+                                validationRules: [{ type: 'required', message: 'Informe a data de conclusão' }]
+                            },
+                            {
+                                dataField: 'info_servico',
+                                editorType: 'dxTextArea',
+                                label: { text: 'Informações do Serviço Executado' },
+                                colSpan: 2,
+                                editorOptions: { height: 80, width: '100%' },
+                                validationRules: [{ type: 'required' }]
+                            },
+                            {
+                                dataField: 'observacoes',
+                                editorType: 'dxTextArea',
+                                label: { text: 'Observações Adicionais' },
+                                colSpan: 2,
+                                editorOptions: { height: 60, width: '100%' }
+                            },
+                            {
+                                dataField: 'custo_total',
+                                label: { text: 'Custo Total (R$)' },
+                                colSpan: 2,
+                                editorType: 'dxNumberBox',
+                                editorOptions: { format: '#,##0.00', showSpinButtons: true },
+                                validationRules: [{ type: 'required', message: 'Informe o custo' }]
+                            },
+                            {
+                                itemType: 'button',
+                                colSpan: 2,
+                                horizontalAlignment: 'right',
+                                buttonOptions: {
+                                    text: 'Finalizar',
+                                    type: 'success',
+                                    onClick: function () {
+                                        const form = $('#formFinalizar').dxForm('instance');
+                                        if (!form.validate().isValid) {
+                                            DevExpress.ui.notify('Preencha os campos obrigatórios', 'error', 3000);
+                                            return;
+                                        }
+
+                                        const formData = form.option('formData');
+                                        const envio = {
+                                            id: data.id,
+                                            ...formData,
+                                            status: 'Finalizada'
+                                        };
+
+                                        $.ajax({
+                                            url: '/planejamento-controle-manutencao/finalizar-manutencao',
+                                            method: 'POST',
+                                            contentType: 'application/json',
+                                            data: JSON.stringify(envio),
+                                            dataType: 'json'
+                                        }).done(function (response) {
+                                            if (response.success) {
+                                                DevExpress.ui.notify('Manutenção finalizada com sucesso!', 'success', 3000);
+                                                finalizarPopup.hide();
+                                                $('#gridControleManutencao').dxDataGrid('instance').refresh();
+                                            } else {
+                                                DevExpress.ui.notify(response.message || 'Erro ao finalizar', 'error', 3000);
+                                            }
+                                        }).fail(function () {
+                                            DevExpress.ui.notify('Erro na solicitação', 'error', 3000);
+                                        });
+                                    }
+                                }
+                            }
+                        ]
+                    });
+                },
+                onShowing: function () {
+                    const form = $('#formFinalizar').dxForm('instance');
+                    form.option('formData', {
+                        data_final: new Date(),
+                        info_servico: '',
+                        observacoes: '',
+                        custo_total: null
+                    });
+                }
+            }).dxPopup('instance');
+
+            finalizarPopup.show();
+        }
+
+        function openOrdemServicoPopup(data) {
+            let osPopup = $('#popupOS').dxPopup({
+                width: 900, 
+                height: '100%',
+                showTitle: false,
+                dragEnabled: true,
+                closeOnOutsideClick: true,
+                position: {
+                    of: window,
+                    at: 'center',
+                    my: 'center',
+                },
+                toolbarItems: [
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        toolbar: 'top',
+                        options: {
+                            icon: 'print',
+                            hint: 'Imprimir / Gerar PDF',
+                            type: 'default',
+                            onClick: async function () {
+                                const loading = document.getElementById('globalLoading');
+                                const spinnerGen = document.getElementById('spinnerGeneric');
+                                const spinnerPDF = document.getElementById('spinnerPDF');
+                                const loadingText = document.getElementById('loadingText');
+
+                                try {
+                                    // Mostrar loading e spinner de PDF
+                                    if (loading) loading.style.display = 'flex';
+                                    if (spinnerGen) spinnerGen.style.display = 'none';
+                                    if (spinnerPDF) spinnerPDF.style.display = 'block';
+                                    if (loadingText) loadingText.textContent = 'Gerando PDF…';
+
+                                    const printArea = document.getElementById('print-area');
+
+                                    // Detecta o zoom do navegador para compensar a escala
+                                    const zoom = window.devicePixelRatio || 1;
+                                    const scale = 2 / zoom;
+
+                                    const canvas = await html2canvas(printArea, {
+                                        scale: scale,
+                                        useCORS: true,
+                                        logging: false,
+                                        allowTaint: true,
+                                        backgroundColor: 'white',
+                                    });
+
+                                    const { jsPDF } = window.jspdf;
+                                    const pdf = new jsPDF('p', 'mm', 'a4');
+                                    const pageWidth = pdf.internal.pageSize.getWidth();
+                                    const pageHeight = pdf.internal.pageSize.getHeight();
+                                    const margemMm = 30 * 0.264583;
+
+                                    const imgData = canvas.toDataURL('image/png', 1.0);
+                                    const props = pdf.getImageProperties(imgData);
+
+                                    const pdfWidth = pageWidth - 2 * margemMm;
+                                    const maxPdfHeight = pageHeight - 2 * margemMm;
+
+                                    let pdfHeight = (props.height * pdfWidth) / props.width;
+                                    if (pdfHeight > maxPdfHeight) {
+                                        pdfHeight = maxPdfHeight;
+                                    }
+
+                                    pdf.addImage(imgData, 'PNG', margemMm, margemMm, pdfWidth, pdfHeight, undefined, 'FAST');
+                                    pdf.save(`ordem-de-servico-${data.id}.pdf`);
+
+                                } catch (err) {
+                                    console.error('Erro ao gerar PDF:', err);
+                                    DevExpress.ui.notify('Erro ao gerar PDF. Verifique o console para detalhes.', 'error', 4000);
+                                } finally {
+                                    // Esconder loading e restaurar spinners
+                                    if (spinnerPDF) spinnerPDF.style.display = 'none';
+                                    if (spinnerGen) spinnerGen.style.display = 'block';
+                                    if (loadingText) loadingText.textContent = 'Carregando Informações...';
+                                    if (loading) loading.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+                ],
+                onInitialized: function (e) {
+                    const contentElement = e.component.content();
+                    const osContent = $(`
+                        <div id="ordemServicoContent" style="height: 100%; padding: 10px; box-sizing: border-box;">
+                            <section id="print-area" style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
+                                <div class="header">
+                                    <h1>Ordem de Serviço</h1>
+                                    <div class="numero-os"></div>
+                                </div>
+
+                                <div style="flex: 1; overflow: auto;">
+                                    <div class="section">
+                                        <div class="section-title">Solicitação</div>
+                                        <div class="field-group">
+                                            <div class="field"><span class="label">Data:</span><div class="value os-data"></div></div>
+                                            <div class="field"><span class="label">Prioridade:</span><div class="value os-prioridade"></div></div>
+                                            <div class="field"><span class="label">Solicitante:</span><div class="value os-solicitante"></div></div>
+                                            <div class="field"><span class="label">Setor:</span><div class="value os-setor"></div></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Dados do Equipamento</div>
+                                        <div class="field-group">
+                                            <div class="field"><span class="label">Tipo de manutenção:</span><div class="value os-tipo"></div></div>
+                                            <div class="field"><span class="label">Equipamento:</span><div class="value os-equipamento"></div></div>
+                                            <div class="field"><span class="label">Área de atuação:</span><div class="value os-local"></div></div>
+                                            <div class="field full"><span class="label">Defeito Relatado:</span><div class="value os-defeito"></div></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Execução do Serviço</div>
+                                        <div class="field-group">
+                                            <div class="field third"><span class="label">Data Programada:</span><div class="value os-data-programada"></div></div>
+                                            <div class="field third"><span class="label">Data Inicial:</span><div class="value os-data-inicio"></div></div>
+                                            <div class="field third"><span class="label">Data Final:</span><div class="value os-data-final"></div></div>
+                                            <div class="field full"><span class="label">Descrição do Serviço Realizado:</span><div class="value os-descricao"></div></div>
+                                            <div class="field"><span class="label">Técnico Responsável:</span><div class="value os-tecnico"></div></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Observações Finais</div>
+                                        <div class="field-group">
+                                            <div class="field full"><div class="value os-observacoes"></div></div>
+                                        </div>
+                                    </div>
+
+                                    <br />
+                                    <div class="signature">Assinatura do Responsável</div>
+                                </div>
+                            </section>
+                        </div>
+                    `);
+                    contentElement.append(osContent);
+                },
+                onShown: function () {
+                    $.ajax({
+                        url: "/planejamento-controle-manutencao/get-info-ordem-servico",
+                        method: 'GET',
+                        data: { id: data.id },
+                        success: function (response) {
+                            try {
+                                const dados = response.data;
+                                if (!dados) throw new Error("Dados não encontrados");
+
+                                // Solicitação
+                                $('.numero-os').text(dados?.nr_ordem_servico ? `Nº ${dados.nr_ordem_servico}` : 'Nº 000');
+                                $('.os-data').text(dados?.data_solicitacao ? dados.data_solicitacao : '');
+                                $('.os-prioridade').text(dados?.prioridade ? dados.prioridade : '');
+                                $('.os-solicitante').text(dados?.nome_solicitante ? dados.nome_solicitante : '');
+                                $('.os-setor').text(dados?.nome_setor ? dados.nome_setor : '');
+
+                                // Dados do Equipamento
+                                $('.os-tipo').text(dados?.tipo_manutencao ? dados.tipo_manutencao : '');
+                                $('.os-equipamento').text(dados?.nome_equipamento ? dados.nome_equipamento : '');
+                                $('.os-local').text(dados?.area_tecnica ? dados.area_tecnica : '');
+                                $('.os-defeito').text(dados?.descricao_defeito ? dados.descricao_defeito : '');
+
+                                // Execução do Serviço
+                                $('.os-data-programada').text(dados?.data_programada ? dados.data_programada : '');
+                                $('.os-data-inicio').text(dados?.data_inicio ? dados.data_inicio : '');
+                                $('.os-data-final').text(dados?.data_final ? dados.data_final : '');
+                                $('.os-descricao').text(dados?.info_servico ? dados.info_servico : '');
+                                $('.os-tecnico').text(dados?.nome_tecnico ? dados.nome_tecnico : '');
+
+                                //Observações Finais
+                                $('.os-observacoes').text(dados?.observacoes ? dados.observacoes : '');
+                            } catch (err) {
+                                DevExpress.ui.notify('Erro ao preencher OS: ' + err.message, 'error', 4000);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            DevExpress.ui.notify('Erro na requisição da OS: ' + error, 'error', 4000);
+                        }
+                    });
+                }
+            }).dxPopup('instance');
+
+            osPopup.show();
+        }
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: 'raw',
+                    load: function () {
+                        return $.ajax({
+                            url: url,
+                            method: 'GET',
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, 'error', 3000);
+                                return [];
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true
+            };
+        }
+    });
+</script>
+

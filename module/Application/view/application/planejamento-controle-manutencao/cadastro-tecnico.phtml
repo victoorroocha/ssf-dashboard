@@ -1,0 +1,388 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Cadastro Técnicos</p>
+
+                    <div id="gridTecnicos"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let tecnicosGrid = $('#gridTecnicos').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function() {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/listar-tecnicos',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar técnicos!', 'error', 3000);
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function(values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-tecnico',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Técnico salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao salvar técnico!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                update: function(key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/salvar-tecnico',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Técnico atualizado com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar técnico!', 'error', 3000);
+                        return {};
+                    });
+                },
+                remove: function(key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/excluir-tecnico',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Técnico excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir técnico!', 'error', 3000);
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            width: '100%',
+            columnAutoWidth: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            paging: {
+                pageSize: 20
+            },
+            pager: {
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 20, 50],
+                showInfo: true
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto'
+            },
+            headerFilter: {
+                visible: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Pesquisar...'
+            },
+            toolbar: {
+                items: [
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#gridTecnicos').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'plus',
+                            hint: 'Adicionar Técnico',
+                            onClick: function () {
+                                $('#gridTecnicos').dxDataGrid('instance').addRow();
+                            }
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: true,
+                useIcons: true,
+                popup: {
+                    title: 'Cadastro de Técnico',
+                    showTitle: true,
+                    width: 450,
+                    height: 'auto',
+                    position: {
+                        my: 'center',
+                        at: 'center',
+                        of: window
+                    }
+                },
+                form: {
+                    colCount: 1,
+                    labelLocation: 'top',
+                    items: [
+                        {
+                            dataField: 'nome',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Nome' },
+                            editorOptions: { width: '100%' },
+                            validationRules: [{ type: 'required', message: 'Nome é obrigatório' }]
+                        },
+                        {
+                            // campo CPF
+                            name: 'cpf',
+                            dataField: 'cpf',
+                            editorType: 'dxTextBox',
+                            label: { text: 'CPF' },
+                            editorOptions: {
+                                width: '100%',
+                                mask: '000.000.000-00',
+                                maskChar: '_',
+                                showMaskMode: 'always'
+                            },
+                            validationRules: [
+                                { type: 'required', message: 'CPF é obrigatório' },
+                                {
+                                    type: 'custom',
+                                    message: 'CPF é inválido',
+                                    validationCallback: function (e) {
+                                        const cpf = e.value.replace(/\D/g, '');
+                                        return validarCPF(cpf);
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            dataField: 'cargo_funcao',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Cargo / Função' },
+                            editorOptions: { width: '100%' },
+                            validationRules: [{ type: 'required', message: 'Cargo/Função é obrigatório' }]
+                        },
+                        {
+                            dataField: 'contato',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Contato' },
+                            editorOptions: {
+                                width: '100%',
+                                mask: '(00) 00000-0000',
+                                maskChar: '_',
+                                showMaskMode: 'always'
+                            }
+                        },
+                        {
+                            dataField: 'area_tecnica_id',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Área Técnica' },
+                            editorOptions: getSelectBoxOptions(
+                                '/planejamento-controle-manutencao/listar-areas',
+                                'nome', 'id',
+                                'Selecione a área técnica'
+                            ),
+                            validationRules: [{ type: 'required', message: 'Área Técnica é obrigatória' }]
+                        },
+                        {
+                            dataField: 'flg_ativo',
+                            editorType: 'dxSwitch',
+                            label: { text: 'Ativo?' },
+                            editorOptions: {
+                                switchedOnText: 'Sim',
+                                switchedOffText: 'Não',
+                            }
+                        }
+                    ]
+                },
+                texts: {
+                    confirmDeleteMessage: 'Tem certeza que deseja excluir este técnico? Esta ação não pode ser desfeita.'
+                }
+            },
+            columns: [
+                { dataField: 'nome', caption: 'Nome' },
+                {
+                    dataField: 'cpf',
+                    caption: 'CPF',
+                    customizeText: function (e) {
+                        const cpf = e.value ? e.value.replace(/\D/g, '') : '';
+                        return cpf.length === 11
+                            ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+                            : e.value;
+                    }
+                },
+                { dataField: 'cargo_funcao', caption: 'Cargo / Função' },
+                {
+                    dataField: 'contato',
+                    caption: 'Contato',
+                    customizeText: function (e) {
+                        const contato = e.value ? e.value.replace(/\D/g, '') : '';
+                        return contato.length === 11
+                            ? contato.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+                            : e.value;
+                    }
+                },
+                {
+                    dataField: 'area_tecnica_id',
+                    caption: 'Área Técnica',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            loadMode: 'raw',
+                            load: function () {
+                                return $.ajax({
+                                    url: '/planejamento-controle-manutencao/listar-areas',
+                                    method: 'GET',
+                                    dataType: 'json'
+                                }).then(response => {
+                                    if (response.success) {
+                                        return response.data;
+                                    } else {
+                                        DevExpress.ui.notify(response.message, 'error', 3000);
+                                        return [];
+                                    }
+                                }).catch(() => {
+                                    DevExpress.ui.notify('Erro ao buscar áreas técnicas!', 'error', 3000);
+                                    return [];
+                                });
+                            }
+                        }),
+                        valueExpr: 'id',
+                        displayExpr: 'nome'
+                    }
+                },
+                {
+                    dataField: 'flg_ativo',
+                    caption: 'Ativo?',
+                    dataType: 'boolean',
+                    alignment: 'center',
+                    width: 120
+                }
+            ],
+            onRowUpdating: function(e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+            onInitNewRow: function(e) {
+                e.data.flg_ativo = true;
+            },
+        });
+
+        function validarCPF(cpf) {
+            if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+            let soma = 0;
+            for (let i = 0; i < 9; i++) {
+                soma += parseInt(cpf.charAt(i)) * (10 - i);
+            }
+
+            let resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            if (resto !== parseInt(cpf.charAt(9))) return false;
+
+            soma = 0;
+            for (let i = 0; i < 10; i++) {
+                soma += parseInt(cpf.charAt(i)) * (11 - i);
+            }
+
+            resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            return resto === parseInt(cpf.charAt(10));
+        }
+
+    // Função para SelectBox usada no editor de área técnica
+    function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+        return {
+            dataSource: new DevExpress.data.CustomStore({
+                loadMode: 'raw',
+                load: function () {
+                    return $.ajax({
+                        url: url,
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return response.data;
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return [];
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
+                        return [];
+                    });
+                }
+            }),
+            displayExpr: displayExpr,
+            valueExpr: valueExpr,
+            placeholder: placeholder,
+            searchEnabled: true,
+            showClearButton: true,
+            onInitialized: function(e) {
+                const val = e.component.option('value');
+                e.component.option('value', val);
+            }
+        };
+    }
+    });
+
+</script>
+
+
