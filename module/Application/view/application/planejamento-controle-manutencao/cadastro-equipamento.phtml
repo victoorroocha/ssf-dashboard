@@ -220,7 +220,7 @@
                                 }
                             }
                         },
-                        { dataField: 'setor_id', editorType: 'dxSelectBox', label: { text: 'Setor' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/listar-setores', 'nome', 'id', 'Selecione o setor') },
+                        { dataField: 'setor_id', editorType: 'dxSelectBox', label: { text: 'Setor' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') },
                         { dataField: 'centro_custo', colSpan: 2, editorType: 'dxSelectBox', label: { text: 'Centro de Custo' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') },
                         { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } }
                     ]

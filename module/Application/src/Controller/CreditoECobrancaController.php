@@ -1492,6 +1492,7 @@ class CreditoECobrancaController extends BaseController
 
                 #region Grafico Recebimento por Data de Pagamento
                     $infoRecebimentoPgtoSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoRecebimentoPorDataPagamento($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
+
                     if ($infoRecebimentoPgtoSQL) {
                         $infoRecebimentoDataPagamento = $this->oracleService->executeQuery($infoRecebimentoPgtoSQL);
                     }

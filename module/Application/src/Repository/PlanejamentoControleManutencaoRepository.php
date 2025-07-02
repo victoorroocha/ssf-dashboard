@@ -311,7 +311,18 @@ class PlanejamentoControleManutencaoRepository
         }
         public function getLookupTecnicos()
         {
-            $sql = 'SELECT id, nome, cpf, cargo_funcao, contato, area_tecnica_id FROM tecnicos where flg_ativo = true ORDER BY id';
+            $sql = 'SELECT 
+                        t.id, 
+                        t.nome, 
+                        t.cpf, 
+                        t.cargo_funcao, 
+                        t.contato, 
+                        t.area_tecnica_id,
+                        at.nome as nome_area_tecnica
+                    FROM tecnicos t
+                    left join areas_tecnicas at on at.id = t.area_tecnica_id
+                    where t.flg_ativo = true 
+                    ORDER BY at.nome, t.nome';
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -722,5 +733,5 @@ class PlanejamentoControleManutencaoRepository
             $result = $statement->execute([':id' => $id]);
             return $result->current();
         }
-    #endregion
+    #endRegion
 }
