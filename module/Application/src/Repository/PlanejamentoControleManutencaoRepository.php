@@ -235,7 +235,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function getLookupTiposManutencao()
         {
-            $sql = 'SELECT id, nome, descricao FROM tipos_manutencao where flg_ativo = true ORDER BY nome';
+            $sql = "SELECT id, nome, descricao FROM tipos_manutencao where flg_ativo = true and nome not like 'Preventiva' ORDER BY nome";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -600,12 +600,11 @@ class PlanejamentoControleManutencaoRepository
         }
         public function salvarControleManutencao(array $data)
         {
-            if (empty($data['data_programada']) || empty($data['equipamento_id']) || empty($data['tipo_manutencao_id']) || empty($data['area_tecnica_id'])) {
+            if (empty($data['equipamento_id']) || empty($data['tipo_manutencao_id']) || empty($data['area_tecnica_id'])) {
                 throw new \Exception('Campos obrigatórios não preenchidos.');
             }
 
             $params = [
-                ':data_programada' => $data['data_programada'],
                 ':data_solicitacao' => $data['data_solicitacao'] ?? null,
                 ':nome_solicitante' => $data['nome_solicitante'] ?? null,
                 ':setor_id' => $data['setor_id'],
@@ -625,7 +624,6 @@ class PlanejamentoControleManutencaoRepository
 
             if (!empty($data['id'])) {
                 $sql = "UPDATE controle_manutencao SET 
-                            data_programada = :data_programada,
                             data_solicitacao = :data_solicitacao,
                             nome_solicitante = :nome_solicitante,
                             setor_id = :setor_id,
@@ -645,11 +643,11 @@ class PlanejamentoControleManutencaoRepository
                 $params[':id'] = $data['id'];
             } else {
                 $sql = "INSERT INTO controle_manutencao (
-                            data_programada, data_solicitacao, nome_solicitante, setor_id, prioridade,
+                            data_solicitacao, nome_solicitante, setor_id, prioridade,
                             equipamento_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, tecnico_id,
                             data_inicio, data_final, status, info_servico, observacoes, custo_total
                         ) VALUES (
-                            :data_programada, :data_solicitacao, :nome_solicitante, :setor_id, :prioridade,
+                            :data_solicitacao, :nome_solicitante, :setor_id, :prioridade,
                             :equipamento_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito, :tecnico_id,
                             :data_inicio, :data_final, :status, :info_servico, :observacoes, :custo_total
                         )";

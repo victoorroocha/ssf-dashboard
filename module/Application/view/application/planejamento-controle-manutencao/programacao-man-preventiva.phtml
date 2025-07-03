@@ -229,7 +229,7 @@
                     caption: 'Equipamento',
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/get-lookup-equipamentos')
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos')
                         }),
                         displayExpr: 'nome',
                         valueExpr: 'id'

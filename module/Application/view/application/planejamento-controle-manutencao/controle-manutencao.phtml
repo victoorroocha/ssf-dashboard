@@ -287,17 +287,10 @@
                     position: { my: 'center', at: 'center', of: window }
                 },
                 form: {
-                    colCount: 3,
+                    colCount: 2,
                     labelLocation: 'top',
                     items: [
                         { dataField: 'data_solicitacao', label: { text: 'Data Solicitação' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
-                        {
-                            dataField: 'data_programada',
-                            editorType: 'dxDateBox',
-                            label: { text: 'Data Programada' },
-                            editorOptions: { type: 'date', min: new Date() },
-                            validationRules: [{ type: 'required', message: 'Data programada é obrigatória' }]
-                        },
                         { dataField: 'data_inicio', label: { text: 'Data Início' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
                         {
                             dataField: 'nome_solicitante',
@@ -313,24 +306,23 @@
                             editorType: 'dxSelectBox', 
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') 
                         },
-                        { 
-                            dataField: 'equipamento_id', 
-                            label: { text: 'Equipamento' }, 
-                            editorType: 'dxSelectBox', 
-                            colSpan: 3, 
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
-                        },
                         {
                             dataField: 'prioridade',
                             editorType: 'dxSelectBox',
                             label: { text: 'Prioridade' },
-                            colSpan: 1,
                             editorOptions: {
                                 items: ['Baixa', 'Média', 'Alta'],
                                 placeholder: 'Selecione a prioridade',
                                 width: '100%'
                             },
                             validationRules: [{ type: 'required' }]
+                        },
+                        { 
+                            dataField: 'equipamento_id', 
+                            label: { text: 'Equipamento' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 2, 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
                         },
                         { 
                             dataField: 'tipo_manutencao_id', 
@@ -343,14 +335,15 @@
                             editorType: 'dxSelectBox', 
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica') 
                         },
-                        { dataField: 'descricao_defeito', label: { text: 'Descrição do Defeito' }, editorType: 'dxTextArea', colSpan: 3, editorOptions: { height: 60 } },
                         { 
                             dataField: 'tecnico_id', 
-                            colSpan: 3, 
                             label: { text: 'Técnico' }, 
                             editorType: 'dxSelectBox', 
+                            colSpan: 2, 
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') 
                         },
+                        { dataField: 'descricao_defeito', label: { text: 'Descrição do Defeito' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+
                     ]
                 }
             },
@@ -391,7 +384,7 @@
                     }
                 },
                 { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
-                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/get-lookup-equipamentos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'nome', valueExpr: 'id' } },
                 { 
                     dataField: 'setor_id', 
                     caption: 'Setor', 
