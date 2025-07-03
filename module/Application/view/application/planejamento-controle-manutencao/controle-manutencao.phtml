@@ -222,55 +222,87 @@
                 }
             }),
             keyExpr: 'id',
-            width: '100%',
             columnAutoWidth: true,
+            width: '100%',
+            height: 600,
             showBorders: true,
-            hoverStateEnabled: true,
-            paging: { pageSize: 20 },
-            pager: {
-                showPageSizeSelector: true,
-                allowedPageSizes: [10, 20, 50],
-                showInfo: true
-            },
-            filterRow: { visible: true, applyFilter: 'auto' },
-            headerFilter: { visible: true },
-            searchPanel: {
-                visible: true,
-                width: 240,
-                placeholder: 'Pesquisar...'
-            },
-            export: {
+            columnChooser: {
                 enabled: true,
-                fileName: 'Controle de Manutenção',
-                allowExportSelectedData: false
+                mode: "dragAndDrop", // or "select"
+                position: { 
+                    my: "right", 
+                    at: "right", 
+                    of: ".dx-datagrid-column-chooser-button" 
+                }
+            },
+            groupPanel: {
+                visible: true,
             },
             toolbar: {
                 items: [
-                    'searchPanel',
                     {
-                        widget: 'dxButton',
-                        location: 'after',
+                        location: "after",
+                        widget: "dxButton",
                         options: {
-                            icon: 'refresh',
-                            hint: 'Atualizar',
+                            icon: "fa fa-expand", // ícone para expandir
+                            text: "",
                             onClick: function () {
-                                $('#gridControleManutencao').dxDataGrid('instance').refresh();
+                                var grid = $("#gridControleManutencao").dxDataGrid("instance");
+                                grid.expandAll(); // Expande todos os grupos
                             }
                         }
                     },
                     {
-                        widget: 'dxButton',
-                        location: 'after',
+                        location: "after",
+                        widget: "dxButton",
                         options: {
-                            icon: 'plus',
-                            hint: 'Adicionar Controle',
+                            icon: "fa fa-compress", // ícone para colapsar
+                            text: "",
                             onClick: function () {
-                                $('#gridControleManutencao').dxDataGrid('instance').addRow();
+                                var grid = $("#gridControleManutencao").dxDataGrid("instance");
+                                grid.collapseAll(); // Colapsa todos os grupos
                             }
+                        }
+                    },
+                    {
+                        name: "refresh", // Define o nome do botão
+                        location: "after", // Coloca o botão após os outros itens na toolbar
+                        widget: "dxButton",
+                        options: {
+                            icon: "refresh", // Ícone de refresh
+                            onClick: function() {
+                                // Lógica para atualizar/recarregar os dados da grid
+                                $("#gridControleManutencao").dxDataGrid("instance").refresh(); // Atualiza a grid
+                            },
+                            text: "Atualizar" // Texto exibido no botão
                         }
                     }
                 ]
             },
+            pager: {
+                visible: true
+            },
+            paging: {
+                pageSize: 500
+            },
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            export: {
+                enabled: true,
+                fileName: "Controle Manutenções",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            hoverStateEnabled: true,
             editing: {
                 mode: 'popup',
                 allowUpdating: true,
@@ -356,6 +388,9 @@
                         {
                             hint: "Ordem de Serviço",
                             icon: "doc",
+                            visible: function (e) {
+                                return e.row.data.status === 'Finalizada';
+                            },
                             onClick: function(e) {
                                 const data = e.row.data;
                                 openOrdemServicoPopup(data);
@@ -439,7 +474,7 @@
                         {
                             hint: 'Finalizar Manutenção',
                             icon: 'check',
-                             visible: function (e) {
+                            visible: function (e) {
                                 return e.row.data.status !== 'Finalizada';
                             },
                             onClick: function (e) {
@@ -499,6 +534,50 @@
             onRowUpdating: function (e) {
                 e.newData = { ...e.oldData, ...e.newData };
             },
+            onToolbarPreparing: function (e) {
+                // Aqui você pode personalizar ainda mais a barra de ferramentas
+                var toolbarItems = e.toolbarOptions.items;
+                // Adicionar os botões de expandir/colapsar
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll(); // Expande todos os grupos
+                        }
+                    }
+                });
+
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll(); // Colapsa todos os grupos
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    name: "refresh", // Adiciona o botão refresh na toolbar
+                    location: "after", // Coloca depois dos outros itens
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh", // Ícone do botão (ícone de atualização)
+                        onClick: function() {
+                            // Recarrega os dados da grid
+                            e.component.refresh(); // Atualiza a grid
+                        },
+                        text: "Atualizar" 
+                    }
+                });
+            },             
         });
 
         function openFinalizarManutencaoPopup(data) {

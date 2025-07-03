@@ -401,7 +401,8 @@ class PlanejamentoControleManutencaoRepository
                 $sqlUpdateManutencao = "
                     UPDATE equipamentos
                     SET status = 'Em Manutenção'
-                    WHERE id IN (
+                    WHERE status <> 'Inativo' 
+                    AND id IN (
                         SELECT DISTINCT equipamento_id
                         FROM controle_manutencao
                         WHERE data_inicio <= CURRENT_DATE
@@ -414,7 +415,8 @@ class PlanejamentoControleManutencaoRepository
                 $sqlUpdateAtivo = "
                     UPDATE equipamentos
                     SET status = 'Ativo'
-                    WHERE id NOT IN (
+                    WHERE status <> 'Inativo'
+                    AND id NOT IN (
                         SELECT DISTINCT equipamento_id
                         FROM controle_manutencao
                         WHERE data_inicio <= CURRENT_DATE
@@ -653,6 +655,9 @@ class PlanejamentoControleManutencaoRepository
                         )";
             }
 
+            // Chama a atualização dos status dos equipamentos
+            $this->atualizarStatusEquipamentos();
+            
             $this->adapter->createStatement($sql)->execute($params);
         }
         public function excluirControleManutencao($id)
@@ -686,7 +691,7 @@ class PlanejamentoControleManutencaoRepository
 
                 $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
 
-                 // Chama a atualização dos status dos equipamentos
+                // Chama a atualização dos status dos equipamentos
                 $this->atualizarStatusEquipamentos();
 
                 $this->adapter->getDriver()->getConnection()->commit();
