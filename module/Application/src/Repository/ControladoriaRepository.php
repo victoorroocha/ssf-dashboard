@@ -22,9 +22,6 @@ class ControladoriaRepository
     public function getLancamentosCentrosCustoContaContas($codempresa = null, $codfilial = null, $lancamento_inicio = null, $lancamento_fim = null)
     {
         $wheresContabilizados = "";
-        // if (!empty($codempresa)) {
-        //     $wheresContabilizados .= " AND lc.CODEMP = {$codempresa}";
-        // }
         if (!empty($codfilial)) {
             $wheresContabilizados .= " AND lc.CODFIL = {$codfilial}";
         }
@@ -35,9 +32,6 @@ class ControladoriaRepository
 
 
         $wheresNaoContabilizados = "";
-        // if (!empty($codempresa)) {
-        //     $wheresNaoContabilizados .= " AND RT.CODEMP = {$codempresa}";
-        // }
         if (!empty($codfilial)) {
             $wheresNaoContabilizados .= " AND LC.CODFIL = {$codfilial}";
         }
@@ -68,34 +62,53 @@ class ControladoriaRepository
                     END AS CONTRA_PARTIDA,    
                     LC.NUMLOT AS LOTE,      
                     RT.NUMLCT AS NUM_LANCAMENTO,      
-                    LC.CODHPD AS CODIGO_HISTORICO,      
-                    CASE 
-                        WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 4 THEN 
-                            SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-                            SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 1) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 2) - INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 2) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 3) - INSTR(lc.cpllct, ',\"\"', 1, 2) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 3) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 3) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 4) - INSTR(lc.cpllct, ',\"\"', 1, 3) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 4) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 5) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 4) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 5) - INSTR(lc.cpllct, ',\"\"', 1, 4) - 1)
-                        WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 3 THEN 
-                            SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-                            SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 1) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 2) - INSTR(lc.cpllct, ',\"\"', 1, 1) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',\"\"', 1, 2) + 1, INSTR(lc.cpllct || ',\"\"', ',\"\"', 1, 3) - INSTR(lc.cpllct, ',\"\"', 1, 2) - 1)
-                        WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) > 1 AND (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) < 3 THEN 
-                            SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||    
-                            SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',', 1, 1) - 1) ||
-                            SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
-                            SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 1) + 1, INSTR(lc.cpllct || ',', ',', 1, 2) - INSTR(lc.cpllct, ',', 1, 1) - 1)
-                        WHEN (LENGTH(HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) <= 1 THEN HP.DESHPD || LC.CPLLCT
+                    LC.CODHPD AS CODIGO_HISTORICO,  
+                    CASE
+                        WHEN (LENGTH (HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 4 THEN 
+                        SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||
+                        -- primeiro *
+                        SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',', 1, 1) - 1) ||
+                        --primeiro list
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
+                        --segundo *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 1) + 1, INSTR(lc.cpllct || ',', ',', 1, 2) - INSTR(lc.cpllct, ',', 1, 1) - 1)||
+                        -- segundo list
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
+                        --terceiro *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 2) + 1, INSTR(lc.cpllct || ',', ',', 1, 3) - INSTR(lc.cpllct, ',', 1, 2) - 1)||
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 3) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
+                        -- quarto *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 3) + 1, INSTR(lc.cpllct || ',', ',', 1, 4) - INSTR(lc.cpllct, ',', 1, 3) - 1 )||
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 4) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 5) ||
+                        -- quinto *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 4) + 1, INSTR(lc.cpllct || ',', ',', 1, 5) - INSTR(lc.cpllct, ',', 1, 4) - 1 )
+                        -- quinto list
+                        WHEN (LENGTH (HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) >= 3 THEN 
+                        SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||
+                        -- primeiro *
+                        SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',', 1, 1) - 1) ||
+                        --primeiro list
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
+                        --segundo *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 1) + 1, INSTR(lc.cpllct || ',', ',', 1, 2) - INSTR(lc.cpllct, ',', 1, 1) - 1)||
+                        -- segundo list
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 2) + 4, INSTR(HP.DESHPD, '*', 1, 3) - INSTR(HP.DESHPD, '*', 1, 2) - 4) ||
+                        --terceiro *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 2) + 1, INSTR(lc.cpllct || ',', ',', 1, 3) - INSTR(lc.cpllct, ',', 1, 2) - 1)
+                        WHEN (LENGTH (HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) > 1
+                        AND (LENGTH (HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) < 3 THEN 
+                        SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) ||
+                        -- primeiro *
+                        SUBSTR(lc.cpllct, 1, INSTR(lc.cpllct, ',', 1, 1) - 1) ||
+                        --primeiro list
+                        SUBSTR(HP.DESHPD, INSTR(HP.DESHPD, '*', 1, 1) + 4, INSTR(HP.DESHPD, '*', 1, 2) - INSTR(HP.DESHPD, '*', 1, 1) - 4) ||
+                        --segundo *
+                        SUBSTR(lc.cpllct, INSTR(lc.cpllct, ',', 1, 1) + 1, INSTR(lc.cpllct || ',', ',', 1, 2) - INSTR(lc.cpllct, ',', 1, 1) - 1)
+                        -- segundo list
+                        WHEN (LENGTH (HP.DESHPD) - LENGTH(REPLACE(HP.DESHPD, '*', ''))) <= 1 THEN 
+                        SUBSTR(HP.DESHPD, 1, INSTR(HP.DESHPD, '*', 1, 1) - 1) || LC.CPLLCT || HP.DESHPD
                         ELSE LC.CPLLCT
-                    END AS HISTORICO,  
+                    END HISTORICO, 
                     CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE 0 END AS DEBITO,       
                     CASE WHEN RT.DEBCRE = 'C' THEN RT.VLRRAT ELSE 0 END AS CREDITO,    
                     (CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE 0 END) - (CASE WHEN RT.DEBCRE = 'C' THEN RT.VLRRAT ELSE 0 END) AS TOTAL,

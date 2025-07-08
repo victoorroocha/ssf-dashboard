@@ -422,7 +422,7 @@
                         contentElement.append(formElement);
 
                         formElement.dxForm({
-                            formData: {}, // vazio inicial, vai atualizar no onShowing
+                            formData: {}, 
                             labelLocation: 'top',
                             showColonAfterLabel: false,
                             minColWidth: 300,
@@ -472,7 +472,7 @@
                                     colSpan: 1,
                                     editorType: 'dxSelectBox', 
                                     editorOptions: {
-                                        ...getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tipos-manutencao', 'nome', 'id', 'Selecione o tipo'),
+                                        ...getSelectBoxOptions('/planejamento-controle-manutencao/listar-tipos-manutencao', 'nome', 'id', 'Selecione o tipo'),
                                         readOnly: true
                                     }
                                 },
@@ -553,8 +553,7 @@
                         const formInstance = $('#formAprovacao').dxForm('instance');
 
                         // Carregar tipos de manutenção e buscar a opção "Preventiva"
-                        $.getJSON('/planejamento-controle-manutencao/get-lookup-tipos-manutencao')
-                            .done(function (tipos) {
+                        $.getJSON('/planejamento-controle-manutencao/listar-tipos-manutencao').done(function (tipos) {
                                 const preventiva = tipos.data.find(item => item.nome.toLowerCase() === 'preventiva');
                                 const tipoId = preventiva ? preventiva.id : null;
 

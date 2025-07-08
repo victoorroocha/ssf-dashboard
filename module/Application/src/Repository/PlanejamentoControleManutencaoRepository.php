@@ -621,7 +621,6 @@ class PlanejamentoControleManutencaoRepository
                 ':status' => $data['status'] ?? 'Pendente',
                 ':info_servico' => $data['info_servico'] ?? null,
                 ':observacoes' => $data['observacoes'] ?? null,
-                ':custo_total' => $data['custo_total'] ?? null,
             ];
 
             if (!empty($data['id'])) {
@@ -639,19 +638,18 @@ class PlanejamentoControleManutencaoRepository
                             data_final = :data_final,
                             status = :status,
                             info_servico = :info_servico,
-                            observacoes = :observacoes,
-                            custo_total = :custo_total
+                            observacoes = :observacoes
                         WHERE id = :id";
                 $params[':id'] = $data['id'];
             } else {
                 $sql = "INSERT INTO controle_manutencao (
                             data_solicitacao, nome_solicitante, setor_id, prioridade,
                             equipamento_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, tecnico_id,
-                            data_inicio, data_final, status, info_servico, observacoes, custo_total
+                            data_inicio, data_final, status, info_servico, observacoes
                         ) VALUES (
                             :data_solicitacao, :nome_solicitante, :setor_id, :prioridade,
                             :equipamento_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito, :tecnico_id,
-                            :data_inicio, :data_final, :status, :info_servico, :observacoes, :custo_total
+                            :data_inicio, :data_final, :status, :info_servico, :observacoes
                         )";
             }
 
@@ -664,19 +662,22 @@ class PlanejamentoControleManutencaoRepository
         {
             $sql = "DELETE FROM controle_manutencao WHERE id = :id";
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
+
+            // Chama a atualização dos status dos equipamentos
+            $this->atualizarStatusEquipamentos();
         }
         public function finalizarManutencao(array $data)
         {
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
             try {
+                // Atualiza a OS (controle_manutencao)
                 $sqlUpdate = "
                     UPDATE controle_manutencao
                     SET 
                         data_final = :data_final,
                         info_servico = :info_servico,
                         observacoes = :observacoes,
-                        custo_total = :custo_total,
                         status = 'Finalizada'
                     WHERE id = :id
                 ";
@@ -685,13 +686,64 @@ class PlanejamentoControleManutencaoRepository
                     ':data_final' => $data['data_final'] ?? null,
                     ':info_servico' => $data['info_servico'] ?? null,
                     ':observacoes' => $data['observacoes'] ?? null,
-                    ':custo_total' => $data['custo_total'] ?? null,
                     ':id' => $data['id'],
                 ];
 
                 $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
 
-                // Chama a atualização dos status dos equipamentos
+                // Remove itens anteriores, se houver
+                $this->adapter->createStatement('DELETE FROM itens_manutencao WHERE id_manutencao = :id')->execute([':id' => $data['id']]);
+
+                // Insere os novos itens
+                if (!empty($data['itens']) && is_array($data['itens'])) {
+                    $sqlInsert = "
+                        INSERT INTO itens_manutencao (
+                            id_manutencao,
+                            cod_produto,
+                            descricao_produto,
+                            cod_deposito,
+                            descricao_deposito,
+                            unidade_medida,
+                            qtd_utilizada,
+                            preco_medio_unitario,
+                            custo_unitario,
+                            observacao,
+                            data_utilizacao
+                        ) VALUES (
+                            :id_manutencao,
+                            :cod_produto,
+                            :descricao_produto,
+                            :cod_deposito,
+                            :descricao_deposito,
+                            :unidade_medida,
+                            :qtd_utilizada,
+                            :preco_medio_unitario,
+                            :custo_unitario,
+                            :observacao,
+                            :data_utilizacao
+                        )
+                    ";
+
+                    foreach ($data['itens'] as $item) {
+                        $paramsInsert = [
+                            ':id_manutencao' => $data['id'],
+                            ':cod_produto' => $item['cod_produto'] ?? null,
+                            ':descricao_produto' => $item['descricao_produto'] ?? null,
+                            ':cod_deposito' => $item['cod_deposito'] ?? null,
+                            ':descricao_deposito' => $item['descricao_deposito'] ?? null,
+                            ':unidade_medida' => $item['unidade_medida'] ?? null,
+                            ':qtd_utilizada' => $item['qtd_utilizada'] ?? 0,
+                            ':preco_medio_unitario' => $item['preco_medio'] ?? null,
+                            ':custo_unitario' => $item['custo_unitario'] ?? null,
+                            ':observacao' => $item['observacao'] ?? null,
+                            ':data_utilizacao' => $item['data_utilizacao'] ?? null
+                        ];
+
+                        $this->adapter->createStatement($sqlInsert)->execute($paramsInsert);
+                    }
+                }
+
+                // Atualiza status de equipamentos
                 $this->atualizarStatusEquipamentos();
 
                 $this->adapter->getDriver()->getConnection()->commit();
@@ -701,6 +753,7 @@ class PlanejamentoControleManutencaoRepository
                 throw $e;
             }
         }
+
     #endRegion
 
     #region Ordem de Serviço
@@ -723,8 +776,7 @@ class PlanejamentoControleManutencaoRepository
                         t.nome AS nome_tecnico,
                         cm.status,
                         cm.info_servico,
-                        cm.observacoes,
-                        cm.custo_total
+                        cm.observacoes
                     FROM controle_manutencao cm
                     LEFT JOIN setores s ON s.id = cm.setor_id
                     LEFT JOIN equipamentos e ON e.id = cm.equipamento_id
@@ -735,6 +787,19 @@ class PlanejamentoControleManutencaoRepository
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);
             return $result->current();
+        }
+        public function getInfoItensOrdemServico($id)
+        {
+            $sql = "select * from itens_manutencao im
+                    WHERE im.id_manutencao = :id";
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute([':id' => $id]);
+            
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
     #endRegion
 }

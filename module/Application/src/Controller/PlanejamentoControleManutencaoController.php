@@ -639,9 +639,6 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao finalizar: ' . $e->getMessage()]);
             }
         }
-    #endRegion
-
-    #region Controle de Manutenção
         public function getInfoOrdemServicoAction()
         {
             try {
@@ -650,8 +647,17 @@ class PlanejamentoControleManutencaoController extends BaseController
                     return new JsonModel(['success' => false, 'message' => 'ID não informado.']);
                 }
                 $data = $this->PlanejamentoControleManutencaoRepository->getInfoOrdemServico($id);
+                $dataItens = $this->PlanejamentoControleManutencaoRepository->getInfoItensOrdemServico($id);
 
-                return new JsonModel(['success' => true, 'data' => $data]);
+                return new JsonModel(
+                    [
+                        'success' => true, 
+                        'data' => array(
+                            'ordemServico' => $data,
+                            'itens' => $dataItens
+                        )
+                    ]
+                );
 
             } catch (\Exception $e) {
                 return new JsonModel([
@@ -660,7 +666,7 @@ class PlanejamentoControleManutencaoController extends BaseController
                 ]);
             }
         }
-    #endregion
+    #endRegion
 
     public function getUsuariosSeniorLookupAction()
     {
@@ -801,6 +807,8 @@ class PlanejamentoControleManutencaoController extends BaseController
                 $result[$key]['DESPRO'] = utf8_encode($row['DESPRO']);
                 $result[$key]['DESDEP'] = utf8_encode($row['DESDEP']);
                 $result[$key]['PRODUTO_DISPLAY'] = utf8_encode($row['PRODUTO_DISPLAY']);
+                $result[$key]['QTDEST'] = floatval(str_replace(',', '.', $row['QTDEST']));
+                $result[$key]['PRMEST'] = floatval(str_replace(',', '.', $row['PRMEST']));
             }
 
             return new JsonModel([
