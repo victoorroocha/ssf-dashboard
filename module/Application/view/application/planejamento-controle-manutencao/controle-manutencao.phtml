@@ -138,8 +138,11 @@
     </div>
 </div>
 
+
 <script>
     $(document).ready(function () {
+        const produtosLookup = []; 
+
         let controleManutencaoGrid = $('#gridControleManutencao').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
                 key: 'id',
@@ -478,7 +481,10 @@
                                 return e.row.data.status !== 'Finalizada';
                             },
                             onClick: function (e) {
-                                openFinalizarManutencaoPopup(e.row.data);
+                                getLookupProdutos();
+                                setTimeout(() => {
+                                    openFinalizarManutencaoPopup(e.row.data);
+                                }, 1000);
                             }
                         },
                     ]
@@ -580,113 +586,242 @@
             },             
         });
 
-        function openFinalizarManutencaoPopup(data) {
-            let finalizarPopup = $('#popupFinalizar').dxPopup({
-                width: 600,
-                height: 'auto',
-                title: 'Finalizar Manutenção',
-                visible: false,
-                showTitle: true,
-                dragEnabled: true,
-                closeOnOutsideClick: false,
-                onInitialized: function (e) {
-                    const contentElement = e.component.content();
-                    const formElement = $('<div>').attr('id', 'formFinalizar');
-                    contentElement.append(formElement);
-
-                    formElement.dxForm({
-                        formData: {},
-                        labelLocation: 'top',
-                        minColWidth: 300,
-                        colCount: 2,
-                        items: [
-                            {
-                                dataField: 'data_final',
-                                editorType: 'dxDateBox',
-                                label: { text: 'Data de Conclusão' },
-                                colSpan: 2,
-                                editorOptions: { width: '100%' },
-                                validationRules: [{ type: 'required', message: 'Informe a data de conclusão' }]
-                            },
-                            {
-                                dataField: 'info_servico',
-                                editorType: 'dxTextArea',
-                                label: { text: 'Informações do Serviço Executado' },
-                                colSpan: 2,
-                                editorOptions: { height: 80, width: '100%' },
-                                validationRules: [{ type: 'required' }]
-                            },
-                            {
-                                dataField: 'observacoes',
-                                editorType: 'dxTextArea',
-                                label: { text: 'Observações Adicionais' },
-                                colSpan: 2,
-                                editorOptions: { height: 60, width: '100%' }
-                            },
-                            {
-                                dataField: 'custo_total',
-                                label: { text: 'Custo Total (R$)' },
-                                colSpan: 2,
-                                editorType: 'dxNumberBox',
-                                editorOptions: { format: '#,##0.00', showSpinButtons: true },
-                                validationRules: [{ type: 'required', message: 'Informe o custo' }]
-                            },
-                            {
-                                itemType: 'button',
-                                colSpan: 2,
-                                horizontalAlignment: 'right',
-                                buttonOptions: {
-                                    text: 'Finalizar',
-                                    type: 'success',
-                                    onClick: function () {
-                                        const form = $('#formFinalizar').dxForm('instance');
-                                        if (!form.validate().isValid) {
-                                            DevExpress.ui.notify('Preencha os campos obrigatórios', 'error', 3000);
-                                            return;
-                                        }
-
-                                        const formData = form.option('formData');
-                                        const envio = {
-                                            id: data.id,
-                                            ...formData,
-                                            status: 'Finalizada'
-                                        };
-
-                                        $.ajax({
-                                            url: '/planejamento-controle-manutencao/finalizar-manutencao',
-                                            method: 'POST',
-                                            contentType: 'application/json',
-                                            data: JSON.stringify(envio),
-                                            dataType: 'json'
-                                        }).done(function (response) {
-                                            if (response.success) {
-                                                DevExpress.ui.notify('Manutenção finalizada com sucesso!', 'success', 3000);
-                                                finalizarPopup.hide();
-                                                $('#gridControleManutencao').dxDataGrid('instance').refresh();
-                                            } else {
-                                                DevExpress.ui.notify(response.message || 'Erro ao finalizar', 'error', 3000);
-                                            }
-                                        }).fail(function () {
-                                            DevExpress.ui.notify('Erro na solicitação', 'error', 3000);
-                                        });
-                                    }
-                                }
-                            }
-                        ]
-                    });
-                },
-                onShowing: function () {
-                    const form = $('#formFinalizar').dxForm('instance');
-                    form.option('formData', {
-                        data_final: new Date(),
-                        info_servico: '',
-                        observacoes: '',
-                        custo_total: null
-                    });
+        function getLookupProdutos() {
+            // 1. Carregar produtos ANTES de exibir o popup
+            $.getJSON('/planejamento-controle-manutencao/get-produtos-estoque-lookup')
+            .done(function (response) {
+                if (response.success && response.data.length > 0) {
+                    produtosLookup = response.data;
+                } else {
+                    DevExpress.ui.notify('Nenhum produto encontrado.', 'warning', 3000);
                 }
-            }).dxPopup('instance');
+            })
+            .fail(function () {
+                DevExpress.ui.notify('Erro ao carregar produtos.', 'error', 3000);
+            });
+        }
 
-            finalizarPopup.show();
+        function openFinalizarManutencaoPopup(data) {
+            console.log('popupaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', data);
+           
+            // let finalizarPopup = $('#popupFinalizar').dxPopup({
+            //     width: 1200,
+            //     height: 800,
+            //     title: 'Finalizar Manutenção',
+            //     visible: false,
+            //     showTitle: true,
+            //     dragEnabled: true,
+            //     closeOnOutsideClick: false,
+            //     position: {
+            //         my: 'center top',    // Alinha o topo do popup ao centro horizontal
+            //         at: 'center top',    // Alvo é o topo da janela (viewport)
+            //         of: window,          // Referência para posicionamento
+            //         offset: '0 30'       // Distância de 30px do topo
+            //     },
+            //     toolbarItems: [
+            //         {
+            //             widget: 'dxButton',
+            //             toolbar: 'bottom',
+            //             location: 'after', // direita
+            //             options: {
+            //                 text: 'Finalizar',
+            //                 type: 'success',
+            //                 onClick: function () {
+            //                     const form = $('#formFinalizar').dxForm('instance');
+            //                     if (!form.validate().isValid) {
+            //                         DevExpress.ui.notify('Preencha os campos obrigatórios', 'error', 3000);
+            //                         return;
+            //                     }
+
+            //                     const formData = form.option('formData');
+            //                     const envio = {
+            //                         id: data.id,
+            //                         ...formData,
+            //                         status: 'Finalizada'
+            //                     };
+
+            //                     $.ajax({
+            //                         url: '/planejamento-controle-manutencao/finalizar-manutencao',
+            //                         method: 'POST',
+            //                         contentType: 'application/json',
+            //                         data: JSON.stringify(envio),
+            //                         dataType: 'json'
+            //                     }).done(function (response) {
+            //                         if (response.success) {
+            //                             DevExpress.ui.notify('Manutenção finalizada com sucesso!', 'success', 3000);
+            //                             finalizarPopup.hide();
+            //                             $('#gridControleManutencao').dxDataGrid('instance').refresh();
+            //                         } else {
+            //                             DevExpress.ui.notify(response.message || 'Erro ao finalizar', 'error', 3000);
+            //                         }
+            //                     }).fail(function () {
+            //                         DevExpress.ui.notify('Erro na solicitação', 'error', 3000);
+            //                     });
+            //                 }
+            //             }
+            //         }
+            //     ],
+            //     onShowing: function () {
+            //         const form = $('#formFinalizar').dxForm('instance');
+            //         form.option('formData', {
+            //             data_final: new Date(),
+            //             info_servico: '',
+            //             observacoes: ''
+            //         });
+            //     },
+            //     onInitialized: function (e) {
+            //         const contentElement = e.component.content();
+
+            //         // Criar o TabPanel
+            //         const tabPanelElement = $('<div>').attr('id', 'tabFinalizar').appendTo(contentElement);
+
+            //         tabPanelElement.dxTabPanel({
+            //             height: 660,
+            //             items: [
+            //                 {
+            //                     title: 'Informações Finalizar OS',
+            //                     template: function(itemData, itemIndex, itemElement) {
+            //                         // Aplica padding no container da aba
+            //                         $(itemElement).css('padding', '15px');
+
+            //                         const formElement = $('<div>').appendTo(itemElement).attr('id', 'formFinalizar');
+
+            //                         formElement.dxForm({
+            //                             formData: {},
+            //                             labelLocation: 'top',
+            //                             minColWidth: 300,
+            //                             colCount: 2,
+            //                             items: [
+            //                                 {
+            //                                     dataField: 'data_final',
+            //                                     editorType: 'dxDateBox',
+            //                                     label: { text: 'Data de Conclusão' },
+            //                                     colSpan: 2,
+            //                                     editorOptions: { width: '100%' },
+            //                                     validationRules: [{ type: 'required', message: 'Informe a data de conclusão' }]
+            //                                 },
+            //                                 {
+            //                                     dataField: 'info_servico',
+            //                                     editorType: 'dxTextArea',
+            //                                     label: { text: 'Informações do Serviço Executado' },
+            //                                     colSpan: 2,
+            //                                     editorOptions: { height: 80, width: '100%' },
+            //                                     validationRules: [{ type: 'required' }]
+            //                                 },
+            //                                 {
+            //                                     dataField: 'observacoes',
+            //                                     editorType: 'dxTextArea',
+            //                                     label: { text: 'Observações Adicionais' },
+            //                                     colSpan: 2,
+            //                                     editorOptions: { height: 60, width: '100%' }
+            //                                 }
+            //                             ]
+            //                         });
+            //                     }
+            //                 },
+            //                 {
+            //                     title: 'Itens',
+            //                     template: function(itemData, itemIndex, itemElement) {
+            //                         // Aplica padding no container da aba
+            //                         $(itemElement).css('padding', '15px');
+
+            //                         const gridItensManutencao = $('<div>').appendTo(itemElement).attr('id', 'gridItensManutencao');
+                                    
+            //                         let itensUtilizados = []; // Array local para armazenar itens da manutenção
+
+            //                         // Grid de itens
+            //                         $('#gridItensManutencao').dxDataGrid({
+            //                             dataSource: itensUtilizados,
+            //                             height: 500,
+            //                             keyExpr: 'id',
+            //                             showBorders: true,
+            //                             columnAutoWidth: true,
+            //                             editing: {
+            //                                 mode: 'form', // Modo alterado aqui
+            //                                 allowAdding: true,
+            //                                 allowUpdating: true,
+            //                                 allowDeleting: true,
+            //                                 useIcons: true,
+            //                                 form: {
+            //                                     colCount: 2,
+            //                                     labelLocation: 'top'
+            //                                 }
+            //                             },
+            //                             columns: [
+            //                                 {
+            //                                     dataField: 'cod_produto',
+            //                                     caption: 'Produto',
+            //                                     lookup: {
+            //                                         dataSource: produtosLookup, 
+            //                                         displayExpr: 'PRODUTO_DISPLAY',
+            //                                         valueExpr: 'CODPRO',
+            //                                         searchEnabled: true,
+            //                                         minSearchLength: 3,
+            //                                         searchExpr: 'PRODUTO_DISPLAY'
+            //                                     },
+            //                                     setCellValue: function (newData, value) {
+            //                                         const produto = produtosLookup.find(p => p.CODPRO == value);
+            //                                         if (produto) {
+            //                                             newData.cod_produto = produto.CODPRO;
+            //                                             newData.descricao_produto = produto.DESPRO;
+            //                                             newData.cod_deposito = produto.CODDEP;
+            //                                             newData.descricao_deposito = produto.DESDEP;
+            //                                             newData.unidade_medida = produto.UNIMED;
+            //                                             newData.qtd_estoque = produto.QTDEST;
+            //                                             newData.preco_medio = produto.PRMEST;
+            //                                         }
+            //                                     },
+            //                                     validationRules: [{ type: 'required' }]
+            //                                 },
+            //                                 { dataField: 'descricao_produto', caption: 'Descrição', allowEditing: false },
+            //                                 { dataField: 'cod_deposito', caption: 'Depósito', allowEditing: false },
+            //                                 { dataField: 'descricao_deposito', caption: 'Desc. Depósito', allowEditing: false },
+            //                                 { dataField: 'unidade_medida', caption: 'Unidade', allowEditing: false, width: 80 },
+            //                                 { 
+            //                                     dataField: 'qtd_estoque', 
+            //                                     caption: 'Qtd. Estoque', 
+            //                                     allowEditing: false, 
+            //                                     alignment: 'right', 
+            //                                     width: 'auto', 
+            //                                     dataType: 'number', 
+            //                                     format: { precision: 2 },
+            //                                 },
+            //                                 { 
+            //                                     dataField: 'preco_medio', 
+            //                                     caption: 'Preço Médio', 
+            //                                     allowEditing: false, 
+            //                                     alignment: 'right', 
+            //                                     width: 'auto', 
+            //                                     dataType: 'number', 
+            //                                     format: { type: 'currency', currency: 'BRL', precision: 2 },
+            //                                 },
+            //                                 {
+            //                                     dataField: 'qtd_utilizada',
+            //                                     caption: 'Qtd Utilizada',
+            //                                     dataType: 'number',
+            //                                     width: 100,
+            //                                     validationRules: [{ type: 'required' }]
+            //                                 },
+            //                                 {
+            //                                     dataField: 'custo_unitario',
+            //                                     caption: 'Custo Unitário',
+            //                                     dataType: 'number',
+            //                                     format: { type: 'currency' },
+            //                                     width: 100,
+            //                                     validationRules: [{ type: 'required' }]
+            //                                 },
+            //                                 { dataField: 'observacao', caption: 'Observação', width: 150 }
+            //                             ]
+            //                         });
+
+            //                     }
+            //                 }
+            //             ]
+            //         });                    
+            //     }
+            // }).dxPopup('instance');
+
+            // finalizarPopup.show();
         }
 
         function openOrdemServicoPopup(data) {
@@ -905,4 +1040,3 @@
         }
     });
 </script>
-

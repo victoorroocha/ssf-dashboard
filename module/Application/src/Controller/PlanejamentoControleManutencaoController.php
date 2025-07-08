@@ -742,6 +742,78 @@ class PlanejamentoControleManutencaoController extends BaseController
             ]);
         }
     }
+    public function getProdutosEstoqueLookupAction()
+    {
+        $request = $this->getRequest();
+        $search = strtoupper($this->params()->fromQuery('search', ''));
+
+        $ands = "";
+        if (!empty($search)) {
+            $ands .= "AND REGEXP_REPLACE(TRIM(MVP.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ')), '\s+', ' ') LIKE '%{$search}%'";
+        }
+
+        $sql = "WITH UltimaMovimentacao AS (
+                    SELECT 
+                        MVP.CODEMP,
+                        MVP.CODPRO,
+                        REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ') AS DESPRO,
+                        PRO.UNIMED,
+                        MVP.CODDEP,
+                        REGEXP_REPLACE(TRIM(DEP.DESDEP), '\s+', ' ') AS DESDEP,
+                        MVP.DATMOV,
+                        MVP.SEQMOV,
+                        MVP.ESTEOS,
+                        MVP.PRMEST,
+                        MVP.QTDEST,
+                        MVP.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ') AS PRODUTO_DISPLAY,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY MVP.CODPRO
+                            ORDER BY MVP.DATMOV DESC, MVP.SEQMOV DESC
+                        ) AS RN
+                    FROM E210MVP MVP
+                    LEFT JOIN E075PRO PRO ON PRO.CODEMP = MVP.CODEMP AND PRO.CODPRO = MVP.CODPRO
+                    LEFT JOIN E205DEP DEP ON DEP.CODEMP = MVP.CODEMP AND DEP.CODDEP = MVP.CODDEP
+                    WHERE MVP.CODEMP = 5
+                    AND PRO.SITPRO = 'A'
+                    AND MVP.QTDEST > 0
+                    {$ands}
+                )
+                SELECT * FROM (
+                    SELECT 
+                        CODEMP,
+                        CODPRO,
+                        DESPRO,
+                        UNIMED,
+                        CODDEP,
+                        DESDEP,
+                        QTDEST,
+                        PRMEST,
+                        PRODUTO_DISPLAY
+                    FROM UltimaMovimentacao
+                    WHERE RN = 1
+                    ORDER BY DESPRO, DESDEP
+                )";
+
+        try {
+            $result = $this->oracleService->executeQuery($sql);
+
+            foreach ($result as $key => $row) {
+                $result[$key]['DESPRO'] = utf8_encode($row['DESPRO']);
+                $result[$key]['DESDEP'] = utf8_encode($row['DESDEP']);
+                $result[$key]['PRODUTO_DISPLAY'] = utf8_encode($row['PRODUTO_DISPLAY']);
+            }
+
+            return new JsonModel([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return new JsonModel([
+                'success' => false,
+                'message' => 'Erro ao buscar produtos: ' . $e->getMessage()
+            ]);
+        }
+    }
 
 
 }

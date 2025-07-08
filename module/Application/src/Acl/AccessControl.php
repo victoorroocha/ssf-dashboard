@@ -313,6 +313,7 @@ class AccessControl
             'getLookupTiposManutencao',
             'getLookupEquipamentos',
             'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Analista
