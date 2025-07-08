@@ -681,12 +681,93 @@ class PlanejamentoControleManutencaoController extends BaseController
         public function listarDadosDashboardControleManutencaoAction()
         {
             try {
-                $data = $this->PlanejamentoControleManutencaoRepository->listarControlesManutencao();
-                return new JsonModel(['success' => true, 'data' => $data]);
+                $request = $this->getRequest();
+                $params = $request->getQuery()->toArray();
+
+                $dataInicio = $params['dataInicio'] ?? null;
+                $dataFim    = $params['dataFim'] ?? null;
+
+                if (!$dataInicio || !$dataFim) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Período não informado corretamente.'
+                    ]);
+                }
+
+                $repo = $this->PlanejamentoControleManutencaoRepository;
+
+                $resumoCards       = $repo->buscarResumoCards($dataInicio, $dataFim);
+                $porTipo           = $repo->buscarPorTipoManutencao($dataInicio, $dataFim);
+                $porAreaTecnica    = $repo->buscarPorAreaTecnica($dataInicio, $dataFim);
+                $porEquipamento    = $repo->buscarPorEquipamento($dataInicio, $dataFim);
+                $porSetor          = $repo->buscarPorSetor($dataInicio, $dataFim);
+                $porTecnico        = $repo->buscarPorTecnico($dataInicio, $dataFim);
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => [
+                        'resumoCards' => $resumoCards,
+                        'porTipo' => $porTipo,
+                        'porAreaTecnica' => $porAreaTecnica,
+                        'porEquipamento' => $porEquipamento,
+                        'porSetor' => $porSetor,
+                        'porTecnico' => $porTecnico
+                    ]
+                ]);
             } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao listar controles de manutenção: ' . $e->getMessage()]);
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar dados do dashboard: ' . $e->getMessage()
+                ]);
             }
         }
+        public function detalhesCardsControleManutencaoAction()
+        {
+            try {
+                $request = $this->getRequest();
+                $params = $request->getQuery()->toArray();
+
+                $dataInicio = $params['dataInicio'] ?? null;
+                $dataFim    = $params['dataFim'] ?? null;
+                $tipo       = $params['tipo'] ?? null;
+
+                if (!$dataInicio || !$dataFim) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Período não informado corretamente.'
+                    ]);
+                }
+      
+
+                $repo = $this->PlanejamentoControleManutencaoRepository;
+                $dados = $repo->getDetalhamentoCard($tipo, $dataInicio, $dataFim);
+
+                $colunas = [
+                    ['dataField' => 'id', 'caption' => 'ID'],
+                    ['dataField' => 'nome_tecnico', 'caption' => 'Técnico'],
+                    ['dataField' => 'area_tecnica', 'caption' => 'Área Técnica'],
+                    ['dataField' => 'tipo_manutencao', 'caption' => 'Tipo'],
+                    ['dataField' => 'data_solicitacao', 'caption' => 'Solicitado em', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
+                    ['dataField' => 'status', 'caption' => 'Status'],
+                    ['dataField' => 'custo_total', 'caption' => 'Custo (R$)', 'dataType' => 'number', 'format' => ['type' => 'currency', 'currency' => 'BRL']]
+                ];
+                return new JsonModel([
+                    'success' => true,
+                    'data' => [
+                        'dataSource' => $dados,
+                        'collumns' => $colunas
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao buscar os detalhes: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+
+
     #endRegion
 
     public function getUsuariosSeniorLookupAction()

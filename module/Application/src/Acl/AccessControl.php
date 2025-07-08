@@ -307,6 +307,7 @@ class AccessControl
             'finalizarManutencao',
             'dashboardControleManutencao',
             'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
 
             'getInfoOrdemServico',
             'getUsuariosSeniorLookup',

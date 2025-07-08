@@ -342,7 +342,7 @@
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Mostra o total de solicitações que ainda não foram iniciadas ou programadas, aguardando tratativa.
+                                                    Mostra o total de solicitações.
                                                 </span>
                                             </span>
                                         </div>
@@ -390,7 +390,6 @@
 
                         <div id="page2-marker" class="page-break"></div>
                     <section>
-
 
                     <div id="popup-container"></div>
 
@@ -587,41 +586,26 @@
                 success: function(response) {
                     if (response.success) {
                         // INICIO CARDS
-                            // Acessar os dados do objeto
-                            // const infoCardsMonitoramentoPedidos = response.data.infoCardsMonitoramentoPedidos;
+                            const resumo = response.data.resumoCards;
 
-                            // const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
-                            //     style: 'currency',
-                            //     currency: 'BRL',
-                            //     minimumFractionDigits: 2,
-                            //     maximumFractionDigits: 2
-                            // });
+                            const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
 
-                            // const totalEmitidos = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_EMITIDO ?? 0);
-                            // document.querySelector('.card-column:nth-child(1) .indicator-value').textContent = totalEmitidos;
+                            // Atualiza os valores nos cards conforme o índice dos elementos
+                            document.querySelector('.card-column:nth-child(1) .indicator-value').textContent = resumo.finalizadas ?? 0;
+                            document.querySelector('.card-column:nth-child(2) .indicator-value').textContent = resumo.programadas ?? 0;
+                            document.querySelector('.card-column:nth-child(3) .indicator-value').textContent = resumo.pendentes ?? 0;
+                            document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = resumo.total ?? 0;
+                            document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = formatadorMoeda.format(Number(resumo.custo_total ?? 0));
 
-                            // const totalPagos = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_PAGO ?? 0);
-                            // document.querySelector('.card-column:nth-child(2) .indicator-value').textContent = totalPagos;
-
-                            // const totalVencidos = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_VENCIDO ?? 0);
-                            // document.querySelector('.card-column:nth-child(3) .indicator-value').textContent = totalVencidos;
-
-                            // const totalAVencer = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_A_VENCER ?? 0);
-                            // document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = totalAVencer;
-
-                            // const totalPermuta = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_PERMUTA ?? 0);
-                            // document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = totalPermuta;
-
-                            // const totalSafra = formatadorMoeda.format(infoCardsMonitoramentoPedidos.TOTAL_SAFRA ?? 0);
-                            // document.querySelector('.card-column:nth-child(6) .indicator-value').textContent = totalSafra;
                         // FIM CARDS
 
-                        // INICIO TIPO MANUNTENÇÃO
-                            const dadosManutencao = [
-                                { tipo: "Corretiva", quantidade: 15 },
-                                { tipo: "Preditiva", quantidade: 10 },
-                                { tipo: "Preventiva", quantidade: 25 }
-                            ];
+                        // INICIO TIPO MANUTENÇÃO
+                            const dadosManutencao = response.data.porTipo ?? [];
 
                             const paletaVerde = ["#2E7D32", "#66BB6A", "#A5D6A7"];
 
@@ -675,14 +659,10 @@
                                     }
                                 }]
                             });
-                        // FIM TIPO MANUNTENÇÃO
+                        // FIM TIPO MANUTENÇÃO
 
                         // INICIO POR ÁREA DE DEFEITOS
-                            const dadosPorArea = [
-                                { area: "Mecânica", quantidade: 20 },
-                                { area: "Elétrica", quantidade: 12 },
-                                { area: "Predial", quantidade: 8 }
-                            ];
+                            const dadosPorArea = response.data.porAreaTecnica ?? [];
 
                             $("#graficoPorArea").dxChart({
                                 dataSource: dadosPorArea,
@@ -710,8 +690,8 @@
                                 },
                                 commonSeriesSettings: {
                                     type: "bar",
-                                    barPadding: 0.1,  
-                                    barWidth: 40,     
+                                    barPadding: 0.1,
+                                    barWidth: 40,
                                     label: {
                                         visible: true,
                                         backgroundColor: "#fff",
@@ -752,28 +732,17 @@
                                     height: 350
                                 }
                             });
-
                         // FIM POR ÁREA DE DEFEITOS
 
                         // INICIO POR EQUIPAMENTO
-                            const dadosPorEquipamento = [
-                                { equipamento: "Trator 01", tipo: "Corretiva", quantidade: 8 },
-                                { equipamento: "Trator 01", tipo: "Preventiva", quantidade: 5 },
-                                { equipamento: "Trator 01", tipo: "Preditiva", quantidade: 2 },
-                                { equipamento: "Colheitadeira", tipo: "Corretiva", quantidade: 10 },
-                                { equipamento: "Colheitadeira", tipo: "Preventiva", quantidade: 3 },
-                                { equipamento: "Plantadeira", tipo: "Corretiva", quantidade: 6 },
-                                { equipamento: "Plantadeira", tipo: "Preditiva", quantidade: 4 },
-                                { equipamento: "Pulverizador", tipo: "Preventiva", quantidade: 7 },
-                                { equipamento: "Pulverizador", tipo: "Corretiva", quantidade: 1 },
-                                { equipamento: "Caminhão", tipo: "Corretiva", quantidade: 9 },
-                                { equipamento: "Caminhão", tipo: "Preditiva", quantidade: 2 },
-                                { equipamento: "Caminhão", tipo: "Preventiva", quantidade: 3 },
-                            ];
+                            const dadosPorEquipamento = response.data.porEquipamento ?? [];
 
                             const equipamentosMap = {};
 
                             dadosPorEquipamento.forEach(({ equipamento, tipo, quantidade }) => {
+                                // Corrige nome "Corrretiva" para "Corretiva" (se for erro de digitação)
+                                const tipoCorrigido = tipo === "Corrretiva" ? "Corretiva" : tipo;
+
                                 if (!equipamentosMap[equipamento]) {
                                     equipamentosMap[equipamento] = {
                                         equipamento,
@@ -782,14 +751,18 @@
                                         Preditiva: 0
                                     };
                                 }
-                                equipamentosMap[equipamento][tipo] = quantidade;
+                                equipamentosMap[equipamento][tipoCorrigido] = quantidade;
                             });
 
                             const equipamentosArray = Object.values(equipamentosMap);
+
+                            // Ordena do maior para o menor total de solicitações (soma dos tipos)
                             equipamentosArray.sort((a, b) => (
-                                (a.Corretiva + a.Preventiva + a.Preditiva) -
-                                (b.Corretiva + b.Preventiva + b.Preditiva) 
+                                (b.Corretiva + b.Preventiva + b.Preditiva) -
+                                (a.Corretiva + a.Preventiva + a.Preditiva)
                             ));
+
+                            // Pega os top 10 equipamentos com mais solicitações
                             const dadosTop10 = equipamentosArray.slice(0, 10);
 
                             $("#graficoPorEquipamento").dxChart({
@@ -815,10 +788,10 @@
                                 },
                                 legend: {
                                     visible: true,
-                                    verticalAlignment: "bottom",      
-                                    horizontalAlignment: "center",    
-                                    orientation: "horizontal",        
-                                    itemTextPosition: "right",        
+                                    verticalAlignment: "bottom",
+                                    horizontalAlignment: "center",
+                                    orientation: "horizontal",
+                                    itemTextPosition: "right",
                                     font: {
                                         size: 12,
                                         color: "#1B5E20"
@@ -866,12 +839,7 @@
                         // FIM POR EQUIPAMENTO
 
                         // INICIO POR SETOR
-                            const dadosPorSetor = [
-                                { setor: "Produção", quantidade: 18 },
-                                { setor: "Logística", quantidade: 11 },
-                                { setor: "Armazenagem", quantidade: 9 },
-                                { setor: "Expedição", quantidade: 6 }
-                            ];
+                            const dadosPorSetor = response.data.porSetor ?? [];
 
                             $("#graficoPorSetor").dxChart({
                                 dataSource: dadosPorSetor,
@@ -897,8 +865,8 @@
                                 legend: { visible: false },
                                 commonSeriesSettings: {
                                     type: "bar",
-                                    barPadding: 0.1,  
-                                    barWidth: 40,     
+                                    barPadding: 0.1,
+                                    barWidth: 40,
                                     label: {
                                         visible: true,
                                         backgroundColor: "#fff",
@@ -934,15 +902,11 @@
                                     height: 350
                                 }
                             });
-                        // FIM POR SETOR  
+                        // FIM POR SETOR
 
                         // INICIO POR TÉCNICO
-                            const dadosPorTecnico = [
-                                { tecnico: "Carlos", quantidade: 12 },
-                                { tecnico: "Fernanda", quantidade: 10 },
-                                { tecnico: "João", quantidade: 7 },
-                                { tecnico: "Lucas", quantidade: 5 }
-                            ];
+                            const dadosPorTecnico = response.data.porTecnico ?? [];
+
                             $("#graficoPorTecnico").dxChart({
                                 dataSource: dadosPorTecnico,
                                 rotated: true,
@@ -967,8 +931,8 @@
                                 legend: { visible: false },
                                 commonSeriesSettings: {
                                     type: "bar",
-                                    barPadding: 0.1,  
-                                    barWidth: 40,     
+                                    barPadding: 0.1,
+                                    barWidth: 40,
                                     label: {
                                         visible: true,
                                         backgroundColor: "#fff",
@@ -1004,13 +968,7 @@
                                     height: 350
                                 }
                             });
-
-
-                        // FIM POR TÉCNICO  
-
-
-
-
+                        // FIM POR TÉCNICO
                     }
                 },
                 error: function(error) {
@@ -1025,163 +983,149 @@
     }
 
 
-    // function obterDadosPedidos(tipo) {
-    //     $('#globalLoading').show();
+    function obterDadosControleManutencao(tipo) {
+        $('#globalLoading').show();
 
-    //     formSelections.tipo = tipo;
+        formSelections.tipo = tipo;
 
-    //     return new Promise((resolve, reject) => {
-    //         $.ajax({
-    //             url: '/credito-e-cobranca/detalhes-cards-monitoramento-pedidos-safra',
-    //             method: 'GET',
-    //             dataType: 'json',
-    //             data: formSelections,
-    //             success: function(response) {
-    //                 if (response.success) {
-    //                     const result = response.data;
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/planejamento-controle-manutencao/detalhes-cards-controle-manutencao',
+                method: 'GET',
+                dataType: 'json',
+                data: formSelections,
+                success: function(response) {
+                    if (response.success) {
+                        resolve(response.data || []);
+                    } else {
+                        reject(new Error("Resposta da API não foi bem-sucedida"));
+                    }
+                },
+                error: function(error) {
+                    DevExpress.ui.notify("Erro na requisição dos Detalhes", "error", 3000);
+                    reject(error);
+                },
+                complete: function() {
+                    $('#globalLoading').hide();
+                }
+            });
+        });
+    }
+    async function abrirPopup(tipo) {
+        try {
+            const result = await obterDadosControleManutencao(tipo);
 
-    //                     // Resolve a Promise com os dados filtrados
-    //                     resolve(result || []);
-    //                 } else {
-    //                     reject(new Error("Resposta da API não foi bem-sucedida"));
-    //                 }
-    //             },
-    //             error: function(error) {
-    //                 DevExpress.ui.notify("Erro na requisição dos Detalhes", "error", 3000);
-    //                 reject(error);
-    //             },
-    //             complete: function() {
-    //                 // Esconde o loading quando tudo estiver pronto
-    //                 $('#globalLoading').hide();
-    //             }
-    //         });
-    //     });
-    // }
-    // async function abrirPopup(tipo) {
-    //     try {
-    //         const result = await obterDadosPedidos(tipo);
-            
-    //         // Processa as colunas para converter a string em função
-    //         const processedColumns = result.collumns.map(column => {
-    //             if (column.caption === 'Abrir Pedido Softsul') {
-    //                 return {
-    //                     ...column,
-    //                     cellTemplate: function(container, options) {
-    //                         if (options.data.LINK_REDIRECT_SOFTSUL) {
-    //                             $('<a>')
-    //                                 .attr('href', options.data.LINK_REDIRECT_SOFTSUL)
-    //                                 .attr('target', '_blank')
-    //                                 .attr('title', 'Abrir pedido no sistema')
-    //                                 .addClass('dx-link')
-    //                                 .html('<i class="fa fa-link"></i>')
-    //                                 .appendTo(container);
-    //                         } else {
-    //                             container.text('N/A');
-    //                         }
-    //                     }
-    //                 };
-    //             }
-    //             return column;
-    //         });
+            const processedColumns = result.collumns.map(column => {
+                if (column.dataField === 'DETALHES') {
+                    return {
+                        ...column,
+                        cellTemplate: function(container, options) {
+                            $('<a>')
+                                .addClass('dx-link')
+                                .text('Ver')
+                                .on('click', function () {
+                                    DevExpress.ui.notify('Abrir detalhes não implementado ainda.', 'info', 2000);
+                                })
+                                .appendTo(container);
+                        }
+                    };
+                }
+                return column;
+            });
 
-    //         $("#popup-container").dxPopup({
-    //             width: '80%',
-    //             height: 800,
-    //             showTitle: true,
-    //             title: `Detalhes - ${tipo}`,
-    //             visible: true,
-    //             dragEnabled: true,
-    //             closeOnOutsideClick: true,
-    //             contentTemplate: function () {
-    //                 return $("<div>").dxDataGrid({
-    //                     dataSource: result.dataSource,
-    //                     height: '100%',
-    //                     width: '100%',
-    //                     columnAutoWidth: true,
-    //                     elementAttr: {
-    //                         class: "grid-personalizada"
-    //                     },
-    //                     showBorders: true,
-    //                     columnChooser: {
-    //                         enabled: true,
-    //                         mode: "dragAndDrop",
-    //                         position: { 
-    //                             my: "right", 
-    //                             at: "right", 
-    //                             of: ".dx-datagrid-column-chooser-button" 
-    //                         }
-    //                     },
-    //                     groupPanel: {
-    //                         visible: true,
-    //                     },
-    //                     editing: {
-    //                         mode: 'batch',
-    //                         allowUpdating: false,
-    //                         allowDeleting: false,
-    //                     },
-    //                     selection: {
-    //                         mode: 'multiple',
-    //                         showCheckBoxesMode: 'none'
-    //                     },
-    //                     hoverStateEnabled: true,
-    //                     pager: {
-    //                         visible: true
-    //                     },
-    //                     paging: {
-    //                         pageSize: 500
-    //                     },
-    //                     headerFilter: {
-    //                         visible: true,
-    //                     },
-    //                     filterRow: {
-    //                         visible: true,
-    //                         applyFilter: 'auto',
-    //                     },
-    //                     export: {
-    //                         enabled: true,
-    //                         fileName: "Detalhes " + tipo,
-    //                         allowExportSelectedData: false,
-    //                     },
-    //                     searchPanel: {
-    //                         visible: true,
-    //                         width: 240,
-    //                         placeholder: 'Procure...',
-    //                     },
-    //                     columns: processedColumns,
-    //                     onToolbarPreparing: function (e) {
-    //                         var toolbarItems = e.toolbarOptions.items;
-                            
-    //                         toolbarItems.push({
-    //                             location: "after",
-    //                             widget: "dxButton",
-    //                             options: {
-    //                                 icon: "fa fa-expand",
-    //                                 text: "Expandir",
-    //                                 onClick: function () {
-    //                                     var grid = e.component;
-    //                                     grid.expandAll();
-    //                                 }
-    //                             }
-    //                         });
+            $("#popup-container").dxPopup({
+                width: '80%',
+                height: 800,
+                showTitle: true,
+                title: `Detalhes - ${tipo}`,
+                visible: true,
+                dragEnabled: true,
+                closeOnOutsideClick: true,
+                contentTemplate: function () {
+                    return $("<div>").dxDataGrid({
+                        dataSource: result.dataSource,
+                        height: '100%',
+                        width: '100%',
+                        columnAutoWidth: true,
+                        elementAttr: {
+                            class: "grid-personalizada"
+                        },
+                        showBorders: true,
+                        columnChooser: {
+                            enabled: true,
+                            mode: "dragAndDrop",
+                        },
+                        groupPanel: {
+                            visible: true,
+                        },
+                        editing: {
+                            mode: 'batch',
+                            allowUpdating: false,
+                            allowDeleting: false,
+                        },
+                        selection: {
+                            mode: 'multiple',
+                            showCheckBoxesMode: 'none'
+                        },
+                        hoverStateEnabled: true,
+                        pager: {
+                            visible: true
+                        },
+                        paging: {
+                            pageSize: 500
+                        },
+                        headerFilter: {
+                            visible: true,
+                        },
+                        filterRow: {
+                            visible: true,
+                            applyFilter: 'auto',
+                        },
+                        export: {
+                            enabled: true,
+                            fileName: "Detalhes_" + tipo,
+                            allowExportSelectedData: false,
+                        },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Procure...',
+                        },
+                        columns: processedColumns,
+                        onToolbarPreparing: function (e) {
+                            const toolbarItems = e.toolbarOptions.items;
 
-    //                         toolbarItems.push({
-    //                             location: "after",
-    //                             widget: "dxButton",
-    //                             options: {
-    //                                 icon: "fa fa-compress",
-    //                                 text: "Colapsar",
-    //                                 onClick: function () {
-    //                                     var grid = e.component;
-    //                                     grid.collapseAll();
-    //                                 }
-    //                             }
-    //                         });
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //     } catch (error) {
-    //         console.error('Erro ao obter dados de detalhe ' + tipo + ':', error);
-    //     }
-    // }
+                            toolbarItems.push({
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-expand",
+                                    text: "Expandir",
+                                    onClick: function () {
+                                        e.component.expandAll();
+                                    }
+                                }
+                            });
+
+                            toolbarItems.push({
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    icon: "fa fa-compress",
+                                    text: "Colapsar",
+                                    onClick: function () {
+                                        e.component.collapseAll();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao obter dados do detalhe:', error);
+        }
+    }
+
+
 </script>

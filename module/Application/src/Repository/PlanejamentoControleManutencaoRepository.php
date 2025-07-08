@@ -755,6 +755,209 @@ class PlanejamentoControleManutencaoRepository
         }
 
     #endRegion
+    
+    #region Dashboard Controle de Manutenção
+        public function buscarResumoCards($dataInicio, $dataFim)
+        {
+            $sql = "
+                SELECT
+                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Finalizada') AS finalizadas,
+                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Programada') AS programadas,
+                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Pendente') AS pendentes,
+                    COUNT(DISTINCT cm.id) AS total,
+                    COALESCE(SUM(im.custo_total), 0) AS custo_total
+                FROM controle_manutencao cm
+                LEFT JOIN itens_manutencao im ON cm.id = im.id_manutencao
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+            ";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute()->current(); 
+            return $result;
+        }
+        public function buscarPorTipoManutencao($dataInicio, $dataFim)
+        {
+            $sql = "
+                SELECT tm.nome AS tipo, COUNT(distinct cm.id) AS quantidade
+                FROM controle_manutencao cm
+                JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                GROUP BY tm.nome
+            ";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function buscarPorAreaTecnica($dataInicio, $dataFim)
+        {
+            $sql = "
+                SELECT at.nome AS area, COUNT(distinct cm.id) AS quantidade
+                FROM controle_manutencao cm
+                JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                GROUP BY at.nome
+            ";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function buscarPorEquipamento($dataInicio, $dataFim)
+        {
+            $sql = "
+                    SELECT 
+                        (e.codigo || '-' || e.nome) AS equipamento,
+                        tm.nome AS tipo,
+                        COUNT(distinct cm.id) AS quantidade
+                    FROM controle_manutencao cm
+                    JOIN equipamentos e ON e.id = cm.equipamento_id
+                    JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                    GROUP BY (e.codigo || '-' || e.nome), tm.nome
+            ";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function buscarPorSetor($dataInicio, $dataFim)
+        {
+            $sql = "
+                SELECT s.nome AS setor, COUNT(distinct cm.id) AS quantidade
+                FROM controle_manutencao cm
+                JOIN setores s ON s.id = cm.setor_id
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                GROUP BY s.nome
+            ";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function buscarPorTecnico($dataInicio, $dataFim)
+        {
+            // Consulta para buscar
+            $sql = "SELECT t.nome AS tecnico, COUNT(distinct cm.id) AS quantidade
+                FROM controle_manutencao cm
+                JOIN tecnicos t ON t.id = cm.tecnico_id
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                GROUP BY t.nome";
+
+            $stmt = $this->adapter->createStatement($sql, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function getDetalhamentoCard($tipo = null, $dataInicio = null, $dataFim = null)
+        {
+            $sqlBase = "
+                SELECT 
+                    cm.id,
+                    eq.nome AS equipamento,
+                    s.nome AS setor,
+                    at.nome AS area_tecnica,
+                    tm.nome AS tipo_manutencao,
+                    t.nome AS nome_tecnico,
+                    cm.data_solicitacao,
+                    cm.status,
+                    COALESCE(SUM(im.custo_total), 0) AS custo_total
+                FROM controle_manutencao cm
+                INNER JOIN equipamentos eq ON eq.id = cm.equipamento_id
+                INNER JOIN setores s ON s.id = cm.setor_id
+                INNER JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                INNER JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                INNER JOIN tecnicos t ON t.id = cm.tecnico_id
+                LEFT JOIN itens_manutencao im ON im.id_manutencao = cm.id
+                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+            ";
+
+            // Adiciona filtro conforme o tipo
+            switch ($tipo) {
+                case 'FINALIZADAS':
+                    $sqlBase .= " AND cm.status = 'Finalizada'";
+                    break;
+                case 'PROGRAMADAS':
+                    $sqlBase .= " AND cm.status = 'Programada'";
+                    break;
+                case 'PENDENTES':
+                    $sqlBase .= " AND cm.status = 'Pendente'";
+                    break;
+                case 'CUSTO_TOTAL':
+                    $sqlBase .= " AND im.custo_total > 0";
+                    break;
+                case 'TOTAL':
+                default:
+                    // Sem filtros adicionais
+                    break;
+            }
+
+            $sqlBase .= " GROUP BY 
+                cm.id, eq.nome, s.nome, at.nome, tm.nome, t.nome, cm.data_solicitacao, cm.status
+                ORDER BY cm.data_solicitacao DESC
+            ";
+
+            $stmt = $this->adapter->createStatement($sqlBase, [
+                'inicio' => $dataInicio,
+                'fim' => $dataFim
+            ]);
+
+            $result = $stmt->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+
+
+
+    #endregion
+
 
     #region Ordem de Serviço
         public function getInfoOrdemServico($id)
