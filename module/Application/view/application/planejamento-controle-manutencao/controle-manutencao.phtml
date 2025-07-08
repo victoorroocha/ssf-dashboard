@@ -1107,14 +1107,14 @@
                                     <div class="section">
                                         <div class="section-title">Itens Utilizados</div>
                                         <div class="field-group">
-                                            <table class="os-itens-utilizados" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+                                            <table class="os-itens-utilizados" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px;">
                                                 <thead>
                                                     <tr>
-                                                        <th style="border: 1px solid #ccc; padding: 6px;">Produto</th>
-                                                        <th style="border: 1px solid #ccc; padding: 6px;">Depósito</th>
-                                                        <th style="border: 1px solid #ccc; padding: 6px;">Quantidade</th>
-                                                        <th style="border: 1px solid #ccc; padding: 6px;">Custo Unitário</th>
-                                                        <th style="border: 1px solid #ccc; padding: 6px;">Custo Total</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px;">Produto</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px;">Depósito</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px;">Quantidade</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px;">Custo Unitário</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px;">Custo Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1175,12 +1175,27 @@
 
                                 dadosItens.forEach(item => {
                                     const row = document.createElement('tr');
+
+                                    const qtdFormatada = Number(item.qtd_utilizada).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                                    const custoUnitarioFormatado = Number(item.custo_unitario).toLocaleString('pt-BR', { 
+                                        style: 'currency', 
+                                        currency: 'BRL', 
+                                        minimumFractionDigits: 4, 
+                                        maximumFractionDigits: 4 
+                                    });
+                                    const custoTotalFormatado = Number(item.custo_total).toLocaleString('pt-BR', { 
+                                        style: 'currency', 
+                                        currency: 'BRL', 
+                                        minimumFractionDigits: 4, 
+                                        maximumFractionDigits: 4 
+                                    });
+
                                     row.innerHTML = `
-                                        <td style="border: 1px solid #ccc; padding: 6px;">${item.descricao_produto}</td>
-                                        <td style="border: 1px solid #ccc; padding: 6px;">${item.descricao_deposito}</td>
-                                        <td style="border: 1px solid #ccc; padding: 6px; text-align: right;">${item.qtd_utilizada}</td>
-                                        <td style="border: 1px solid #ccc; padding: 6px; text-align: right;">R$ ${item.custo_unitario}</td>
-                                        <td style="border: 1px solid #ccc; padding: 6px; text-align: right;">R$ ${item.custo_total}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_produto}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_deposito}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${qtdFormatada}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoUnitarioFormatado}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoTotalFormatado}</td>
                                     `;
                                     tbody.appendChild(row);
                                 });

@@ -305,6 +305,9 @@ class AccessControl
             'salvarControleManutencao',
             'excluirControleManutencao',
             'finalizarManutencao',
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+
             'getInfoOrdemServico',
             'getUsuariosSeniorLookup',
             'getLookupAreas',

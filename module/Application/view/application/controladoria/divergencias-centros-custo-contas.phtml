@@ -15,7 +15,7 @@
                     <p>Divergências entre Contas e Centros de Custos</p>
 
                     <div id="form-container">
-                        <div id="form-filtro"></div> <!-- Seu formulário aqui -->
+                        <div id="form-filtro"></div> 
                     </div>
                     <!-- Grid Container for the DataGrid -->
                     <div id="gridContainer"></div>
@@ -39,49 +39,6 @@
         $("#form-filtro").dxForm({
             formData: formData,
             items: [
-                // {
-                //     dataField: "codempresa",
-                //     label: { text: "Empresa" },
-                //     editorType: "dxSelectBox",
-                //     editorOptions: {
-                //         dataSource: new DevExpress.data.CustomStore({
-                //             loadMode: "raw",
-                //             load: function() {
-                //                 return $.ajax({
-                //                     url: "/controladoria/get-lookup-empresa", 
-                //                     method: "GET",
-                //                     dataType: "json"
-                //                 }).then(response => {
-                //                     if (response.success) {
-                //                         return response.data;
-                //                     } else {
-                //                         DevExpress.ui.notify(response.message, "error", 3000);
-                //                         return [];
-                //                     }
-                //                 }).catch(error => {
-                //                     if (error.responseJSON) {
-                //                         DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
-                //                         return {};
-                //                     } else {
-                //                         DevExpress.ui.notify("Erro ao buscar empresas!", "error", 3000);
-                //                         return [];
-                //                     }
-                //                 });
-                //             }
-                //         }),
-                //         displayExpr: "DSC", 
-                //         valueExpr: "ID", 
-                //         placeholder: "Selecione a empresa",
-                //         searchEnabled: true,
-                //         onValueChanged: function(e) {
-                //             // Obtém o código da empresa selecionada
-                //             var codempresa = e.value;
-
-                //             // Atualiza as filiais com base na empresa selecionada
-                //             atualizarFiliais(codempresa);
-                //         },
-                //     },
-                // },
                 {
                     dataField: "codfilial",
                     label: { text: "Filial" },

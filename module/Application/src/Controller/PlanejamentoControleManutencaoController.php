@@ -668,6 +668,27 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
     #endRegion
 
+     #region DASHBOARD Controle de Manutenção
+        public function dashboardControleManutencaoAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listarDadosDashboardControleManutencaoAction()
+        {
+            try {
+                $data = $this->PlanejamentoControleManutencaoRepository->listarControlesManutencao();
+                return new JsonModel(['success' => true, 'data' => $data]);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao listar controles de manutenção: ' . $e->getMessage()]);
+            }
+        }
+    #endRegion
+
     public function getUsuariosSeniorLookupAction()
     {
         $request = $this->getRequest();
