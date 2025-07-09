@@ -743,11 +743,13 @@ class PlanejamentoControleManutencaoController extends BaseController
                 $dados = $repo->getDetalhamentoCard($tipo, $dataInicio, $dataFim);
 
                 $colunas = [
-                    ['dataField' => 'id', 'caption' => 'ID'],
+                    ['dataField' => 'nr_ordem_servico', 'caption' => 'Ordem Serviço', 'width' => 110, 'alignment' => 'center'],
                     ['dataField' => 'nome_tecnico', 'caption' => 'Técnico'],
                     ['dataField' => 'area_tecnica', 'caption' => 'Área Técnica'],
                     ['dataField' => 'tipo_manutencao', 'caption' => 'Tipo'],
                     ['dataField' => 'data_solicitacao', 'caption' => 'Solicitado em', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
+                    ['dataField' => 'data_inicio', 'caption' => 'Inicio', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
+                    ['dataField' => 'data_final', 'caption' => 'Fim', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
                     ['dataField' => 'status', 'caption' => 'Status'],
                     ['dataField' => 'custo_total', 'caption' => 'Custo (R$)', 'dataType' => 'number', 'format' => ['type' => 'currency', 'currency' => 'BRL']]
                 ];

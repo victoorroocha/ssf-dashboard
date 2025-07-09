@@ -895,13 +895,15 @@ class PlanejamentoControleManutencaoRepository
         {
             $sqlBase = "
                 SELECT 
-                    cm.id,
+                    LPAD(cm.id::text, 3, '0') AS nr_ordem_servico,
                     eq.nome AS equipamento,
                     s.nome AS setor,
                     at.nome AS area_tecnica,
                     tm.nome AS tipo_manutencao,
                     t.nome AS nome_tecnico,
                     cm.data_solicitacao,
+                    cm.data_inicio,
+                    cm.data_final,
                     cm.status,
                     COALESCE(SUM(im.custo_total), 0) AS custo_total
                 FROM controle_manutencao cm
@@ -934,10 +936,8 @@ class PlanejamentoControleManutencaoRepository
                     break;
             }
 
-            $sqlBase .= " GROUP BY 
-                cm.id, eq.nome, s.nome, at.nome, tm.nome, t.nome, cm.data_solicitacao, cm.status
-                ORDER BY cm.data_solicitacao DESC
-            ";
+            $sqlBase .= " GROUP BY cm.id, eq.nome, s.nome, at.nome, tm.nome, t.nome, cm.data_solicitacao, cm.status
+                          ORDER BY cm.data_solicitacao DESC";
 
             $stmt = $this->adapter->createStatement($sqlBase, [
                 'inicio' => $dataInicio,
@@ -956,8 +956,7 @@ class PlanejamentoControleManutencaoRepository
 
 
 
-    #endregion
-
+    #endRegion
 
     #region Ordem de Serviço
         public function getInfoOrdemServico($id)
