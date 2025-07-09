@@ -331,14 +331,14 @@
                                     columns: [
                                         // Visiveis
                                         {
-                                            type: "buttons",       // define coluna de botões
-                                            width: 100,             // largura adequada
+                                            type: "buttons",      
+                                            width: 100,            
                                             fixed: true,
                                             fixedPosition: "left",
                                             buttons: [
                                                 {
                                                     hint: "Visualizar Documentos Cliente",
-                                                    icon: "fa fa-eye",   // ícone de olho
+                                                    icon: "fa fa-eye",  
                                                     onClick: function(e) {
                                                         const data = e.row.data;
                                                         abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA, data.GRUPO_CLIENTE, data.CODIGOSAFRA);
@@ -346,7 +346,7 @@
                                                 },
                                                 {
                                                     hint: "Imprimir Documentos",
-                                                    icon: "fa fa-print", // ícone de impressora
+                                                    icon: "fa fa-print", 
                                                     visible: function(e) {
                                                         const docStatus = e.row?.data?.STATUS_DOCUMENTO_PEDIDO;
                                                         const garStatus = e.row?.data?.STATUS_GARANTIA_PEDIDO;
@@ -1362,6 +1362,48 @@
                             $textarea.css('height', $textarea[0].scrollHeight + 'px');
                         //#endregion
 
+                        // #region DEFERIMENTO
+                            $(".checklist-cadastro").append(`
+                                <hr style="border: none; border-top: 2px solid #444; margin-bottom: 16px;" />
+
+                                <div id="grupo-deferimento" style="margin-bottom: 24px;">
+                                    <div style="background-color: #006400; color: white; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 26px; font-weight: bold;">
+                                        05. Deferimento
+                                    </div>
+                                    <div style="padding: 12px; font-size: 22px;">
+                                        <label style="margin-right: 24px;">
+                                            [&nbsp;&nbsp;&nbsp;] Aprovado
+                                        </label>
+                                        <label>
+                                            [&nbsp;&nbsp;&nbsp;] Reprovado
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; padding: 8px 12px; font-size: 22px;"><strong>Observação do Deferimento:</strong></label>
+                                        <textarea id="observacaoDeferimento" 
+                                            style="
+                                                width: 100%;
+                                                padding: 8px;
+                                                font-size: 22px;
+                                                border-radius: 0 0 6px 6px;
+                                                border: 1px solid #ccc;
+                                                resize: none;
+                                                margin: 0 auto;
+                                                display: block;
+                                                min-height: 200px;
+                                            "
+                                            placeholder="Não há observações..."></textarea>
+                                    </div>
+                                </div>
+                            `);
+
+                            // Preenche e ajusta altura como feito na observação do pedido
+                            const $textareaDeferimento = $("#observacaoDeferimento");
+                            $textareaDeferimento.val('');
+                            $textareaDeferimento.css('height', 'auto');
+                            $textareaDeferimento.css('height', $textareaDeferimento[0].scrollHeight + 'px');
+                        // #endregion
+
                         //#region IMPRIMIR E GERAR PDF - Versão Corrigida
                             const loading = document.getElementById('globalLoading');
                             const spinnerGen = document.getElementById('spinnerGeneric');
@@ -1460,112 +1502,6 @@
                                 loadingText.textContent = 'Carregando Informações...';
                                 loading.style.display = 'none';
                             }
-                            // const loading = document.getElementById('globalLoading');
-                            // const spinnerGen = document.getElementById('spinnerGeneric');
-                            // const spinnerPDF = document.getElementById('spinnerPDF');
-                            // const loadingText = document.getElementById('loadingText');
-
-                            // loading.style.display = 'flex';
-                            // spinnerGen.style.display = 'none';
-                            // spinnerPDF.style.display = 'block';
-                            // loadingText.textContent = 'Gerando PDF…';
-
-                            // try {
-                            //     const printArea = document.getElementById('print-area');
-
-                            //     // 🔒 Congela o layout com tamanho fixo para evitar distorções
-                            //     printArea.style.width = '100vw'; // largura da janela do navegador
-                            //     printArea.style.maxWidth = '100vw';
-                            //     printArea.style.minWidth = '100vw';
-                            //     printArea.style.overflowX = 'hidden'; // previne barra horizontal
-                            //     printArea.style.boxSizing = 'border-box';
-
-                            //     // Aguarda renderização e fontes
-                            //     await document.fonts.ready;
-                            //     printArea.offsetHeight; // força reflow
-                                
-                            //     // Adiciona timeout para garantir renderização
-                            //     await new Promise(resolve => setTimeout(resolve, 150));
-                                
-                            //     const canvas = await html2canvas(printArea, {
-                            //         scale: 1.5,
-                            //         useCORS: true,
-                            //         logging: true,
-                            //         allowTaint: true,
-                            //         backgroundColor: '#fff',
-                            //         onclone: (clonedDoc) => {
-                            //             // Mostrar cabeçalho
-                            //             const cabecalho = clonedDoc.querySelector('.cabecalho-content');
-                            //             if (cabecalho) {
-                            //                 cabecalho.classList.remove('hidden-print');
-                            //                 cabecalho.style.backgroundColor = '#006400';
-                            //                 cabecalho.style.color = 'white';
-                            //                 cabecalho.style.padding = '10px 20px';
-                            //                 cabecalho.style.textAlign = 'center';
-                            //             }
-                                        
-                            //             // Mostrar todos os elementos que devem aparecer no PDF
-                            //             const elementsToShow = clonedDoc.querySelectorAll('.hidden-print');
-                            //             elementsToShow.forEach(el => el.classList.remove('hidden-print'));
-
-                            //                 // Substituir textarea por div com texto para impressão
-                            //                 const obsTextarea = clonedDoc.querySelector('#observacaoPedido');
-                            //                 if (obsTextarea) {
-                            //                     const texto = obsTextarea.value || obsTextarea.placeholder || '';
-                            //                     const divObs = clonedDoc.createElement('div');
-
-                            //                     divObs.style.width = '100%';
-                            //                     divObs.style.padding = '8px';
-                            //                     divObs.style.fontSize = '22px';
-                            //                     divObs.style.border = '1px solid #ccc';
-                            //                     divObs.style.borderRadius = '0 0 6px 6px';
-                            //                     divObs.style.whiteSpace = 'pre-wrap';  // preserva quebras de linha
-                            //                     divObs.style.minHeight = '50px';
-                            //                     divObs.textContent = texto;
-
-                            //                     obsTextarea.parentNode.replaceChild(divObs, obsTextarea);
-                            //                 }
-                            //         }
-                            //     });
-
-                            //     const { jsPDF } = window.jspdf;
-                            //     const pdf = new jsPDF('p', 'mm', 'a4');
-                            //     const pageWidth = pdf.internal.pageSize.getWidth();
-                            //     const pageHeight = pdf.internal.pageSize.getHeight();
-                            //     const margemMm = 30 * 0.264583;
-
-                            //     const imgData = canvas.toDataURL('image/png', 1.0);
-                            //     const props = pdf.getImageProperties(imgData);
-
-                            //     const pdfWidth = pageWidth - 2 * margemMm;
-                            //     const maxPdfHeight = pageHeight - 2 * margemMm;
-
-                            //     let pdfHeight = (props.height * pdfWidth) / props.width;
-                            //     if (pdfHeight > maxPdfHeight) {
-                            //         pdfHeight = maxPdfHeight;
-                            //     }
-
-                            //     pdf.addImage(
-                            //         imgData,
-                            //         'PNG',
-                            //         margemMm,
-                            //         margemMm,
-                            //         pdfWidth,
-                            //         pdfHeight,
-                            //         undefined,
-                            //         'FAST'
-                            //     );
-
-                            //     pdf.save(`informacoes-documentos-pedido-${dadosCliente.ID_CLIENTE}.pdf`);
-                            // } catch (err) {
-                            //     console.error('Erro ao gerar PDF:', err);
-                            //     alert('Erro ao gerar PDF. Verifique o console para detalhes.');
-                            // } finally {
-                            //     spinnerPDF.style.display = 'none';
-                            //     spinnerGen.style.display = 'block';
-                            //     loadingText.textContent = 'Carregando Informações...';
-                            //     loading.style.display = 'none';
-                            // }                            
                         //#endregion
 
                     } catch (error) {
