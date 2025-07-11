@@ -16,7 +16,7 @@
 return [
     'db' => [
         'driver'   => 'Pdo_Pgsql',
-        'hostname' => '172.31.23.70',
+        'hostname' => '172.31.19.126',
         'database' => 'ssf_dashboard',
         'username' => 'postgres',
         'password' => 'admin',
