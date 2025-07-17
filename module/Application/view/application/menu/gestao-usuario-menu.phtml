@@ -75,7 +75,7 @@
                     }).then(response => {
                         if (response.success) {
                             return response.data
-                                .filter(usuario => usuario.role !== 'Administrador')
+                                // .filter(usuario => usuario.role !== 'Administrador')
                                 .map(usuario => ({
                                     id: usuario.id,
                                     nome: usuario.nome

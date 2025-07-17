@@ -1441,7 +1441,6 @@ class CreditoECobrancaController extends BaseController
                 #region CARDS MES ATUAL
                     // Informações Cards
                     $infoCardsSQL = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getInfoCardsMonitoramentoPedidos($apuracao_inicio, $apuracao_fim, $codigoSafra) : null;
-                    // echo '<pre>';print_r($infoCardsSQL);exit;
                     if ($infoCardsSQL) {
                         $infoCardsMonitoramentoPedidos = $this->oracleService->executeQuery($infoCardsSQL)[0];
                     }
