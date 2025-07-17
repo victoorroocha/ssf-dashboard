@@ -668,7 +668,7 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
     #endRegion
 
-     #region DASHBOARD Controle de Manutenção
+    #region DASHBOARD Controle de Manutenção
         public function dashboardControleManutencaoAction()
         {
             $session = new Container('auth');
@@ -767,9 +767,6 @@ class PlanejamentoControleManutencaoController extends BaseController
                 ]);
             }
         }
-
-
-
     #endRegion
 
     public function getUsuariosSeniorLookupAction()

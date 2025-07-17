@@ -36,8 +36,28 @@ class MenuRepository
     public function fetchAllowedMenus($userId, $isAdmin = false)
     {
         if ($isAdmin) {
-            // Se for administrador, retorna todos os menus
-            return $this->fetchAll();
+            // Se for administrador, retorna apenas o menu de Gestão do Sistema e seus submenus
+            $select = $this->tableGateway->getSql()->select();
+            $select->where->equalTo('id', 5); // ID do menu "Gestão do Sistema"
+            $menus = $this->tableGateway->selectWith($select)->toArray();
+            
+            // Se encontrou o menu principal, busca toda sua hierarquia
+            if (!empty($menus)) {
+                $select = $this->tableGateway->getSql()->select();
+                $select->where->nest()
+                    ->equalTo('id', 5) // O próprio menu
+                    ->or
+                    ->equalTo('parent_id', 5) // Seus filhos diretos
+                    ->or
+                    ->in('parent_id', 
+                        $this->tableGateway->getSql()->select()
+                            ->columns(['id'])
+                            ->where(['parent_id' => 5]) // IDs dos filhos diretos para buscar netos
+                    );
+                $menus = $this->tableGateway->selectWith($select)->toArray();
+            }
+            
+            return $this->organizeMenus($menus);
         }
 
         // Busca os IDs dos menus permitidos para o usuário
