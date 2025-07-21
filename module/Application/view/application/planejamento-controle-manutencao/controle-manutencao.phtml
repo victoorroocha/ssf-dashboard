@@ -410,6 +410,13 @@
                         return rowData.data_inicio ? new Date(rowData.data_inicio) : new Date(8640000000000000); 
                     }
                 },
+                { 
+                    dataField: 'data_final', 
+                    caption: 'Dt. Finalização', 
+                    dataType: 'date', 
+                    alignment: 'center', 
+                    width: 110,
+                },
                 { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
                 { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'nome', valueExpr: 'id' } },
                 { 

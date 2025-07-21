@@ -257,7 +257,7 @@ class RecursosHumanosRepository
         }
         
         return "SELECT 
-                     DADOS.NUMEMP
+                    DADOS.NUMEMP
                     ,DADOS.NOMEMP
                     ,DADOS.CODFIL
                     ,DADOS.NOMFIL
@@ -289,9 +289,25 @@ class RecursosHumanosRepository
                     ,SUM(DADOS.SALDO) AS SALDO
                     ,CASE WHEN SUM(DADOS.SALDO) < 0 THEN '-' || TO_CHAR(FLOOR(ABS(SUM(DADOS.SALDO)) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(ABS(SUM(DADOS.SALDO)), 60), 'FM00') || ':00'
                     ELSE TO_CHAR(FLOOR(SUM(DADOS.SALDO) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(SUM(DADOS.SALDO), 60), 'FM00') || ':00' END AS SALDO_FORMAT
+                    ,SUM(DADOS.SALDO_POSITIVO) AS SALDO_POSITIVO
+                    -- Formatação do saldo positivo (HH24:MI:SS)
+                    ,CASE 
+                        WHEN SUM(DADOS.SALDO_POSITIVO) = 0 THEN '00:00:00'
+                        ELSE TO_CHAR(FLOOR(SUM(DADOS.SALDO_POSITIVO) / 60), 'FM99999990') 
+                            || ':' || TO_CHAR(MOD(SUM(DADOS.SALDO_POSITIVO), 60), 'FM00') 
+                            || ':00' 
+                    END AS SALDO_POSITIVO_FORMAT
+                    ,SUM(DADOS.SALDO_NEGATIVO) AS SALDO_NEGATIVO
+                    -- Formatação do saldo negativo (HH24:MI:SS, com sinal negativo)
+                    ,CASE 
+                        WHEN SUM(DADOS.SALDO_NEGATIVO) = 0 THEN '00:00:00'
+                        ELSE '-' || TO_CHAR(FLOOR(ABS(SUM(DADOS.SALDO_NEGATIVO)) / 60), 'FM99999990') 
+                            || ':' || TO_CHAR(MOD(ABS(SUM(DADOS.SALDO_NEGATIVO)), 60), 'FM00') 
+                            || ':00' 
+                    END AS SALDO_NEGATIVO_FORMAT
                 FROM (
                     SELECT 
-                         R011LAN.NUMEMP
+                        R011LAN.NUMEMP
                         ,R030EMP.NOMEMP
                         ,R011LAN.TIPCOL
                         ,R011LAN.NUMCAD
@@ -321,6 +337,12 @@ class RecursosHumanosRepository
                         ,SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END) 
                         OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO
                         ,ROW_NUMBER() OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, TO_CHAR(R011LAN.CMPLAN, 'MM'), TO_CHAR(R011LAN.CMPLAN, 'YYYY') ORDER BY R011LAN.DATLAN DESC) AS RN
+                        -- Total acumulado de horas positivas (SINLAN = '+')
+                        ,SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR ELSE 0 END)
+                            OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO_POSITIVO
+                        -- Total acumulado de horas negativas (SINLAN = '-')
+                        ,SUM(CASE WHEN R011LAN.SINLAN = '-' THEN R011LAN.QTDHOR ELSE 0 END)
+                            OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO_NEGATIVO
                     FROM VETORH.R011LAN
                     LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R011LAN.NUMEMP AND R034FUN.TIPCOL = R011LAN.TIPCOL AND R034FUN.NUMCAD = R011LAN.NUMCAD
                     LEFT JOIN VETORH.R034CPL ON R034CPL.NUMEMP = R034FUN.NUMEMP AND R034CPL.TIPCOL = R034FUN.TIPCOL AND R034CPL.NUMCAD = R034FUN.NUMCAD 
@@ -342,7 +364,7 @@ class RecursosHumanosRepository
                 WHERE DADOS.RN = 1
                 {$wheresExternos}
                 GROUP BY NUMEMP,NOMEMP,CODFIL, NOMFIL, CODCCU, TIPCOL,NUMCAD,NUMCRA,NOMFUN,DATADM,CODCAR,TITCAR,TABORG,NUMLOC,NOMLOC,USU_NUMCAD,NOME_SUPERVISOR,DATCMP,MES_REFERENCIA,ANO_REFERENCIA,DADOS.CMPLAN
-                ORDER BY DADOS.NUMCAD, DADOS.ANO_REFERENCIA, DADOS.MES_REFERENCIA ASC ";  
+                ORDER BY DADOS.NUMCAD, DADOS.ANO_REFERENCIA, DADOS.MES_REFERENCIA ASC";  
     }
 
 
