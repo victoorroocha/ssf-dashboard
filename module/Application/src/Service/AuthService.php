@@ -22,6 +22,10 @@ class AuthService
     
     public function authenticate($email, $senha)
     {
+
+        // Normaliza o e-mail para minúsculo
+        $email = strtolower(trim($email));
+
         // Primeiro tenta autenticar localmente
         $localUser = $this->authenticateLocally($email, $senha);
         if ($localUser) {
