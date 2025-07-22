@@ -719,6 +719,7 @@
                                     label: {
                                         visible: true,
                                         position: "inside",
+                                        horizontalOffset: 300, // Aumente este valor para empurrar mais para a direita
                                         customizeText: function (pointInfo) {
                                             const formatador = new Intl.NumberFormat('pt-BR', {
                                                 style: 'currency',
@@ -726,13 +727,26 @@
                                             });
                                             return formatador.format(pointInfo.value);
                                         },
-                                        customizeLabel: function (pointInfo) {
-                                            return {
-                                                horizontalOffset: pointInfo.value < 1000 ? 150 : 120
-                                            };
-                                        },
                                         font: { color: "#b0b0b0", size: 12, weight: "bold" }
                                     }
+
+                                    // label: {
+                                    //     visible: true,
+                                    //     position: "inside", 
+                                    //     customizeText: function (pointInfo) {
+                                    //         const formatador = new Intl.NumberFormat('pt-BR', {
+                                    //             style: 'currency',
+                                    //             currency: 'BRL'
+                                    //         });
+                                    //         return formatador.format(pointInfo.value);
+                                    //     },
+                                    //     customizeLabel: function (pointInfo) {
+                                    //         return {
+                                    //             horizontalOffset: pointInfo.value < 1000 ? 150 : 120
+                                    //         };
+                                    //     },
+                                    //     font: { color: "#b0b0b0", size: 12, weight: "bold" }
+                                    // }
                                 }
                             ],
                             tooltip: {
