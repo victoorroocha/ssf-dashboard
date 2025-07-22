@@ -290,21 +290,7 @@ class RecursosHumanosRepository
                     ,CASE WHEN SUM(DADOS.SALDO) < 0 THEN '-' || TO_CHAR(FLOOR(ABS(SUM(DADOS.SALDO)) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(ABS(SUM(DADOS.SALDO)), 60), 'FM00') || ':00'
                     ELSE TO_CHAR(FLOOR(SUM(DADOS.SALDO) / 60), 'FM99999990') || ':' || TO_CHAR(MOD(SUM(DADOS.SALDO), 60), 'FM00') || ':00' END AS SALDO_FORMAT
                     ,SUM(DADOS.SALDO_POSITIVO) AS SALDO_POSITIVO
-                    -- Formatação do saldo positivo (HH24:MI:SS)
-                    ,CASE 
-                        WHEN SUM(DADOS.SALDO_POSITIVO) = 0 THEN '00:00:00'
-                        ELSE TO_CHAR(FLOOR(SUM(DADOS.SALDO_POSITIVO) / 60), 'FM99999990') 
-                            || ':' || TO_CHAR(MOD(SUM(DADOS.SALDO_POSITIVO), 60), 'FM00') 
-                            || ':00' 
-                    END AS SALDO_POSITIVO_FORMAT
-                    ,SUM(DADOS.SALDO_NEGATIVO) AS SALDO_NEGATIVO
-                    -- Formatação do saldo negativo (HH24:MI:SS, com sinal negativo)
-                    ,CASE 
-                        WHEN SUM(DADOS.SALDO_NEGATIVO) = 0 THEN '00:00:00'
-                        ELSE '-' || TO_CHAR(FLOOR(ABS(SUM(DADOS.SALDO_NEGATIVO)) / 60), 'FM99999990') 
-                            || ':' || TO_CHAR(MOD(ABS(SUM(DADOS.SALDO_NEGATIVO)), 60), 'FM00') 
-                            || ':00' 
-                    END AS SALDO_NEGATIVO_FORMAT
+	                ,SUM(DADOS.SALDO_NEGATIVO) AS SALDO_NEGATIVO
                 FROM (
                     SELECT 
                         R011LAN.NUMEMP
@@ -332,17 +318,40 @@ class RecursosHumanosRepository
                         ,R011LAN.SINLAN
                         ,R011LAN.DATLAN
                         ,R011LAN.CMPLAN
+                        ,R011LAN.ORILAN
                         ,TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'MM')) AS MES_REFERENCIA
                         ,TO_NUMBER(TO_CHAR(R011LAN.CMPLAN, 'YYYY')) AS ANO_REFERENCIA
-                        ,SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR ELSE 0 END) 
-                        OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO
+                        ,SUM(CASE 
+                            WHEN R011LAN.ORILAN <> 'G' THEN 
+                                CASE 
+                                    WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR 
+                                    WHEN R011LAN.SINLAN = '-' THEN -R011LAN.QTDHOR 
+                                    ELSE 0 
+                                END 
+                            ELSE 0 
+                        END)
+                        OVER (
+                            PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD 
+                            ORDER BY R011LAN.DATLAN 
+                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                        ) AS SALDO
                         ,ROW_NUMBER() OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, TO_CHAR(R011LAN.CMPLAN, 'MM'), TO_CHAR(R011LAN.CMPLAN, 'YYYY') ORDER BY R011LAN.DATLAN DESC) AS RN
-                        -- Total acumulado de horas positivas (SINLAN = '+')
-                        ,SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR ELSE 0 END)
-                            OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO_POSITIVO
-                        -- Total acumulado de horas negativas (SINLAN = '-')
-                        ,SUM(CASE WHEN R011LAN.SINLAN = '-' THEN R011LAN.QTDHOR ELSE 0 END)
-                            OVER (PARTITION BY R011LAN.DATCMP, R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD ORDER BY R011LAN.DATLAN ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SALDO_NEGATIVO
+                        ,CASE WHEN ROW_NUMBER() OVER (
+                                    PARTITION BY R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.CMPLAN
+                                    ORDER BY R011LAN.DATLAN DESC
+                            ) = 1
+                            THEN SUM(CASE WHEN R011LAN.SINLAN = '+' THEN R011LAN.QTDHOR ELSE 0 END)
+                                OVER (PARTITION BY R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.CMPLAN)
+                            ELSE 0
+                        END AS SALDO_POSITIVO,
+                        CASE WHEN ROW_NUMBER() OVER (
+                                    PARTITION BY R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.CMPLAN
+                                    ORDER BY R011LAN.DATLAN DESC
+                            ) = 1
+                            THEN SUM(CASE WHEN R011LAN.SINLAN = '-' THEN R011LAN.QTDHOR ELSE 0 END)
+                                OVER (PARTITION BY R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.CMPLAN)
+                            ELSE 0
+                        END AS SALDO_NEGATIVO
                     FROM VETORH.R011LAN
                     LEFT JOIN VETORH.R034FUN ON R034FUN.NUMEMP = R011LAN.NUMEMP AND R034FUN.TIPCOL = R011LAN.TIPCOL AND R034FUN.NUMCAD = R011LAN.NUMCAD
                     LEFT JOIN VETORH.R034CPL ON R034CPL.NUMEMP = R034FUN.NUMEMP AND R034CPL.TIPCOL = R034FUN.TIPCOL AND R034CPL.NUMCAD = R034FUN.NUMCAD 
@@ -358,7 +367,7 @@ class RecursosHumanosRepository
                     AND R011LAN.ORILAN in ('A', 'D', 'B')
                     {$wheresInternos}
                     GROUP BY R011LAN.NUMEMP,R030EMP.NOMEMP,R011LAN.TIPCOL,R011LAN.NUMCAD,R034FUN.CODFIL,R030FIL.NOMFIL,R034FUN.CODCCU,R034FUN.NUMCRA,R034FUN.NOMFUN,R034FUN.DATADM,R034FUN.CODCAR,R024CAR.TITCAR,R034FUN.TABORG,R034FUN.NUMLOC, R034FUN.DATAFA,R016ORN.NOMLOC,R034CPL.USU_NUMCAD,SUPERV.NOMFUN,R011LAN.DATCMP
-                            ,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR
+                            ,R011LAN.ORILAN,R011LAN.CODBHR,R011BHR.DESBHR,R011LAN.CODSIT,R011LAN.SINLAN,R011LAN.DATLAN,R011LAN.CMPLAN,R011LAN.QTDHOR
                     ORDER BY R011LAN.CODBHR, R011LAN.NUMEMP, R011LAN.TIPCOL, R011LAN.NUMCAD, R011LAN.DATLAN
                 ) DADOS
                 WHERE DADOS.RN = 1
