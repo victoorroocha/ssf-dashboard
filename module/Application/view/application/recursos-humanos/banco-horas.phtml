@@ -337,7 +337,7 @@
                                 return;
                             }
                             // Formata as colunas de hora para o Excel
-                            if (options.gridCell.column.dataField === 'SALDO' || options.gridCell.column.dataField === 'MEDIA_HORAS_DIA') {
+                            if (options.gridCell.column.dataField === 'SALDO' || options.gridCell.column.dataField === 'MEDIA_HORAS_DIA' || options.gridCell.column.dataField === 'SALDO_POSITIVO' || options.gridCell.column.dataField === 'SALDO_NEGATIVO') {
                                 options.value = formatHourBalance(options.gridCell.value);
                                 
                                 // Configura o formato de hora no Excel (para que seja reconhecido como tempo)
