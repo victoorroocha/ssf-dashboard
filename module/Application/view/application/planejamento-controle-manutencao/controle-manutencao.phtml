@@ -332,8 +332,23 @@
                     colCount: 2,
                     labelLocation: 'top',
                     items: [
-                        { dataField: 'data_solicitacao', label: { text: 'Data Solicitação' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
-                        { dataField: 'data_inicio', label: { text: 'Data Início' }, editorType: 'dxDateBox', editorOptions: { type: 'date' } },
+                        { dataField: 'data_solicitacao', label: { text: 'Data Solicitação' }, editorType: 'dxDateBox', editorOptions: { type: 'date' }, colSpan: 2, },
+                        { dataField: 'data_inicio', label: { text: 'Data Início' }, editorType: 'dxDateBox', editorOptions: { type: 'date' }, colSpan: 1, },
+                        {
+                            dataField: 'tempo_previsto',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Tempo Previsto' },
+                            colSpan: 1,
+                            editorOptions: {
+                                mask: "00:00",
+                                maskRules: {
+                                    "0": /[0-9]/
+                                },
+                                placeholder: "00:00",
+                                useMaskedValue: true
+                            },
+                            validationRules: [{ type: 'required', message: 'Tempo Previsto é obrigatório' }]
+                        },
                         {
                             dataField: 'nome_solicitante',
                             label: { text: 'Nome do Solicitante' },
@@ -369,7 +384,7 @@
                         { 
                             dataField: 'tipo_manutencao_id', 
                             label: { text: 'Tipo Manutenção' }, 
-                            editorType: 'dxSelectBox', editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tipos-manutencao', 'nome', 'id', 'Selecione o tipo') 
+                            editorType: 'dxSelectBox', editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/listar-tipos-manutencao', 'nome', 'id', 'Selecione o tipo') 
                         },
                         { 
                             dataField: 'area_tecnica_id', 
@@ -409,6 +424,11 @@
                     calculateSortValue: function (rowData) {
                         return rowData.data_inicio ? new Date(rowData.data_inicio) : new Date(8640000000000000); 
                     }
+                },
+                { 
+                    dataField: 'tempo_previsto', 
+                    caption: 'Tempo Previsto', 
+                    visible: false
                 },
                 { 
                     dataField: 'data_final', 
@@ -522,6 +542,32 @@
                     if (isPreventiva) {
                         e.editorOptions.readOnly = true;
                         e.editorOptions.disabled = true;
+                    }
+                }
+                if (e.dataField === 'tipo_manutencao_id') {
+                    const tipoPreventivaId = 1;
+                    const isPreventiva = e.row?.data?.tipo_manutencao_id === tipoPreventivaId;
+
+                    // Bloqueia edição do campo se já for preventiva
+                    if (e.row?.isNewRow === false) {
+                        e.editorOptions.readOnly = true;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = true;
+                        }
+                    }
+
+                    // Bloqueia Preventiva no dropdown quando for novo registro
+                    if (e.row?.isNewRow === true) {
+                        e.editorOptions.dataSource = new DevExpress.data.DataSource({
+                            load: function () {
+                                return $.getJSON('/planejamento-controle-manutencao/get-lookup-tipos-manutencao')
+                                    .then(data => {
+                                        console.log('assadas', data);
+                                        return data;
+                                    });
+                            },
+                            key: 'id'
+                        });
                     }
                 }
             },
@@ -656,13 +702,15 @@
                                     if (!result) return; // Usuário clicou "Não"
 
                                     const formData = form.option('formData');
-                                    const itensGrid = $('#gridItensManutencao').dxDataGrid('instance').option('dataSource');
+                                    // const itensGrid = $('#gridItsensManutencao').dxDataGrid('instance').option('dataSource');
+                                    const gridInstance = $('#gridItensManutencao').dxDataGrid('instance');
+                                    const itens = gridInstance ? gridInstance.getDataSource().items() : [];
 
                                     const envio = {
                                         id: data.id,
                                         ...formData,
                                         status: 'Finalizada',
-                                        itens: itensGrid
+                                        itens: itens
                                     };
 
                                     $.ajax({
@@ -722,9 +770,24 @@
                                                 dataField: 'data_final',
                                                 editorType: 'dxDateBox',
                                                 label: { text: 'Data de Conclusão' },
-                                                colSpan: 2,
+                                                colSpan: 1,
                                                 editorOptions: { width: '100%' },
                                                 validationRules: [{ type: 'required', message: 'Informe a data de conclusão' }]
+                                            },
+                                            {
+                                                dataField: 'tempo_execucao',
+                                                editorType: 'dxTextBox',
+                                                label: { text: 'Tempo Execução' },
+                                                colSpan: 1,
+                                                editorOptions: {
+                                                    mask: "00:00",
+                                                    maskRules: {
+                                                        "0": /[0-9]/
+                                                    },
+                                                    placeholder: "00:00",
+                                                    useMaskedValue: true
+                                                },
+                                                validationRules: [{ type: 'required', message: 'Tempo Execução é obrigatório' }]
                                             },
                                             {
                                                 dataField: 'info_servico',

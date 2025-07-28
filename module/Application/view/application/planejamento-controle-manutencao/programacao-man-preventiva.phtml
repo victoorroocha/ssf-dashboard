@@ -440,11 +440,26 @@
                                     dataField: 'data_inicio',
                                     editorType: 'dxDateBox',
                                     label: { text: 'Data Início' },
-                                    colSpan: 2,
+                                    colSpan: 1,
                                     editorOptions: { width: '100%' },
                                     validationRules: [
                                         { type: 'required' }
                                     ]
+                                },
+                                {
+                                    dataField: 'tempo_previsto',
+                                    editorType: 'dxTextBox',
+                                    label: { text: 'Tempo Previsto' },
+                                    colSpan: 1,
+                                    editorOptions: {
+                                        mask: "00:00",
+                                        maskRules: {
+                                            "0": /[0-9]/
+                                        },
+                                        placeholder: "00:00",
+                                        useMaskedValue: true
+                                    },
+                                    validationRules: [{ type: 'required', message: 'Tempo Previsto é obrigatório' }]
                                 },
                                 {
                                     dataField: 'nome_solicitante',

@@ -208,7 +208,7 @@ class RecursosHumanosController extends BaseController
                 ]);
             }
         }
-        #endregion
+    #endregion
 
     #region Lookups Filtros
     public function getLookupColaboradorAction()
@@ -461,6 +461,74 @@ class RecursosHumanosController extends BaseController
         }
     }
     #endregion
+
+    #region Controle Banco de Horas
+        public function dashboardTurnoverAction()
+        {
+            $session = new Container('auth');
+    
+            if (!isset($session->user)) {
+                // Redireciona o usuário para o login caso não esteja autenticado
+                return $this->redirect()->toRoute('login');
+            }
+    
+            return new ViewModel();
+        }
+        public function listInfoDashboardTurnoverAction()
+        {
+            // Verifica se o serviço Oracle está disponível
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            // Captura os parâmetros da requisição GET
+            $dataInicio = $this->params()->fromQuery('dataInicio', null);
+            $dataFim = $this->params()->fromQuery('dataFim', null);
+
+            try {
+                // Define o cabeçalho corretamente antes de qualquer saída
+                $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8')
+                                                ->addHeaderLine('Cache-Control', 'no-store, no-cache, must-revalidate')
+                                                ->addHeaderLine('Pragma', 'no-cache')
+                                                ->addHeaderLine('Expires', '0');
+
+                // Infos Todos Colaboradores Base
+                $infosColaboradoresSQL = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getDadosDashboardTurnover() : null;
+                if ($infosColaboradoresSQL) {
+                    $infosColaboradores = $this->oracleService->executeQuery($infosColaboradoresSQL);
+                }
+
+                echo '<pre>';
+                print_r($infosColaboradores);exit;
+
+                #region Informações Cards
+                    $infoCardsResult = null;
+                    
+                #endregion
+
+                // Retorna os dados em JSON
+                return new JsonModel([
+                    'success' => true,
+                    'data' => array(
+                        'infoCards' => $infoCardsResult,
+                    ),
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+    #endregion
+
+
+
+
+
 
     // // action com paginação
     // public function listLancamentosApuracoesColaboradoresAction()

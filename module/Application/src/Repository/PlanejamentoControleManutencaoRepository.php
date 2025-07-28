@@ -513,6 +513,7 @@ class PlanejamentoControleManutencaoRepository
                                 status,
                                 data_solicitacao,
                                 data_inicio,
+                                tempo_previsto,
                                 nome_solicitante,
                                 prioridade,
                                 tipo_manutencao_id,
@@ -526,6 +527,7 @@ class PlanejamentoControleManutencaoRepository
                                 'Pendente',
                                 :data_solicitacao,
                                 :data_inicio,
+                                :tempo_previsto,
                                 :nome_solicitante,
                                 :prioridade,
                                 :tipo_manutencao_id,
@@ -539,6 +541,7 @@ class PlanejamentoControleManutencaoRepository
                     ':descricao_defeito' => $data['descricao_defeito'],
                     ':data_solicitacao' => $data['data_solicitacao'],
                     ':data_inicio' => $data['data_inicio'],
+                    ':tempo_previsto' => $data['tempo_previsto'],
                     ':nome_solicitante' => $data['nome_solicitante'],
                     ':prioridade' => $data['prioridade'],
                     ':tipo_manutencao_id' => $data['tipo_manutencao_id'],
@@ -617,6 +620,7 @@ class PlanejamentoControleManutencaoRepository
                 ':descricao_defeito' => $data['descricao_defeito'] ?? null,
                 ':tecnico_id' => $data['tecnico_id'],
                 ':data_inicio' => $data['data_inicio'] ?? null,
+                ':tempo_previsto' => $data['tempo_previsto'] ?? null,
                 ':data_final' => $data['data_final'] ?? null,
                 ':status' => $data['status'] ?? 'Pendente',
                 ':info_servico' => $data['info_servico'] ?? null,
@@ -635,6 +639,7 @@ class PlanejamentoControleManutencaoRepository
                             descricao_defeito = :descricao_defeito,
                             tecnico_id = :tecnico_id,
                             data_inicio = :data_inicio,
+                            tempo_previsto = :tempo_previsto,
                             data_final = :data_final,
                             status = :status,
                             info_servico = :info_servico,
@@ -645,11 +650,11 @@ class PlanejamentoControleManutencaoRepository
                 $sql = "INSERT INTO controle_manutencao (
                             data_solicitacao, nome_solicitante, setor_id, prioridade,
                             equipamento_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, tecnico_id,
-                            data_inicio, data_final, status, info_servico, observacoes
+                            data_inicio, tempo_previsto, data_final, status, info_servico, observacoes
                         ) VALUES (
                             :data_solicitacao, :nome_solicitante, :setor_id, :prioridade,
                             :equipamento_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito, :tecnico_id,
-                            :data_inicio, :data_final, :status, :info_servico, :observacoes
+                            :data_inicio, :tempo_previsto, :data_final, :status, :info_servico, :observacoes
                         )";
             }
 
@@ -676,6 +681,7 @@ class PlanejamentoControleManutencaoRepository
                     UPDATE controle_manutencao
                     SET 
                         data_final = :data_final,
+                        tempo_execucao = :tempo_execucao,
                         info_servico = :info_servico,
                         observacoes = :observacoes,
                         status = 'Finalizada'
@@ -684,6 +690,7 @@ class PlanejamentoControleManutencaoRepository
 
                 $paramsUpdate = [
                     ':data_final' => $data['data_final'] ?? null,
+                    ':tempo_execucao' => $data['tempo_execucao'] ?? null,
                     ':info_servico' => $data['info_servico'] ?? null,
                     ':observacoes' => $data['observacoes'] ?? null,
                     ':id' => $data['id'],
