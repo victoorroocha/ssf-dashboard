@@ -775,11 +775,6 @@
                             var dataSourcePagamento = response.data.infoRecebimentoDataPagamento || [];
                             var moedaBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-                            console.log('dataSourcePagamento', dataSourcePagamento);
-
-
-
-                            
                             var graficoPagamento = $("#chart1").dxChart({
                                 dataSource: dataSourcePagamento,
                                 rotated: false, 

@@ -1,92 +1,5 @@
+
 <style>
-    /* Adicione isso ao seu CSS existente */
-    .chart-row {
-        display: flex;
-        flex-wrap: wrap;
-        margin: 0 -5px;
-        width: 100%;
-    }
-    .chart-half {
-        flex: 0 0 50%;
-        max-width: 50%;
-        padding: 0 5px;
-        box-sizing: border-box;
-    }
-    
-    @media (max-width: 768px) {
-        .chart-half {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-    }
-    .dashboard-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        padding: 5px;
-        margin-bottom: 20px;
-        height: 85%;
-    }
-    .indicator-card {
-        padding: 12px 8px;
-        border-radius: 8px;
-        text-align: center;
-        height: 100%;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between; /* Distribui o espaço verticalmente */
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-    }
-    .indicator-card:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-        opacity: 0.95;
-    }
-    .indicator-title {
-        font-size: 12px;
-        font-weight: 500;
-        margin-bottom: 5px;
-        /* white-space: nowrap; */
-        align-self: flex-start; /* Posiciona no topo */
-        word-wrap: break-word; white-space: normal;
-        width: 100%;
-    }
-    .indicator-value {
-        font-size: 14px;
-        font-weight: bold;
-        margin: auto 0; /* Centraliza verticalmente */
-        text-align: center;
-        width: 100%;
-    }
-    .indicator-change {
-        font-size: 12px;
-        background-color: rgba(255,255,255,0.2);
-        border-radius: 12px;
-        padding: 2px 6px;
-        display: inline-block;
-        align-self: flex-end; /* Posiciona na base */
-        width: 100%;
-        margin-top: auto; /* Empurra para baixo */
-        text-align: center;
-    }
-    .cards-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    /* 6 cards por linha */
-    .card-column {
-        flex: 0 1 calc(16.66% - 10px);
-        min-width: 130px;
-        box-sizing: border-box;
-    }
-
-
     /* Período de Apuração */
     .period-title {
         background-color: white;
@@ -99,69 +12,9 @@
         border-left: 4px solid var(--primary-color);
         text-align: center;
     }
-
     .period-title i {
         color: var(--primary-color);
         margin-right: 10px;
-    }
-
-    .detalhes-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-    }
-    .bloco-info {
-        flex: 1 1 200px;
-        padding: 16px;
-        border-radius: 8px;
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: relative;
-    }
-    .bloco-info h4 {
-        margin-top: 0;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    /* Cores específicas de fundo e borda */
-    .bloco-info:nth-child(1) {
-        border-left: 6px solid #AED581;
-        background-color: #F1F8E9;
-    }
-    .bloco-info:nth-child(2) {
-        border-left: 6px solid #FFD54F;
-        background-color: #FFFDE7;
-    }
-    .bloco-info:nth-child(3) {
-        border-left: 6px solid #4FC3F7;
-        background-color: #E1F5FE;
-    }
-    .bloco-info:nth-child(4) {
-        border-left: 6px solid #BCAAA4;
-        background-color: #EFEBE9;
-    }
-    /* Mini-cards internos de valores */
-    .valor-box {
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        padding: 8px 12px;
-        border-radius: 6px;
-        margin-top: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        border-left: 4px solid currentColor;
-    }
-    .valor-titulo {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 2px;
-        font-weight: 600;
-    }
-    .valor-montante {
-        font-size: 16px;
-        font-weight: bold;
     }
 
     .cabecalho-content {
@@ -170,13 +23,14 @@
         padding: 10px 20px;
         text-align: center;
     }
+
     .cabecalho-logo {
-        filter: brightness(0) invert(1); /* deixa logo branca */
-        width: 100%;         /* ocupa 100% da largura disponível */
-        height: auto;        /* mantém proporção */
-        max-height: 100px;    /* evita que fique muito alto */
-        object-fit: contain; /* garante que a imagem não distorça */
-        margin-bottom: 5px;  /* espaço abaixo da imagem */
+        filter: brightness(0) invert(1);
+        width: 100%;
+        height: auto;
+        max-height: 100px;
+        object-fit: contain;
+        margin-bottom: 5px;
     }
 
     .cabecalho-logo-div {
@@ -189,53 +43,141 @@
         margin-bottom: 5px;
     }
 
-
     .hidden-print {
         display: none !important;
     }
-    .custom-tooltip {
-        position: relative;
-        display: inline-block;
-        cursor: pointer;
-        margin-left: 5px;
-        color: #fff;
+
+.container-turnover {
+    display: flex;
+    margin-top: 20px;
+    gap: 20px;
+    align-items: stretch;
+    height: auto; /* ou remova completamente se estiver fixo */
+}
+
+.turnover-cards {
+    flex: 0 0 15%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+}
+
+.turnover-cards .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.card-header-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+}
+    
+.card-admitidos .card-header-line {
+    background-color: #2e7d32; /* verde escuro */
+}
+
+.card-desligados .card-header-line {
+    background-color: #c62828; /* vermelho escuro */
+}
+
+.card-ativos .card-header-line {
+    background-color: #616161; /* cinza escuro */
+}
+
+.card-tempo .card-header-line {
+    background-color: #424242; /* cinza mais escuro */
+}
+
+.card-turnover .card-header-line {
+    background-color: #1976d2; /* azul ou outra cor distinta */
+}
+
+.card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.card-title {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.card-value {
+    font-size: 40px;
+    font-weight: 700;
+    color: #444;
+    line-height: 1;
+}
+
+.card-icon {
+    font-size: 30px;
+    color: #222;
+}
+
+    .turnover-cards .card hr {
+        margin: 4px 0;
+        border: none;
+        border-top: 1px solid #ccc;
     }
 
-    .custom-tooltip .tooltip-text {
-        visibility: hidden;
-        width: 220px;
-        background-color: #333;
-        color: #fff;
-        text-align: left;
-        border-radius: 6px;
-        padding: 8px 10px;
+    /* Gráficos em 2 colunas por 2 linhas com gráfico central */
+    .turnover-charts-wrap {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 10px;
+        height: 100%;
+        position: relative; /* Necessário para posicionamento absoluto do central */
+        padding: 10px;
+    }
+    .turnover-charts-wrap .chart-half {
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 340px; /* Altura fixa para visualização */
+        /* display: flex; */
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    /* Gráfico circular central */
+    .chart-central {
         position: absolute;
-        z-index: 1;
-        bottom: 125%; /* acima do ícone */
+        top: 50%;
         left: 50%;
-        transform: translateX(-50%);
-        opacity: 0;
-        box-shadow: 0 4px 10px rgba(182, 182, 182, 0.3);
-        transition: opacity 0.3s;
-        font-size: 13px;
-    }
-
-    .custom-tooltip .tooltip-text::after {
-        content: "";
-        position: absolute;
-        top: 100%; /* seta na parte inferior do tooltip */
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: #333 transparent transparent transparent;
-    }
-
-    .custom-tooltip:hover .tooltip-text {
-        visibility: visible;
-        opacity: 1;
-    }
+        transform: translate(-50%, -50%);
+        width: 260px;
+        height: 260px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #555;
+    } 
 </style>
+
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
@@ -274,17 +216,78 @@
                         <!-- Período de Apuração -->
                         <div class="period-title">
                             <i class="fas fa-calendar-week"></i> Período: <span id="periodo-apuracao"></span>
+                        </div>        
+                        
+                        <div class="container-turnover">
+                            <!-- Coluna da esquerda: cards -->
+                            <div class="turnover-cards">
+                                <div class="card card-admitidos">
+                                <div class="card-header-line"></div>
+                                <div class="card-text">
+                                    <div class="card-title">Admitidos</div>
+                                    <div class="card-value" id="valor-admitidos">0</div>
+                                    <i class="fas fa-user-tie card-icon"></i>
+                                </div>
+                                </div>
+
+                                <div class="card card-desligados">
+                                <div class="card-header-line"></div>
+                                <div class="card-text">
+                                    <div class="card-title">Desligados</div>
+                                    <div class="card-value" id="valor-demissoes">0</div>
+                                    <i class="fas fa-user-minus card-icon"></i>
+                                </div>
+                                </div>
+
+                                <div class="card card-ativos">
+                                <div class="card-header-line"></div>
+                                <div class="card-text">
+                                    <div class="card-title">Ativos</div>
+                                    <div class="card-value" id="valor-ativos">0</div>
+                                    <i class="fas fa-users card-icon"></i>
+                                </div>
+                                </div>
+
+                                <div class="card card-tempo">
+                                <div class="card-header-line"></div>
+                                <div class="card-text">
+                                    <div class="card-title">Tempo Médio de Empresa (em meses)</div>
+                                    <div class="card-value" id="valor-tempo-medio">0</div>
+                                    <i class="fas fa-user-clock card-icon"></i>
+                                </div>
+                                </div>
+
+                                <div class="card card-turnover">
+                                <div class="card-header-line"></div>
+                                <div class="card-text">
+                                    <div class="card-title">% Turnover</div>
+                                    <div class="card-value" id="valor-turnover">0</div>
+                                    <i class="fas fa-user-clock card-icon"></i>
+                                </div>
+                                </div>
+                            </div>
+
+
+                            <!-- Coluna da direita: gráficos -->
+                            <div class="turnover-charts-wrap">
+                                <div class="chart-half" id="grafico1"></div>
+                                <div class="chart-half" id="grafico2"></div>
+                                <div class="chart-half" id="grafico3"></div>
+                                <div class="chart-half" id="grafico4"></div>
+                                <div class="chart-central">Gráfico Central</div>
+                            </div>
+
+
                         </div>
                     <section>
 
-
                     <div id="popup-container"></div>
-
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 
 <script>
@@ -436,7 +439,7 @@
 
         // Inicializa o Range Selector
         const today = moment();
-        const startYear = 2024; // definido para pegar historico de 2023 pra k.
+        const startYear = 2025; // definido para pegar historico de 2023 pra k.
         const startOfMonth = today.clone().startOf('year');  // Primeiro dia do mês atual
         const endOfMonth = today.clone().endOf('year');     // Último dia do mês atual
 
@@ -498,8 +501,66 @@
                 dataType: 'json',
                 data: formSelections,
                 success: function(response) {
-                    if (response.success) {
-                        console.log('data', response.data)
+                    if (response.success && response.data && response.data.infoCardsTurnover) {
+                        const info = response.data.infoCardsTurnover;
+                        if (info !== null) {
+                            $('#valor-admitidos').text(info.ADMITIDOS || 0);
+                            $('#valor-demissoes').text(info.DEMITIDOS || 0);
+                            $('#valor-ativos').text(info.ATIVOS || 0);
+                            $('#valor-tempo-medio').text(parseFloat(info.TEMPO_MEDIO_EMPRESA || 0).toFixed(1));
+                            $('#valor-turnover').text(parseFloat(info.PERC_TURNOVER || 0).toFixed(1));
+                        }
+                    }
+
+                    if (response.success && response.data && response.data.turnoverPorMes) {
+                        const turnoverPorMes = response.data.turnoverPorMes;
+
+                        var graficoTurnover = $("#grafico1").dxChart({
+                            dataSource: turnoverPorMes,
+                            rotated: false,
+                            commonSeriesSettings: {
+                                argumentField: "mes",
+                                type: "line",
+                                label: {
+                                    visible: true,
+                                    backgroundColor: "transparent",
+                                    font: {
+                                        color: "#1976d2",
+                                        weight: 600
+                                    },
+                                    customizeText: function(e) {
+                                        return (e.value).toFixed(1) + "%";
+                                    }
+                                }
+                            },
+                            series: [{
+                                valueField: "perc_turnover",
+                                name: "Turnover",
+                                color: "#1976d2"
+                            }],
+                            argumentAxis: {
+                                visible: true,
+                                label: { visible: false },
+                                tick: { visible: false },
+                                line: { visible: false },
+                                grid: { visible: false }
+                            },
+                            valueAxis: {
+                                visible: true,
+                                label: { visible: false },
+                                tick: { visible: false },
+                                line: { visible: false },
+                                grid: { visible: false },
+                                max: 1,
+                                min: 0
+                            },
+                            legend: { visible: false },
+                            tooltip: { enabled: false },
+                            title: "",
+                            size: { height: "100%", width: '100%' }
+                        }).dxChart("instance");
+
+
                     }
                 },
                 error: function(error) {

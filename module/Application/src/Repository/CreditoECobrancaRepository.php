@@ -1671,7 +1671,8 @@ class CreditoECobrancaRepository
                         CLI.NOME,
                         P.RTV_USER_ID,
                         VEND.NAME,
-                        PARC.VENCIMENTO_PARCELA";
+                        PARC.VENCIMENTO_PARCELA
+                    HAVING SUM(PARC.PRECO_PARCELA) > 0";
         }
         public function getDetalhesPedidosAVencerPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
         {
@@ -1695,7 +1696,7 @@ class CreditoECobrancaRepository
                         CLI.NOME AS NOME_CLIENTE,
                         P.RTV_USER_ID AS VENDEDOR_ID,
                         VEND.NAME AS NOME_VENDEDOR,
-                        PARC.VENCIMENTO_PARCELA,
+                        TO_CHAR(PARC.VENCIMENTO_PARCELA, 'YYYY-MM-DD') AS VENCIMENTO_PARCELA,
                         SUM(parc.PRECO_PARCELA) AS PRECO_PARCELA
                         ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.view_vencimentos_por_data parc
@@ -1721,7 +1722,8 @@ class CreditoECobrancaRepository
                         CLI.NOME,
                         P.RTV_USER_ID,
                         VEND.NAME,
-                        PARC.VENCIMENTO_PARCELA";
+                        PARC.VENCIMENTO_PARCELA
+                    HAVING SUM(PARC.PRECO_PARCELA) > 0";
         }
         public function getDetalhesPedidosPermuta($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
         {

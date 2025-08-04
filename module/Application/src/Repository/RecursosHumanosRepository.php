@@ -1346,103 +1346,36 @@ class RecursosHumanosRepository
     #endRegion
 
     #region Informações do Dashboard Turnover
-    public function getDadosDashboardTurnover($flgAtivos = false)
-    {
-        $ands = "";
-        if ($flgAtivos == true) {
-            $ands .= "AND R010SIT.TIPSIT <> 7
-                      AND (NOT EXISTS (
-                          SELECT 1
-                          FROM VETORH.R034MDL
-                          WHERE R034MDL.NUMEMP = R034FUN.NUMEMP
-                          AND R034MDL.TIPCOL = R034FUN.TIPCOL
-                          AND R034MDL.NUMCAD = R034FUN.NUMCAD
-                          AND R034MDL.CODMOD = 9
-                      ) OR EXISTS (
-                          SELECT 1
-                          FROM VETORH.R034MDL
-                          WHERE R034MDL.NUMEMP = R034FUN.NUMEMP
-                          AND R034MDL.TIPCOL = R034FUN.TIPCOL
-                          AND R034MDL.NUMCAD = R034FUN.NUMCAD
-                          AND R034MDL.CODMOD = 9
-                          AND R034MDL.INDCON = 'S'
-                      ))
-                      AND NOT EXISTS (
-                          SELECT R034FUN.NUMCAD
-                          FROM VETORH.R038AFA, VETORH.R010SIT, VETORH.R042CAU
-                          WHERE R010SIT.TIPSIT = 7
-                          AND R010SIT.CODSIT = R038AFA.SITAFA
-                          AND R038AFA.CAUDEM = R042CAU.CAUDEM
-                          AND (R042CAU.TIPTSF = 'E' OR R042CAU.TIPTSF = 'F')
-                          AND R038AFA.DATAFA > DATAFA
-                          AND R034FUN.NUMEMP = R038AFA.NUMEMP
-                          AND R034FUN.TIPCOL = R038AFA.TIPCOL
-                          AND R034FUN.NUMCAD = R038AFA.NUMCAD
-                      ) -- condições para garantir apenas colaboradores ativos da mesma forma que consulta ativos da chave copia (proprietária)";
+        public function getCardsDashboardTurnover($dataInicial = null, $dataFinal = null)
+        {
+
+            return "SELECT 
+                        COUNT(DISTINCT A.ATIVOS) ATIVOS
+                        ,COUNT(DISTINCT A.ADMITIDOS) ADMITIDOS
+                        ,COUNT(DISTINCT A.DEMITIDOS) DEMITIDOS
+                        ,((COUNT(DISTINCT A.ATIVOS_INICIO) + COUNT(DISTINCT A.ATIVOS)) /2) MEDIA_COLABORADORES_ANO
+                        ,((COUNT(DISTINCT A.ADMITIDOS) + COUNT(DISTINCT A.DEMITIDOS)) / 2) / ((COUNT(DISTINCT A.ATIVOS_INICIO) + COUNT(DISTINCT A.ATIVOS)) /2) * 100 PERC_TURNOVER
+                        ,AVG(TEMPO_EMPRESA_MESES) TEMPO_MEDIO_EMPRESA
+                    FROM (
+                    SELECT 
+                        R034FUN.NUMEMP 
+                        ,R034FUN.TIPCOL 
+                        ,R034FUN.NUMCAD 
+                        ,R034FUN.NOMFUN 
+                        ,R034FUN.DATADM
+                        ,R034FUN.SITAFA
+                        ,R034FUN.DATAFA
+                        ,CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < TO_DATE('{$dataFinal}', 'YYYY-MM-DD') THEN NULL ELSE CASE WHEN R034FUN.SITAFA = 7 THEN MONTHS_BETWEEN(R034FUN.DATAFA, R034FUN.DATADM) ELSE MONTHS_BETWEEN(SYSDATE, R034FUN.DATADM) END END AS TEMPO_EMPRESA_MESES
+                        ,R034FUN.TIPSEX 
+                        ,CASE WHEN R034FUN.DATADM BETWEEN TO_DATE('{$dataInicial}', 'YYYY-MM-DD') AND TO_DATE('{$dataFinal}', 'YYYY-MM-DD') THEN R034FUN.NUMCAD ELSE NULL END ADMITIDOS
+                        ,CASE WHEN R034FUN.DATAFA BETWEEN TO_DATE('{$dataInicial}', 'YYYY-MM-DD') AND TO_DATE('{$dataFinal}', 'YYYY-MM-DD') AND R034FUN.SITAFA = 7 THEN R034FUN.NUMCAD ELSE NULL END DEMITIDOS
+                        ,CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < TO_DATE('{$dataFinal}', 'YYYY-MM-DD') THEN NULL ELSE R034FUN.NUMCAD END ATIVOS
+                        ,CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < TO_DATE('{$dataInicial}', 'YYYY-MM-DD') THEN NULL ELSE R034FUN.NUMCAD END ATIVOS_INICIO
+                    FROM VETORH.R034FUN 
+                    INNER JOIN VETORH.R010SIT ON R010SIT.CODSIT = R034FUN.SITAFA
+                    WHERE R034FUN.TIPCOL = 1
+                    AND R034FUN.NUMEMP IN (5,12) 
+                    ) A";  
         }
-
-        return "SELECT 
-                     R034FUN.NUMEMP 
-                    ,R034FUN.TIPCOL 
-                    ,R034FUN.NUMCAD 
-                    ,R034FUN.NOMFUN 
-                    ,TO_CHAR(R034FUN.DATADM, 'YYYY-MM-DD') AS DATADM
-                    ,CASE WHEN SITAFA = 7 THEN MONTHS_BETWEEN(R034FUN.DATAFA, R034FUN.DATADM) ELSE MONTHS_BETWEEN(SYSDATE, R034FUN.DATADM) END AS TEMPO_EMPRESA_MESES
-                    ,R034FUN.TIPADM 
-                    ,CASE R034FUN.TIPADM
-                        WHEN 1  THEN 'Primeiro Emprego'
-                        WHEN 2  THEN 'Reemprego'
-                        WHEN 3  THEN 'Transferência c/ Ônus'
-                        WHEN 4  THEN 'Transferência s/ Ônus'
-                        WHEN 5  THEN 'Incorporação/Fusão/Cisão/Outros'
-                        WHEN 6  THEN 'Reintegração'
-                        WHEN 7  THEN 'Recondução (Servidor Público)'
-                        WHEN 8  THEN 'Reversão (Servidor Público)'
-                        WHEN 9  THEN 'Provisório de servidor do mesmo órgão/entidade'
-                        WHEN 10 THEN 'Requisição'
-                        WHEN 11 THEN 'Redistribuição (Servidor Público)'
-                        WHEN 12 THEN 'Descentralizado de servidor do mesmo órgão/entidade'
-                        WHEN 13 THEN 'Remoção (Servidor Público)'
-                        WHEN 14 THEN 'Readaptação (Servidor Público)'
-                    ELSE 'Tipo de Admissão Desconhecido'
-                    END AS DESC_TIPADM
-                    ,TRUNC(MONTHS_BETWEEN(SYSDATE, R034FUN.DATNAS ) / 12) AS IDADE                                                                                                                                                                               
-                    ,R034FUN.TIPSEX                                                                                                                                                                                                                              
-                    ,CASE WHEN R034FUN.ESTCIV = 1 THEN 'Solteiro (a)'                                                                                                                                                                                            
-                        WHEN R034FUN.ESTCIV = 2 THEN 'Casado (a)'                                                                                                                                                                                              
-                        WHEN R034FUN.ESTCIV = 3 THEN 'Divorciado (a)'                                                                                                                                                                                          
-                        WHEN R034FUN.ESTCIV = 4 THEN 'Viúvo (a)'                                                                                                                                                                                               
-                        WHEN R034FUN.ESTCIV = 5 THEN 'Concubinato (a)'                                                                                                                                                                                         
-                        WHEN R034FUN.ESTCIV = 6 THEN 'Separado (a)'                                                                                                                                                                                            
-                        WHEN R034FUN.ESTCIV = 7 THEN 'União Estavel'                                                                                                                                                                                           
-                    ELSE NULL END AS ESTCIV            
-                    ,R034FUN.SITAFA 
-                    ,R010SIT.DESSIT 
-                    ,CASE WHEN TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') = '1900-12-31' THEN NULL ELSE TO_CHAR(R034FUN.DATAFA, 'YYYY-MM-DD') END AS DATAFA 
-                    ,R034FUN.CODCAR
-                    ,R024CAR.TITCAR 
-                    ,R034FUN.NUMLOC 
-                    ,R016ORN.NOMLOC 
-                    ,CASE WHEN R034FUN.RACCOR = 1 THEN 'Branco'                                                                                                                                                                                                 
-                        WHEN R034FUN.RACCOR = 2 THEN 'Preta/Negra'                                                                                                                                                                                            
-                        WHEN R034FUN.RACCOR = 3 THEN 'Amarela'                                                                                                                                                                                                
-                        WHEN R034FUN.RACCOR = 4 THEN 'Parda'                                                                                                                                                                                                  
-                        WHEN R034FUN.RACCOR = 5 THEN 'Indígena'                                                                                                                                                                                               
-                        WHEN R034FUN.RACCOR = 6 THEN 'Mameluco'                                                                                                                                                                                               
-                        WHEN R034FUN.RACCOR = 7 THEN 'Mulato'                                                                                                                                                                                                 
-                        WHEN R034FUN.RACCOR = 8 THEN 'Cafuzo'                                                                                                                                                                                                 
-                    ELSE NULL END AS RACCOR
-                    ,CASE WHEN R034FUN.TIPADM = 1 THEN 'Sim' ELSE 'Não' END AS PRIMEIROEMPREGO
-                    ,R022GRA.DESGRA
-                FROM VETORH.R034FUN
-                INNER JOIN VETORH.R010SIT ON R010SIT.CODSIT = R034FUN.SITAFA
-                LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR
-                LEFT JOIN VETORH.R016ORN ON R016ORN.NUMLOC = R034FUN.NUMLOC AND R016ORN.TABORG = R034FUN.TABORG 
-                LEFT JOIN VETORH.R022GRA ON R022GRA.GRAINS = R034FUN.GRAINS  
-                WHERE R034FUN.TIPCOL = 1 -- apenas colaboradores.
-                {$ands}";  
-    }
-
-
     #endRegion
 }

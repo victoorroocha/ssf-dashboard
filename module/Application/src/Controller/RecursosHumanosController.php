@@ -495,25 +495,61 @@ class RecursosHumanosController extends BaseController
                                                 ->addHeaderLine('Pragma', 'no-cache')
                                                 ->addHeaderLine('Expires', '0');
 
-                // Infos Todos Colaboradores Base
-                $infosColaboradoresSQL = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getDadosDashboardTurnover() : null;
-                if ($infosColaboradoresSQL) {
-                    $infosColaboradores = $this->oracleService->executeQuery($infosColaboradoresSQL);
+                // Infos Cards Turnover
+                $infoCardsTurnoverSQL = $this->RecursosHumanosRepository ? $this->RecursosHumanosRepository->getCardsDashboardTurnover($dataInicio, $dataFim) : null;
+                if ($infoCardsTurnoverSQL) {
+                    $infoCardsTurnover = $this->oracleService->executeQuery($infoCardsTurnoverSQL);
                 }
 
-                echo '<pre>';
-                print_r($infosColaboradores);exit;
+                $turnoverPorMes = [];
 
-                #region Informações Cards
-                    $infoCardsResult = null;
-                    
-                #endregion
+                // Datas como objetos
+                $start = new \DateTime($dataInicio);
+                $end = new \DateTime($dataFim);
+                // Para garantir que o fim seja o último dia do mês
+                $end->modify('last day of this month');
+
+                if ($start->format('Y-m') === $end->format('Y-m')) {
+                    // Caso apenas um mês selecionado, já formata no padrão ISO para Oracle
+                    $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover(
+                        $start->format('Y-m-d'), 
+                        $end->format('Y-m-d')
+                    );
+                    $dados = $this->oracleService->executeQuery($sql);
+                    $turnoverPorMes[] = [
+                        'mes' => $start->format('Y-m-01'),
+                        'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                    ];
+                } else {
+                    // Percorre mês a mês
+                    $interval = new \DateInterval('P1M');
+                    // Clona o $end para não modificar o original no DatePeriod
+                    $periodEnd = (clone $end)->modify('+1 day'); 
+
+                    $period = new \DatePeriod($start, $interval, $periodEnd);
+
+                    foreach ($period as $mes) {
+                        // Primeiro dia do mês
+                        $inicioMes = (clone $mes)->modify('first day of this month')->format('Y-m-d');
+                        // Último dia do mês
+                        $fimMes = (clone $mes)->modify('last day of this month')->format('Y-m-d');
+
+                        $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover($inicioMes, $fimMes);
+                        $dados = $this->oracleService->executeQuery($sql);
+
+                        $turnoverPorMes[] = [
+                            'mes' => $mes->format('Y-m-01'),
+                            'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                        ];
+                    }
+                }
 
                 // Retorna os dados em JSON
                 return new JsonModel([
                     'success' => true,
                     'data' => array(
-                        'infoCards' => $infoCardsResult,
+                        'infoCardsTurnover' => $infoCardsTurnover[0] ?? null,
+                        'turnoverPorMes' => $turnoverPorMes
                     ),
                 ]);
             } catch (\Exception $e) {
