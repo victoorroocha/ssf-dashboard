@@ -250,7 +250,7 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Técnicos
         public function listarTecnicos()
         {
-            $sql = 'SELECT id, nome, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo FROM tecnicos ORDER BY id';
+            $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo FROM tecnicos ORDER BY id';
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -270,6 +270,7 @@ class PlanejamentoControleManutencaoRepository
             if (!empty($data['id'])) {
                 $sql = 'UPDATE tecnicos SET 
                             nome = :nome, 
+                            numcad = :numcad, 
                             cpf = :cpf, 
                             cargo_funcao = :cargo_funcao, 
                             contato = :contato, 
@@ -278,6 +279,7 @@ class PlanejamentoControleManutencaoRepository
                         WHERE id = :id';
                 $params = [
                     ':nome' => $data['nome'],
+                    ':numcad' => $data['numcad'],
                     ':cpf' => $data['cpf'],
                     ':cargo_funcao' => $data['cargo_funcao'],
                     ':contato' => $data['contato'] ?? null,
@@ -286,10 +288,11 @@ class PlanejamentoControleManutencaoRepository
                     ':id' => $data['id']
                 ];
             } else {
-                $sql = 'INSERT INTO tecnicos (nome, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo) 
-                        VALUES (:nome, :cpf, :cargo_funcao, :contato, :area_tecnica_id, :flg_ativo)';
+                $sql = 'INSERT INTO tecnicos (nome, numcad, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo) 
+                        VALUES (:nome, :numcad, :cpf, :cargo_funcao, :contato, :area_tecnica_id, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
+                    ':numcad' => $data['numcad'],
                     ':cpf' => $data['cpf'],
                     ':cargo_funcao' => $data['cargo_funcao'],
                     ':contato' => $data['contato'] ?? null,
@@ -336,7 +339,7 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Equipamentos
         public function listarEquipamentos()
         {
-            $sql = "SELECT id, codigo, nome, setor_id, status, observacoes, centro_custo FROM equipamentos ORDER BY codigo";
+            $sql = "SELECT id, codigo, nome, (codigo || '-' || nome) as dsc_equipamento, setor_id, status, observacoes, centro_custo FROM equipamentos ORDER BY codigo";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -383,7 +386,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function getLookupEquipamentos()
         {
-            $sql = "SELECT id, codigo, nome, setor_id, status, observacoes, centro_custo FROM equipamentos where status NOT LIKE 'Inativo' ORDER BY codigo";
+            $sql = "SELECT id, codigo, nome, (codigo || '-' || nome) as dsc_equipamento, setor_id, status, observacoes, centro_custo FROM equipamentos where status NOT LIKE 'Inativo' ORDER BY codigo";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -605,20 +608,25 @@ class PlanejamentoControleManutencaoRepository
         }
         public function salvarControleManutencao(array $data)
         {
-            if (empty($data['equipamento_id']) || empty($data['tipo_manutencao_id']) || empty($data['area_tecnica_id'])) {
-                throw new \Exception('Campos obrigatórios não preenchidos.');
-            }
+            // Alimenta tipo_ordem_servico
+            if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
+                $data['tipo_ordem_servico'] = 'Equipamento';
+            } 
+            if (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
+                $data['tipo_ordem_servico'] = 'Centro de Custo';
+            } 
 
             $params = [
                 ':data_solicitacao' => $data['data_solicitacao'] ?? null,
                 ':nome_solicitante' => $data['nome_solicitante'] ?? null,
                 ':setor_id' => $data['setor_id'],
                 ':prioridade' => $data['prioridade'] ?? null,
-                ':equipamento_id' => $data['equipamento_id'],
+                ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
+                ':equipamento_id' => $data['equipamento_id'] ?? null,
+                ':centro_custo_id' => $data['centro_custo_id'] ?? null,
                 ':tipo_manutencao_id' => $data['tipo_manutencao_id'],
                 ':area_tecnica_id' => $data['area_tecnica_id'],
                 ':descricao_defeito' => $data['descricao_defeito'] ?? null,
-                ':tecnico_id' => $data['tecnico_id'],
                 ':data_inicio' => $data['data_inicio'] ?? null,
                 ':tempo_previsto' => $data['tempo_previsto'] ?? null,
                 ':data_final' => $data['data_final'] ?? null,
@@ -633,11 +641,12 @@ class PlanejamentoControleManutencaoRepository
                             nome_solicitante = :nome_solicitante,
                             setor_id = :setor_id,
                             prioridade = :prioridade,
+                            tipo_ordem_servico = :tipo_ordem_servico,
                             equipamento_id = :equipamento_id,
+                            centro_custo_id = :centro_custo_id,
                             tipo_manutencao_id = :tipo_manutencao_id,
                             area_tecnica_id = :area_tecnica_id,
                             descricao_defeito = :descricao_defeito,
-                            tecnico_id = :tecnico_id,
                             data_inicio = :data_inicio,
                             tempo_previsto = :tempo_previsto,
                             data_final = :data_final,
@@ -648,16 +657,16 @@ class PlanejamentoControleManutencaoRepository
                 $params[':id'] = $data['id'];
             } else {
                 $sql = "INSERT INTO controle_manutencao (
-                            data_solicitacao, nome_solicitante, setor_id, prioridade,
-                            equipamento_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, tecnico_id,
+                            data_solicitacao, nome_solicitante, setor_id, prioridade, tipo_ordem_servico,
+                            equipamento_id, centro_custo_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, 
                             data_inicio, tempo_previsto, data_final, status, info_servico, observacoes
                         ) VALUES (
-                            :data_solicitacao, :nome_solicitante, :setor_id, :prioridade,
-                            :equipamento_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito, :tecnico_id,
+                            :data_solicitacao, :nome_solicitante, :setor_id, :prioridade, :tipo_ordem_servico,
+                            :equipamento_id, :centro_custo_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito,
                             :data_inicio, :tempo_previsto, :data_final, :status, :info_servico, :observacoes
                         )";
-            }
 
+            }
             // Chama a atualização dos status dos equipamentos
             $this->atualizarStatusEquipamentos();
             
@@ -671,39 +680,99 @@ class PlanejamentoControleManutencaoRepository
             // Chama a atualização dos status dos equipamentos
             $this->atualizarStatusEquipamentos();
         }
-        public function finalizarManutencao(array $data)
+        public function validarOsApontamentos($id)
+        {
+            $sql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
+            $statement = $this->adapter->createStatement($sql);
+            $statement->prepare();
+            $statement->execute(['id' => $id]);
+
+            $result = $statement->getResource()->fetch();
+
+            if ($result && $result['total'] > 0) {
+                return [
+                    'success' => true,
+                    'message' => 'OS válida para apontamentos.'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Ordem de Serviço não encontrada ou já finalizada.'
+                ];
+            }
+        }
+        public function getApontamentosPorOS($osId)
+        {
+            $sql = "SELECT * FROM apontamentos_manutencao WHERE id_manutencao = :id";
+            $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
+            
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function getItensUtilizadosPorOS($osId)
+        {
+            $sql = "SELECT * FROM itens_manutencao WHERE id_manutencao = :id";
+            $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
+            
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function apontamentosManutencaoOs(array $data)
         {
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
+            $id_manutencao = intval($data['id_os']);
+
             try {
-                // Atualiza a OS (controle_manutencao)
-                $sqlUpdate = "
-                    UPDATE controle_manutencao
-                    SET 
-                        data_final = :data_final,
-                        tempo_execucao = :tempo_execucao,
-                        info_servico = :info_servico,
-                        observacoes = :observacoes,
-                        status = 'Finalizada'
-                    WHERE id = :id
-                ";
+                // Remove itens anteriores, se houver
+                $this->adapter->createStatement('DELETE FROM apontamentos_manutencao WHERE id_manutencao = :id')->execute([':id' => $id_manutencao]);
 
-                $paramsUpdate = [
-                    ':data_final' => $data['data_final'] ?? null,
-                    ':tempo_execucao' => $data['tempo_execucao'] ?? null,
-                    ':info_servico' => $data['info_servico'] ?? null,
-                    ':observacoes' => $data['observacoes'] ?? null,
-                    ':id' => $data['id'],
-                ];
+                // Insere os novos Apontamentos
+                if (!empty($data['apontamentos']) && is_array($data['apontamentos'])) {
+                    $sqlInsertApontamentos = "
+                        INSERT INTO apontamentos_manutencao (
+                            id_manutencao,
+                            tecnico_id,
+                            data_inicio,
+                            data_fim,
+                            observacao
+                        ) VALUES (
+                            :id_manutencao,
+                            :tecnico_id,
+                            :data_inicio,
+                            :data_fim,
+                            :observacao
+                        )
+                    ";
 
-                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
+                    foreach ($data['apontamentos'] as $apontamentos) {
+                        $paramsInsertApontamentos = [
+                            ':id_manutencao' => $id_manutencao,
+                            ':tecnico_id' => $apontamentos['tecnico_id'] ?? null,
+                            ':data_inicio' => $apontamentos['data_inicio'] ?? null,
+                            ':data_fim' => $apontamentos['data_fim'] ?? null,
+                            ':observacao' => $apontamentos['observacao'] ?? null,
+                        ];
+
+                        $this->adapter->createStatement($sqlInsertApontamentos)->execute($paramsInsertApontamentos);
+                    }
+                }
+
 
                 // Remove itens anteriores, se houver
-                $this->adapter->createStatement('DELETE FROM itens_manutencao WHERE id_manutencao = :id')->execute([':id' => $data['id']]);
+                $this->adapter->createStatement('DELETE FROM itens_manutencao WHERE id_manutencao = :id')->execute([':id' => $id_manutencao]);
 
                 // Insere os novos itens
                 if (!empty($data['itens']) && is_array($data['itens'])) {
-                    $sqlInsert = "
+                    $sqlInsertItens = "
                         INSERT INTO itens_manutencao (
                             id_manutencao,
                             cod_produto,
@@ -732,8 +801,8 @@ class PlanejamentoControleManutencaoRepository
                     ";
 
                     foreach ($data['itens'] as $item) {
-                        $paramsInsert = [
-                            ':id_manutencao' => $data['id'],
+                        $paramsInsertItens = [
+                            ':id_manutencao' => $id_manutencao,
                             ':cod_produto' => $item['cod_produto'] ?? null,
                             ':descricao_produto' => $item['descricao_produto'] ?? null,
                             ':cod_deposito' => $item['cod_deposito'] ?? null,
@@ -746,7 +815,7 @@ class PlanejamentoControleManutencaoRepository
                             ':data_utilizacao' => $item['data_utilizacao'] ?? null
                         ];
 
-                        $this->adapter->createStatement($sqlInsert)->execute($paramsInsert);
+                        $this->adapter->createStatement($sqlInsertItens)->execute($paramsInsertItens);
                     }
                 }
 
@@ -760,7 +829,28 @@ class PlanejamentoControleManutencaoRepository
                 throw $e;
             }
         }
+        public function finalizarOs(array $data)
+        {
+            $this->adapter->getDriver()->getConnection()->beginTransaction();
 
+            try {
+                // Atualiza a OS (controle_manutencao)
+                $sqlUpdate = "UPDATE controle_manutencao SET status = 'Finalizada', data_final = CURRENT_DATE WHERE id = :id";
+                $paramsUpdate = [
+                    ':id' => $data['id'],
+                ];
+                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
+
+                // Atualiza status de equipamentos
+                $this->atualizarStatusEquipamentos();
+
+                $this->adapter->getDriver()->getConnection()->commit();
+
+            } catch (\Exception $e) {
+                $this->adapter->getDriver()->getConnection()->rollback();
+                throw $e;
+            }
+        }
     #endRegion
     
     #region Dashboard Controle de Manutenção
@@ -880,11 +970,14 @@ class PlanejamentoControleManutencaoRepository
         public function buscarPorTecnico($dataInicio, $dataFim)
         {
             // Consulta para buscar
-            $sql = "SELECT t.nome AS tecnico, COUNT(distinct cm.id) AS quantidade
-                FROM controle_manutencao cm
-                JOIN tecnicos t ON t.id = cm.tecnico_id
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
-                GROUP BY t.nome";
+            $sql = "SELECT 
+                        t.nome AS tecnico,
+                        COUNT(distinct cm.id) AS quantidade
+                    from apontamentos_manutencao am 
+                    left join tecnicos t on t.id = am.tecnico_id 
+                    left join controle_manutencao cm on cm.id = am.id_manutencao 
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                    GROUP BY t.nome";
 
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
@@ -970,7 +1063,7 @@ class PlanejamentoControleManutencaoRepository
         {
             $sql = "SELECT
                         cm.id, 
-                        LPAD(cm.id::text, 3, '0') AS nr_ordem_servico,
+                        LPAD(cm.id::text, 5, '0') AS nr_ordem_servico,
                         TO_CHAR(cm.data_programada, 'DD/MM/YYYY') AS data_programada,
                         TO_CHAR(cm.data_solicitacao, 'DD/MM/YYYY') AS data_solicitacao,
                         TO_CHAR(cm.data_inicio, 'DD/MM/YYYY') AS data_inicio,
@@ -982,16 +1075,20 @@ class PlanejamentoControleManutencaoRepository
                         tm.nome AS tipo_manutencao,
                         at.nome AS area_tecnica,
                         cm.descricao_defeito,
-                        t.nome AS nome_tecnico,
                         cm.status,
                         cm.info_servico,
-                        cm.observacoes
+                        cm.observacoes,
+                        (
+                            SELECT string_agg(DISTINCT t.nome, ', ')
+                            FROM apontamentos_manutencao am
+                            LEFT JOIN tecnicos t ON t.id = am.tecnico_id
+                            WHERE am.id_manutencao = cm.id
+                        ) AS nome_tecnico
                     FROM controle_manutencao cm
                     LEFT JOIN setores s ON s.id = cm.setor_id
                     LEFT JOIN equipamentos e ON e.id = cm.equipamento_id
                     LEFT JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
                     LEFT JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
-                    LEFT JOIN tecnicos t ON t.id = cm.tecnico_id
                     WHERE cm.id = :id";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);

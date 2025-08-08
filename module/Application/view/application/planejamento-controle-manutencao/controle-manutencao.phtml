@@ -133,7 +133,7 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Controle das Manutenções</p>
+                    <p>Controle das Manutenções - Ordem de Serviço</p>
 
                     <div id="gridControleManutencao"></div>
                     <div id="popupOS"></div>
@@ -320,19 +320,27 @@
                 allowDeleting: true,
                 useIcons: true,
                 popup: {
-                    title: 'Cadastro de Controle de Manutenção',
+                    title: "Nova Ordem de Serviço",
                     showTitle: true,
-                    width: 1000,
-                    maxWidth: '100vw',
-                    maxHeight: '100vh',
-                    height: 'auto',
-                    position: { my: 'center', at: 'center', of: window }
+                    width: '800px',
+                    resizeEnabled: true,
+                    autoResizeEnabled: true, 
+                    maxHeight: '95vh'
                 },
                 form: {
                     colCount: 2,
                     labelLocation: 'top',
                     items: [
-                        { dataField: 'data_solicitacao', label: { text: 'Data Solicitação' }, editorType: 'dxDateBox', editorOptions: { type: 'date' }, colSpan: 2, },
+                        { 
+                            dataField: 'data_solicitacao', 
+                            label: { text: 'Data Solicitação' }, 
+                            editorType: 'dxDateBox', 
+                            editorOptions: { 
+                                type: 'date', 
+                                value: new Date() // define a data atual como padrão
+                            }, 
+                            colSpan: 2 
+                        },
                         { dataField: 'data_inicio', label: { text: 'Data Início' }, editorType: 'dxDateBox', editorOptions: { type: 'date' }, colSpan: 1, },
                         {
                             dataField: 'tempo_previsto',
@@ -374,13 +382,33 @@
                             },
                             validationRules: [{ type: 'required' }]
                         },
+                        // Novo campo: Tipo Ordem Serviço
+                        {
+                            dataField: 'tipo_ordem_servico',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Tipo Ordem de Serviço' },
+                            colSpan: 2,
+                            editorOptions: {
+                                items: ['Equipamento', 'Centro de Custo'],
+                                placeholder: 'Selecione o tipo',
+                            },
+                            validationRules: [{ type: 'required', message: 'Tipo Ordem de Serviço é obrigatório' }]
+                        },
                         { 
                             dataField: 'equipamento_id', 
                             label: { text: 'Equipamento' }, 
                             editorType: 'dxSelectBox', 
                             colSpan: 2, 
+                            visible: false,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
                         },
+                        { 
+                            dataField: 'centro_custo_id', 
+                            colSpan: 2,
+                            editorType: 'dxSelectBox', 
+                            label: { text: 'Centro de Custo' }, 
+                            visible: false,
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') },
                         { 
                             dataField: 'tipo_manutencao_id', 
                             label: { text: 'Tipo Manutenção' }, 
@@ -392,25 +420,30 @@
                             editorType: 'dxSelectBox', 
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica') 
                         },
-                        { 
-                            dataField: 'tecnico_id', 
-                            label: { text: 'Técnico' }, 
-                            editorType: 'dxSelectBox', 
-                            colSpan: 2, 
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') 
-                        },
                         { dataField: 'descricao_defeito', label: { text: 'Descrição do Defeito' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                        { dataField: 'info_servico', label: { text: 'Informações do Serviço Executado' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
 
                     ]
                 }
             },
             columns: [
+                { 
+                    dataField: 'id', 
+                    caption: 'OS', 
+                    alignment: 'center', 
+                    width: 110,
+                    calculateDisplayValue: function(rowData) {
+                        return String(rowData.id).padStart(5, '0');
+                    }
+                },
                 { dataField: 'data_solicitacao', caption: 'Dt. Solicitação', dataType: 'date', alignment: 'center', width: 110 },
                 {
                     dataField: 'data_programada',
                     caption: 'Data Programada',
                     dataType: 'date',
                     alignment: 'center', 
+                    visible: false,
                     width: 110,
                 },
                 { 
@@ -438,16 +471,30 @@
                     width: 110,
                 },
                 { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
-                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'tipo_ordem_servico', caption: 'Tipo Ordem Serviço', visible: false, width: 200 },
+                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'dsc_equipamento', valueExpr: 'id' } },
+                {
+                    dataField: 'centro_custo_id',
+                    caption: 'Centro de Custo',
+                    width: 200,
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
+                        }),
+                        displayExpr: 'DSC',
+                        valueExpr: 'ID'
+                    }
+                },
                 { 
                     dataField: 'setor_id', 
                     caption: 'Setor', 
-                    lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores') }), displayExpr: 'nome', valueExpr: 'id' }, 
-                    width: 120
+                    lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores') }), displayExpr: 'dsc_equipamento', valueExpr: 'id' }, 
+                    width: 160
                 },
                 {
                     dataField: 'tipo_manutencao_id',
                     caption: 'Tipo Manutenção',
+                    alignment: 'center',
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
                             load: () => $.getJSON('/planejamento-controle-manutencao/listar-tipos-manutencao')
@@ -455,11 +502,12 @@
                         displayExpr: 'nome',
                         valueExpr: 'id'
                     }, 
-                    width: 120
+                    width: 'auto'
                 },
                 {
                     dataField: 'area_tecnica_id',
                     caption: 'Área Técnica',
+                    visible: false,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
                             load: () => $.getJSON('/planejamento-controle-manutencao/listar-areas')
@@ -469,13 +517,15 @@
                     }
                 },
                 { dataField: 'descricao_defeito', caption: 'Descrição do Defeito', visible: false },
-                { dataField: 'tecnico_id', caption: 'Técnico', lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'info_servico', caption: 'Informações do Serviço Executado', visible: false },
+                { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
                 { dataField: 'custo_total', caption: 'Custo (R$)', format: { type: 'fixedPoint', precision: 2 }, visible: false },
-                { dataField: 'prioridade', caption: 'Prioridade' },
+                { dataField: 'prioridade', caption: 'Prioridade', visible: false },
                 {
                     dataField: 'status',
                     caption: 'Status',
-                    sortIndex: 0, 
+                    sortIndex: 0,
+                    alignment: 'center',
                     sortOrder: 'asc',
                     calculateSortValue: function(rowData) {
                         // Forçar a ordem: Pendente < Finalizada
@@ -496,79 +546,90 @@
                         },
                         'delete',
                         {
-                            hint: 'Finalizar Manutenção',
+                            hint: "Ordem de Serviço",
+                            icon: "doc",
+                            // visible: function (e) {
+                            //     return e.row.data.status === 'Finalizada';
+                            // },
+                            onClick: function(e) {
+                                const data = e.row.data;
+                                openOrdemServicoPopup(data);
+                            }
+                        },
+                        {
+                            hint: 'Finalizar OS',
                             icon: 'check',
                             visible: function (e) {
                                 return e.row.data.status !== 'Finalizada';
                             },
                             onClick: function (e) {
-                                openFinalizarManutencaoPopup(e.row.data);
+                                finalizarOS(e.row.data);
                             }
                         },
-                        {
-                            hint: "Ordem de Serviço",
-                            icon: "doc",
-                            visible: function (e) {
-                                return e.row.data.status === 'Finalizada';
-                            },
-                            onClick: function(e) {
-                                const data = e.row.data;
-                                openOrdemServicoPopup(data);
-                            }
-                        }
                     ]
                 },
             ],
+            onInitNewRow: function(e) {
+                e.data.tipo_ordem_servico = '';
+                e.data.data_solicitacao = new Date();
+                
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                    if (form) {
+                        form.updateData('data_solicitacao', new Date());
+                    }
+                }, 100);
+            },
+            onEditingStart: function(e) {
+                // Determina o tipo_ordem_servico baseado nos campos preenchidos
+                const tipo = e.data.equipamento_id ? 'Equipamento' :
+                            e.data.centro_custo_id ? 'Centro de Custo' : null;
+
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+
+                    if (form) {
+                        // Atualiza o valor diretamente no formData do formulário
+                        const formData = form.option('formData');
+                        formData.tipo_ordem_servico = tipo;
+
+                        form.option('formData', formData); // força atualização visual
+
+                        atualizarVisibilidadeForm(form);
+                    }
+                }, 100);
+            },
             onEditorPreparing: function(e) {
-                if (e.dataField === 'equipamento_id') {
-                    // Se estiver editando (e.row existe), desabilita o campo
+                // Mantém a lógica original de equipamento_id
+                if (e.dataField === 'equipamento_id' || e.dataField === 'centro_custo_id' || e.dataField === 'tipo_ordem_servico') {
                     if (e.row && e.row.isNewRow !== true) {
                         e.editorOptions.readOnly = true;
                         if (e.editorName === 'dxSelectBox') {
                             e.editorOptions.disabled = true;
                         }
                     } else {
-                        // Está adicionando, libera o campo
                         e.editorOptions.readOnly = false;
                         if (e.editorName === 'dxSelectBox') {
                             e.editorOptions.disabled = false;
                         }
                     }
                 }
-                if (e.dataField === 'data_programada' || e.dataField === 'data_solicitacao') {
-                    const tipoPreventivaId = 1; 
-                    const isPreventiva = e.row?.data?.tipo_manutencao_id === tipoPreventivaId;
 
-                    if (isPreventiva) {
-                        e.editorOptions.readOnly = true;
-                        e.editorOptions.disabled = true;
-                    }
-                }
-                if (e.dataField === 'tipo_manutencao_id') {
-                    const tipoPreventivaId = 1;
-                    const isPreventiva = e.row?.data?.tipo_manutencao_id === tipoPreventivaId;
+                // Adicione esta parte para o campo tipo_ordem_servico
+                if (e.dataField === 'tipo_ordem_servico' && e.parentType === 'dataRow') {
+                    e.editorOptions.onValueChanged = function(args) {
+                        // Atualiza o valor da célula corretamente
+                        e.setValue(args.value);
 
-                    // Bloqueia edição do campo se já for preventiva
-                    if (e.row?.isNewRow === false) {
-                        e.editorOptions.readOnly = true;
-                        if (e.editorName === 'dxSelectBox') {
-                            e.editorOptions.disabled = true;
+                        const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                        if (form) {
+                            // Atualiza valor no formData
+                            form.option('formData.tipo_ordem_servico', args.value);
+
+                            // Atualiza visibilidade e obrigatoriedade
+                            atualizarVisibilidadeForm(form);
                         }
-                    }
-
-                    // Bloqueia Preventiva no dropdown quando for novo registro
-                    if (e.row?.isNewRow === true) {
-                        e.editorOptions.dataSource = new DevExpress.data.DataSource({
-                            load: function () {
-                                return $.getJSON('/planejamento-controle-manutencao/get-lookup-tipos-manutencao')
-                                    .then(data => {
-                                        console.log('assadas', data);
-                                        return data;
-                                    });
-                            },
-                            key: 'id'
-                        });
-                    }
+                    };
                 }
             },
             onRowPrepared: function (e) {
@@ -598,6 +659,19 @@
             onToolbarPreparing: function (e) {
                 // Aqui você pode personalizar ainda mais a barra de ferramentas
                 var toolbarItems = e.toolbarOptions.items;
+
+                e.toolbarOptions.items.push({
+                    location: "after", // Coloca depois dos outros itens
+                    widget: "dxButton",
+                    options: {
+                        // icon: "refresh", // Ícone do botão (ícone de atualização)
+                        onClick: function() {
+                            openApontamentosManutencaoPopup();
+                        },
+                        text: "Apontamentos OS" 
+                    }
+                });
+
                 // Adicionar os botões de expandir/colapsar
                 toolbarItems.push({
                     location: "after",
@@ -655,9 +729,39 @@
                 DevExpress.ui.notify('Erro ao carregar produtos.', 'error', 3000);
             });
         }
+        // Função para atualizar a visibilidade dos campos
+        function atualizarVisibilidadeForm(form) {
+            const tipoOrdemServico = form.option('formData').tipo_ordem_servico;
 
-        function openFinalizarManutencaoPopup(data) {
-            // Sempre reinicia o popup
+            console.log('form', form);
+            console.log('tipoOrdemServico', tipoOrdemServico);
+
+            
+            // Esconde e remove obrigatoriedade de ambos os campos
+            form.itemOption('equipamento_id', {
+                visible: false,
+                validationRules: []
+            });
+
+            form.itemOption('centro_custo_id', {
+                visible: false,
+                validationRules: []
+            });
+
+            // Mostra e adiciona obrigatoriedade ao campo correto
+            if (tipoOrdemServico === 'Equipamento') {
+                form.itemOption('equipamento_id', {
+                    visible: true,
+                    validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
+                });
+            } else if (tipoOrdemServico === 'Centro de Custo') {
+                form.itemOption('centro_custo_id', {
+                    visible: true,
+                    validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
+                });
+            }
+        }
+        function openApontamentosManutencaoPopup() {
             const existingPopup = $('#popupFinalizar').dxPopup('instance');
             if (existingPopup) {
                 existingPopup.dispose();
@@ -668,388 +772,507 @@
 
             let finalizarPopup = $('#popupFinalizar').dxPopup({
                 width: 1300,
-                height: 800,
-                title: 'Finalizar Manutenção',
+                height: 880,
+                title: 'Apontamentos da OS',
                 visible: false,
                 showTitle: true,
                 dragEnabled: true,
                 closeOnOutsideClick: false,
                 position: {
-                    my: 'center top',    // Alinha o topo do popup ao centro horizontal
-                    at: 'center top',    // Alvo é o topo da janela (viewport)
-                    of: window,          // Referência para posicionamento
-                    offset: '0 30'       // Distância de 30px do topo
+                    my: 'center top',
+                    at: 'center top',
+                    of: window,
+                    offset: '0 30'
                 },
                 toolbarItems: [
                     {
                         widget: 'dxButton',
                         toolbar: 'bottom',
-                        location: 'after', // direita
+                        location: 'after',
                         options: {
-                            text: 'Finalizar',
+                            text: 'Adicionar Apontamentos',
                             type: 'success',
+                            disabled: true,
                             onClick: function () {
-                                const form = $('#formFinalizar').dxForm('instance');
-                                if (!form.validate().isValid) {
-                                    DevExpress.ui.notify('Preencha os campos obrigatórios', 'error', 3000);
-                                    return;
+                                const idOS = $('#idOSApontamento').dxTextBox('instance').option('value');
+
+                                const gridApontamentos = $('#gridApontamentos').dxDataGrid('instance');
+                                
+                                function formatDateTimeLocal(date) {
+                                    if (!date) return null;
+
+                                    const d = new Date(date);
+                                    const pad = n => n.toString().padStart(2, '0');
+
+                                    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
                                 }
 
-                                DevExpress.ui.dialog.confirm(
-                                    "Tem certeza que deseja finalizar esta manutenção?\nApós finalizada, não será possível editar os dados.",
-                                    "Confirmação"
-                                ).then(function (result) {
-                                    if (!result) return; // Usuário clicou "Não"
+                                const apontamentos = gridApontamentos.getDataSource().items().map(ap => ({
+                                    ...ap,
+                                    data_inicio: formatDateTimeLocal(ap.data_inicio),
+                                    data_fim: formatDateTimeLocal(ap.data_fim)
+                                }));
 
-                                    const formData = form.option('formData');
-                                    // const itensGrid = $('#gridItsensManutencao').dxDataGrid('instance').option('dataSource');
-                                    const gridInstance = $('#gridItensManutencao').dxDataGrid('instance');
-                                    const itens = gridInstance ? gridInstance.getDataSource().items() : [];
+                                const gridInstance = $('#gridItensManutencao').dxDataGrid('instance');
+                                const itens = gridInstance ? gridInstance.getDataSource().items() : [];
 
-                                    const envio = {
-                                        id: data.id,
-                                        ...formData,
-                                        status: 'Finalizada',
-                                        itens: itens
-                                    };
+                                const envio = {
+                                    id_os: idOS,
+                                    apontamentos: apontamentos,
+                                    itens: itens
+                                };
 
-                                    $.ajax({
-                                        url: '/planejamento-controle-manutencao/finalizar-manutencao',
-                                        method: 'POST',
-                                        contentType: 'application/json',
-                                        data: JSON.stringify(envio),
-                                        dataType: 'json'
-                                    }).done(function (response) {
-                                        if (response.success) {
-                                            DevExpress.ui.notify('Manutenção finalizada com sucesso!', 'success', 3000);
-                                            finalizarPopup.hide();
-                                            $('#gridControleManutencao').dxDataGrid('instance').refresh();
-                                        } else {
-                                            DevExpress.ui.notify(response.message || 'Erro ao finalizar', 'error', 3000);
-                                        }
-                                    }).fail(function () {
-                                        DevExpress.ui.notify('Erro na solicitação', 'error', 3000);
-                                    });
+                                $.ajax({
+                                    url: '/planejamento-controle-manutencao/apontamentos-manutencao-os',
+                                    method: 'POST',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify(envio),
+                                    dataType: 'json'
+                                }).done(function (response) {
+                                    if (response.success) {
+                                        DevExpress.ui.notify('Apontamento realizado com sucesso!', 'success', 3000);
+                                        finalizarPopup.hide();
+                                        $('#gridControleManutencao').dxDataGrid('instance').refresh();
+                                    } else {
+                                        DevExpress.ui.notify(response.message || 'Erro ao finalizar', 'error', 3000);
+                                    }
+                                }).fail(function () {
+                                    DevExpress.ui.notify('Erro na solicitação', 'error', 3000);
                                 });
                             }
                         }
                     }
                 ],
-                onShowing: function () {
-                    const form = $('#formFinalizar').dxForm('instance');
-                    form.option('formData', {
-                        data_final: new Date(),
-                        info_servico: '',
-                        observacoes: ''
-                    });
-                },
                 onInitialized: function (e) {
                     const contentElement = e.component.content();
 
-                    // Criar o TabPanel
-                    const tabPanelElement = $('<div>').attr('id', 'tabFinalizar').appendTo(contentElement);
+                    // Adiciona o label manualmente antes do campo
+                    $('<label for="idOSApontamento" style="display:block; margin-bottom:5px;">Ordem Serviço</label>').appendTo(contentElement);
 
-                    tabPanelElement.dxTabPanel({
-                        height: 660,
-                        items: [
+                    $('<div id="idOSApontamento">').appendTo(contentElement).dxTextBox({
+                        label: 'ID da OS',
+                        labelMode: 'static',
+                        placeholder: '00000',
+                        width: 300,
+                        mask: '00000',
+                        showMaskMode: 'always',
+                        isValid: true,
+                        validationRules: [
                             {
-                                title: 'Informações Finalizar OS',
-                                template: function(itemData, itemIndex, itemElement) {
-                                    // Aplica padding no container da aba
-                                    $(itemElement).css('padding', '15px');
-
-                                    const formElement = $('<div>').appendTo(itemElement).attr('id', 'formFinalizar');
-
-                                    formElement.dxForm({
-                                        formData: {},
-                                        labelLocation: 'top',
-                                        minColWidth: 300,
-                                        colCount: 2,
-                                        items: [
-                                            {
-                                                dataField: 'data_final',
-                                                editorType: 'dxDateBox',
-                                                label: { text: 'Data de Conclusão' },
-                                                colSpan: 1,
-                                                editorOptions: { width: '100%' },
-                                                validationRules: [{ type: 'required', message: 'Informe a data de conclusão' }]
-                                            },
-                                            {
-                                                dataField: 'tempo_execucao',
-                                                editorType: 'dxTextBox',
-                                                label: { text: 'Tempo Execução' },
-                                                colSpan: 1,
-                                                editorOptions: {
-                                                    mask: "00:00",
-                                                    maskRules: {
-                                                        "0": /[0-9]/
-                                                    },
-                                                    placeholder: "00:00",
-                                                    useMaskedValue: true
-                                                },
-                                                validationRules: [{ type: 'required', message: 'Tempo Execução é obrigatório' }]
-                                            },
-                                            {
-                                                dataField: 'info_servico',
-                                                editorType: 'dxTextArea',
-                                                label: { text: 'Informações do Serviço Executado' },
-                                                colSpan: 2,
-                                                editorOptions: { height: 80, width: '100%' },
-                                                validationRules: [{ type: 'required' }]
-                                            },
-                                            {
-                                                dataField: 'observacoes',
-                                                editorType: 'dxTextArea',
-                                                label: { text: 'Observações Adicionais' },
-                                                colSpan: 2,
-                                                editorOptions: { height: 60, width: '100%' }
-                                            }
-                                        ]
-                                    });
-                                }
-                            },
-                            {
-                                title: 'Itens',
-                                template: function(itemData, itemIndex, itemElement) {
-                                    // Aplica padding no container da aba
-                                    $(itemElement).css('padding', '15px');
-
-                                    const gridItensManutencao = $('<div>').attr('id', 'gridItensManutencao').appendTo(itemElement);
-                                    
-                                    let itensUtilizados = []; // Array local para armazenar itens da manutenção
-
-                                    // Grid de itens
-                                    $('#gridItensManutencao').dxDataGrid({
-                                        dataSource: itensUtilizados,
-                                        width: 'auto',
-                                        height: 590,
-                                        keyExpr: 'id',
-                                        showBorders: true,
-                                        columnAutoWidth: true,
-                                        editing: {
-                                            mode: 'form',
-                                            allowAdding: true,
-                                            allowUpdating: true,
-                                            allowDeleting: true,
-                                            useIcons: true,
-                                            form: {
-                                                colCount: 2,
-                                                labelLocation: 'top',
-                                                items: [
-                                                    'cod_produto',
-                                                    {
-                                                        dataField: 'data_utilizacao',
-                                                        editorType: 'dxDateBox',
-                                                        label: { text: 'Data Utilização' },
-                                                        colSpan: 2,
-                                                        editorOptions: { type: 'date' },
-                                                        validationRules: [{ type: 'required', message: 'Data Utilização é obrigatória' }]
-                                                    },
-                                                    'cod_deposito',
-                                                    {
-                                                        dataField: 'descricao_deposito',
-                                                        editorOptions: { readOnly: true }
-                                                    },
-                                                    {
-                                                        dataField: 'qtd_estoque',
-                                                        editorType: 'dxNumberBox',
-                                                        editorOptions: {
-                                                            readOnly: true,
-                                                            format: {
-                                                                type: 'fixedPoint',
-                                                                precision: 4
-                                                            }
-                                                        }
-                                                    },
-                                                    {
-                                                        dataField: 'preco_medio',
-                                                        editorType: 'dxNumberBox',
-                                                        editorOptions: {
-                                                            readOnly: true,
-                                                            format: {
-                                                                type: 'currency',
-                                                                currency: 'BRL',
-                                                                precision: 4
-                                                            }
-                                                        }
-                                                    },
-                                                    {
-                                                        dataField: 'qtd_utilizada',
-                                                        editorType: 'dxNumberBox',
-                                                        editorOptions: {
-                                                            format: {
-                                                                type: 'fixedPoint',
-                                                                precision: 4
-                                                            }
-                                                        },
-                                                        validationRules: [{ type: 'required' }]
-                                                    },
-                                                    {
-                                                        dataField: 'custo_unitario',
-                                                        editorType: 'dxNumberBox',
-                                                        editorOptions: {
-                                                            format: {
-                                                                type: 'currency',
-                                                                currency: 'BRL',
-                                                                precision: 4
-                                                            }
-                                                        },
-                                                        validationRules: [{ type: 'required' }]
-                                                    },
-                                                    {
-                                                        dataField: 'observacao',
-                                                        colSpan: 2,
-                                                        editorType: 'dxTextArea',
-                                                        label: { text: 'Observação' },
-                                                        editorOptions: { height: 100, width: '100%' },
-                                                        validationRules: [{ type: 'required', message: 'Observação é obrigatória' }]
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        columns: [
-                                            {
-                                                dataField: 'cod_produto',
-                                                caption: 'Produto',
-                                                lookup: {
-                                                    dataSource: new DevExpress.data.CustomStore({
-                                                        key: 'CODPRO',
-                                                        loadMode: 'processed',
-                                                        cacheRawData: true, 
-                                                        load: function (loadOptions) {
-                                                            return new Promise((resolve) => {
-                                                                const searchValue = (loadOptions.searchValue || '').toUpperCase();
-
-                                                                let resultado = [];
-
-                                                                if (!searchValue) {
-                                                                    resultado = produtosLookup.slice(0, 50);
-                                                                } else {
-                                                                    resultado = produtosLookup.filter(item =>
-                                                                        item.PRODUTO_DISPLAY.toUpperCase().includes(searchValue)
-                                                                    );
-                                                                }
-
-                                                                resolve({
-                                                                    data: resultado,
-                                                                    totalCount: resultado.length
-                                                                });
-                                                            });
-                                                        },
-                                                        byKey: function (key) {
-                                                            return new Promise((resolve, reject) => {
-                                                                const encontrado = produtosLookup.find(item => item.CODPRO == key);
-                                                                if (encontrado) {
-                                                                    resolve(encontrado);
-                                                                } else {
-                                                                    reject(`Produto com CODPRO ${key} não encontrado`);
-                                                                }
-                                                            });
-                                                        }
-                                                    }),
-                                                    displayExpr: 'PRODUTO_DISPLAY',
-                                                    valueExpr: 'CODPRO',
-                                                    searchEnabled: true,
-                                                    minSearchLength: 3,
-                                                    searchExpr: 'PRODUTO_DISPLAY'
-                                                },
-                                                setCellValue: function (newData, value) {
-                                                    const produto = produtosLookup.find(p => p.CODPRO == value);
-                                                    if (produto) {
-                                                        newData.cod_produto = produto.CODPRO;
-                                                        newData.descricao_produto = produto.DESPRO;
-                                                        newData.cod_deposito = produto.CODDEP;
-                                                        newData.descricao_deposito = produto.DESDEP;
-                                                        newData.unidade_medida = produto.UNIMED;
-                                                        newData.qtd_estoque = produto.QTDEST;
-                                                        newData.preco_medio = produto.PRMEST;
-                                                    }
-                                                },
-                                                visible: false,
-                                                validationRules: [{ type: 'required' }]
-                                            },
-                                            { dataField: 'descricao_produto', caption: 'Descrição', allowEditing: false },
-                                            {
-                                                dataField: 'data_utilizacao',
-                                                caption: 'Dt. Utilização',
-                                                width: 100,
-                                                dataType: 'date',
-                                                alignment: 'center',
-                                                sortIndex: 1, 
-                                                sortOrder: 'asc'
-                                            },
-                                            { dataField: 'cod_deposito', caption: 'Código Depósito', allowEditing: false, visible: false },
-                                            { dataField: 'descricao_deposito', caption: 'Depósito', allowEditing: false },
-                                            { dataField: 'unidade_medida', caption: 'Unidade', allowEditing: false, width: 80, visible: false },
-                                            { 
-                                                dataField: 'qtd_estoque', 
-                                                caption: 'Qtd. Estoque', 
-                                                allowEditing: false, 
-                                                alignment: 'right', 
-                                                width: 120, 
-                                                dataType: 'number', 
-                                                format: {
-                                                    type: 'fixedPoint',
-                                                    precision: 4
-                                                }
-                                            },
-                                            { 
-                                                dataField: 'preco_medio', 
-                                                caption: 'Preço Médio', 
-                                                allowEditing: false, 
-                                                alignment: 'right', 
-                                                width: 120, 
-                                                dataType: 'number', 
-                                                format: {
-                                                    type: 'currency',
-                                                    currency: 'BRL',
-                                                    precision: 4
-                                                }
-                                            },
-                                            { 
-                                                dataField: 'qtd_utilizada', 
-                                                caption: 'Qtd. Utilizada', 
-                                                allowEditing: true, 
-                                                alignment: 'right', 
-                                                width: 120, 
-                                                dataType: 'number', 
-                                                format: {
-                                                    type: 'fixedPoint',
-                                                    precision: 4
-                                                },
-                                                validationRules: [{ type: 'required' }]
-                                            },
-                                            {
-                                                dataField: 'custo_unitario',
-                                                caption: 'Custo Unitário',
-                                                allowEditing: true, 
-                                                alignment: 'right', 
-                                                width: 120, 
-                                                dataType: 'number', 
-                                                format: {
-                                                    type: 'currency',
-                                                    currency: 'BRL',
-                                                    precision: 4
-                                                },
-                                                validationRules: [{ type: 'required' }]
-                                            },
-                                            { dataField: 'observacao', caption: 'Observação', width: 200 }
-                                        ],
-                                        onRowUpdating: function (e) {
-                                            e.newData = { ...e.oldData, ...e.newData };
-                                        },
-                                    });
-
-                                }
+                                type: 'stringLength',
+                                min: 5,
+                                max: 5,
+                                message: 'Digite exatamente 5 dígitos'
                             }
-                        ]
-                    });                    
+                        ],
+                        onValueChanged: function (e) {
+                            const osId = e.value;
+
+                                // Se não tiver exatamente 5 dígitos, não prossegue
+                                if (!osId || !/^\d{5}$/.test(osId)) {
+                                    return;
+                                }
+
+                            $.getJSON(`/planejamento-controle-manutencao/validar-os-apontamentos?id=${osId}`)
+                                .done(function (response) {
+                                    if (response.success) {
+
+                                        // Destruir TabPanel existente antes de criar
+                                        const existingTabPanel = $('#tabpanelFinalizar').dxTabPanel('instance');
+                                        if (existingTabPanel) {
+                                            existingTabPanel.dispose(); // destrói instância DevExtreme
+                                            $('#tabpanelFinalizar').remove(); // remove do DOM
+                                        }
+
+                                        // Habilita Botao
+                                        const button = finalizarPopup.option('toolbarItems')[0];
+                                        button.options.disabled = false;
+                                        finalizarPopup.option('toolbarItems', [button]);
+
+
+                                        // Criar TabPanel
+                                        const tabPanelElement = $('<div>').attr('id', 'tabpanelFinalizar').appendTo(contentElement);
+
+                                        const tabPanel = tabPanelElement.dxTabPanel({
+                                            height: 660,
+                                            items: [
+                                                {
+                                                    title: 'Apontamentos',
+                                                    template: function (itemData, itemIndex, itemElement) {
+                                                        $(itemElement).css('padding', '15px');
+
+                                                        // Carrega apontamentos
+                                                        $.getJSON(`/planejamento-controle-manutencao/get-apontamentos-os?id=${osId}`)
+                                                        .done(function (data) {
+                                                            const apontamentos = data ?? [];
+
+                                                            $('<div id="gridApontamentos">').appendTo(itemElement).dxDataGrid({
+                                                                dataSource: apontamentos,
+                                                                width: '100%',
+                                                                height: 590,
+                                                                keyExpr: 'id',
+                                                                showBorders: true,
+                                                                columnAutoWidth: true,
+                                                                editing: {
+                                                                    mode: 'form',
+                                                                    allowAdding: true,
+                                                                    allowUpdating: true,
+                                                                    allowDeleting: true,
+                                                                    useIcons: true,
+                                                                    form: {
+                                                                        colCount: 2,
+                                                                        labelLocation: 'top',
+                                                                        items: [
+                                                                            { 
+                                                                                dataField: 'tecnico_id', 
+                                                                                label: { text: 'Técnico' }, 
+                                                                                editorType: 'dxSelectBox', 
+                                                                                colSpan: 2, 
+                                                                                editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') 
+                                                                            },
+                                                                            {
+                                                                                dataField: 'data_inicio',
+                                                                                editorType: 'dxDateBox',
+                                                                                label: { text: 'Início' },
+                                                                                editorOptions: {
+                                                                                    type: 'datetime',
+                                                                                    displayFormat: 'dd/MM/yyyy HH:mm'
+                                                                                },
+                                                                                validationRules: [{ type: 'required' }]
+                                                                            },
+                                                                            {
+                                                                                dataField: 'data_fim',
+                                                                                editorType: 'dxDateBox',
+                                                                                label: { text: 'Fim' },
+                                                                                editorOptions: {
+                                                                                    type: 'datetime',
+                                                                                    displayFormat: 'dd/MM/yyyy HH:mm'
+                                                                                },
+                                                                                validationRules: [{ type: 'required' }]
+                                                                            },
+                                                                            {
+                                                                                dataField: 'observacao',
+                                                                                editorType: 'dxTextArea',
+                                                                                label: { text: 'Observação' },
+                                                                                colSpan: 2,
+                                                                                editorOptions: { height: 100 },
+                                                                                validationRules: [{ type: 'required' }]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                columns: [
+                                                                    { dataField: 'tecnico_id', caption: 'Técnico', lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                                                                    {
+                                                                        dataField: 'data_inicio',
+                                                                        caption: 'Início',
+                                                                        dataType: 'datetime',
+                                                                        format: 'dd/MM/yyyy HH:mm',
+                                                                        width: 160,
+                                                                        serialize: function(value) {
+                                                                            return value ? DevExpress.localization.formatDate(value, 'yyyy-MM-ddTHH:mm:ss') : null;
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        dataField: 'data_fim',
+                                                                        caption: 'Fim',
+                                                                        dataType: 'datetime',
+                                                                        format: 'dd/MM/yyyy HH:mm',
+                                                                        width: 160,
+                                                                        serialize: function(value) {
+                                                                            return value ? DevExpress.localization.formatDate(value, 'yyyy-MM-ddTHH:mm:ss') : null;
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        dataField: 'observacao',
+                                                                        caption: 'Observação',
+                                                                        width: 300
+                                                                    }
+                                                                ],
+                                                                onRowUpdating: function (e) {
+                                                                    e.newData = { ...e.oldData, ...e.newData };
+                                                                }
+                                                            });
+                                                        });
+
+                                                    }
+                                                },
+                                                {
+                                                    title: 'Itens',
+                                                    template: function (itemData, itemIndex, itemElement) {
+                                                        $(itemElement).css('padding', '15px');
+
+                                                        // Carrega itens utilizados
+                                                        $.getJSON(`/planejamento-controle-manutencao/get-itens-utilizados-os?id=${osId}`)
+                                                        .done(function (data) {
+                                                            let itensUtilizados = data ?? [];
+
+                                                            $('<div id="gridItensManutencao">').appendTo(itemElement).dxDataGrid({
+                                                                dataSource: itensUtilizados,
+                                                                width: 'auto',
+                                                                height: 590,
+                                                                keyExpr: 'id',
+                                                                showBorders: true,
+                                                                columnAutoWidth: true,
+                                                                editing: {
+                                                                    mode: 'form',
+                                                                    allowAdding: true,
+                                                                    allowUpdating: true,
+                                                                    allowDeleting: true,
+                                                                    useIcons: true,
+                                                                    form: {
+                                                                        colCount: 2,
+                                                                        labelLocation: 'top',
+                                                                        items: [
+                                                                            'cod_produto',
+                                                                            {
+                                                                                dataField: 'data_utilizacao',
+                                                                                editorType: 'dxDateBox',
+                                                                                label: { text: 'Data Utilização' },
+                                                                                colSpan: 2,
+                                                                                editorOptions: { type: 'date' },
+                                                                                validationRules: [{ type: 'required', message: 'Data Utilização é obrigatória' }]
+                                                                            },
+                                                                            'cod_deposito',
+                                                                            {
+                                                                                dataField: 'descricao_deposito',
+                                                                                editorOptions: { readOnly: true }
+                                                                            },
+                                                                            {
+                                                                                dataField: 'qtd_estoque',
+                                                                                editorType: 'dxNumberBox',
+                                                                                editorOptions: {
+                                                                                    readOnly: true,
+                                                                                    format: { type: 'fixedPoint', precision: 4 }
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                dataField: 'preco_medio',
+                                                                                editorType: 'dxNumberBox',
+                                                                                editorOptions: {
+                                                                                    readOnly: true,
+                                                                                    format: { type: 'currency', currency: 'BRL', precision: 4 }
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                dataField: 'qtd_utilizada',
+                                                                                editorType: 'dxNumberBox',
+                                                                                editorOptions: {
+                                                                                    format: { type: 'fixedPoint', precision: 4 }
+                                                                                },
+                                                                                validationRules: [{ type: 'required' }]
+                                                                            },
+                                                                            {
+                                                                                dataField: 'custo_unitario',
+                                                                                editorType: 'dxNumberBox',
+                                                                                editorOptions: {
+                                                                                    format: { type: 'currency', currency: 'BRL', precision: 4 }
+                                                                                },
+                                                                                validationRules: [{ type: 'required' }]
+                                                                            },
+                                                                            {
+                                                                                dataField: 'observacao',
+                                                                                colSpan: 2,
+                                                                                editorType: 'dxTextArea',
+                                                                                label: { text: 'Observação' },
+                                                                                editorOptions: { height: 100, width: '100%' },
+                                                                                validationRules: [{ type: 'required', message: 'Observação é obrigatória' }]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                columns: [
+                                                                    {
+                                                                        dataField: 'cod_produto',
+                                                                        caption: 'Produto',
+                                                                        lookup: {
+                                                                            dataSource: new DevExpress.data.CustomStore({
+                                                                                key: 'CODPRO',
+                                                                                loadMode: 'processed',
+                                                                                cacheRawData: true,
+                                                                                load: function (loadOptions) {
+                                                                                    return new Promise((resolve) => {
+                                                                                        const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                                                                        let resultado = [];
+
+                                                                                        if (!searchValue) {
+                                                                                            resultado = produtosLookup.slice(0, 50);
+                                                                                        } else {
+                                                                                            resultado = produtosLookup.filter(item =>
+                                                                                                item.PRODUTO_DISPLAY.toUpperCase().includes(searchValue)
+                                                                                            );
+                                                                                        }
+
+                                                                                        resolve({ data: resultado, totalCount: resultado.length });
+                                                                                    });
+                                                                                },
+                                                                                byKey: function (key) {
+                                                                                    return new Promise((resolve, reject) => {
+                                                                                        const encontrado = produtosLookup.find(item => item.CODPRO == key);
+                                                                                        encontrado ? resolve(encontrado) : reject(`Produto com CODPRO ${key} não encontrado`);
+                                                                                    });
+                                                                                }
+                                                                            }),
+                                                                            displayExpr: 'PRODUTO_DISPLAY',
+                                                                            valueExpr: 'CODPRO',
+                                                                            searchEnabled: true,
+                                                                            minSearchLength: 3,
+                                                                            searchExpr: 'PRODUTO_DISPLAY'
+                                                                        },
+                                                                        setCellValue: function (newData, value) {
+                                                                            const produto = produtosLookup.find(p => p.CODPRO == value);
+                                                                            if (produto) {
+                                                                                Object.assign(newData, {
+                                                                                    cod_produto: produto.CODPRO,
+                                                                                    descricao_produto: produto.DESPRO,
+                                                                                    cod_deposito: produto.CODDEP,
+                                                                                    descricao_deposito: produto.DESDEP,
+                                                                                    unidade_medida: produto.UNIMED,
+                                                                                    qtd_estoque: produto.QTDEST,
+                                                                                    preco_medio: produto.PRMEST,
+                                                                                    custo_unitario: produto.PRMEST
+                                                                                });
+                                                                            }
+                                                                        },
+                                                                        visible: false,
+                                                                        validationRules: [{ type: 'required' }]
+                                                                    },
+                                                                    { dataField: 'descricao_produto', caption: 'Descrição', allowEditing: false },
+                                                                    {
+                                                                        dataField: 'data_utilizacao',
+                                                                        caption: 'Dt. Utilização',
+                                                                        width: 100,
+                                                                        dataType: 'date',
+                                                                        alignment: 'center',
+                                                                        sortIndex: 1,
+                                                                        sortOrder: 'asc'
+                                                                    },
+                                                                    { dataField: 'cod_deposito', caption: 'Código Depósito', allowEditing: false, visible: false },
+                                                                    { dataField: 'descricao_deposito', caption: 'Depósito', allowEditing: false },
+                                                                    { dataField: 'unidade_medida', caption: 'Unidade', allowEditing: false, width: 80, visible: false },
+                                                                    {
+                                                                        dataField: 'qtd_estoque',
+                                                                        caption: 'Qtd. Estoque',
+                                                                        allowEditing: false,
+                                                                        visible: false,
+                                                                        alignment: 'right',
+                                                                        width: 120,
+                                                                        dataType: 'number',
+                                                                        format: { type: 'fixedPoint', precision: 4 }
+                                                                    },
+                                                                    {
+                                                                        dataField: 'preco_medio',
+                                                                        caption: 'Preço Médio',
+                                                                        allowEditing: false,
+                                                                        visible: false,
+                                                                        alignment: 'right',
+                                                                        width: 120,
+                                                                        dataType: 'number',
+                                                                        format: { type: 'currency', currency: 'BRL', precision: 4 }
+                                                                    },
+                                                                    {
+                                                                        dataField: 'qtd_utilizada',
+                                                                        caption: 'Qtd. Utilizada',
+                                                                        allowEditing: true,
+                                                                        alignment: 'right',
+                                                                        width: 120,
+                                                                        dataType: 'number',
+                                                                        format: { type: 'fixedPoint', precision: 4 },
+                                                                        validationRules: [{ type: 'required' }]
+                                                                    },
+                                                                    {
+                                                                        dataField: 'custo_unitario',
+                                                                        caption: 'Custo Unitário',
+                                                                        allowEditing: true,
+                                                                        alignment: 'right',
+                                                                        width: 120,
+                                                                        dataType: 'number',
+                                                                        format: { type: 'currency', currency: 'BRL', precision: 4 },
+                                                                        validationRules: [{ type: 'required' }]
+                                                                    },
+                                                                    { dataField: 'observacao', caption: 'Observação', width: 200 }
+                                                                ],
+                                                                onRowUpdating: function (e) {
+                                                                    e.newData = { ...e.oldData, ...e.newData };
+                                                                }
+                                                            });
+                                                        });
+
+                                                    }
+                                                }
+                                            ]
+                                        });
+
+                                    } else {
+                                        // Destruir TabPanel existente antes de criar
+                                        const existingTabPanel = $('#tabpanelFinalizar').dxTabPanel('instance');
+                                        if (existingTabPanel) {
+                                            existingTabPanel.dispose(); // destrói instância DevExtreme
+                                            $('#tabpanelFinalizar').remove(); // remove do DOM
+                                        }
+
+                                        // Quando a validação falhar ou o campo não tiver 5 dígitos
+                                        const button = finalizarPopup.option('toolbarItems')[0];
+                                        if (button) {
+                                            button.options.disabled = true;
+                                            finalizarPopup.option('toolbarItems', [button]);
+                                        }
+
+                                        DevExpress.ui.notify(response.message || 'OS não encontrada.', 'warning', 3000);
+                                    }
+                                })
+                                .fail(function () {
+                                    // Destruir TabPanel existente antes de criar
+                                    const existingTabPanel = $('#tabpanelFinalizar').dxTabPanel('instance');
+                                    if (existingTabPanel) {
+                                        existingTabPanel.dispose(); // destrói instância DevExtreme
+                                        $('#tabpanelFinalizar').remove(); // remove do DOM
+                                    }
+
+                                    // Quando a validação falhar ou o campo não tiver 5 dígitos
+                                    const button = finalizarPopup.option('toolbarItems')[0];
+                                    if (button) {
+                                        button.options.disabled = true;
+                                        finalizarPopup.option('toolbarItems', [button]);
+                                    }
+                                    DevExpress.ui.notify('Erro ao validar a Ordem de Serviço.', 'error', 3000);
+                                });
+                        }
+                    }).css({ marginBottom: '15px' });
                 }
             }).dxPopup('instance');
 
             finalizarPopup.show();
         }
+        function finalizarOS(data) {
+            DevExpress.ui.dialog.confirm(
+                "Tem certeza que deseja finalizar esta manutenção?\nApós finalizada, não será possível editar os dados.",
+                "Confirmação"
+            ).then(function (result) {
+                if (!result) return; // Usuário clicou "Não"
 
+                const envio = {
+                    id: data.id
+                };
+
+                $.ajax({
+                    url: '/planejamento-controle-manutencao/finalizar-os',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(envio),
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (response.success) {
+                        DevExpress.ui.notify('Ordem de Serviço finalizada com sucesso!', 'success', 3000);
+                        $('#gridControleManutencao').dxDataGrid('instance').refresh();
+                    } else {
+                        DevExpress.ui.notify(response.message || 'Erro ao finalizar Ordem de Serviço', 'error', 3000);
+                    }
+                }).fail(function () {
+                    DevExpress.ui.notify('Erro na requisição para finalizar Ordem de Serviço ', 'error', 3000);
+                });
+            });
+        }
         function openOrdemServicoPopup(data) {
             let osPopup = $('#popupOS').dxPopup({
                 width: 900, 
@@ -1170,7 +1393,7 @@
                                             <div class="field third"><span class="label">Data Inicial:</span><div class="value os-data-inicio"></div></div>
                                             <div class="field third"><span class="label">Data Final:</span><div class="value os-data-final"></div></div>
                                             <div class="field full"><span class="label">Descrição do Serviço Realizado:</span><div class="value os-descricao"></div></div>
-                                            <div class="field"><span class="label">Técnico Responsável:</span><div class="value os-tecnico"></div></div>
+                                            <div class="field"><span class="label">Técnico(s) Responsável(s):</span><div class="value os-tecnico"></div></div>
                                         </div>
                                     </div>
 
@@ -1285,7 +1508,6 @@
 
             osPopup.show();
         }
-
         function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
             return {
                 dataSource: new DevExpress.data.CustomStore({

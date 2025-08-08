@@ -618,7 +618,60 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao excluir controle: ' . $e->getMessage()]);
             }
         }
-        public function finalizarManutencaoAction()
+        public function validarOsApontamentosAction()
+        {
+            $request = $this->getRequest();
+
+            if (!$request->isGet()) {
+                return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+            }
+
+            $id = $this->params()->fromQuery('id');
+
+            if (empty($id)) {
+                return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
+            }
+
+            try {
+                $valido = $this->PlanejamentoControleManutencaoRepository->validarOsApontamentos($id);
+                return new JsonModel($valido);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao validar: ' . $e->getMessage()]);
+            }
+        }
+        public function getApontamentosOsAction()
+        {
+            $request = $this->getRequest();
+            $osId = (int)$this->params()->fromQuery('id');
+
+            if (!$osId) {
+                return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
+            }
+
+            try {
+                $dados = $this->PlanejamentoControleManutencaoRepository->getApontamentosPorOS($osId);
+                return new JsonModel($dados);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao buscar apontamentos: ' . $e->getMessage()]);
+            }
+        }
+        public function getItensUtilizadosOsAction()
+        {
+            $request = $this->getRequest();
+            $osId = (int)$this->params()->fromQuery('id');
+
+            if (!$osId) {
+                return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
+            }
+
+            try {
+                $dados = $this->PlanejamentoControleManutencaoRepository->getItensUtilizadosPorOS($osId);
+                return new JsonModel($dados);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao buscar itens: ' . $e->getMessage()]);
+            }
+        }
+        public function apontamentosManutencaoOsAction()
         {
             $request = $this->getRequest();
 
@@ -628,12 +681,12 @@ class PlanejamentoControleManutencaoController extends BaseController
 
             $dados = json_decode($request->getContent(), true);
 
-            if (empty($dados['id'])) {
-                return new JsonModel(['success' => false, 'message' => 'ID não informado']);
+            if (empty($dados['id_os'])) {
+                return new JsonModel(['success' => false, 'message' => 'OS não informada']);
             }
 
             try {
-                $this->PlanejamentoControleManutencaoRepository->finalizarManutencao($dados);
+                $this->PlanejamentoControleManutencaoRepository->apontamentosManutencaoOs($dados);
                 return new JsonModel(['success' => true, 'message' => 'Controle finalizado com sucesso']);
             } catch (\Exception $e) {
                 return new JsonModel(['success' => false, 'message' => 'Erro ao finalizar: ' . $e->getMessage()]);
@@ -664,6 +717,27 @@ class PlanejamentoControleManutencaoController extends BaseController
                     'success' => false,
                     'message' => 'Erro ao buscar informações para ordem de serviço: ' . $e->getMessage()
                 ]);
+            }
+        }
+        public function finalizarOsAction()
+        {
+            $request = $this->getRequest();
+           
+            if (!$request->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+            }
+
+            $dados = json_decode($request->getContent(), true);
+
+            if (empty($dados['id'])) {
+                return new JsonModel(['success' => false, 'message' => 'ID não informado']);
+            }
+
+            try {
+                $this->PlanejamentoControleManutencaoRepository->finalizarOs($dados);
+                return new JsonModel(['success' => true, 'message' => 'Controle finalizado com sucesso']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao finalizar: ' . $e->getMessage()]);
             }
         }
     #endRegion
@@ -773,26 +847,24 @@ class PlanejamentoControleManutencaoController extends BaseController
     {
         $request = $this->getRequest();
 
-        $sql = "SELECT DISTINCT
-                    R034FUN.NUMCAD AS MATRICULA,
-                    R034FUN.NOMFUN AS NOME_COLABORADOR,
-                    LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0') AS CPF,
-                    R024CAR.TITCAR AS DSC_CARGO,
-                    CASE WHEN LENGTH(REGEXP_REPLACE(R033PES.DDDTEL, '[^0-9]', '')) = 2
-                        AND LENGTH(REGEXP_REPLACE(R033PES.NUMTEL, '[^0-9]', '')) >= 8
-                        THEN REGEXP_REPLACE(CONCAT(R033PES.DDDTEL, R033PES.NUMTEL), '[^0-9]', '')
-                        ELSE NULL
-                    END NUMTEL,
-                    CASE WHEN LENGTH(REGEXP_REPLACE(R033PES.DDDCEL, '[^0-9]', '')) = 2
-                        AND LENGTH(REGEXP_REPLACE(R033PES.NUMCEL, '[^0-9]', '')) >= 8
-                        THEN REGEXP_REPLACE(CONCAT(R033PES.DDDCEL, R033PES.NUMCEL), '[^0-9]', '')
-                        ELSE NULL
-                    END NUMCEL
+        $sql = "SELECT 
+                    R034FUN.NUMEMP 
+                    ,R034FUN.TIPCOL 
+                    ,R034FUN.NUMCAD AS MATRICULA
+                    ,R034FUN.NOMFUN AS NOME_COLABORADOR
+                    ,LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0') AS  CPF
+                    ,R034FUN.DATADM
+                    ,TRUNC(MONTHS_BETWEEN(SYSDATE, R034FUN.DATNAS ) / 12) AS IDADE 
+                    ,CASE WHEN LENGTH(REGEXP_REPLACE(R033PES.DDDTEL, '[^0-9]', '')) = 2 AND LENGTH(REGEXP_REPLACE(R033PES.NUMTEL, '[^0-9]', '')) >= 8 THEN REGEXP_REPLACE(CONCAT(R033PES.DDDTEL, R033PES.NUMTEL), '[^0-9]', '') ELSE NULL END NUMTEL            
+                    ,CASE WHEN LENGTH(REGEXP_REPLACE(R033PES.DDDCEL, '[^0-9]', '')) = 2 AND LENGTH(REGEXP_REPLACE(R033PES.NUMCEL, '[^0-9]', '')) >= 8 THEN REGEXP_REPLACE(CONCAT(R033PES.DDDTEL, R033PES.NUMCEL), '[^0-9]', '') ELSE NULL END NUMCEL            
+                    ,R024CAR.TITCAR AS DSC_CARGO
                 FROM VETORH.R034FUN
-                LEFT JOIN VETORH.R033PES ON R033PES.CADAUX = R034FUN.NUMCAD AND R033PES.EMPAUX = R034FUN.NUMEMP AND R033PES.NUMCPF = R034FUN.NUMCPF
+                INNER JOIN VETORH.R010SIT ON R010SIT.CODSIT = R034FUN.SITAFA
                 LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR
-                WHERE R034FUN.SITAFA <> 7
-                AND R034FUN.NUMEMP = 5
+                LEFT JOIN VETORH.R033PES ON R033PES.CADAUX = R034FUN.NUMCAD AND R033PES.EMPAUX = R034FUN.NUMEMP AND R033PES.NUMCPF = R034FUN.NUMCPF 
+                WHERE R034FUN.TIPCOL = 1
+                AND R034FUN.SITAFA <> 7
+                AND R034FUN.NUMEMP IN (5,12)
                 ORDER BY R034FUN.NOMFUN";
 
         try {

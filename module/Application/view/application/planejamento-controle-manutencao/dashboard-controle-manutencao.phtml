@@ -739,103 +739,82 @@
 
                             const equipamentosMap = {};
 
+                            // Mapeia dados long para wide, considerando correção de nomes
                             dadosPorEquipamento.forEach(({ equipamento, tipo, quantidade }) => {
-                                // Corrige nome "Corrretiva" para "Corretiva" (se for erro de digitação)
-                                const tipoCorrigido = tipo === "Corrretiva" ? "Corretiva" : tipo;
+                            const tipoCorrigido = tipo === "Corrretiva" ? "Corretiva" : tipo;
 
-                                if (!equipamentosMap[equipamento]) {
-                                    equipamentosMap[equipamento] = {
-                                        equipamento,
-                                        Corretiva: 0,
-                                        Preventiva: 0,
-                                        Preditiva: 0
-                                    };
-                                }
-                                equipamentosMap[equipamento][tipoCorrigido] = quantidade;
+                            if (!equipamentosMap[equipamento]) {
+                                equipamentosMap[equipamento] = { equipamento };
+                            }
+
+                            equipamentosMap[equipamento][tipoCorrigido] = (equipamentosMap[equipamento][tipoCorrigido] || 0) + quantidade;
                             });
 
                             const equipamentosArray = Object.values(equipamentosMap);
 
-                            // Ordena do maior para o menor total de solicitações (soma dos tipos)
-                            equipamentosArray.sort((a, b) => (
-                                (b.Corretiva + b.Preventiva + b.Preditiva) -
-                                (a.Corretiva + a.Preventiva + a.Preditiva)
-                            ));
+                            // Ordena do maior para o menor total
+                            equipamentosArray.sort((a, b) => {
+                            const somaA = Object.keys(a).reduce((acc, key) => key !== 'equipamento' ? acc + a[key] : acc, 0);
+                            const somaB = Object.keys(b).reduce((acc, key) => key !== 'equipamento' ? acc + b[key] : acc, 0);
+                            return somaB - somaA;
+                            });
 
-                            // Pega os top 10 equipamentos com mais solicitações
+                            // Pega top 10
                             const dadosTop10 = equipamentosArray.slice(0, 10);
 
+                            // Extrai os tipos dinâmicos para series (todas as keys exceto 'equipamento')
+                            const tiposUnicos = Object.keys(dadosTop10[0] || {}).filter(k => k !== 'equipamento');
+
+                            // Monta config de series para o gráfico
+                            const seriesConfig = tiposUnicos.map(tipo => ({
+                            valueField: tipo,
+                            name: tipo
+                            }));
+
+                            // Renderiza gráfico
                             $("#graficoPorEquipamento").dxChart({
-                                dataSource: dadosTop10,
-                                rotated: true,
-                                palette: paletaVerde,
-                                title: {
-                                    text: "Solicitações por Equipamento (Top 10)",
-                                    font: {
-                                        size: 16,
-                                        weight: 600,
-                                        color: "#1B5E20"
-                                    },
-                                    horizontalAlignment: "center"
-                                },
-                                tooltip: {
-                                    enabled: true,
-                                    customizeTooltip(arg) {
-                                        return {
-                                            text: `${arg.seriesName} em ${arg.argumentText}: ${arg.valueText} solicitações`
-                                        };
-                                    }
-                                },
-                                legend: {
-                                    visible: true,
-                                    verticalAlignment: "bottom",
-                                    horizontalAlignment: "center",
-                                    orientation: "horizontal",
-                                    itemTextPosition: "right",
-                                    font: {
-                                        size: 12,
-                                        color: "#1B5E20"
-                                    },
-                                    paddingLeftRight: 10,
-                                    paddingTopBottom: 10
-                                },
-                                commonSeriesSettings: {
-                                    type: "stackedBar",
-                                    argumentField: "equipamento",
-                                    label: {
-                                        visible: true,
-                                        font: {
-                                            size: 12,
-                                            weight: 600
-                                        }
-                                    }
-                                },
-                                series: [
-                                    { valueField: "Corretiva", name: "Corretiva" },
-                                    { valueField: "Preventiva", name: "Preventiva" },
-                                    { valueField: "Preditiva", name: "Preditiva" },
-                                ],
-                                valueAxis: {
-                                    title: {
-                                        text: "Quantidade",
-                                        font: { color: "#1B5E20" }
-                                    },
-                                    grid: { visible: false }
-                                },
-                                argumentAxis: {
-                                    title: {
-                                        text: "Equipamento",
-                                        font: { color: "#1B5E20" }
-                                    },
-                                    label: {
-                                        font: { color: "#1B5E20" }
-                                    },
-                                    grid: { visible: false }
-                                },
-                                size: {
-                                    height: 400
+                            dataSource: dadosTop10,
+                            rotated: true,
+                            palette: paletaVerde,
+                            title: {
+                                text: "Solicitações por Equipamento (Top 10)",
+                                font: { size: 16, weight: 600, color: "#1B5E20" },
+                                horizontalAlignment: "center"
+                            },
+                            tooltip: {
+                                enabled: true,
+                                customizeTooltip(arg) {
+                                return { text: `${arg.seriesName} em ${arg.argumentText}: ${arg.valueText} solicitações` };
                                 }
+                            },
+                            legend: {
+                                visible: true,
+                                verticalAlignment: "bottom",
+                                horizontalAlignment: "center",
+                                orientation: "horizontal",
+                                itemTextPosition: "right",
+                                font: { size: 12, color: "#1B5E20" },
+                                paddingLeftRight: 10,
+                                paddingTopBottom: 10
+                            },
+                            commonSeriesSettings: {
+                                type: "stackedBar",
+                                argumentField: "equipamento",
+                                label: { visible: true, font: { size: 12, weight: 600 } }
+                            },
+                            series: seriesConfig,
+                            valueAxis: {
+                                title: { text: "Quantidade", font: { color: "#1B5E20" } },
+                                grid: { visible: false }
+                            },
+                            argumentAxis: {
+                                title: { text: "Equipamento", font: { color: "#1B5E20" } },
+                                label: { font: { color: "#1B5E20" } },
+                                grid: { visible: false }
+                            },
+                            size: { height: 400 }
                             });
+
                         // FIM POR EQUIPAMENTO
 
                         // INICIO POR SETOR

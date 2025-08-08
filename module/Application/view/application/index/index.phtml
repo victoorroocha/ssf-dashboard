@@ -213,7 +213,7 @@
                     <div class="card-body p-0" style="height: 80vh; overflow: hidden;">
                         <div class="tech-placeholder">
                             <!-- Layer de partículas de sementes animadas -->
-                            <canvas id="seedCanvas"></canvas>
+                            <!-- <canvas id="seedCanvas"></canvas> -->
 
                             <!-- Conteúdo principal -->
                             <div class="tech-content">
@@ -390,50 +390,50 @@
     });
 
     // COMEÇA CANVAS
-        const canvas = document.getElementById('seedCanvas');
-        const ctx = canvas.getContext('2d');
-        let w, h, particles = [];
-        function resize() {
-            w = canvas.width = canvas.clientWidth;
-            h = canvas.height = canvas.clientHeight;
-        }
-        class Seed {
-            constructor() {
-            this.reset();
-            }
-            reset() {
-            this.x = Math.random()*w;
-            this.y = h + Math.random()*100;
-            this.vx = (Math.random()-0.5)*0.3;
-            this.vy = - (1 + Math.random()*1.5);
-            this.size = 2 + Math.random()*3;
-            this.alpha = 0.3 + Math.random()*0.5;
-            }
-            update() {
-            this.x += this.vx; this.y += this.vy;
-            this.alpha -= 0.005;
-            if (this.alpha <= 0) this.reset();
-            }
-            draw() {
-            ctx.globalAlpha = this.alpha;
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, 2*Math.PI);
-            ctx.fill();
-            }
-        }
-        function init() {
-            resize();
-            particles = Array.from({length: 80}, () => new Seed());
-            animate();
-        }
-        function animate() {
-            ctx.clearRect(0,0,w,h);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        window.addEventListener('resize', resize);
-        init();
+        // const canvas = document.getElementById('seedCanvas');
+        // const ctx = canvas.getContext('2d');
+        // let w, h, particles = [];
+        // function resize() {
+        //     w = canvas.width = canvas.clientWidth;
+        //     h = canvas.height = canvas.clientHeight;
+        // }
+        // class Seed {
+        //     constructor() {
+        //     this.reset();
+        //     }
+        //     reset() {
+        //     this.x = Math.random()*w;
+        //     this.y = h + Math.random()*100;
+        //     this.vx = (Math.random()-0.5)*0.3;
+        //     this.vy = - (1 + Math.random()*1.5);
+        //     this.size = 2 + Math.random()*3;
+        //     this.alpha = 0.3 + Math.random()*0.5;
+        //     }
+        //     update() {
+        //     this.x += this.vx; this.y += this.vy;
+        //     this.alpha -= 0.005;
+        //     if (this.alpha <= 0) this.reset();
+        //     }
+        //     draw() {
+        //     ctx.globalAlpha = this.alpha;
+        //     ctx.fillStyle = '#fff';
+        //     ctx.beginPath();
+        //     ctx.arc(this.x, this.y, this.size, 0, 2*Math.PI);
+        //     ctx.fill();
+        //     }
+        // }
+        // function init() {
+        //     resize();
+        //     particles = Array.from({length: 80}, () => new Seed());
+        //     animate();
+        // }
+        // function animate() {
+        //     ctx.clearRect(0,0,w,h);
+        //     particles.forEach(p => { p.update(); p.draw(); });
+        //     requestAnimationFrame(animate);
+        // }
+        // window.addEventListener('resize', resize);
+        // init();
     // FINALIZA CANVAS
 </script>
 <!-- /.container-fluid -->

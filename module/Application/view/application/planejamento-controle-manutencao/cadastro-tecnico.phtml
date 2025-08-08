@@ -24,7 +24,13 @@
 <!-- /.container-fluid -->
 
 <script>
+    
     $(document).ready(function() {
+
+        var tecnicosLookup = []; 
+
+        getLookupTecnicos();
+
         let tecnicosGrid = $('#gridTecnicos').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
                 key: 'id',
@@ -213,13 +219,7 @@
                     colCount: 1,
                     labelLocation: 'top',
                     items: [
-                        {
-                            dataField: 'nome',
-                            editorType: 'dxTextBox',
-                            label: { text: 'Nome' },
-                            editorOptions: { width: '100%' },
-                            validationRules: [{ type: 'required', message: 'Nome é obrigatório' }]
-                        },
+                        'numcad',
                         {
                             // campo CPF
                             name: 'cpf',
@@ -232,17 +232,6 @@
                                 maskChar: '_',
                                 showMaskMode: 'always'
                             },
-                            validationRules: [
-                                { type: 'required', message: 'CPF é obrigatório' },
-                                {
-                                    type: 'custom',
-                                    message: 'CPF é inválido',
-                                    validationCallback: function (e) {
-                                        const cpf = e.value.replace(/\D/g, '');
-                                        return validarCPF(cpf);
-                                    }
-                                }
-                            ]
                         },
                         {
                             dataField: 'cargo_funcao',
@@ -289,7 +278,68 @@
                 }
             },
             columns: [
-                { dataField: 'nome', caption: 'Nome' },
+                {
+                    dataField: 'numcad',
+                    caption: 'Nome Técnico',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: 'MATRICULA',
+                            loadMode: 'processed',
+                            cacheRawData: true, 
+                            load: function (loadOptions) {
+                                return new Promise((resolve) => {
+                                    const searchValue = (loadOptions.searchValue || '').toUpperCase();
+
+                                    let resultado = [];
+
+                                    if (!searchValue) {
+                                        resultado = tecnicosLookup.slice(0, 50);
+                                    } else {
+                                        resultado = tecnicosLookup.filter(item =>
+                                            item.NOME_COLABORADOR.toUpperCase().includes(searchValue)
+                                        );
+                                    }
+
+                                    resolve({
+                                        data: resultado,
+                                        totalCount: resultado.length
+                                    });
+                                });
+                            },
+                            byKey: function (key) {
+                                return new Promise((resolve, reject) => {
+                                    const encontrado = tecnicosLookup.find(item => item.MATRICULA == key);
+                                    if (encontrado) {
+                                        resolve(encontrado);
+                                    } else {
+                                        reject(`Técnico com Matricula ${key} não encontrado`);
+                                    }
+                                });
+                            }
+                        }),
+                        displayExpr: 'NOME_COLABORADOR',
+                        valueExpr: 'MATRICULA',
+                        searchEnabled: true,
+                        minSearchLength: 3,
+                        searchExpr: 'NOME_COLABORADOR'
+                    },
+                    setCellValue: function (newData, value) {
+                        const tecnico = tecnicosLookup.find(p => p.MATRICULA == value);
+                        if (tecnico) {
+                            newData.numcad = tecnico.MATRICULA;
+                            newData.nome = tecnico.NOME_COLABORADOR;
+                            newData.cpf = tecnico.CPF;
+                            newData.cargo_funcao = tecnico.DSC_CARGO;
+                            newData.contato = tecnico.NUMTEL ?? tecnico.NUMCEL ?? null;
+                        }
+                    },
+                    visible: false,
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'nome',
+                    caption: 'Nome Técnico',
+                },
                 {
                     dataField: 'cpf',
                     caption: 'CPF',
@@ -419,6 +469,20 @@
             resto = (soma * 10) % 11;
             if (resto === 10 || resto === 11) resto = 0;
             return resto === parseInt(cpf.charAt(10));
+        }
+
+        function getLookupTecnicos() {
+            $.getJSON('/planejamento-controle-manutencao/get-usuarios-senior-lookup')
+            .done(function (response) {
+                if (response.success && response.data.length > 0) {
+                    tecnicosLookup = response.data;
+                } else {
+                    DevExpress.ui.notify('Nenhum técnico encontrado.', 'warning', 3000);
+                }
+            })
+            .fail(function () {
+                DevExpress.ui.notify('Erro ao carregar técnicos.', 'error', 3000);
+            });
         }
 
     // Função para SelectBox usada no editor de área técnica
