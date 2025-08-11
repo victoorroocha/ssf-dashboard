@@ -852,6 +852,48 @@ class PlanejamentoControleManutencaoRepository
             }
         }
     #endRegion
+
+    #region Controle Retirada Itens
+        public function listarItensPendentes()
+        {
+            $sql = "SELECT 
+                        im.id 
+                        ,LPAD(cm.id::text, 5, '0') AS nr_ordem_servico
+                        ,im.cod_produto
+                        ,im.descricao_produto 
+                        ,im.cod_deposito 
+                        ,im.descricao_deposito 
+                        ,im.qtd_utilizada 
+                        ,im.custo_unitario 
+                        ,im.custo_total 
+                    FROM itens_manutencao im 
+                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao 
+                    WHERE (im.flg_retirado = false or im.flg_retirado = null)";
+            $result = $this->adapter->createStatement($sql)->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function marcarRetirada(array $data)
+        {
+            if (empty($data['ids']) || !is_array($data['ids'])) {
+                throw new \InvalidArgumentException('Nenhum item informado para retirada.');
+            }
+
+            $sql = "UPDATE itens_manutencao 
+                    SET flg_retirado = TRUE
+                    WHERE id = :id";
+
+            $stmt = $this->adapter->createStatement($sql);
+
+            foreach ($data['ids'] as $id) {
+                $stmt->execute([':id' => $id]);
+            }
+        }
+    #endRegion
     
     #region Dashboard Controle de Manutenção
         public function buscarResumoCards($dataInicio, $dataFim)

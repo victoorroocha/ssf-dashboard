@@ -1,0 +1,181 @@
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Controle de Retiradas Estoque</p>
+
+                    <div id="gridRetiradaItens"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let marcarRetiradaButton = null;
+
+        let retiradasItensGrid = $('#gridRetiradaItens').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function(loadOptions) {
+                    return $.ajax({
+                        url: '/planejamento-controle-manutencao/listar-itens-pendentes',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar itens!', 'error', 3000);
+                        return { data: [], totalCount: 0 };
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            selection: {
+                mode: "multiple",
+                showCheckBoxesMode: "always",
+                allowSelectAll: true
+            },
+            columnAutoWidth: true,
+            width: '100%',
+            height: 600,
+            showBorders: true,
+            groupPanel: { visible: true },
+            pager: { visible: true },
+            paging: { pageSize: 500 },
+            headerFilter: { visible: true },
+            filterRow: { visible: true, applyFilter: 'auto' },
+            export: {
+                enabled: true,
+                fileName: "Controle Retirada Estoque",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            hoverStateEnabled: true,
+            editing: {
+                mode: 'batch',
+                allowUpdating: false,
+                allowAdding: false,
+                allowDeleting: false,
+                useIcons: true,
+            },
+            columns: [
+                { dataField: 'nr_ordem_servico', caption: 'Ordem Serviço', groupIndex: 0 },
+                { dataField: 'id', caption: 'Item ID' },
+                { dataField: 'cod_produto', caption: 'Código Produto' },
+                { dataField: 'descricao_produto', caption: 'Produto' },
+                { dataField: 'cod_deposito', caption: 'Código Depósito' },
+                { dataField: 'descricao_deposito', caption: 'Depósito' },
+                { dataField: 'qtd_utilizada', caption: 'Quantidade' },
+                { dataField: 'custo_unitario', caption: 'Custo Unitário' },
+                { dataField: 'custo_total', caption: 'Custo Total' },
+            ],
+            // Atualiza estado do botão quando seleção muda
+            onSelectionChanged: function(e) {
+                const selectedKeys = e.component.getSelectedRowKeys() || [];
+                if (marcarRetiradaButton) {
+                    marcarRetiradaButton.option('disabled', selectedKeys.length === 0);
+                }
+            },
+            // Prepara a toolbar e captura a instância do botão (onInitialized)
+            onToolbarPreparing: function(e) {
+                // evita duplicar o botão caso onToolbarPreparing seja chamado novamente
+                e.toolbarOptions.items = e.toolbarOptions.items.filter(function(item) {
+                    return item.name !== 'marcarRetirada';
+                });
+                e.toolbarOptions.items.unshift({
+                    name: 'marcarRetirada',
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        text: "Marcar Retirada",
+                        icon: "check",
+                        type: "success",
+                        disabled: true, // começa desabilitado
+                        // captura a instância do botão para controlar depois
+                        onInitialized: function(evt) {
+                            marcarRetiradaButton = evt.component;
+                            // garante estado correto (se já houver seleção)
+                            try {
+                                const gridInstance = $('#gridRetiradaItens').dxDataGrid('instance');
+                                const keys = gridInstance ? gridInstance.getSelectedRowKeys() : [];
+                                marcarRetiradaButton.option('disabled', !keys || keys.length === 0);
+                            } catch (err) {
+                                // ignore
+                            }
+                        },
+                        onClick: function() {
+                            const grid = $('#gridRetiradaItens').dxDataGrid('instance');
+                            const selectedIds = grid.getSelectedRowKeys() || [];
+
+                            if (!selectedIds.length) {
+                                DevExpress.ui.notify("Nenhum item selecionado!", "warning", 2000);
+                                return;
+                            }
+
+                            DevExpress.ui.dialog.confirm(
+                                `Confirma marcar ${selectedIds.length} item(ns) como retirado(s)?`,
+                                "Confirmação"
+                            ).done(function(confirmed) {
+                                if (!confirmed) return;
+
+                                $.ajax({
+                                    url: '/planejamento-controle-manutencao/marcar-retirada',
+                                    method: 'POST',
+                                    contentType: 'application/json; charset=utf-8',
+                                    dataType: 'json',
+                                    data: JSON.stringify({ ids: selectedIds })
+                                }).done(function(resp) {
+                                    if (resp && resp.success) {
+                                        DevExpress.ui.notify("Itens marcados como retirados!", "success", 2000);
+                                        // limpa seleção e atualiza grid
+                                        try { grid.clearSelection(); } catch (er) {}
+                                        grid.refresh();
+                                        if (marcarRetiradaButton) marcarRetiradaButton.option('disabled', true);
+                                    } else {
+                                        DevExpress.ui.notify((resp && resp.message) || "Erro ao marcar retirada!", "error", 3000);
+                                    }
+                                }).fail(function() {
+                                    DevExpress.ui.notify("Erro na requisição!", "error", 3000);
+                                });
+                            });
+                        }
+                    }
+                });
+            },
+            // garante estado inicial do botão quando o conteúdo estiver pronto
+            onContentReady: function(e) {
+                const keys = e.component.getSelectedRowKeys() || [];
+                if (marcarRetiradaButton) {
+                    marcarRetiradaButton.option('disabled', keys.length === 0);
+                }
+            }
+        });
+    });
+
+</script>

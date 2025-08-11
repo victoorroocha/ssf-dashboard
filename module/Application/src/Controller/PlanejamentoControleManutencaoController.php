@@ -742,6 +742,57 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
     #endRegion
 
+    #region Controle Retiradas Estoque
+        public function retiradaEstoqueAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarItensPendentesAction()
+        {
+            try {
+                $equipamentos = $this->PlanejamentoControleManutencaoRepository->listarItensPendentes();
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $equipamentos,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar equipamentos: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function marcarRetiradaAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            if (empty($data['ids']) || !is_array($data['ids'])) {
+                return new JsonModel(['success' => false, 'message' => 'Nenhum item informado para retirada.']);
+            }
+
+            try {
+                $this->PlanejamentoControleManutencaoRepository->marcarRetirada($data);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => count($data['ids']) . ' item(s) marcado(s) como retirado(s) com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao marcar retirada: ' . $e->getMessage()
+                ]);
+            }
+        }
+    #endRegion
+
     #region DASHBOARD Controle de Manutenção
         public function dashboardControleManutencaoAction()
         {

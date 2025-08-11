@@ -909,7 +909,7 @@
                                                             $('<div id="gridApontamentos">').appendTo(itemElement).dxDataGrid({
                                                                 dataSource: apontamentos,
                                                                 width: '100%',
-                                                                height: 590,
+                                                                height: 550,
                                                                 keyExpr: 'id',
                                                                 showBorders: true,
                                                                 columnAutoWidth: true,
@@ -1010,7 +1010,7 @@
                                                             $('<div id="gridItensManutencao">').appendTo(itemElement).dxDataGrid({
                                                                 dataSource: itensUtilizados,
                                                                 width: 'auto',
-                                                                height: 590,
+                                                                height: 550,
                                                                 keyExpr: 'id',
                                                                 showBorders: true,
                                                                 columnAutoWidth: true,
@@ -1154,7 +1154,6 @@
                                                                         dataField: 'qtd_estoque',
                                                                         caption: 'Qtd. Estoque',
                                                                         allowEditing: false,
-                                                                        visible: false,
                                                                         alignment: 'right',
                                                                         width: 120,
                                                                         dataType: 'number',
@@ -1164,7 +1163,6 @@
                                                                         dataField: 'preco_medio',
                                                                         caption: 'Preço Médio',
                                                                         allowEditing: false,
-                                                                        visible: false,
                                                                         alignment: 'right',
                                                                         width: 120,
                                                                         dataType: 'number',
@@ -1408,6 +1406,7 @@
                                                         <th style="border: 1px solid #ccc; padding: 2px;">Quantidade</th>
                                                         <th style="border: 1px solid #ccc; padding: 2px;">Custo Unitário</th>
                                                         <th style="border: 1px solid #ccc; padding: 2px;">Custo Total</th>
+                                                        <th style="border: 1px solid #ccc; padding: 2px; text-align: center;"">Retirado?</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1483,12 +1482,18 @@
                                         maximumFractionDigits: 4 
                                     });
 
+                                    // Ícone condicional
+                                    const iconeRetirado = item.flg_retirado
+                                        ? '<span style="color: green;">&#10003;</span>' // ✔ verde
+                                        : '<span style="color: red;">&#10007;</span>';  // ✗ vermelho
+
                                     row.innerHTML = `
                                         <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_produto}</td>
                                         <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_deposito}</td>
                                         <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${qtdFormatada}</td>
                                         <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoUnitarioFormatado}</td>
                                         <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoTotalFormatado}</td>
+                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: center;">${iconeRetirado}</td>
                                     `;
                                     tbody.appendChild(row);
                                 });
