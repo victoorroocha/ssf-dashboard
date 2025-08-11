@@ -62,6 +62,9 @@
             height: 600,
             showBorders: true,
             groupPanel: { visible: true },
+            grouping: {
+                autoExpandAll: false // deixa todos os grupos fechados inicialmente
+            },
             pager: { visible: true },
             paging: { pageSize: 500 },
             headerFilter: { visible: true },
@@ -86,10 +89,10 @@
             },
             columns: [
                 { dataField: 'nr_ordem_servico', caption: 'Ordem Serviço', groupIndex: 0 },
-                { dataField: 'id', caption: 'Item ID' },
-                { dataField: 'cod_produto', caption: 'Código Produto' },
+                { dataField: 'id', caption: 'Item ID', width: 100, },
+                { dataField: 'cod_produto', caption: 'Código Produto', width: 120, },
                 { dataField: 'descricao_produto', caption: 'Produto' },
-                { dataField: 'cod_deposito', caption: 'Código Depósito' },
+                { dataField: 'cod_deposito', caption: 'Código Depósito', width: 120, },
                 { dataField: 'descricao_deposito', caption: 'Depósito' },
                 {
                     dataField: 'qtd_utilizada',
@@ -124,12 +127,6 @@
             ],
             summary: {
                 groupItems: [
-                    {
-                        column: 'qtd_utilizada',
-                        summaryType: 'sum',
-                        displayFormat: 'Total: {0}',
-                        showInGroupFooter: true,
-                    },
                     {
                         column: 'custo_unitario',
                         summaryType: 'sum',
