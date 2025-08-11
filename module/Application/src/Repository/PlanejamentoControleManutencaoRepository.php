@@ -350,9 +350,25 @@ class PlanejamentoControleManutencaoRepository
         }
         public function salvarEquipamento(array $data)
         {
-            if (empty($data['nome'])) {
-                throw new \Exception('Nome do equipamento é obrigatório.');
-            }
+            #region Validações
+                if (empty($data['nome'])) {
+                    throw new \Exception('Nome do equipamento é obrigatório.');
+                }
+                if (empty($data['codigo'])) {
+                    throw new \Exception('Código do equipamento é obrigatório.');
+                }
+                // Verifica se já existe equipamento com o mesmo código (exceto o atual, se for update)
+                $sqlCheck = "SELECT COUNT(*) AS total FROM equipamentos WHERE codigo = :codigo";
+                $paramsCheck = [':codigo' => $data['codigo']];
+                if (!empty($data['id'])) {
+                    $sqlCheck .= " AND id <> :id";
+                    $paramsCheck[':id'] = $data['id'];
+                }
+                $result = $this->adapter->query($sqlCheck, $paramsCheck)->current();
+                if ($result && $result['total'] > 0) {
+                    throw new \Exception('Já existe um equipamento cadastrado com esse código.');
+                }
+            #endregion
 
             if (!empty($data['id'])) {
                 $sql = 'UPDATE equipamentos SET codigo = :codigo, nome = :nome, setor_id = :setor_id, status = :status, observacoes = :observacoes, centro_custo = :centro_custo WHERE id = :id';
@@ -835,7 +851,15 @@ class PlanejamentoControleManutencaoRepository
 
             try {
                 // Atualiza a OS (controle_manutencao)
-                $sqlUpdate = "UPDATE controle_manutencao SET status = 'Finalizada', data_final = CURRENT_DATE WHERE id = :id";
+                $sqlUpdate = "UPDATE controle_manutencao 
+                                SET status = 'Finalizada', 
+                                    data_final = (select max(data_fim) from apontamentos_manutencao am where am.id_manutencao = :id), 
+                                    tempo_execucao = (
+                                            SELECT (make_interval(secs => sum(total_horas) * 3600))::time
+                                            FROM apontamentos_manutencao am
+                                            WHERE am.id_manutencao = :id
+                                        ) 
+                                WHERE id = :id";
                 $paramsUpdate = [
                     ':id' => $data['id'],
                 ];

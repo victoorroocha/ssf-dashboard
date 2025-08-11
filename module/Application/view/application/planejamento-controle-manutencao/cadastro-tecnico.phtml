@@ -219,7 +219,14 @@
                     colCount: 1,
                     labelLocation: 'top',
                     items: [
-                        'numcad',
+                        {
+                            dataField: 'numcad',
+                            label: { text: 'Matrícula / Técnico' },
+                            editorType: 'dxSelectBox',
+                            editorOptions: {
+                                readOnly: false // vai ser alterado dinamicamente no onEditingStart
+                            }
+                        },
                         {
                             // campo CPF
                             name: 'cpf',
@@ -403,6 +410,22 @@
             onInitNewRow: function(e) {
                 e.data.flg_ativo = true;
             },
+            onEditorPreparing: function(e) {
+                // Mantém a lógica original de equipamento_id
+                if (e.dataField === 'numcad' || e.dataField === 'cpf') {
+                    if (e.row && e.row.isNewRow !== true) {
+                        e.editorOptions.readOnly = true;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = true;
+                        }
+                    } else {
+                        e.editorOptions.readOnly = false;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = false;
+                        }
+                    }
+                }
+            },
             onToolbarPreparing: function (e) {
                 // Aqui você pode personalizar ainda mais a barra de ferramentas
                 var toolbarItems = e.toolbarOptions.items;
@@ -448,7 +471,6 @@
                 });
             },
         });
-
         function validarCPF(cpf) {
             if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
 
@@ -470,7 +492,6 @@
             if (resto === 10 || resto === 11) resto = 0;
             return resto === parseInt(cpf.charAt(10));
         }
-
         function getLookupTecnicos() {
             $.getJSON('/planejamento-controle-manutencao/get-usuarios-senior-lookup')
             .done(function (response) {
@@ -485,40 +506,40 @@
             });
         }
 
-    // Função para SelectBox usada no editor de área técnica
-    function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
-        return {
-            dataSource: new DevExpress.data.CustomStore({
-                loadMode: 'raw',
-                load: function () {
-                    return $.ajax({
-                        url: url,
-                        method: 'GET',
-                        dataType: 'json'
-                    }).then(response => {
-                        if (response.success) {
-                            return response.data;
-                        } else {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
+        // Função para SelectBox usada no editor de área técnica
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: 'raw',
+                    load: function () {
+                        return $.ajax({
+                            url: url,
+                            method: 'GET',
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, 'error', 3000);
+                                return [];
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
                             return [];
-                        }
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
-                        return [];
-                    });
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true,
+                onInitialized: function(e) {
+                    const val = e.component.option('value');
+                    e.component.option('value', val);
                 }
-            }),
-            displayExpr: displayExpr,
-            valueExpr: valueExpr,
-            placeholder: placeholder,
-            searchEnabled: true,
-            showClearButton: true,
-            onInitialized: function(e) {
-                const val = e.component.option('value');
-                e.component.option('value', val);
-            }
-        };
-    }
+            };
+        }
     });
 
 </script>
