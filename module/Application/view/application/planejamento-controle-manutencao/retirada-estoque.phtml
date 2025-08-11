@@ -91,10 +91,85 @@
                 { dataField: 'descricao_produto', caption: 'Produto' },
                 { dataField: 'cod_deposito', caption: 'Código Depósito' },
                 { dataField: 'descricao_deposito', caption: 'Depósito' },
-                { dataField: 'qtd_utilizada', caption: 'Quantidade' },
-                { dataField: 'custo_unitario', caption: 'Custo Unitário' },
-                { dataField: 'custo_total', caption: 'Custo Total' },
+                {
+                    dataField: 'qtd_utilizada',
+                    caption: 'Quantidade',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 120,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'custo_unitario',
+                    caption: 'Custo Unitário',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 120,
+                    dataType: 'number',
+                    format: { type: 'currency', currency: 'BRL', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'custo_total',
+                    caption: 'Custo Total',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 120,
+                    dataType: 'number',
+                    format: { type: 'currency', currency: 'BRL', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
             ],
+            summary: {
+                groupItems: [
+                    {
+                        column: 'qtd_utilizada',
+                        summaryType: 'sum',
+                        displayFormat: 'Total: {0}',
+                        showInGroupFooter: true,
+                    },
+                    {
+                        column: 'custo_unitario',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: 'Total: {0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        column: 'custo_total',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: 'Total: {0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                        customizeText: function(cellInfo) {
+                            // Verifica se o valor é válido antes de formatar
+                            if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                                // Exibe o valor formatado como moeda brasileira
+                                return 'R$ ' + cellInfo.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return '';
+                        }
+                    },
+                ],
+            },
             // Atualiza estado do botão quando seleção muda
             onSelectionChanged: function(e) {
                 const selectedKeys = e.component.getSelectedRowKeys() || [];
