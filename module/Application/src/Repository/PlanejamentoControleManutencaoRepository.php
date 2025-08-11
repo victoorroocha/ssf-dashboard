@@ -850,19 +850,40 @@ class PlanejamentoControleManutencaoRepository
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
             try {
-                // Atualiza a OS (controle_manutencao)
-                $sqlUpdate = "UPDATE controle_manutencao 
-                                SET status = 'Finalizada', 
-                                    data_final = (select max(data_fim) from apontamentos_manutencao am where am.id_manutencao = :id), 
-                                    tempo_execucao = (
-                                            SELECT (make_interval(secs => sum(total_horas) * 3600))::time
+                // Primeiro verifica se existem apontamentos para essa OS
+                $sqlCount = "SELECT COUNT(*) AS total FROM apontamentos_manutencao WHERE id_manutencao = :id";
+                $result = $this->adapter->query($sqlCount, [':id' => $data['id']])->current();
+
+                if ($result && $result['total'] > 0) {
+                    // Tem apontamentos: usa data final e tempo execução calculados
+                    $sqlUpdate = "UPDATE controle_manutencao 
+                                    SET status = 'Finalizada', 
+                                        data_final = (
+                                            SELECT MAX(data_fim) 
+                                            FROM apontamentos_manutencao am 
+                                            WHERE am.id_manutencao = :id
+                                        ), 
+                                        tempo_execucao = (
+                                            SELECT (make_interval(secs => SUM(total_horas) * 3600))::time
                                             FROM apontamentos_manutencao am
                                             WHERE am.id_manutencao = :id
-                                        ) 
-                                WHERE id = :id";
-                $paramsUpdate = [
-                    ':id' => $data['id'],
-                ];
+                                        )
+                                    WHERE id = :id";
+                    $paramsUpdate = [
+                        ':id' => $data['id'],
+                    ];
+                } else {
+                    // Não tem apontamentos: data_final = NOW(), tempo_execucao = NULL
+                    $sqlUpdate = "UPDATE controle_manutencao
+                                    SET status = 'Finalizada',
+                                        data_final = NOW(),
+                                        tempo_execucao = NULL
+                                    WHERE id = :id";
+                    $paramsUpdate = [
+                        ':id' => $data['id'],
+                    ];
+                }
+
                 $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
 
                 // Atualiza status de equipamentos
