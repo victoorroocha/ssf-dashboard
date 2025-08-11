@@ -583,14 +583,14 @@
                 },
             ],
             onInitNewRow: function(e) {
-                e.data.tipo_ordem_servico = '';
+                e.data.tipo_ordem_servico = null;
                 e.data.data_solicitacao = new Date();
                 
                 setTimeout(() => {
                     const form = $(".dx-popup-content .dx-form").dxForm("instance");
                     if (form) {
-                        form.updateData('tipo_ordem_servico', null);
                         form.updateData('data_solicitacao', new Date());
+                        atualizarVisibilidadeForm(form);
                     }
                 }, 100);
             },
