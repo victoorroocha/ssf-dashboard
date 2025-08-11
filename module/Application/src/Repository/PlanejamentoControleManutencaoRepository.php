@@ -613,11 +613,22 @@ class PlanejamentoControleManutencaoRepository
     #region Controle de Manutenção
         public function listarControlesManutencao()
         {
-            $sql = "SELECT * FROM controle_manutencao ORDER BY data_programada DESC";
+            $sql = "SELECT 
+                        *,
+                        (
+                            select sum(qtd) from (
+                                select count(*) qtd from apontamentos_manutencao am where am.id_manutencao = cm.id
+                                union
+                                select count(*) qtd from itens_manutencao im where im.id_manutencao = cm.id
+                            ) A
+                        ) as qtd_apontamentos
+                    FROM controle_manutencao cm
+                    ORDER BY data_programada DESC";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
             foreach ($result as $row) {
+                $row['qtd_apontamentos'] = (int)$row['qtd_apontamentos'];
                 $data[] = $row;
             }
             return $data;
@@ -642,6 +653,7 @@ class PlanejamentoControleManutencaoRepository
                 ':centro_custo_id' => $data['centro_custo_id'] ?? null,
                 ':tipo_manutencao_id' => $data['tipo_manutencao_id'],
                 ':area_tecnica_id' => $data['area_tecnica_id'],
+                ':tecnico_id' => $data['tecnico_id'],
                 ':descricao_defeito' => $data['descricao_defeito'] ?? null,
                 ':data_inicio' => $data['data_inicio'] ?? null,
                 ':tempo_previsto' => $data['tempo_previsto'] ?? null,
@@ -662,6 +674,7 @@ class PlanejamentoControleManutencaoRepository
                             centro_custo_id = :centro_custo_id,
                             tipo_manutencao_id = :tipo_manutencao_id,
                             area_tecnica_id = :area_tecnica_id,
+                            tecnico_id = :tecnico_id,
                             descricao_defeito = :descricao_defeito,
                             data_inicio = :data_inicio,
                             tempo_previsto = :tempo_previsto,
@@ -674,11 +687,11 @@ class PlanejamentoControleManutencaoRepository
             } else {
                 $sql = "INSERT INTO controle_manutencao (
                             data_solicitacao, nome_solicitante, setor_id, prioridade, tipo_ordem_servico,
-                            equipamento_id, centro_custo_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, 
+                            equipamento_id, centro_custo_id, tecnico_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, 
                             data_inicio, tempo_previsto, data_final, status, info_servico, observacoes
                         ) VALUES (
                             :data_solicitacao, :nome_solicitante, :setor_id, :prioridade, :tipo_ordem_servico,
-                            :equipamento_id, :centro_custo_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito,
+                            :equipamento_id, :centro_custo_id, :tecnico_id, :tipo_manutencao_id, :area_tecnica_id, :descricao_defeito,
                             :data_inicio, :tempo_previsto, :data_final, :status, :info_servico, :observacoes
                         )";
 
@@ -1170,12 +1183,15 @@ class PlanejamentoControleManutencaoRepository
                             FROM apontamentos_manutencao am
                             LEFT JOIN tecnicos t ON t.id = am.tecnico_id
                             WHERE am.id_manutencao = cm.id
-                        ) AS nome_tecnico
+                        ) AS nome_tecnico_exec,
+                        t.nome as nome_tecnico,
+                        cm.centro_custo_id
                     FROM controle_manutencao cm
                     LEFT JOIN setores s ON s.id = cm.setor_id
                     LEFT JOIN equipamentos e ON e.id = cm.equipamento_id
                     LEFT JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
                     LEFT JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                    LEFT JOIN tecnicos t ON t.id = cm.tecnico_id
                     WHERE cm.id = :id";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);
