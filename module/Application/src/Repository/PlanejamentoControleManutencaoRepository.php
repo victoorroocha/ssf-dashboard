@@ -455,15 +455,18 @@ class PlanejamentoControleManutencaoRepository
     #region Programação Manutenção Preventiva
         public function listarProgramacoesPreventivas()
         {
-            $sql = "SELECT pmp.*, eq.nome as nome_equipamento, at.nome as nome_area, st.nome as nome_setor
+            $sql = "SELECT 
+                        pmp.*, 
+                        eq.nome as nome_equipamento, 
+                        at.nome as nome_area, 
+                        st.nome as nome_setor
                     FROM programacao_manutencao_preventiva pmp
-                    JOIN equipamentos eq ON eq.id = pmp.equipamento_id
-                    JOIN areas_tecnicas at ON at.id = pmp.area_tecnica_id
-                    JOIN setores st ON st.id = pmp.setor_id
-                    where eq.status = 'Ativo'
-                    and pmp.status = 'Programada'
-                    ORDER BY pmp.data_programada DESC";
-
+                    LEFT JOIN equipamentos eq ON eq.id = pmp.equipamento_id
+                    LEFT JOIN areas_tecnicas at ON at.id = pmp.area_tecnica_id
+                    LEFT JOIN setores st ON st.id = pmp.setor_id
+                    where (eq.status = 'Ativo' or eq.status is null)
+                    and pmp.status_programacao = 'Ativa'
+                    ORDER BY pmp.proxima_execucao ASC";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -474,40 +477,112 @@ class PlanejamentoControleManutencaoRepository
         }
         public function salvarProgramacaoPreventiva(array $data)
         {
+            $status_programacao = $data['status_programacao'] ?? 'Ativa';
+            $periodicidade_dias = isset($data['periodicidade_dias']) ? (int)$data['periodicidade_dias'] : null;
+
+            // Definir tipo_ordem_servico e setor_id conforme regras
+            if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
+                $data['tipo_ordem_servico'] = 'Equipamento';
+
+                // Busca o setor_id do equipamento
+                $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
+                $resultSetor = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
+                if ($resultSetor && isset($resultSetor['setor_id'])) {
+                    $data['setor_id'] = $resultSetor['setor_id']; // Sobrescreve o setor vindo do form
+                }
+            } elseif (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
+                $data['tipo_ordem_servico'] = 'Centro de Custo';
+            } else {
+                // Caso não tenha nem equipamento nem centro de custo, lance exceção ou defina padrão
+                throw new \InvalidArgumentException("Informe equipamento ou centro de custo.");
+            }
+
             if (!empty($data['id'])) {
+                // Busca dados atuais para comparar
+                $sqlSelect = "SELECT data_programada, periodicidade_dias FROM programacao_manutencao_preventiva WHERE id = :id";
+                $stmtSelect = $this->adapter->createStatement($sqlSelect);
+                $result = $stmtSelect->execute([':id' => $data['id']])->current();
+
+                $recalcularProxima = false;
+                if ($result) {
+                    if ($result['data_programada'] != $data['data_programada'] ||
+                        $result['periodicidade_dias'] != $periodicidade_dias) {
+                        $recalcularProxima = true;
+                    }
+                }
+
+                $proxima_execucao = $recalcularProxima ? date('Y-m-d', strtotime($data['data_programada'].' +'.$periodicidade_dias.' days')) : null;
+
                 $sql = 'UPDATE programacao_manutencao_preventiva SET 
                             equipamento_id = :equipamento_id,
+                            centro_custo_id = :centro_custo_id,
                             area_tecnica_id = :area_tecnica_id,
-                            descricao_servico = :descricao_servico,
+                            observacoes = :observacoes,
                             data_programada = :data_programada,
+                            periodicidade_dias = :periodicidade_dias,
                             setor_id = :setor_id,
-                            status = :status
+                            tipo_ordem_servico = :tipo_ordem_servico,
+                            status_programacao = :status_programacao,
+                            motivo_cancelamento = :motivo_cancelamento'
+                            .($recalcularProxima ? ', proxima_execucao = :proxima_execucao' : '').'
                         WHERE id = :id';
 
                 $params = [
-                    ':equipamento_id' => $data['equipamento_id'],
+                    ':equipamento_id' => $data['equipamento_id'] ?? null,
+                    ':centro_custo_id' => $data['centro_custo_id'] ?? null,
                     ':area_tecnica_id' => $data['area_tecnica_id'],
-                    ':descricao_servico' => $data['descricao_servico'],
+                    ':observacoes' => $data['observacoes'] ?? null,
                     ':data_programada' => $data['data_programada'],
+                    ':periodicidade_dias' => $periodicidade_dias,
                     ':setor_id' => $data['setor_id'],
-                    ':status' => $data['status'],
+                    ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
+                    ':status_programacao' => $status_programacao,
+                    ':motivo_cancelamento' => $data['motivo_cancelamento'] ?? null,
                     ':id' => $data['id']
                 ];
+
+                if ($recalcularProxima) {
+                    $params[':proxima_execucao'] = $proxima_execucao;
+                }
             } else {
+                // Inserção nova
                 $sql = 'INSERT INTO programacao_manutencao_preventiva (
-                            equipamento_id, area_tecnica_id, descricao_servico, data_programada, setor_id, status
-                        ) VALUES (
-                            :equipamento_id, :area_tecnica_id, :descricao_servico, :data_programada, :setor_id, :status
-                        )';
+                    equipamento_id,
+                    centro_custo_id,
+                    area_tecnica_id,
+                    observacoes,
+                    data_programada,
+                    periodicidade_dias,
+                    setor_id,
+                    tipo_ordem_servico,
+                    status_programacao,
+                    proxima_execucao
+                ) VALUES (
+                    :equipamento_id,
+                    :centro_custo_id,
+                    :area_tecnica_id,
+                    :observacoes,
+                    :data_programada,
+                    :periodicidade_dias,
+                    :setor_id,
+                    :tipo_ordem_servico,
+                    :status_programacao,
+                    :proxima_execucao
+                )';
 
                 $params = [
-                    ':equipamento_id' => $data['equipamento_id'],
+                    ':equipamento_id' => $data['equipamento_id'] ?? null,
+                    ':centro_custo_id' => $data['centro_custo_id'] ?? null,
                     ':area_tecnica_id' => $data['area_tecnica_id'],
-                    ':descricao_servico' => $data['descricao_servico'],
+                    ':observacoes' => $data['observacoes'] ?? null,
                     ':data_programada' => $data['data_programada'],
+                    ':periodicidade_dias' => $periodicidade_dias,
                     ':setor_id' => $data['setor_id'],
-                    ':status' => $data['status'] ?? 'Programada'
+                    ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
+                    ':status_programacao' => $status_programacao,
+                    ':proxima_execucao' => $data['data_programada'], // inicializa com data_programada
                 ];
+
             }
 
             $this->adapter->createStatement($sql)->execute($params);
@@ -638,6 +713,13 @@ class PlanejamentoControleManutencaoRepository
             // Alimenta tipo_ordem_servico
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
                 $data['tipo_ordem_servico'] = 'Equipamento';
+
+                 // Busca o setor_id do equipamento
+                $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
+                $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
+                if ($result && isset($result['setor_id'])) {
+                    $data['setor_id'] = $result['setor_id']; // Sobrescreve o setor vindo do form
+                }
             } 
             if (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
                 $data['tipo_ordem_servico'] = 'Centro de Custo';

@@ -91,26 +91,6 @@
                         return {};
                     });
                 },
-                remove: function (key) {
-                    // excluir programação preventiva
-                    return $.ajax({
-                        url: '/planejamento-controle-manutencao/excluir-programacao-preventiva',
-                        method: 'DELETE',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ id: key }),
-                        dataType: 'json'
-                    }).then(response => {
-                        if (!response.success) {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify(response.message || 'Programação excluída com sucesso!', 'success', 2000);
-                        }
-                        return response;
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao excluir programação!', 'error', 3000);
-                        return {};
-                    });
-                }
             }),
             keyExpr: 'id',
             columnAutoWidth: true,
@@ -198,7 +178,7 @@
                 mode: 'popup',
                 allowUpdating: true,
                 allowAdding: true,
-                allowDeleting: true,
+                allowDeleting: false,
                 useIcons: true,
                 popup: {
                     title: 'Cadastro de Programação Preventiva',
@@ -212,17 +192,37 @@
                     labelLocation: 'top',
                     items: [
                         {
-                            dataField: 'equipamento_id',
-                            label: { text: 'Equipamento' },
+                            dataField: 'tipo_ordem_servico',
                             editorType: 'dxSelectBox',
+                            label: { text: 'Tipo Ordem de Serviço' },
                             colSpan: 2,
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento'),
-                            validationRules: [{ type: 'required', message: 'Equipamento é obrigatório' }]
+                            editorOptions: {
+                                items: ['Equipamento', 'Centro de Custo'],
+                                placeholder: 'Selecione o tipo',
+                            },
+                            validationRules: [{ type: 'required', message: 'Tipo Ordem de Serviço é obrigatório' }]
+                        },
+                        { 
+                            dataField: 'equipamento_id', 
+                            label: { text: 'Equipamento' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 2, 
+                            visible: false,
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
+                        },
+                        { 
+                            dataField: 'centro_custo_id', 
+                            colSpan: 2,
+                            editorType: 'dxSelectBox', 
+                            label: { text: 'Centro de Custo' }, 
+                            visible: false,
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') 
                         },
                         {
                             dataField: 'area_tecnica_id',
                             label: { text: 'Área Técnica' },
                             editorType: 'dxSelectBox',
+                            colSpan: 2,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica'),
                             validationRules: [{ type: 'required', message: 'Área Técnica é obrigatória' }]
                         },
@@ -230,6 +230,7 @@
                             dataField: 'setor_id',
                             label: { text: 'Setor' },
                             editorType: 'dxSelectBox',
+                            colSpan: 2,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor'),
                             validationRules: [{ type: 'required', message: 'Setor é obrigatório' }]
                         },
@@ -237,18 +238,19 @@
                             dataField: 'data_programada',
                             editorType: 'dxDateBox',
                             label: { text: 'Data Programada' },
-                            colSpan: 2,
+                            colSpan: 1,
                             editorOptions: { type: 'date', min: new Date() },
                             validationRules: [{ type: 'required', message: 'Data programada é obrigatória' }]
                         },
                         {
-                            dataField: 'descricao_servico',
-                            colSpan: 2,
-                            editorType: 'dxTextArea',
-                            label: { text: 'Descrição do Serviço' },
-                            editorOptions: { height: 100, width: '100%' },
-                            validationRules: [{ type: 'required', message: 'Descrição do serviço é obrigatória' }]
-                        }
+                            dataField: 'periodicidade_dias',
+                            label: { text: 'Periodicidade (dias)' },
+                            editorType: 'dxNumberBox',
+                            colSpan: 1,
+                            editorOptions: { min: 1, showSpinButtons: true },
+                            validationRules: [{ type: 'required', message: 'Periodicidade é obrigatória' }]
+                        },
+                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
                     ]
                 },
                 texts: {
@@ -256,15 +258,18 @@
                 }
             },
             columns: [
+                { dataField: 'tipo_ordem_servico', caption: 'Tipo Ordem Serviço', visible: false, width: 200 },
+                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'dsc_equipamento', valueExpr: 'id' } },
                 {
-                    dataField: 'equipamento_id',
-                    caption: 'Equipamento',
+                    dataField: 'centro_custo_id',
+                    caption: 'Centro de Custo',
+                    width: 200,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos')
+                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
                         }),
-                        displayExpr: 'nome',
-                        valueExpr: 'id'
+                        displayExpr: 'DSC',
+                        valueExpr: 'ID'
                     }
                 },
                 {
@@ -293,22 +298,27 @@
                     dataField: 'data_programada',
                     caption: 'Data Programada',
                     dataType: 'date',
-                    sortIndex: 1, 
-                    sortOrder: 'asc'
+                    alignment: 'center',
                 },
-                { dataField: 'descricao_servico', caption: 'Descrição', width: 300 },
                 {
-                    dataField: 'status',
-                    caption: 'Status',
+                    dataField: 'proxima_execucao',
+                    caption: 'Proxima Execução',
                     sortIndex: 0, 
                     sortOrder: 'asc',
-                    calculateSortValue: function(rowData) {
-                        // Forçar a ordem: Programada < Pendente < Finalizada
-                        const order = { 'programada': 0, 'pendente': 1, 'finalizada': 2 };
-                        return order[(rowData.status || '').toLowerCase()] ?? 99;
-                    }
+                    dataType: 'date',
+                    alignment: 'center',
                 },
-
+                { 
+                    dataField: 'periodicidade_dias', 
+                    caption: 'Periodicidade (dias)', 
+                    alignment: 'center',
+                },
+                { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
+                {
+                    dataField: 'status_programacao',
+                    caption: 'Status Programação',
+                    alignment: 'center',
+                },
                 // Botões de ação na última coluna
                 {
                     type: 'buttons',
@@ -338,6 +348,70 @@
                     ]
                 }
             ],
+            onInitNewRow: function(e) {
+                e.data.tipo_ordem_servico = null;
+                // e.data.data_solicitacao = new Date();
+                
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                    if (form) {
+                        // form.updateData('data_solicitacao', new Date());
+                        atualizarVisibilidadeForm(form);
+                    }
+                }, 100);
+            },
+            onEditingStart: function(e) {
+                // Determina o tipo_ordem_servico baseado nos campos preenchidos
+                const tipo = e.data.equipamento_id ? 'Equipamento' :
+                            e.data.centro_custo_id ? 'Centro de Custo' : null;
+
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+
+                    if (form) {
+                        // Atualiza o valor diretamente no formData do formulário
+                        const formData = form.option('formData');
+                        formData.tipo_ordem_servico = tipo;
+
+                        form.option('formData', formData); // força atualização visual
+
+                        atualizarVisibilidadeForm(form);
+                    }
+                }, 100);
+            },
+            onEditorPreparing: function(e) {
+                // Mantém a lógica original de equipamento_id
+                if (e.dataField === 'equipamento_id' || e.dataField === 'centro_custo_id' || e.dataField === 'tipo_ordem_servico') {
+                    if (e.row && e.row.isNewRow !== true) {
+                        e.editorOptions.readOnly = true;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = true;
+                        }
+                    } else {
+                        e.editorOptions.readOnly = false;
+                        if (e.editorName === 'dxSelectBox') {
+                            e.editorOptions.disabled = false;
+                        }
+                    }
+                }
+
+                // Adicione esta parte para o campo tipo_ordem_servico
+                if (e.dataField === 'tipo_ordem_servico' && e.parentType === 'dataRow') {
+                    e.editorOptions.onValueChanged = function(args) {
+                        // Atualiza o valor da célula corretamente
+                        e.setValue(args.value);
+
+                        const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                        if (form) {
+                            // Atualiza valor no formData
+                            form.option('formData.tipo_ordem_servico', args.value);
+
+                            // Atualiza visibilidade e obrigatoriedade
+                            atualizarVisibilidadeForm(form);
+                        }
+                    };
+                }
+            },
             onRowUpdating: function (e) {
                 e.newData = { ...e.oldData, ...e.newData };
             },
@@ -403,218 +477,40 @@
                 });
             },   
         });
+        
+        // Função para atualizar a visibilidade dos campos
+        function atualizarVisibilidadeForm(form) {
+            const tipoOrdemServico = form.option('formData').tipo_ordem_servico;
 
-        // Função para abrir o popup de aprovação, passando os dados da programação
-        function openAprovacaoPopup(data) {
-            if (!aprovacaoPopup) {
-                aprovacaoPopup = $('#popupAprovacao').dxPopup({
-                    width: 600,
-                    height: 'auto',
-                    title: 'Aprovar Programação Preventiva',
-                    visible: false,
-                    showTitle: true,
-                    dragEnabled: true,
-                    closeOnOutsideClick: false,
-                    onInitialized: function(e) {
-                        // Criar o formulário uma única vez aqui
-                        const contentElement = e.component.content();
-                        const formElement = $('<div>').attr('id', 'formAprovacao');
-                        contentElement.append(formElement);
+            // Esconde e remove obrigatoriedade de ambos os campos
+            form.itemOption('equipamento_id', {
+                visible: false,
+                validationRules: []
+            });
 
-                        formElement.dxForm({
-                            formData: {}, 
-                            labelLocation: 'top',
-                            showColonAfterLabel: false,
-                            minColWidth: 300,
-                            colCount: 2,
-                            items: [
-                                {
-                                    dataField: 'data_solicitacao',
-                                    editorType: 'dxDateBox',
-                                    label: { text: 'Data da Solicitação' },
-                                    colSpan: 2,
-                                    editorOptions: { width: '100%', readOnly: true, },
-                                    validationRules: [{ type: 'required' }]
-                                },
-                                {
-                                    dataField: 'data_inicio',
-                                    editorType: 'dxDateBox',
-                                    label: { text: 'Data Início' },
-                                    colSpan: 1,
-                                    editorOptions: { width: '100%' },
-                                    validationRules: [
-                                        { type: 'required' }
-                                    ]
-                                },
-                                {
-                                    dataField: 'tempo_previsto',
-                                    editorType: 'dxTextBox',
-                                    label: { text: 'Tempo Previsto' },
-                                    colSpan: 1,
-                                    editorOptions: {
-                                        mask: "00:00",
-                                        maskRules: {
-                                            "0": /[0-9]/
-                                        },
-                                        placeholder: "00:00",
-                                        useMaskedValue: true
-                                    },
-                                    validationRules: [{ type: 'required', message: 'Tempo Previsto é obrigatório' }]
-                                },
-                                {
-                                    dataField: 'nome_solicitante',
-                                    label: { text: 'Nome do Solicitante' },
-                                    editorType: 'dxSelectBox',
-                                    colSpan: 2,
-                                    editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
-                                    validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
-                                },
-                                {
-                                    dataField: 'prioridade',
-                                    editorType: 'dxSelectBox',
-                                    label: { text: 'Prioridade' },
-                                    colSpan: 1,
-                                    editorOptions: {
-                                        items: ['Baixa', 'Média', 'Alta'],
-                                        placeholder: 'Selecione a prioridade',
-                                        width: '100%'
-                                    },
-                                    validationRules: [{ type: 'required' }]
-                                },
-                                { 
-                                    dataField: 'tipo_manutencao_id', 
-                                    label: { text: 'Tipo Manutenção' }, 
-                                    colSpan: 1,
-                                    editorType: 'dxSelectBox', 
-                                    editorOptions: {
-                                        ...getSelectBoxOptions('/planejamento-controle-manutencao/listar-tipos-manutencao', 'nome', 'id', 'Selecione o tipo'),
-                                        readOnly: true
-                                    }
-                                },
-                                {
-                                    dataField: 'tecnico_id',
-                                    editorType: 'dxSelectBox',
-                                    label: { text: 'Técnico' },
-                                    colSpan: 2,
-                                    editorOptions: {
-                                        dataSource: new DevExpress.data.CustomStore({
-                                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos')
-                                        }),
-                                        displayExpr: 'nome',
-                                        valueExpr: 'id',
-                                        placeholder: 'Selecione o técnico',
-                                        width: '100%'
-                                    },
-                                    validationRules: [{ type: 'required' }]
-                                },
-                                {
-                                    dataField: 'descricao_defeito',
-                                    editorType: 'dxTextArea',
-                                    label: { text: 'Descrição do Defeito' },
-                                    colSpan: 2,
-                                    editorOptions: { height: 80, width: '100%' },
-                                    validationRules: [{ type: 'required' }]
-                                },
-                                {
-                                    itemType: 'button',
-                                    colSpan: 2,
-                                    horizontalAlignment: 'right',
-                                    buttonOptions: {
-                                        text: 'Aprovar',
-                                        type: 'success',
-                                        useSubmitBehavior: true,
-                                        onClick: function () {
-                                            const formInstance = $('#formAprovacao').dxForm('instance');
-                                            if (!formInstance.validate().isValid) {
-                                                DevExpress.ui.notify('Preencha os campos obrigatórios', 'error', 3000);
-                                                return;
-                                            }
+            form.itemOption('centro_custo_id', {
+                visible: false,
+                validationRules: []
+            });
+            form.itemOption('setor_id', {
+                visible: false,
+            });
 
-                                            const formData = formInstance.option('formData');
-                                            const dadosEnvio = {
-                                                equipamento_id: data.equipamento_id,
-                                                area_tecnica_id: data.area_tecnica_id,
-                                                setor_id: data.setor_id,
-                                                data_programada: data.data_programada,
-                                                descricao_servico: data.descricao_servico,
-                                                status: 'Programada',
-                                                ...formData
-                                            };
-
-                                            $.ajax({
-                                                url: '/planejamento-controle-manutencao/aprovar-programacao-preventiva',
-                                                method: 'POST',
-                                                contentType: 'application/json',
-                                                data: JSON.stringify(dadosEnvio),
-                                                dataType: 'json'
-                                            }).done(function (response) {
-                                                if (response.success) {
-                                                    DevExpress.ui.notify(response.message || 'Programação aprovada com sucesso!', 'success', 3000);
-                                                    aprovacaoPopup.hide();
-                                                    $('#gridProgramacaoPreventiva').dxDataGrid('instance').refresh();
-                                                } else {
-                                                    DevExpress.ui.notify(response.message || 'Erro ao aprovar programação!', 'error', 3000);
-                                                }
-                                            }).fail(function () {
-                                                DevExpress.ui.notify('Erro ao aprovar programação!', 'error', 3000);
-                                            });
-                                        }
-                                    }
-                                }
-                            ]
-                        });
-                    },
-                    onShowing: function () {
-                        const formInstance = $('#formAprovacao').dxForm('instance');
-
-                        // Carregar tipos de manutenção e buscar a opção "Preventiva"
-                        $.getJSON('/planejamento-controle-manutencao/listar-tipos-manutencao').done(function (tipos) {
-                                const preventiva = tipos.data.find(item => item.nome.toLowerCase() === 'preventiva');
-                                const tipoId = preventiva ? preventiva.id : null;
-
-                                formInstance.option('formData', {
-                                    equipamento_id: data.equipamento_id,
-                                    area_tecnica_id: data.area_tecnica_id,
-                                    setor_id: data.setor_id,
-                                    data_programada: data.data_programada,
-                                    descricao_servico: data.descricao_servico,
-                                    status: data.status,
-                                    data_solicitacao: new Date(),
-                                    data_inicio: null,
-                                    tipo_manutencao_id: tipoId
-                                });
-                            })
-                            .fail(function () {
-                                DevExpress.ui.notify('Erro ao carregar tipos de manutenção', 'error', 3000);
-                            });
-                    }
-                }).dxPopup('instance');
-            }
-
-            aprovacaoPopup.show();
-        }
-        function reprovarProgramacao(data) {
-            DevExpress.ui.dialog.confirm("Deseja realmente reprovar esta programação Preventiva?", "Confirmação")
-                .done(function (result) {
-                    if (result) {
-                        $.ajax({
-                            url: '/planejamento-controle-manutencao/reprovar-programacao-preventiva',
-                            method: 'POST', // ou PUT conforme sua API
-                            contentType: 'application/json',
-                            data: JSON.stringify({ id: data.id, status: 'Reprovada' }),
-                            dataType: 'json'
-                        }).done(function (response) {
-                            if (response.success) {
-                                DevExpress.ui.notify(response.message || 'Programação reprovada com sucesso!', 'success', 3000);
-                                $('#gridProgramacaoPreventiva').dxDataGrid('instance').refresh();
-                            } else {
-                                DevExpress.ui.notify(response.message || 'Erro ao reprovar programação!', 'error', 3000);
-                            }
-                        }).fail(function () {
-                            DevExpress.ui.notify('Erro na comunicação com o servidor!', 'error', 3000);
-                        });
-                    }
+            // Mostra e adiciona obrigatoriedade ao campo correto
+            if (tipoOrdemServico === 'Equipamento') {
+                form.itemOption('equipamento_id', {
+                    visible: true,
+                    validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
+            } else if (tipoOrdemServico === 'Centro de Custo') {
+                form.itemOption('centro_custo_id', {
+                    visible: true,
+                    validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
+                });
+                form.itemOption('setor_id', {
+                    visible: true
+                });
+            }
         }
 
         // Função para SelectBox usada no editor de área técnica

@@ -365,25 +365,7 @@
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
                             validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
                         },
-                        { 
-                            dataField: 'setor_id', 
-                            label: { text: 'Setor' }, 
-                            editorType: 'dxSelectBox', 
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') 
-                        },
-                        {
-                            dataField: 'prioridade',
-                            editorType: 'dxSelectBox',
-                            label: { text: 'Prioridade' },
-                            editorOptions: {
-                                items: ['Baixa', 'Média', 'Alta'],
-                                placeholder: 'Selecione a prioridade',
-                                width: '100%'
-                            },
-                            validationRules: [{ type: 'required' }]
-                        },
-                        // Novo campo: Tipo Ordem Serviço
-                        {
+                                                {
                             dataField: 'tipo_ordem_servico',
                             editorType: 'dxSelectBox',
                             label: { text: 'Tipo Ordem de Serviço' },
@@ -409,6 +391,23 @@
                             label: { text: 'Centro de Custo' }, 
                             visible: false,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') 
+                        },
+                        { 
+                            dataField: 'setor_id', 
+                            label: { text: 'Setor' }, 
+                            editorType: 'dxSelectBox', 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') 
+                        },
+                        {
+                            dataField: 'prioridade',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Prioridade' },
+                            editorOptions: {
+                                items: ['Baixa', 'Média', 'Alta'],
+                                placeholder: 'Selecione a prioridade',
+                                width: '100%'
+                            },
+                            validationRules: [{ type: 'required' }]
                         },
                         { 
                             dataField: 'tecnico_id', 
@@ -747,10 +746,6 @@
         function atualizarVisibilidadeForm(form) {
             const tipoOrdemServico = form.option('formData').tipo_ordem_servico;
 
-            console.log('form', form);
-            console.log('tipoOrdemServico', tipoOrdemServico);
-
-            
             // Esconde e remove obrigatoriedade de ambos os campos
             form.itemOption('equipamento_id', {
                 visible: false,
@@ -760,6 +755,9 @@
             form.itemOption('centro_custo_id', {
                 visible: false,
                 validationRules: []
+            });
+            form.itemOption('setor_id', {
+                visible: false,
             });
 
             // Mostra e adiciona obrigatoriedade ao campo correto
@@ -772,6 +770,9 @@
                 form.itemOption('centro_custo_id', {
                     visible: true,
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
+                });
+                form.itemOption('setor_id', {
+                    visible: true
                 });
             }
         }
