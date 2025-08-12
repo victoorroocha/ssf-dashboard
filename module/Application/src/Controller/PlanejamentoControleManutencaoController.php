@@ -513,51 +513,22 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()]);
             }
         }
-        public function excluirProgramacaoPreventivaAction()
+        public function gerarOsPreventivaAction()
         {
-            if (!$this->getRequest()->isDelete()) {
-                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
-            }
-
-            $data = json_decode($this->getRequest()->getContent(), true);
-
             try {
-                $this->PlanejamentoControleManutencaoRepository->excluirProgramacaoPreventiva($data['id']);
-                return new JsonModel(['success' => true, 'message' => 'Excluída com sucesso!']);
+                $this->PlanejamentoControleManutencaoRepository->gerarOsPreventiva();
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'OS preventivas geradas com sucesso.'
+                ]);
             } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao excluir: ' . $e->getMessage()]);
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao gerar OS preventiva: ' . $e->getMessage()
+                ]);
             }
         }
-        public function aprovarProgramacaoPreventivaAction()
-        {
-            if (!$this->getRequest()->isPost()) {
-                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
-            }
 
-            $data = json_decode($this->getRequest()->getContent(), true);
-
-            try {
-                $this->PlanejamentoControleManutencaoRepository->aprovarProgramacaoPreventiva($data);
-                return new JsonModel(['success' => true, 'message' => 'Programação aprovada e pendente criada com sucesso!']);
-            } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao aprovar programação: ' . $e->getMessage()]);
-            }
-        }
-        public function reprovarProgramacaoPreventivaAction()
-        {
-            if (!$this->getRequest()->isPost()) {
-                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
-            }
-
-            $data = json_decode($this->getRequest()->getContent(), true);
-
-            try {
-                $this->PlanejamentoControleManutencaoRepository->reprovarProgramacaoPreventiva($data);
-                return new JsonModel(['success' => true, 'message' => 'Programação reprovada com sucesso!']);
-            } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao reprovar programação: ' . $e->getMessage()]);
-            }
-        }
     #endRegion
 
     #region Controle de Manutenção

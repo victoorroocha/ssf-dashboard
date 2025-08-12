@@ -587,100 +587,39 @@ class PlanejamentoControleManutencaoRepository
 
             $this->adapter->createStatement($sql)->execute($params);
         }
-        public function excluirProgramacaoPreventiva($id)
+        public function gerarOsPreventiva()
         {
-            $sql = 'DELETE FROM programacao_manutencao_preventiva WHERE id = :id';
-            $this->adapter->createStatement($sql)->execute([':id' => $id]);
-        }
-        public function aprovarProgramacaoPreventiva(array $data)
-        {
-            $this->adapter->getDriver()->getConnection()->beginTransaction();
+            $sql = "SELECT * FROM programacao_manutencao_preventiva WHERE status_programacao = 'Ativa' AND proxima_execucao <= CURRENT_DATE";
+            $programacoes = $this->adapter->query($sql, $this->adapter::QUERY_MODE_EXECUTE);
 
-            try {
-                // Inserção em controle_manutencao
-                $sqlInsert = "INSERT INTO controle_manutencao (
-                                equipamento_id,
-                                area_tecnica_id,
-                                setor_id,
-                                data_programada,
-                                descricao_defeito,
-                                status,
-                                data_solicitacao,
-                                data_inicio,
-                                tempo_previsto,
-                                nome_solicitante,
-                                prioridade,
-                                tipo_manutencao_id,
-                                tecnico_id
-                            ) VALUES (
-                                :equipamento_id,
-                                :area_tecnica_id,
-                                :setor_id,
-                                :data_programada,
-                                :descricao_defeito,
-                                'Pendente',
-                                :data_solicitacao,
-                                :data_inicio,
-                                :tempo_previsto,
-                                :nome_solicitante,
-                                :prioridade,
-                                :tipo_manutencao_id,
-                                :tecnico_id
-                            )";
-                $paramsInsert = [
-                    ':equipamento_id' => $data['equipamento_id'],
-                    ':area_tecnica_id' => $data['area_tecnica_id'],
-                    ':setor_id' => $data['setor_id'],
-                    ':data_programada' => $data['data_programada'],
-                    ':descricao_defeito' => $data['descricao_defeito'],
-                    ':data_solicitacao' => $data['data_solicitacao'],
-                    ':data_inicio' => $data['data_inicio'],
-                    ':tempo_previsto' => $data['tempo_previsto'],
-                    ':nome_solicitante' => $data['nome_solicitante'],
-                    ':prioridade' => $data['prioridade'],
-                    ':tipo_manutencao_id' => $data['tipo_manutencao_id'],
-                    ':tecnico_id' => $data['tecnico_id']
-                ];
-                $this->adapter->createStatement($sqlInsert)->execute($paramsInsert);
+            foreach ($programacoes as $prog) {
+                $checkSql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE programacao_id = ? AND data_programada = ?";
+                $check = $this->adapter->query($checkSql, [$prog['id'], $prog['proxima_execucao']])->current();
 
-                // Atualiza programacao_manutencao_preventiva para status 'Pendente'
-                $sqlUpdate = "UPDATE programacao_manutencao_preventiva SET status = 'Pendente' WHERE
-                            equipamento_id = :equipamento_id
-                            AND area_tecnica_id = :area_tecnica_id
-                            AND setor_id = :setor_id
-                            AND data_programada = :data_programada";
-                $paramsUpdate = [
-                    ':equipamento_id' => $data['equipamento_id'],
-                    ':area_tecnica_id' => $data['area_tecnica_id'],
-                    ':setor_id' => $data['setor_id'],
-                    ':data_programada' => $data['data_programada'],
-                ];
-                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
-                $this->adapter->getDriver()->getConnection()->commit();
+                if ($check['total'] == 0) {
+                    $insertSql = "INSERT INTO controle_manutencao 
+                        (data_programada, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, 
+                        tipo_manutencao_id, area_tecnica_id, status, observacoes, programacao_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente', ?, ?)";
 
-            } catch (\Exception $e) {
-                $this->adapter->getDriver()->getConnection()->rollback();
-                throw $e;
-            }
-        }
-        public function reprovarProgramacaoPreventiva(array $data)
-        {
-            $this->adapter->getDriver()->getConnection()->beginTransaction();
+                    $this->adapter->query($insertSql, [
+                        $prog['proxima_execucao'],
+                        $prog['setor_id'],
+                        $prog['tipo_ordem_servico'],
+                        $prog['equipamento_id'],
+                        $prog['centro_custo_id'],
+                        1, // Ajuste o tipo_manutencao_id conforme necessário
+                        $prog['area_tecnica_id'],
+                        $prog['observacoes'],
+                        $prog['id']
+                    ]);
 
-            try {
-                // Atualiza programacao_manutencao_preventiva para status 'Reprovada' com base no ID
-                $sqlUpdate = "UPDATE programacao_manutencao_preventiva 
-                            SET status = 'Reprovada' 
-                            WHERE id = :id";
-                $paramsUpdate = [
-                    ':id' => $data['id']
-                ];
-                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
-
-                $this->adapter->getDriver()->getConnection()->commit();
-            } catch (\Exception $e) {
-                $this->adapter->getDriver()->getConnection()->rollback();
-                throw $e;
+                    $updateSql = "UPDATE programacao_manutencao_preventiva SET 
+                                    data_ultima_execucao = proxima_execucao, 
+                                    proxima_execucao = proxima_execucao + INTERVAL '{$prog['periodicidade_dias']} days' 
+                                WHERE id = ?";
+                    $this->adapter->query($updateSql, [$prog['id']]);
+                }
             }
         }
     #endRegion
