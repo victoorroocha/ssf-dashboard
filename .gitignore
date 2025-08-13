@@ -7,3 +7,4 @@ data/cache/*
 !data/cache/.gitkeep
 phpunit.xml
 node_modules/
+/module/Application/src/LogCronJob/cron_gerar_os.log

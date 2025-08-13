@@ -465,7 +465,7 @@ class PlanejamentoControleManutencaoRepository
                     LEFT JOIN areas_tecnicas at ON at.id = pmp.area_tecnica_id
                     LEFT JOIN setores st ON st.id = pmp.setor_id
                     where (eq.status = 'Ativo' or eq.status is null)
-                    and pmp.status_programacao = 'Ativa'
+                    and pmp.status_programacao <> 'Cancelada'
                     ORDER BY pmp.proxima_execucao ASC";
             $result = $this->adapter->createStatement($sql)->execute();
 
@@ -505,8 +505,7 @@ class PlanejamentoControleManutencaoRepository
 
                 $recalcularProxima = false;
                 if ($result) {
-                    if ($result['data_programada'] != $data['data_programada'] ||
-                        $result['periodicidade_dias'] != $periodicidade_dias) {
+                    if ($result['data_programada'] != $data['data_programada'] || $result['periodicidade_dias'] != $periodicidade_dias) {
                         $recalcularProxima = true;
                     }
                 }
@@ -586,6 +585,23 @@ class PlanejamentoControleManutencaoRepository
             }
 
             $this->adapter->createStatement($sql)->execute($params);
+        }
+        public function atualizarStatusProgramacao($id, $status)
+        {
+            $sql = 'UPDATE programacao_manutencao_preventiva SET status_programacao = :status WHERE id = :id';
+            $this->adapter->createStatement($sql)->execute([
+                ':status' => $status,
+                ':id' => $id
+            ]);
+        }
+        public function cancelarProgramacao(array $data)
+        {
+            $sql = "UPDATE programacao_manutencao_preventiva SET status_programacao = 'Cancelada', motivo_cancelamento = :motivo WHERE id = :id";
+
+            $this->adapter->createStatement($sql)->execute([
+                ':motivo' => $data['motivo_cancelamento'],
+                ':id' => $data['id']
+            ]);
         }
         public function gerarOsPreventiva()
         {

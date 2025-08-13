@@ -513,21 +513,70 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()]);
             }
         }
+        public function pausarProgramacaoAction()
+        {
+            if (!$this->getRequest()->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+
+            $id = $this->params()->fromPost('id');
+            
+            try {
+                $this->PlanejamentoControleManutencaoRepository->atualizarStatusProgramacao($id, 'Pausada');
+                return new JsonModel(['success' => true, 'message' => 'Programação pausada com sucesso!']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao pausar: ' . $e->getMessage()]);
+            }
+        }
+        public function retomarProgramacaoAction()
+        {
+            if (!$this->getRequest()->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+
+            $id = $this->params()->fromPost('id');
+            
+            try {
+                $this->PlanejamentoControleManutencaoRepository->atualizarStatusProgramacao($id, 'Ativa');
+                return new JsonModel(['success' => true, 'message' => 'Programação retomada com sucesso!']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao retomar: ' . $e->getMessage()]);
+            }
+        }
+        public function cancelarProgramacaoAction()
+        {
+            if (!$this->getRequest()->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleManutencaoRepository->cancelarProgramacao($data);
+                return new JsonModel(['success' => true, 'message' => 'Programação cancelada com sucesso!']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao cancelar: ' . $e->getMessage()]);
+            }
+        }
         public function gerarOsPreventivaAction()
         {
+            date_default_timezone_set('America/Sao_Paulo');
             try {
                 $this->PlanejamentoControleManutencaoRepository->gerarOsPreventiva();
+
+                $hora = date('Y-m-d H:i:s');
                 return new JsonModel([
                     'success' => true,
-                    'message' => 'OS preventivas geradas com sucesso.'
+                    'message' => "OS preventivas geradas com sucesso em $hora."
                 ]);
             } catch (\Exception $e) {
+                $hora = date('Y-m-d H:i:s');
                 return new JsonModel([
                     'success' => false,
-                    'message' => 'Erro ao gerar OS preventiva: ' . $e->getMessage()
+                    'message' => "Erro ao gerar OS preventiva em $hora: " . $e->getMessage()
                 ]);
             }
         }
+
 
     #endRegion
 

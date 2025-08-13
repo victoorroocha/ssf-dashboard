@@ -15,7 +15,7 @@
                     <p>Programação das Manutenções Preventivas</p>
 
                     <div id="gridProgramacaoPreventiva"></div>
-                    <div id="popupAprovacao"></div>
+                    <div id="popupCancelarProgramacao"></div>
 
                 </div>
             </div>
@@ -292,7 +292,8 @@
                         }),
                         displayExpr: 'nome',
                         valueExpr: 'id'
-                    }
+                    },
+                    groupIndex: 0, // Agrupa por setor
                 },
                 {
                     dataField: 'data_programada',
@@ -326,23 +327,30 @@
                     buttons: [
                         'edit',
                         {
-                            hint: 'Aprovar Programação',
-                            icon: 'check',
-                            visible: function (e) {
-                                return e.row.data.status === 'Programada';
+                            hint: 'Pausar Programação',
+                            icon: 'fa fa-pause',
+                            visible: function(e) {
+                                return e.row.data.status_programacao === 'Ativa';
                             },
-                            onClick: function (e) {
-                                openAprovacaoPopup(e.row.data);
+                            onClick: function(e) {
+                                pausarProgramacao(e.row.data.id);
                             }
                         },
                         {
-                            hint: 'Reprovar Programação',
-                            icon: 'close',  // ou algum ícone que queira
-                            visible: function (e) {
-                                return e.row.data.status === 'Programada';
+                            hint: 'Retomar Programação',
+                            icon: 'fa fa-play',
+                            visible: function(e) {
+                                return e.row.data.status_programacao === 'Pausada'; // Só mostra se estiver Pausada
                             },
-                            onClick: function (e) {
-                                reprovarProgramacao(e.row.data);
+                            onClick: function(e) {
+                                retomarProgramacao(e.row.data.id);
+                            }
+                        },
+                        {
+                            hint: 'Cancelar Programação',
+                            icon: 'close',
+                            onClick: function(e) {
+                                cancelarProgramacao(e.row.data.id);
                             }
                         }
                     ]
@@ -511,6 +519,118 @@
                     visible: true
                 });
             }
+        }
+        function pausarProgramacao(id) {
+            DevExpress.ui.dialog.confirm(
+                "Deseja pausar esta programação? Enquanto pausada, não serão geradas novas OS.",
+                "Confirmar Pausa"
+            ).then(function(result) {
+                if (result) {
+                    $.ajax({
+                        url: '/planejamento-controle-manutencao/pausar-programacao',
+                        method: 'POST',
+                        data: { id: id },
+                        dataType: 'json'
+                    }).then(function(response) {
+                        if (response.success) {
+                            DevExpress.ui.notify("Programação pausada com sucesso!", "success", 2000);
+                            $("#gridProgramacaoPreventiva").dxDataGrid("instance").refresh();
+                        } else {
+                            DevExpress.ui.notify(response.message || "Erro ao pausar programação", "error", 3000);
+                        }
+                    });
+                }
+            });
+        }
+        function retomarProgramacao(id) {
+            $.ajax({
+                url: '/planejamento-controle-manutencao/retomar-programacao',
+                method: 'POST',
+                data: { id: id },
+                dataType: 'json'
+            }).then(function(response) {
+                if (response.success) {
+                    DevExpress.ui.notify("Programação retomada com sucesso!", "success", 2000);
+                    $("#gridProgramacaoPreventiva").dxDataGrid("instance").refresh();
+                } else {
+                    DevExpress.ui.notify(response.message || "Erro ao retomar programação", "error", 3000);
+                }
+            });
+        }
+        function cancelarProgramacao(id) {
+            const popupInstance = $("#popupCancelarProgramacao").dxPopup({
+                title: "Cancelar Programação",
+                visible: true,
+                width: 400,
+                height: 250,
+                showCloseButton: true,
+                dragEnabled: true,
+                contentTemplate: function(contentElement) {
+                    // Cria o textarea para o motivo
+                    $("<textarea>")
+                        .attr("id", "motivoCancelamento")
+                        .attr("placeholder", "Digite o motivo do cancelamento...")
+                        .css({
+                            width: "100%",
+                            height: "120px",
+                            padding: "8px",
+                            resize: "none",
+                            boxSizing: "border-box"
+                        })
+                        .appendTo(contentElement);
+                },
+                toolbarItems: [
+                    {
+                        widget: "dxButton",
+                        toolbar: "bottom",
+                        location: "after",
+                        options: {
+                            text: "Confirmar",
+                            type: "default",
+                            onClick: function() {
+                                const motivo = $("#motivoCancelamento").val().trim();
+                                if (!motivo) {
+                                    DevExpress.ui.notify("Informe o motivo do cancelamento", "error", 2000);
+                                    return;
+                                }
+                                
+                                // Faz a requisição AJAX
+                                $.ajax({
+                                    url: '/planejamento-controle-manutencao/cancelar-programacao',
+                                    method: 'POST',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({
+                                        id: id,
+                                        motivo_cancelamento: motivo
+                                    }),
+                                    dataType: 'json'
+                                }).done(function(response) {
+                                    if (response.success) {
+                                        DevExpress.ui.notify("Programação cancelada!", "success", 2000);
+                                        $("#gridProgramacaoPreventiva").dxDataGrid("instance").refresh();
+                                        popupInstance.hide(); // Changed this line
+                                    } else {
+                                        DevExpress.ui.notify(response.message || "Erro no cancelamento", "error", 3000);
+                                    }
+                                }).fail(function() {
+                                    DevExpress.ui.notify("Falha na requisição", "error", 3000);
+                                });
+                            }
+                        }
+                    },
+                    {
+                        widget: "dxButton",
+                        toolbar: "bottom",
+                        location: "after",
+                        options: {
+                            text: "Cancelar",
+                            onClick: function() {
+                                popupInstance.hide(); // Changed this line
+                            }
+                        }
+                    }
+                ]
+            }).dxPopup("instance");
         }
 
         // Função para SelectBox usada no editor de área técnica

@@ -20,6 +20,19 @@ abstract class BaseController extends AbstractActionController
 
     public function onDispatch(\Laminas\Mvc\MvcEvent $e)
     {
+        // Obtém o nome da action atual
+        $action = $e->getRouteMatch()->getParam('action');
+
+        // Se for 'gerarOsPreventiva', libera direto, pula checagem de sessão
+        if ($action === 'gerar-os-preventiva') {
+            return parent::onDispatch($e);
+        }
+
+        // Inicializa a sessão auth (se ainda não inicializada)
+        if (!isset($this->session)) {
+            $this->session = new \Laminas\Session\Container('auth');
+        }
+
         // Verifica se o usuário está autenticado
         if (!isset($this->session->user)) {
             return $this->redirect()->toRoute('login');
@@ -30,7 +43,6 @@ abstract class BaseController extends AbstractActionController
 
         // Obtém o nome da controller e da action atual
         $controller = $e->getRouteMatch()->getParam('controller');
-        $action = $e->getRouteMatch()->getParam('action');
 
         // Remove o namespace da controller para obter o nome simples
         $controller = substr($controller, strrpos($controller, '\\') + 1);
