@@ -36,6 +36,36 @@
         background-size: contain;
         margin-bottom: 5px;
     }
+    /* Layout A4 */
+    .layout-ssf {
+        width: 210mm; /* Largura A4 */
+        height: 297mm; /* Altura A4 */
+        background-image: url('<?= $this->basePath('img/layout-ssf.png') ?>');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: cover; /* Preenche todo o espaço */
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    /* Texto posicionado no layout */
+    .info-overlay {
+        position: absolute;
+        font-size: 14pt;
+        font-weight: bold;
+        color: black;
+        white-space: nowrap; /* Evita quebra de linha */
+    }
+
+    /* Área de impressão */
+    #print-area-nota-promissoria {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 210mm;
+        height: 297mm;
+        margin: 0 auto;
+    }
     .hidden-print {
         display: none !important;
     }
@@ -76,9 +106,9 @@
     </div>
 
 
-    <section id="print-area">
-
-    </section>
+    
+    <section id="print-area"></section>
+    <section id="print-area-nota-promissoria"></section>
 </div>
 <!-- /.container-fluid -->
 
@@ -355,6 +385,18 @@
                                                     onClick: function(e) {
                                                         const data = e.row.data;
                                                         imprimirDocumentosPedido(data);
+                                                    }
+                                                },
+                                               {
+                                                    hint: "Gerar Nota Promissória",
+                                                    icon: "fa fa-file",
+                                                    visible: function(e) {
+                                                        const tipoPrazo = e.row?.data?.TIPO_PRAZO;
+                                                        return tipoPrazo === "Prazo Safra";
+                                                    },
+                                                    onClick: function(e) {
+                                                        const data = e.row.data;
+                                                        gerarNotaPromissoria(data);
                                                     }
                                                 }
                                             ]
@@ -1515,6 +1557,94 @@
                 }
             });
         }
+
+        async function gerarNotaPromissoria(data) {
+            let idPedido = data.ID_PEDIDO;
+            let tipoPessoa = data.TIPO_PESSOA;
+            let grupoClienteID = data.GRUPO_CLIENTE;
+            let codigoSafra = data.CODIGOSAFRA;
+
+            // Validações
+            if (!idPedido) return DevExpress.ui.notify('ID do pedido não está definido.', 'error', 3000);
+            if (!tipoPessoa) return DevExpress.ui.notify('Tipo de pessoa não está definido.', 'error', 3000);
+            if (!grupoClienteID) return DevExpress.ui.notify('Grupo de cliente não está definido.', 'error', 3000);
+            if (!codigoSafra) return DevExpress.ui.notify('Código da safra não está definido.', 'error', 3000);
+
+            const dadosCliente = data;
+
+            $.ajax({
+                url: "/credito-e-cobranca/list-documentos-pedido",
+                method: 'GET',
+                data: {
+                    idPedido: idPedido,
+                    tipoPessoa: tipoPessoa,
+                    grupoClienteID: grupoClienteID,
+                    codigoSafra: codigoSafra
+                },
+                success: async function(response) {
+                    try {
+                        if (!response.data) throw new Error('Dados de resposta inválidos');
+
+                        // Limpa a área antes de gerar
+                        $("#print-area-nota-promissoria").empty();
+
+                        // Cria o layout de fundo
+                        const layoutDiv = $('<div class="layout-ssf" id="layoutNotaPromissoria"></div>');
+
+                        // --- INSERÇÃO DOS CAMPOS NO LAYOUT ---
+                        // layoutDiv.append($('<div class="info-overlay"></div>').text(dadosCliente.NOME_CLIENTE).css({ top: '60mm', left: '20mm' }));
+
+                        // Adiciona o layout na seção
+                        $("#print-area-nota-promissoria").append(layoutDiv);
+
+                        // --- GERAÇÃO DO PDF ---
+                        const loading = document.getElementById('globalLoading');
+                        const spinnerGen = document.getElementById('spinnerGeneric');
+                        const spinnerPDF = document.getElementById('spinnerPDF');
+                        const loadingText = document.getElementById('loadingText');
+
+                        loading.style.display = 'flex';
+                        spinnerGen.style.display = 'none';
+                        spinnerPDF.style.display = 'block';
+                        loadingText.textContent = 'Gerando PDF…';
+
+                        try {
+                            const canvas = await html2canvas(layoutDiv[0], {
+                                scale: 3, // Alta resolução
+                                useCORS: true,
+                                backgroundColor: null
+                            });
+
+                            const imgData = canvas.toDataURL('image/png', 1.0);
+                            const { jsPDF } = window.jspdf;
+                            const pdf = new jsPDF('p', 'mm', 'a4');
+
+                            // Adiciona a imagem ocupando toda a página
+                            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+
+                            pdf.save(`nota-promissoria-${dadosCliente.ID_CLIENTE}.pdf`);
+                        } catch (err) {
+                            console.error('Erro ao gerar PDF:', err);
+                            alert('Erro ao gerar PDF. Verifique o console.');
+                        } finally {
+                            spinnerPDF.style.display = 'none';
+                            spinnerGen.style.display = 'block';
+                            loadingText.textContent = 'Carregando Informações...';
+                            loading.style.display = 'none';
+                        }
+
+                    } catch (error) {
+                        console.error('Erro no processamento:', error);
+                        DevExpress.ui.notify('Erro ao processar documentos: ' + error.message, 'error', 5000);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro na requisição:', status, error);
+                    DevExpress.ui.notify('Falha na requisição: ' + error, 'error', 5000);
+                }
+            });
+        }
+
 
         function criarTabelaDuplicatasBoletos(data) {
             // Cria tabela

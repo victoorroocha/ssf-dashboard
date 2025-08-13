@@ -219,6 +219,14 @@
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') 
                         },
                         {
+                            dataField: 'nome_solicitante',
+                            label: { text: 'Nome do Solicitante' },
+                            editorType: 'dxSelectBox',
+                            colSpan: 2,
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
+                            validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
+                        },
+                        {
                             dataField: 'area_tecnica_id',
                             label: { text: 'Área Técnica' },
                             editorType: 'dxSelectBox',
@@ -250,6 +258,7 @@
                             editorOptions: { min: 1, showSpinButtons: true },
                             validationRules: [{ type: 'required', message: 'Periodicidade é obrigatória' }]
                         },
+                        { dataField: 'info_servico', label: { text: 'Informações do Serviço' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
                         { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
                     ]
                 },
@@ -272,6 +281,7 @@
                         valueExpr: 'ID'
                     }
                 },
+                { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
                 {
                     dataField: 'area_tecnica_id',
                     caption: 'Área Técnica',
@@ -314,6 +324,7 @@
                     caption: 'Periodicidade (dias)', 
                     alignment: 'center',
                 },
+                { dataField: 'info_servico', caption: 'Informações do Serviço', visible: false },
                 { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
                 {
                     dataField: 'status_programacao',

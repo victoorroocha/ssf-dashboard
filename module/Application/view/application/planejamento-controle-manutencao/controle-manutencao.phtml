@@ -353,9 +353,9 @@
                                     "0": /[0-9]/
                                 },
                                 placeholder: "00:00",
-                                useMaskedValue: true
-                            },
-                            // validationRules: [{ type: 'required', message: 'Tempo Previsto é obrigatório' }]
+                                useMaskedValue: true,
+                                value: "00:00" // valor inicial
+                            }
                         },
                         {
                             dataField: 'nome_solicitante',
@@ -365,7 +365,7 @@
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
                             validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
                         },
-                                                {
+                        {
                             dataField: 'tipo_ordem_servico',
                             editorType: 'dxSelectBox',
                             label: { text: 'Tipo Ordem de Serviço' },
@@ -428,7 +428,7 @@
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica') 
                         },
                         { dataField: 'descricao_defeito', label: { text: 'Descrição do Defeito' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
-                        { dataField: 'info_servico', label: { text: 'Informações do Serviço Executado' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                        { dataField: 'info_servico', label: { text: 'Informações do Serviço' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
                         { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
                     ]
                 }
@@ -524,7 +524,7 @@
                     }
                 },
                 { dataField: 'descricao_defeito', caption: 'Descrição do Defeito', visible: false },
-                { dataField: 'info_servico', caption: 'Informações do Serviço Executado', visible: false },
+                { dataField: 'info_servico', caption: 'Informações do Serviço', visible: false },
                 { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
                 { dataField: 'custo_total', caption: 'Custo (R$)', format: { type: 'fixedPoint', precision: 2 }, visible: false },
                 { dataField: 'prioridade', caption: 'Prioridade', visible: false },
@@ -583,19 +583,21 @@
             ],
             onInitNewRow: function(e) {
                 e.data.tipo_ordem_servico = null;
+                e.data.tempo_previsto = "00:00"; // valor inicial
                 e.data.data_solicitacao = new Date();
                 
                 setTimeout(() => {
                     const form = $(".dx-popup-content .dx-form").dxForm("instance");
                     if (form) {
                         form.updateData('data_solicitacao', new Date());
+                        form.updateData('tempo_previsto', "00:00"); // força aparecer no form
                         atualizarVisibilidadeForm(form);
                     }
                 }, 100);
             },
             onEditingStart: function(e) {
                 // Determina o tipo_ordem_servico baseado nos campos preenchidos
-                const tipo = e.data.equipamento_id ? 'Equipamento' :
+                const tipo = e.data.equipamento_id ? 'Equipamento' : 
                             e.data.centro_custo_id ? 'Centro de Custo' : null;
 
                 setTimeout(() => {
@@ -649,10 +651,11 @@
                 if (e.rowType === 'data') {
                     const status = (e.data.status || '').toLowerCase();
                     const hoje = new Date();
+                    const dataProgramada = e.data.data_programada ? new Date(e.data.data_programada) : null;
                     const dataInicio = e.data.data_inicio ? new Date(e.data.data_inicio) : null;
                     const dataFim = e.data.data_fim ? new Date(e.data.data_fim) : null;
 
-                    const emExecucao = dataInicio && dataInicio <= hoje && status !== 'finalizada';
+                    const emExecucao = status !== 'finalizada' && ((dataInicio && dataInicio <= hoje) || (dataProgramada && dataProgramada <= hoje));
 
                     if (emExecucao) {
                         e.rowElement.css({ backgroundColor: '#F4A261', color: '#000' }); 
@@ -1406,7 +1409,7 @@
                                             <div class="field third"><span class="label">Data Programada:</span><div class="value os-data-programada"></div></div>
                                             <div class="field third"><span class="label">Data Inicial:</span><div class="value os-data-inicio"></div></div>
                                             <div class="field third"><span class="label">Data Final:</span><div class="value os-data-final"></div></div>
-                                            <div class="field full"><span class="label">Descrição do Serviço Realizado:</span><div class="value os-descricao"></div></div>
+                                            <div class="field full"><span class="label">Informação do Serviço:</span><div class="value os-descricao"></div></div>
                                             <div class="field full"><span class="label">Técnico(s) Responsável(s):</span><div class="value os-tecnico"></div></div>
                                             <div class="field full"><span class="label">Técnico(s) Executor(s):</span><div class="value os-tecnico-executor"></div></div>
                                         </div>

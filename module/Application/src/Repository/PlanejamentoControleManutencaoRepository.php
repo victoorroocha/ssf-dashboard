@@ -515,8 +515,10 @@ class PlanejamentoControleManutencaoRepository
                 $sql = 'UPDATE programacao_manutencao_preventiva SET 
                             equipamento_id = :equipamento_id,
                             centro_custo_id = :centro_custo_id,
+                            nome_solicitante = :nome_solicitante,
                             area_tecnica_id = :area_tecnica_id,
                             observacoes = :observacoes,
+                            info_servico = :info_servico,
                             data_programada = :data_programada,
                             periodicidade_dias = :periodicidade_dias,
                             setor_id = :setor_id,
@@ -529,8 +531,10 @@ class PlanejamentoControleManutencaoRepository
                 $params = [
                     ':equipamento_id' => $data['equipamento_id'] ?? null,
                     ':centro_custo_id' => $data['centro_custo_id'] ?? null,
+                    ':nome_solicitante' => $data['nome_solicitante'],
                     ':area_tecnica_id' => $data['area_tecnica_id'],
                     ':observacoes' => $data['observacoes'] ?? null,
+                    ':info_servico' => $data['info_servico'] ?? null,
                     ':data_programada' => $data['data_programada'],
                     ':periodicidade_dias' => $periodicidade_dias,
                     ':setor_id' => $data['setor_id'],
@@ -548,7 +552,9 @@ class PlanejamentoControleManutencaoRepository
                 $sql = 'INSERT INTO programacao_manutencao_preventiva (
                     equipamento_id,
                     centro_custo_id,
+                    nome_solicitante,
                     area_tecnica_id,
+                    info_servico,
                     observacoes,
                     data_programada,
                     periodicidade_dias,
@@ -559,7 +565,9 @@ class PlanejamentoControleManutencaoRepository
                 ) VALUES (
                     :equipamento_id,
                     :centro_custo_id,
+                    :nome_solicitante,
                     :area_tecnica_id,
+                    :info_servico,
                     :observacoes,
                     :data_programada,
                     :periodicidade_dias,
@@ -572,7 +580,9 @@ class PlanejamentoControleManutencaoRepository
                 $params = [
                     ':equipamento_id' => $data['equipamento_id'] ?? null,
                     ':centro_custo_id' => $data['centro_custo_id'] ?? null,
+                    ':nome_solicitante' => $data['nome_solicitante'],
                     ':area_tecnica_id' => $data['area_tecnica_id'],
+                    ':info_servico' => $data['info_servico'] ?? null,
                     ':observacoes' => $data['observacoes'] ?? null,
                     ':data_programada' => $data['data_programada'],
                     ':periodicidade_dias' => $periodicidade_dias,
@@ -614,20 +624,24 @@ class PlanejamentoControleManutencaoRepository
 
                 if ($check['total'] == 0) {
                     $insertSql = "INSERT INTO controle_manutencao 
-                        (data_programada, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, 
-                        tipo_manutencao_id, area_tecnica_id, status, observacoes, programacao_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente', ?, ?)";
+                        (data_programada, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, nome_solicitante, prioridade,
+                        tipo_manutencao_id, area_tecnica_id, status, info_servico, observacoes, programacao_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                     $this->adapter->query($insertSql, [
-                        $prog['proxima_execucao'],
-                        $prog['setor_id'],
-                        $prog['tipo_ordem_servico'],
-                        $prog['equipamento_id'],
-                        $prog['centro_custo_id'],
-                        1, // Ajuste o tipo_manutencao_id conforme necessário
-                        $prog['area_tecnica_id'],
-                        $prog['observacoes'],
-                        $prog['id']
+                        $prog['proxima_execucao'],  // data_programada
+                        $prog['setor_id'],          // setor_id
+                        $prog['tipo_ordem_servico'],// tipo_ordem_servico
+                        $prog['equipamento_id'],    // equipamento_id
+                        $prog['centro_custo_id'],   // centro_custo_id
+                        $prog['nome_solicitante'],  // nome_solicitante
+                        'Alta',                     // prioridade
+                        1,                          // tipo_manutencao_id (fixo)
+                        $prog['area_tecnica_id'],   // area_tecnica_id
+                        'Pendente',                 // status
+                        $prog['info_servico'],      // info_servico
+                        $prog['observacoes'],       // observacoes
+                        $prog['id']                 // programacao_id
                     ]);
 
                     $updateSql = "UPDATE programacao_manutencao_preventiva SET 
