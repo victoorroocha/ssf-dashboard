@@ -2081,9 +2081,7 @@
         // Função para formatar data
         function formatarData(data) {
             if (!data) return '';
-            const date = new Date(data);
-            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            return date.toLocaleDateString('pt-BR', options);
+            return moment(data, 'YYYY-MM-DD').format('DD/MM/YYYY');
         }
         function formatarDataPorExtenso(dataString) {
             const meses = [
@@ -2091,7 +2089,10 @@
                 "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
             ];
 
+            console.log('dataString', dataString);
+
             const partes = dataString.split('/'); // [dia, mês, ano]
+            console.log('partes', partes);
             const dia = partes[0];
             const mes = meses[parseInt(partes[1], 10) - 1];
             const ano = partes[2];
