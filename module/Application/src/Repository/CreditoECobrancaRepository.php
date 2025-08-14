@@ -496,6 +496,8 @@ class CreditoECobrancaRepository
                         ,max(CLISENIOR.SIGUFS) ESTADO_CLIENTE
                         ,max(CLISENIOR.FONCLI) FONE1_CLIENTE
                         ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
+                        ,max(CLISENIOR.INSEST) INSEST_CLIENTE
+                        ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
@@ -682,7 +684,37 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
+        public function getDadosClientesSeniorAvalistasQuery($search, $key = null)
+        {
+            // Acrescenta filtro de pesquisa se houver
+            $ands = "";
+            if ($search) {
+                $ands .= " AND UPPER((CLISENIOR.CODCLI || '-' || CLISENIOR.NOMCLI)) LIKE '%{$search}%' ";
+            }
 
+            if (!empty($key)) {
+                $ands .= " AND CLISENIOR.CODCLI = $key ";
+            }
+
+            return "SELECT
+                         CLISENIOR.CODCLI AS ID_CLIENTE
+                        ,(CLISENIOR.CODCLI || '-' || CLISENIOR.NOMCLI) AS NOME_CLIENTE
+                        ,CLISENIOR.NOMCLI AS NOME_CLIENTE_S_ID
+                        ,CLISENIOR.CGCCPF AS CGC_CPF_CLIENTE
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END  AS TIPO_PESSOA
+                        -- Endereço concatenado sem hífen extra
+                        ,RTRIM(
+                            NVL(CLISENIOR.ENDCLI, '') ||
+                            CASE WHEN CLISENIOR.BAICLI IS NOT NULL THEN ' - ' || CLISENIOR.BAICLI ELSE '' END ||
+                            CASE WHEN CLISENIOR.CEPCLI IS NOT NULL THEN ' - ' || CLISENIOR.CEPCLI ELSE '' END ||
+                            CASE WHEN CLISENIOR.CIDCLI IS NOT NULL THEN ' - ' || CLISENIOR.CIDCLI ELSE '' END ||
+                            CASE WHEN CLISENIOR.SIGUFS IS NOT NULL THEN ' - ' || CLISENIOR.SIGUFS ELSE '' END
+                        ) AS ENDERECO_CLIENTE
+                    FROM SAPIENS.E085CLI CLISENIOR
+                    WHERE 1 = 1
+                    $ands
+                    FETCH FIRST 30 ROWS ONLY";  
+        }
         
         public function getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra)
         {

@@ -704,6 +704,64 @@ class CreditoECobrancaController extends BaseController
                             }
                         }
 
+
+                        // Monta objeto com os Vencimentos
+                        $vencimentosAgrupados = [];
+
+                        $tipos = [
+                            'GERMO' => [
+                                'vencimento' => $row['VENCIMENTO_GERMOPLASMA'],
+                                'valor' => floatval($row['PRECO_TOTAL_GERMOPLASMA'])
+                            ],
+                            'ROYAL' => [
+                                'vencimento' => $row['VENCIMENTO_ROYALTIES'],
+                                'valor' => floatval($row['PRECO_TOTAL_ROYALTIES'])
+                            ],
+                            'TSI' => [
+                                'vencimento' => $row['VENCIMENTO_TSI'],
+                                'valor' => floatval($row['PRECO_TOTAL_TSI'])
+                            ],
+                            'FRETE' => [
+                                'vencimento' => $row['VENCIMENTO_FRETE'],
+                                'valor' => floatval($row['PRECO_TOTAL_FRETE'])
+                            ]
+                        ];
+
+                        foreach ($tipos as $dados) {
+                            $venc = $dados['vencimento'];
+                            $valor = $dados['valor'];
+
+                            if ($venc) {
+                                $anoVencimento = (int)substr($venc, 0, 4);
+                                $anoSafra = (int)$row['ANO_SAFRA'];
+
+                                // Só inclui se for ano prazo
+                                if ($anoVencimento > $anoSafra) {
+                                    if (!isset($vencimentosAgrupados[$venc])) {
+                                        $vencimentosAgrupados[$venc] = 0;
+                                    }
+                                    $vencimentosAgrupados[$venc] += $valor;
+                                }
+                            }
+                        }
+
+                        $listaVencimentos = [];
+                        foreach ($vencimentosAgrupados as $dataVenc => $totalValor) {
+                            $listaVencimentos[] = [
+                                'vencimento' => $dataVenc,
+                                'valor_total' => number_format($totalValor, 2, '.', '') 
+                            ];
+                        }
+
+                        // Ordena o array por vencimento (data crescente)
+                        usort($listaVencimentos, function($a, $b) {
+                            return strtotime($a['vencimento']) - strtotime($b['vencimento']);
+                        });
+
+                        $result[$key]['VENCIMENTOS_ANO_SAFRA'] = $listaVencimentos;
+
+
+
                         // Convertendo a codificação para UTF-8
                         $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
                         $result[$key]['ENDERECO_CLIENTE'] = utf8_encode($row['ENDERECO_CLIENTE']);
@@ -838,6 +896,54 @@ class CreditoECobrancaController extends BaseController
                 return new JsonModel([
                     'success' => true,
                     'data' => $result
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        public function listClientesSeniorAction()
+        {
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            // Recebe o parâmetro de pesquisa
+            $key = $this->params()->fromQuery('key', '');
+            $search = $this->params()->fromQuery('search', '');
+            $search = strtoupper(trim($search));
+            
+            try {
+                // Consulta Clientes Senior
+                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosClientesSeniorAvalistasQuery($search, $key) : '';
+
+                $result = [];
+                if ($sql) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                    $result = $this->oracleService->executeQuery($sql, $params);
+
+                    // Processa os dados do Oracle
+                    foreach ($result as $key => $row) {
+                        // Convertendo a codificação para UTF-8
+                        $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                        $result[$key]['NOME_CLIENTE_S_ID'] = utf8_encode($row['NOME_CLIENTE_S_ID']);
+                        $result[$key]['ENDERECO_CLIENTE'] = utf8_encode($row['ENDERECO_CLIENTE']);
+                    }
+                }
+
+                $totalCount = count($result); // Contagem total de registros
+                $pagedData = $result; // Aplica paginação
+
+                // Retorna os dados como JSON
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $pagedData,
+                    'totalCount' => $totalCount
                 ]);
             } catch (\Exception $e) {
                 return new JsonModel([
