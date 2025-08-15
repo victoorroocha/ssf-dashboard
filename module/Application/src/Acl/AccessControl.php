@@ -103,28 +103,76 @@ class AccessControl
         $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Diretor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Diretor', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
-            'cadastroTipoManutencao',
-            'listarTiposManutencao',
-            'salvarTipoManutencao',
-            'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
 
@@ -166,24 +214,76 @@ class AccessControl
         $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Gerente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Gerente', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Coordenador 
@@ -224,24 +324,76 @@ class AccessControl
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Coordenador', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Coordenador', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Encarregado
@@ -282,48 +434,74 @@ class AccessControl
         $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Encarregado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Encarregado', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
-            'cadastroEquipamento',
-            'listarEquipamentos',
-            'salvarEquipamento',
-            'excluirEquipamento',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
             'cadastroTecnico',
             'listarTecnicos',
             'salvarTecnico',
             'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
             'programacaoManPreventiva',
             'listarProgramacaoPreventiva',
             'salvarProgramacaoPreventiva',
-            'excluirProgramacaoPreventiva',
-            'aprovarProgramacaoPreventiva',
-            'reprovarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
             'controleManutencao',
             'listarControlesManutencao',
             'salvarControleManutencao',
             'excluirControleManutencao',
-            'finalizarManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
             'dashboardControleManutencao',
             'listarDadosDashboardControleManutencao',
             'detalhesCardsControleManutencao',
-
-            'getInfoOrdemServico',
+            
+            // Lookups
             'getUsuariosSeniorLookup',
-            'getLookupAreas',
-            'getLookupSetores',
-            'getLookupTecnicos',
-            'getLookupTiposManutencao',
-            'getLookupEquipamentos',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -366,24 +544,76 @@ class AccessControl
         $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Analista', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Analista', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Assistente 
@@ -424,24 +654,76 @@ class AccessControl
         $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Assistente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Assistente', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Auxiliar 
@@ -482,24 +764,76 @@ class AccessControl
         $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
         $this->acl->allow('Auxiliar', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Auxiliar', 'PlanejamentoControleManutencaoController', [
+            // Cadastro Areas Técnicas
             'cadastroArea', 
             'listarAreas', 
             'salvarArea', 
-            'excluirArea', 
+            'excluirArea',
+            'getLookupAreas',
+            
+            // Cadastro Setores
             'cadastroSetor', 
             'listarSetores',
             'salvarSetor',
-            'excluirSetor', 
-            'getUsuariosSeniorLookup',
+            'excluirSetor',
+            'getLookupSetores',
+            
+            // Cadastro Tipos de Manutenção
             'cadastroTipoManutencao',
             'listarTiposManutencao',
             'salvarTipoManutencao',
             'excluirTipoManutencao',
+            'getLookupTiposManutencao',
+            
+            // Cadastro Técnicos
+            'cadastroTecnico',
+            'listarTecnicos',
+            'salvarTecnico',
+            'excluirTecnico',
+            'getLookupTecnicos',
+            
+            // Cadastro Equipamentos
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
             'excluirEquipamento',
-            'getCentroCustoLookup'
+            'getLookupEquipamentos',
+            
+            // Programação Manutenção Preventiva
+            'programacaoManPreventiva',
+            'listarProgramacaoPreventiva',
+            'salvarProgramacaoPreventiva',
+            'pausarProgramacao',
+            'retomarProgramacao',
+            'cancelarProgramacao',
+            'gerarOsPreventiva',
+            
+            // Controle de Manutenção
+            'controleManutencao',
+            'listarControlesManutencao',
+            'salvarControleManutencao',
+            'excluirControleManutencao',
+            'validarOsApontamentos',
+            'getApontamentosOs',
+            'getItensUtilizadosOs',
+            'apontamentosManutencaoOs',
+            'getInfoOrdemServico',
+            'finalizarOs',
+            
+            // Controle Retiradas Estoque
+            'retiradaEstoque',
+            'listarItensPendentes',
+            'marcarRetirada',
+            
+            // DASHBOARD Controle de Manutenção
+            'dashboardControleManutencao',
+            'listarDadosDashboardControleManutencao',
+            'detalhesCardsControleManutencao',
+            
+            // Lookups
+            'getUsuariosSeniorLookup',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup'
         ]);
 
         // Convidado
