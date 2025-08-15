@@ -38,6 +38,21 @@ abstract class BaseController extends AbstractActionController
             return $this->redirect()->toRoute('login');
         }
 
+        if ($this->session->user['id'] === 2) {
+            // // === Validação por MENU/ROTA ===
+            // $currentPath = $this->getRequest()->getUri()->getPath();
+            // if (!$this->usuarioTemAcessoMenu($this->session->user['id'], $currentPath)) {
+            //     if ($this->isJsonAction()) {
+            //         return $this->jsonResponse([
+            //             'success' => false,
+            //             'message' => 'Você não tem permissão para acessar este recurso.'
+            //         ], 403);
+            //     }
+            //     return $this->redirect()->toRoute('error', ['action' => 'unauthorized']);
+            // }
+        }
+
+
         // Obtém a role do usuário da sessão
         $role = $this->session->user['role'];
 
@@ -110,5 +125,27 @@ abstract class BaseController extends AbstractActionController
         // Converte a primeira letra para minúscula (camelCase)
         $string = lcfirst($string);
         return $string;
+    }
+
+
+    protected function usuarioTemAcessoMenu($usuarioId, $rota)
+    {
+        /** @var \Laminas\Db\Adapter\Adapter $db */
+        $db = $this->getEvent()
+                ->getApplication()
+                ->getServiceManager()
+                ->get('Laminas\Db\Adapter\Adapter');
+
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM usuario_menu um
+            INNER JOIN menu m ON um.menu_id = m.id
+            WHERE um.usuario_id = ? AND m.link = ?
+        ";
+
+        $stmt = $db->createStatement($sql, [$usuarioId, $rota]);
+        $result = $stmt->execute()->current();
+
+        return !empty($result['total']);
     }
 }

@@ -464,7 +464,7 @@ class PlanejamentoControleManutencaoRepository
                     LEFT JOIN equipamentos eq ON eq.id = pmp.equipamento_id
                     LEFT JOIN areas_tecnicas at ON at.id = pmp.area_tecnica_id
                     LEFT JOIN setores st ON st.id = pmp.setor_id
-                    where (eq.status = 'Ativo' or eq.status is null)
+                    where 1=1
                     and pmp.status_programacao <> 'Cancelada'
                     ORDER BY pmp.proxima_execucao ASC";
             $result = $this->adapter->createStatement($sql)->execute();
@@ -507,10 +507,11 @@ class PlanejamentoControleManutencaoRepository
                 if ($result) {
                     if ($result['data_programada'] != $data['data_programada'] || $result['periodicidade_dias'] != $periodicidade_dias) {
                         $recalcularProxima = true;
+                        $data['proxima_execucao'] = $data['data_programada'];
+                    } else {
+                        $data['proxima_execucao'] = $data['proxima_execucao'];
                     }
                 }
-
-                $proxima_execucao = $recalcularProxima ? date('Y-m-d', strtotime($data['data_programada'].' +'.$periodicidade_dias.' days')) : null;
 
                 $sql = 'UPDATE programacao_manutencao_preventiva SET 
                             equipamento_id = :equipamento_id,
@@ -520,12 +521,12 @@ class PlanejamentoControleManutencaoRepository
                             observacoes = :observacoes,
                             info_servico = :info_servico,
                             data_programada = :data_programada,
+                            proxima_execucao = :proxima_execucao,
                             periodicidade_dias = :periodicidade_dias,
                             setor_id = :setor_id,
                             tipo_ordem_servico = :tipo_ordem_servico,
                             status_programacao = :status_programacao,
-                            motivo_cancelamento = :motivo_cancelamento'
-                            .($recalcularProxima ? ', proxima_execucao = :proxima_execucao' : '').'
+                            motivo_cancelamento = :motivo_cancelamento
                         WHERE id = :id';
 
                 $params = [
@@ -536,6 +537,7 @@ class PlanejamentoControleManutencaoRepository
                     ':observacoes' => $data['observacoes'] ?? null,
                     ':info_servico' => $data['info_servico'] ?? null,
                     ':data_programada' => $data['data_programada'],
+                    ':proxima_execucao' => $data['proxima_execucao'],
                     ':periodicidade_dias' => $periodicidade_dias,
                     ':setor_id' => $data['setor_id'],
                     ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
@@ -544,9 +546,6 @@ class PlanejamentoControleManutencaoRepository
                     ':id' => $data['id']
                 ];
 
-                if ($recalcularProxima) {
-                    $params[':proxima_execucao'] = $proxima_execucao;
-                }
             } else {
                 // Inserção nova
                 $sql = 'INSERT INTO programacao_manutencao_preventiva (
