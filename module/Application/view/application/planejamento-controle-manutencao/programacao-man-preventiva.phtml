@@ -1,3 +1,26 @@
+<style>
+    /* teste template equipamentos selectBox */
+    .equipamento-template {
+        padding: 8px;
+        line-height: 1.4;
+    }
+
+    .equipamento-header {
+        font-size: 14px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 3px;
+    }
+
+    .equipamento-details {
+        font-size: 12px;
+        color: #020202ff;
+    }
+
+    .equipamento-details div {
+        margin-bottom: 2px;
+    }
+</style>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
@@ -249,7 +272,7 @@
                                 }),
                                 valueExpr: 'id',
                                 searchEnabled: true,
-                                searchExpr: ['codigo', 'nome', 'setor_nome', 'centro_custo'],
+                                searchExpr: ['codigo', 'nome', 'setor_nome', 'centro_custo', 'observacoes'],
                                 searchTimeout: 500,
                                 minSearchLength: 0,
                                 itemTemplate: function(data) {

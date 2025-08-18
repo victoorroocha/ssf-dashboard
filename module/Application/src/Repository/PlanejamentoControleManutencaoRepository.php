@@ -423,12 +423,14 @@ class PlanejamentoControleManutencaoRepository
             // Acrescenta filtro de pesquisa se houver
             $ands = "";
             if (!empty($search)) {
-                $ands .= " AND (e.codigo || '-' || e.nome || COALESCE(
-                            CASE 
-                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
-                            END, 
-                            ''
-                        )) LIKE '%{$search}%' ";
+                // Remove caracteres especiais para evitar problemas na busca
+                $searchTerm = str_replace(['%', '_'], ['\%', '\_'], $search);
+                
+                $ands .= " AND (e.codigo::text ILIKE '%{$searchTerm}%' 
+                            OR e.nome::text ILIKE '%{$searchTerm}%' 
+                            OR s.nome::text ILIKE '%{$searchTerm}%' 
+                            OR e.observacoes::text ILIKE '%{$searchTerm}%' 
+                            OR e.centro_custo::text ILIKE '%{$searchTerm}%') ";
             }
 
             if (!empty($key)) {
