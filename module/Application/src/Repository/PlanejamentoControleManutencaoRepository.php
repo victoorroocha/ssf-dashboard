@@ -339,7 +339,25 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Equipamentos
         public function listarEquipamentos()
         {
-            $sql = "SELECT id, codigo, nome, (codigo || '-' || nome) as dsc_equipamento, setor_id, status, observacoes, centro_custo FROM equipamentos ORDER BY codigo";
+            $sql = "SELECT 
+                        e.id, 
+                        e.codigo, 
+                        e.nome, 
+                        e.codigo || '-' || e.nome ||
+                        COALESCE(
+                            CASE 
+                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
+                            END, 
+                            ''
+                        ) AS dsc_equipamento,
+                        e.setor_id, 
+                        s.nome as setor_nome,
+                        e.status, 
+                        e.observacoes, 
+                        e.centro_custo 
+                    FROM equipamentos e
+                    left join setores s on s.id = e.setor_id 
+                    ORDER BY codigo";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -400,16 +418,67 @@ class PlanejamentoControleManutencaoRepository
             $sql = 'DELETE FROM equipamentos WHERE id = :id';
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
         }
-        public function getLookupEquipamentos()
+        public function getLookupEquipamentos($search = null, $key = null, $offset = 0, $limit = 30)
         {
-            $sql = "SELECT id, codigo, nome, (codigo || '-' || nome) as dsc_equipamento, setor_id, status, observacoes, centro_custo FROM equipamentos where status NOT LIKE 'Inativo' ORDER BY codigo";
+            // Acrescenta filtro de pesquisa se houver
+            $ands = "";
+            if (!empty($search)) {
+                $ands .= " AND (e.codigo || '-' || e.nome || COALESCE(
+                            CASE 
+                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
+                            END, 
+                            ''
+                        )) LIKE '%{$search}%' ";
+            }
+
+            if (!empty($key)) {
+                $ands .= " AND e.id = $key ";
+            }
+            
+            // Query principal com paginação
+            $sql = "SELECT 
+                        e.id, 
+                        e.codigo, 
+                        e.nome, 
+                        e.codigo || '-' || e.nome || COALESCE(
+                            CASE 
+                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
+                            END, 
+                            ''
+                        ) AS dsc_equipamento,
+                        e.setor_id, 
+                        s.nome as setor_nome,
+                        e.status, 
+                        e.observacoes, 
+                        e.centro_custo 
+                    FROM equipamentos e
+                    LEFT JOIN setores s ON s.id = e.setor_id 
+                    WHERE status NOT LIKE 'Inativo'
+                    {$ands}
+                    ORDER BY codigo
+                    LIMIT $limit OFFSET $offset";  // Paginação incluída aqui
+                    
             $result = $this->adapter->createStatement($sql)->execute();
+
+            // Query para contar o total de registros (para paginação)
+            $countSql = "SELECT COUNT(*) as total 
+                        FROM equipamentos e
+                        LEFT JOIN setores s ON s.id = e.setor_id 
+                        WHERE status NOT LIKE 'Inativo'
+                        {$ands}";
+                        
+            $countResult = $this->adapter->createStatement($countSql)->execute()->current();
+            $totalCount = $countResult['total'] ?? 0;
 
             $data = [];
             foreach ($result as $row) {
                 $data[] = $row;
             }
-            return $data;
+            
+            return [
+                'data' => $data,
+                'totalCount' => $totalCount
+            ];
         }
         public function atualizarStatusEquipamentos() // Essa função atualiza o status dos equipamentos com base nas manutenções ativas
         {
@@ -523,6 +592,7 @@ class PlanejamentoControleManutencaoRepository
                             data_programada = :data_programada,
                             proxima_execucao = :proxima_execucao,
                             periodicidade_dias = :periodicidade_dias,
+                            dias_aviso = :dias_aviso,
                             setor_id = :setor_id,
                             tipo_ordem_servico = :tipo_ordem_servico,
                             status_programacao = :status_programacao,
@@ -539,6 +609,7 @@ class PlanejamentoControleManutencaoRepository
                     ':data_programada' => $data['data_programada'],
                     ':proxima_execucao' => $data['proxima_execucao'],
                     ':periodicidade_dias' => $periodicidade_dias,
+                    ':dias_aviso' => $data['dias_aviso'] ?? null,
                     ':setor_id' => $data['setor_id'],
                     ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
                     ':status_programacao' => $status_programacao,
@@ -557,6 +628,7 @@ class PlanejamentoControleManutencaoRepository
                     observacoes,
                     data_programada,
                     periodicidade_dias,
+                    dias_aviso,
                     setor_id,
                     tipo_ordem_servico,
                     status_programacao,
@@ -570,6 +642,7 @@ class PlanejamentoControleManutencaoRepository
                     :observacoes,
                     :data_programada,
                     :periodicidade_dias,
+                    :dias_aviso,
                     :setor_id,
                     :tipo_ordem_servico,
                     :status_programacao,
@@ -585,6 +658,7 @@ class PlanejamentoControleManutencaoRepository
                     ':observacoes' => $data['observacoes'] ?? null,
                     ':data_programada' => $data['data_programada'],
                     ':periodicidade_dias' => $periodicidade_dias,
+                    ':dias_aviso' => $data['dias_aviso'] ?? null,
                     ':setor_id' => $data['setor_id'],
                     ':tipo_ordem_servico' => $data['tipo_ordem_servico'],
                     ':status_programacao' => $status_programacao,
@@ -692,6 +766,10 @@ class PlanejamentoControleManutencaoRepository
             if (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
                 $data['tipo_ordem_servico'] = 'Centro de Custo';
             } 
+
+            if (isset($data['data_inicio']) && $data['data_inicio'] !== null) {
+                $data['status'] = 'Em Execução';
+            }
 
             $params = [
                 ':data_solicitacao' => $data['data_solicitacao'] ?? null,

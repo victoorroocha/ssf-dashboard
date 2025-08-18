@@ -188,14 +188,14 @@
                     position: { my: 'center', at: 'center', of: window }
                 },
                 form: {
-                    colCount: 2,
+                    colCount: 3,
                     labelLocation: 'top',
                     items: [
                         {
                             dataField: 'tipo_ordem_servico',
                             editorType: 'dxSelectBox',
                             label: { text: 'Tipo Ordem de Serviço' },
-                            colSpan: 2,
+                            colSpan: 3,
                             editorOptions: {
                                 items: ['Equipamento', 'Centro de Custo'],
                                 placeholder: 'Selecione o tipo',
@@ -206,13 +206,78 @@
                             dataField: 'equipamento_id', 
                             label: { text: 'Equipamento' }, 
                             editorType: 'dxSelectBox', 
-                            colSpan: 2, 
+                            colSpan: 3, 
                             visible: false,
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-equipamentos', 'nome', 'id', 'Selecione o equipamento') 
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'id',
+                                        load: function(loadOptions) {
+                                            const deferred = $.Deferred();
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+                                            
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-lookup-equipamentos',
+                                                dataType: 'json',
+                                                data: { 
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || result;
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || 1000 // Número estimado ou real
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function(key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-lookup-equipamentos', // Nova rota específica
+                                                dataType: 'json',
+                                                data: { key: key } // Envia como parâmetro GET
+                                            }).then(result => result.data || result);
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30 // Tamanho padrão da página
+                                }),
+                                valueExpr: 'id',
+                                searchEnabled: true,
+                                searchExpr: ['codigo', 'nome', 'setor_nome', 'centro_custo'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                itemTemplate: function(data) {
+                                    return `
+                                        <div class="equipamento-template">
+                                            <div class="equipamento-header">
+                                                <strong>${data.codigo || 'Sem código'}</strong> - ${data.nome || 'Sem nome'}
+                                            </div>
+                                            <div class="equipamento-details">
+                                                <div><small><strong>Setor:</strong> ${data.setor_nome || 'Não informada'}</small></div>
+                                                <div><small><strong>Centro de Custo:</strong> ${data.centro_custo || 'Não informado'}</small></div>
+                                                <div><small><strong>Status:</strong> ${data.status || 'Não informado'}</small></div>
+                                                <div><small><strong>Observação:</strong> ${data.observacoes || 'Nenhuma'}</small></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                },
+                                displayExpr: function(item) {
+                                    return item ? `${item.codigo} - ${item.nome}` : '';
+                                },
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            } 
                         },
                         { 
                             dataField: 'centro_custo_id', 
-                            colSpan: 2,
+                            colSpan: 3,
                             editorType: 'dxSelectBox', 
                             label: { text: 'Centro de Custo' }, 
                             visible: false,
@@ -222,7 +287,7 @@
                             dataField: 'nome_solicitante',
                             label: { text: 'Nome do Solicitante' },
                             editorType: 'dxSelectBox',
-                            colSpan: 2,
+                            colSpan: 3,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-usuarios-senior-lookup', 'NOME_COLABORADOR', 'NOME_COLABORADOR', 'Selecione o solicitante'),
                             validationRules: [{ type: 'required', message: 'Solicitante é obrigatório' }]
                         },
@@ -230,7 +295,7 @@
                             dataField: 'area_tecnica_id',
                             label: { text: 'Área Técnica' },
                             editorType: 'dxSelectBox',
-                            colSpan: 2,
+                            colSpan: 3,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-areas', 'nome', 'id', 'Selecione a área técnica'),
                             validationRules: [{ type: 'required', message: 'Área Técnica é obrigatória' }]
                         },
@@ -238,7 +303,7 @@
                             dataField: 'setor_id',
                             label: { text: 'Setor' },
                             editorType: 'dxSelectBox',
-                            colSpan: 2,
+                            colSpan: 3,
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor'),
                             validationRules: [{ type: 'required', message: 'Setor é obrigatório' }]
                         },
@@ -258,8 +323,16 @@
                             editorOptions: { min: 1, showSpinButtons: true },
                             validationRules: [{ type: 'required', message: 'Periodicidade é obrigatória' }]
                         },
-                        { dataField: 'info_servico', label: { text: 'Informações do Serviço' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
-                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                        {
+                            dataField: 'dias_aviso',
+                            label: { text: 'Dias Aviso' },
+                            editorType: 'dxNumberBox',
+                            colSpan: 1,
+                            editorOptions: { min: 1, showSpinButtons: true },
+                            // validationRules: [{ type: 'required', message: 'Periodicidade é obrigatória' }]
+                        },
+                        { dataField: 'info_servico', label: { text: 'Check-List' }, editorType: 'dxTextArea', colSpan: 3, editorOptions: { height: 60 } },
+                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 3, editorOptions: { height: 60 } },
                     ]
                 },
                 texts: {
@@ -324,7 +397,13 @@
                     caption: 'Periodicidade (dias)', 
                     alignment: 'center',
                 },
-                { dataField: 'info_servico', caption: 'Informações do Serviço', visible: false },
+                { 
+                    dataField: 'dias_aviso', 
+                    caption: 'Dias Aviso', 
+                    alignment: 'center',
+                    visible: false
+                },
+                { dataField: 'info_servico', caption: 'Check-List', visible: false },
                 { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
                 {
                     dataField: 'status_programacao',
@@ -436,18 +515,18 @@
             },
             onRowPrepared: function (e) {
                 if (e.rowType === 'data') {
-                    const status = (e.data.status || '').toLowerCase();
+                    const diasAviso = e.data.dias_aviso ? parseInt(e.data.dias_aviso) : 0;
+                    const proximaExecucao = e.data.proxima_execucao ? new Date(e.data.proxima_execucao) : null;
+                    const hoje = new Date();
 
-                    switch (status) {
-                        case 'pendente':
-                            e.rowElement.css({ backgroundColor: '#FFF3CD', color: '#856404' });
-                            break;
-                        case 'programada':
-                            e.rowElement.css({ backgroundColor: '#D1ECF1', color: '#0C5460' });
-                            break;
-                        case 'finalizada':
-                            e.rowElement.css({ backgroundColor: '#D4EDDA', color: '#155724' });
-                            break;
+                    if (diasAviso > 0 && proximaExecucao) {
+                        const diffTime = proximaExecucao.getTime() - hoje.getTime();
+                        const diffDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        // Dentro do período de aviso (entre hoje e a data programada)
+                        if (diffDias >= 0 && diffDias <= diasAviso) {
+                            e.rowElement.css({ backgroundColor: '#F8D7DA', color: '#000' }); // Vermelho claro
+                        }
                     }
                 }
             },

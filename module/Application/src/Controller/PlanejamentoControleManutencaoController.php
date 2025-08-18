@@ -457,16 +457,20 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
         public function getLookupEquipamentosAction() // Esse Lookup para os controles, não lista equipamentos inativos!
         {
-            try {
-                $equipamentos = $this->PlanejamentoControleManutencaoRepository->getLookupEquipamentos();
+            // Recebe o parâmetro de pesquisa
+            $key = $this->params()->fromQuery('key', '');
+            $search = $this->params()->fromQuery('search', '');
+            $search = strtoupper(trim($search));
+            $offset = $this->params()->fromQuery('offset', 0);
+            $limit = $this->params()->fromQuery('limit', 30);
 
-                foreach ($equipamentos as $key => $equipamento) {
-                    $equipamentos[$key]['nome'] = $equipamento['codigo'] . ' - ' . $equipamento['nome'];
-                }
+            try {
+                $result = $this->PlanejamentoControleManutencaoRepository->getLookupEquipamentos($search, $key, $offset, $limit);
 
                 return new JsonModel([
                     'success' => true,
-                    'data' => $equipamentos,
+                    'data' => $result['data'],
+                    'totalCount' => $result['totalCount']
                 ]);
             } catch (\Exception $e) {
                 return new JsonModel([
