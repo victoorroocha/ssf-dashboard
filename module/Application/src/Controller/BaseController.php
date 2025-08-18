@@ -38,20 +38,19 @@ abstract class BaseController extends AbstractActionController
             return $this->redirect()->toRoute('login');
         }
 
-        if ($this->session->user['id'] === 2) {
-            // // === Validação por MENU/ROTA ===
-            // $currentPath = $this->getRequest()->getUri()->getPath();
-            // if (!$this->usuarioTemAcessoMenu($this->session->user['id'], $currentPath)) {
-            //     if ($this->isJsonAction()) {
-            //         return $this->jsonResponse([
-            //             'success' => false,
-            //             'message' => 'Você não tem permissão para acessar este recurso.'
-            //         ], 403);
-            //     }
-            //     return $this->redirect()->toRoute('error', ['action' => 'unauthorized']);
-            // }
-        }
+        if ($this->session->user['role'] != 'Administrador') {
+            // === Validação por MENU/ROTA ===
+            $currentPath = $this->getRequest()->getUri()->getPath();
 
+            if (!$this->usuarioTemAcessoMenu($this->session->user['id'], $currentPath) 
+                && ($currentPath != '/')
+                && ($currentPath != '/login')
+                && ($currentPath != '/logout')
+                && ($currentPath != '/usuario/perfil-usuario')
+            ) {
+                return $this->redirect()->toRoute('error', ['action' => 'unauthorized']);
+            }
+        }
 
         // Obtém a role do usuário da sessão
         $role = $this->session->user['role'];
@@ -126,9 +125,7 @@ abstract class BaseController extends AbstractActionController
         $string = lcfirst($string);
         return $string;
     }
-
-
-    protected function usuarioTemAcessoMenu($usuarioId, $rota)
+    protected function usuarioTemAcessoMenu($usuarioId, $currentPath)
     {
         /** @var \Laminas\Db\Adapter\Adapter $db */
         $db = $this->getEvent()
@@ -136,14 +133,19 @@ abstract class BaseController extends AbstractActionController
                 ->getServiceManager()
                 ->get('Laminas\Db\Adapter\Adapter');
 
+        // Pega a primeira parte da rota (ex: "/credito-e-cobranca/")
+        $pathParts = explode('/', trim($currentPath, '/'));
+        $moduloPrincipal = '/' . $pathParts[0] . '/'; // Formata como "/credito-e-cobranca/"
+
+        // Verifica se o usuário tem acesso a qualquer menu dentro desse módulo
         $sql = "
             SELECT COUNT(*) AS total
             FROM usuario_menu um
             INNER JOIN menu m ON um.menu_id = m.id
-            WHERE um.usuario_id = ? AND m.link = ?
+            WHERE um.usuario_id = ?
+            AND m.link LIKE ? || '%'
         ";
-
-        $stmt = $db->createStatement($sql, [$usuarioId, $rota]);
+        $stmt = $db->createStatement($sql, [$usuarioId, $moduloPrincipal]);
         $result = $stmt->execute()->current();
 
         return !empty($result['total']);

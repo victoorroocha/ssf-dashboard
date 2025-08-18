@@ -119,14 +119,13 @@
                 }
             },
             rowDragging: {
-                allowDropInsideItem: true, // Permite arrastar dentro de um item
-                allowReordering: true, // Permite reordenar as linhas
+                allowDropInsideItem: true,
+                allowReordering: true,
                 onDragChange(e) {
                     const visibleRows = e.component.getVisibleRows();
                     const sourceNode = e.component.getNodeByKey(e.itemData.id);
                     let targetNode = visibleRows[e.toIndex].node;
 
-                    // Previne a ação se tentar arrastar um item para dentro dele mesmo
                     while (targetNode && targetNode.data) {
                         if (targetNode.data.id === sourceNode.data.id) {
                             e.cancel = true;
@@ -140,14 +139,12 @@
                     const visibleRows = e.component.getVisibleRows();
                     let targetData = visibleRows[e.toIndex].node.data;
 
-                    // Atualiza o campo parent_id com base na posição reordenada
                     if (e.dropInsideItem) {
                         sourceData.parent_id = targetData.id;
                     } else {
                         sourceData.parent_id = targetData ? targetData.parent_id : e.component.option('rootValue');
                     }
 
-                    // Atualiza os dados no servidor ou no modelo
                     $.ajax({
                         url: '/controladoria/atualizar-plano-conta',
                         method: 'PUT',
@@ -231,6 +228,7 @@
                     alignment: 'center',
                     width: 150,
                     lookup: {
+                        allowClearing: true,
                         dataSource: [
                             { value: 'S', text: 'Sintética' },
                             { value: 'A', text: 'Analítica' }
@@ -240,25 +238,47 @@
                     }
                 },
                 {
-                    dataField: 'ilevel',
-                    caption: 'ILevel',
+                    dataField: 'id_grupo_contas',
+                    caption: 'Grupo de Contas',
                     lookup: {
-                        dataSource: [
-                            { value: 'Gross Revenue' },
-                            { value: 'Sales Taxes' },
-                            { value: 'Devolutions' },
-                            { value: 'Others Non Recurring' },
-                            { value: 'COGS' },
-                            { value: 'G&A From Operations' },
-                            { value: 'Other Sales Expenses' },
-                            { value: 'Logistics Expenses' },
-                            { value: 'Depreciation and Amortization' },
-                            { value: 'Rent expenses' },
-                            { value: 'Financial Revenues' },
-                            { value: 'Financial Expenses - IS' }
-                        ],
-                        valueExpr: 'value',
-                        displayExpr: 'value'
+                        allowClearing: true,
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: 'id',
+                            loadMode: 'raw',
+                            load: function() {
+                                return $.ajax({
+                                    url: '/controladoria/get-lookup-grupo-contas',
+                                    method: 'GET',
+                                    dataType: 'json'
+                                }).then(response => {
+                                    return response.success ? response.data : [];
+                                });
+                            }
+                        }),
+                        valueExpr: 'id',
+                        displayExpr: 'nome'
+                    }
+                },
+                {
+                    dataField: 'id_pacote_contas',
+                    caption: 'Pacote de Contas',
+                    lookup: {
+                        allowClearing: true,
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: 'id',
+                            loadMode: 'raw',
+                            load: function() {
+                                return $.ajax({
+                                    url: '/controladoria/get-lookup-pacote-contas',
+                                    method: 'GET',
+                                    dataType: 'json'
+                                }).then(response => {
+                                    return response.success ? response.data : [];
+                                });
+                            }
+                        }),
+                        valueExpr: 'id',
+                        displayExpr: 'nome'
                     }
                 },
             ],
@@ -267,9 +287,6 @@
             },
             onEditorPreparing: function (e) {
                 if (e.parentType === "dataRow") {
-                    if (e.dataField === "ilevel" && e.row && e.row.data.anasin === 'S') {
-                        e.editorOptions.disabled = true;
-                    }
                     if (e.dataField === "clacta") {
                         e.editorOptions.onValueChanged = function (args) {
                             const clactaValue = args.value;
@@ -305,14 +322,11 @@
             },
             onRowPrepared: function (e) {
                 if (e.rowType === 'data') {
-                    const anasin = (e.data.anasin || '').toUpperCase(); // Tipo de conta
-                    const natcta = (e.data.natcta || '').toUpperCase(); // Natureza da conta
-                    const codigo = e.data.codigo || ''; // Estrutura da conta (ex: 1.1.1.1)
-
-                    // Calcula o nível com base na quantidade de pontos
+                    const anasin = (e.data.anasin || '').toUpperCase();
+                    const natcta = (e.data.natcta || '').toUpperCase();
+                    const codigo = e.data.codigo || '';
                     const nivel = (codigo.match(/\./g) || []).length + 1;
 
-                    // Limpa estilos antigos
                     e.rowElement.css({
                         'background-color': '',
                         'font-weight': '',
@@ -320,12 +334,11 @@
                     });
 
                     if (anasin === 'S') {
-                        // Sintética: aplicar diferentes tons de cinza conforme o nível
                         let bgColor = '#f5f5f5';
                         if (nivel === 1) bgColor = '#d0d0d0';       
                         else if (nivel === 2) bgColor = '#e0e0e0';  
                         else if (nivel === 3) bgColor = '#f5f5f5';  
-                        else bgColor = '#ebebeb'; // Níveis mais profundos
+                        else bgColor = '#ebebeb';
 
                         e.rowElement.css({
                             'background-color': bgColor,
@@ -333,15 +346,14 @@
                             'color': '#000000'
                         });
                     } else {
-                        // Analíticas (último nível): fundo branco
                         e.rowElement.css('background-color', '#ffffff');
 
                         if (natcta === 'C') {
-                            e.rowElement.css('color', '#198754'); // Verde para Crédito
+                            e.rowElement.css('color', '#198754');
                         } else if (natcta === 'D') {
-                            e.rowElement.css('color', '#dc3545'); // Vermelho para Débito
+                            e.rowElement.css('color', '#dc3545');
                         } else {
-                            e.rowElement.css('color', '#000000'); // Padrão
+                            e.rowElement.css('color', '#000000');
                         }
                     }
                 }

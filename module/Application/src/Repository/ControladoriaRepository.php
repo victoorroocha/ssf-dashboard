@@ -194,10 +194,6 @@ class ControladoriaRepository
     }
 
 
-
-
-
-
     #region Estrutura Contas
         public function listarPlanoContas()
         {
@@ -211,7 +207,8 @@ class ControladoriaRepository
                     ctared, 
                     natcta, 
                     anasin, 
-                    ilevel 
+                    id_grupo_contas,
+                    id_pacote_contas 
                 FROM 
                     plano_contas
                 ORDER BY 
@@ -231,8 +228,11 @@ class ControladoriaRepository
         }
         public function inserirPlanoConta(array $data)
         {
-            $sql = 'INSERT INTO plano_contas (parent_id, clacta, descta, codigo, ctared, natcta, anasin, ilevel) 
-                    VALUES (:parent_id, :clacta, :descta, :codigo, :ctared, :natcta, :anasin, :ilevel)';
+            $sql = 'INSERT INTO plano_contas 
+                    (parent_id, clacta, descta, codigo, ctared, natcta, anasin, id_grupo_contas, id_pacote_contas) 
+                    VALUES 
+                    (:parent_id, :clacta, :descta, :codigo, :ctared, :natcta, :anasin, :id_grupo_contas, :id_pacote_contas)';
+            
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([
                 ':parent_id' => $data['parent_id'] ?? null,
@@ -242,21 +242,25 @@ class ControladoriaRepository
                 ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
                 ':natcta' => $data['natcta'] ?? null,
                 ':anasin' => $data['anasin'] ?? null,
-                ':ilevel' => $data['ilevel'] ?? null
+                ':id_grupo_contas' => $data['id_grupo_contas'] ?? null,
+                ':id_pacote_contas' => $data['id_pacote_contas'] ?? null
             ]);
         }
         public function atualizarPlanoConta(array $data)
         {
             $sql = 'UPDATE plano_contas 
-                        SET parent_id = :parent_id, 
-                            clacta = :clacta, 
-                            descta = :descta, 
-                            codigo = :codigo, 
-                            ctared = :ctared, 
-                            natcta = :natcta, 
-                            anasin = :anasin, 
-                            ilevel = :ilevel 
+                    SET 
+                        parent_id = :parent_id, 
+                        clacta = :clacta, 
+                        descta = :descta, 
+                        codigo = :codigo, 
+                        ctared = :ctared, 
+                        natcta = :natcta, 
+                        anasin = :anasin, 
+                        id_grupo_contas = :id_grupo_contas,
+                        id_pacote_contas = :id_pacote_contas
                     WHERE id = :id';
+            
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([
                 ':id' => $data['id'],
@@ -267,7 +271,8 @@ class ControladoriaRepository
                 ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
                 ':natcta' => $data['natcta'] ?? null,
                 ':anasin' => $data['anasin'] ?? null,
-                ':ilevel' => $data['ilevel'] ?? null,
+                ':id_grupo_contas' => $data['id_grupo_contas'] ?? null,
+                ':id_pacote_contas' => $data['id_pacote_contas'] ?? null
             ]);
         }
         public function excluirPlanoConta($id)
@@ -312,4 +317,153 @@ class ControladoriaRepository
                     ORDER BY CLACTA"; 
         }
     #endRegion
+
+    #region Cadastro Grupos Contas
+        public function listarGrupoContas()
+        {
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM grupo_contas ORDER BY nome'; 
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function salvarGrupoContas(array $data)
+        {
+            if (empty($data['nome'])) {
+                throw new \Exception('Nome do Grupo Contas é obrigatório.');
+            }
+
+            $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : false;
+
+            if (!empty($data['id'])) {
+                // Atualizar
+                $sql = 'UPDATE grupo_contas SET 
+                            nome = :nome, 
+                            descricao = :descricao,
+                            flg_ativo = :flg_ativo
+                        WHERE id = :id';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                    ':id' => $data['id'],
+                ];
+            } else {
+                // Inserir
+                $sql = 'INSERT INTO grupo_contas (nome, descricao, flg_ativo) 
+                        VALUES (:nome, :descricao, :flg_ativo)';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                ];
+            }
+
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute($params);
+        }
+        public function excluirGrupoContas($id)
+        {
+            if (empty($id)) {
+                throw new \Exception('ID do Grupo Contas não fornecido.');
+            }
+
+            $sql = 'UPDATE grupo_contas SET flg_ativo = false WHERE id = :id';
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute([':id' => $id]);
+        }
+        public function getLookupGrupoContas()
+        {
+            $sql = 'SELECT id, nome, descricao FROM grupo_contas WHERE flg_ativo = true ORDER BY nome'; 
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    #endregion
+
+    #region Cadastro Pacote Contas
+        public function listarPacoteContas()
+        {
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM pacote_contas ORDER BY nome';
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function salvarPacoteContas(array $data)
+        {
+            if (empty($data['nome'])) {
+                throw new \Exception('Nome do Pacote de Contas é obrigatório.');
+            }
+
+            $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : false;
+
+            if (!empty($data['id'])) {
+                // Atualizar
+                $sql = 'UPDATE pacote_contas SET 
+                            nome = :nome, 
+                            descricao = :descricao,
+                            flg_ativo = :flg_ativo
+                        WHERE id = :id';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                    ':id' => $data['id'],
+                ];
+            } else {
+                // Inserir
+                $sql = 'INSERT INTO pacote_contas (nome, descricao, flg_ativo) 
+                        VALUES (:nome, :descricao, :flg_ativo)';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                ];
+            }
+
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute($params);
+        }
+        public function excluirPacoteContas($id)
+        {
+            if (empty($id)) {
+                throw new \Exception('ID do Pacote de Contas não fornecido.');
+            }
+
+            $sql = 'UPDATE pacote_contas SET flg_ativo = false WHERE id = :id';
+            $statement = $this->adapter->createStatement($sql);
+            $statement->execute([':id' => $id]);
+        }
+        public function getLookupPacoteContas()
+        {
+            $sql = 'SELECT id, nome, descricao FROM pacote_contas WHERE flg_ativo = true ORDER BY nome';
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    #endregion
+
 }

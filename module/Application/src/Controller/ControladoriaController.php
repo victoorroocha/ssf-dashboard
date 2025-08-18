@@ -183,16 +183,6 @@ class ControladoriaController extends BaseController
     }
 
 
-
-
-
-
-
-
-
-
-
-
     #region Estrutura Contas
         public function estruturaContasAction()
         {
@@ -341,6 +331,199 @@ class ControladoriaController extends BaseController
             }
         }
     #endRegion
+
+    #region Cadastro Grupos Contas
+        public function cadastroGrupoContasAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarGrupoContasAction()
+        {
+            try {
+                $grupoContas = $this->ControladoriaRepository->listarGrupoContas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $grupoContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar áreas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function salvarGrupoContasAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                if ($this->getRequest()->isPut()) {
+                    $this->ControladoriaRepository->salvarGrupoContas($data);
+                    $message = 'Grupo Contas atualizada com sucesso!';
+                } else {
+                    $this->ControladoriaRepository->salvarGrupoContas($data);
+                    $message = 'Grupo Contas adicionada com sucesso!';
+                }
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar Grupo Contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirGrupoContasAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->ControladoriaRepository->excluirGrupoContas($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Grupo Contas excluída com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir Grupo Contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function getLookupGrupoContasAction()
+        {
+            try {
+                $grupoContas = $this->ControladoriaRepository->getLookupGrupoContas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $grupoContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar áreas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endRegion
+
+    #region Cadastro Pacote Contas
+        public function cadastroPacoteContasAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarPacoteContasAction()
+        {
+            try {
+                $pacoteContas = $this->ControladoriaRepository->listarPacoteContas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $pacoteContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar Pacotes de Contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function salvarPacoteContasAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->ControladoriaRepository->salvarPacoteContas($data);
+                $message = $this->getRequest()->isPut()
+                    ? 'Pacote de Contas atualizado com sucesso!'
+                    : 'Pacote de Contas adicionado com sucesso!';
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar Pacote de Contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirPacoteContasAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->ControladoriaRepository->excluirPacoteContas($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Pacote de Contas excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir Pacote de Contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function getLookupPacoteContasAction()
+        {
+            try {
+                $pacoteContas = $this->ControladoriaRepository->getLookupPacoteContas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $pacoteContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar áreas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endregion
+
 
 
 }
