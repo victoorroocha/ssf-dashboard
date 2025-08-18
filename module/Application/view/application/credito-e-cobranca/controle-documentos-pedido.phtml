@@ -1849,189 +1849,191 @@
 
                 // Itera sobre cada vencimento
                 vencimentosAnoSafra.forEach((parcela, index) => {
-                     // Cria o layout de fundo com index concatenado na classe
-                    const layoutDiv = $(`<div class="layout-ssf pagina-nota-${index} hidden-print" style="page-break-after: always;"></div>`);
+                    if (parcela.valor_total !== "0.00") {
+                        // Cria o layout de fundo com index concatenado na classe
+                        const layoutDiv = $(`<div class="layout-ssf pagina-nota-${index} hidden-print" style="page-break-after: always;"></div>`);
 
-                    // Título centralizado
-                    layoutDiv.append(
-                        $('<div class="info-overlay"></div>')
-                            .text('NOTA PROMISSÓRIA')
-                            .css({
-                                top: '40mm',
-                                left: '0',
-                                width: '210mm',
-                                textAlign: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '18px',
-                                position: 'absolute'
-                            })
-                    );
+                        // Título centralizado
+                        layoutDiv.append(
+                            $('<div class="info-overlay"></div>')
+                                .text('NOTA PROMISSÓRIA')
+                                .css({
+                                    top: '40mm',
+                                    left: '0',
+                                    width: '210mm',
+                                    textAlign: 'center',
+                                    fontWeight: 'bold',
+                                    fontSize: '18px',
+                                    position: 'absolute'
+                                })
+                        );
 
-                    // Tabela com informações do cliente
-                    const tabelaInfo = $(`
-                        <table style="
-                            border-collapse: collapse;
-                            width: 175mm;
-                            margin: 0 auto;
-                            font-size: 10px;
-                            text-align: left;
-                        ">
-                            <tr>
-                                <td style="border: 1px solid #858796; padding: 4px;" colspan="3"><b>Nome/Razão Social:</b> ${dadosCliente.NOME_CLIENTE || ''}</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #858796; padding: 4px; "><b>Tipo Pessoa:</b> ${dadosCliente.TIPO_PESSOA === 'PF' ? 'Física' : dadosCliente.TIPO_PESSOA === 'PJ' ? 'Jurídica' : ''}</td>
-                                <td style="border: 1px solid #858796; padding: 4px;"><b>CPF/CNPJ:</b> ${formatarCPFCNPJ(dadosCliente.CGC_CPF_CLIENTE, dadosCliente.TIPO_PESSOA)}</td>
-                                <td style="border: 1px solid #858796; padding: 4px; "><b>Insc. Estadual:</b> ${dadosCliente.INSEST_CLIENTE || ''}</td>
-                            </tr>                                    
-                            <tr>
-                                <td style="border: 1px solid #858796; padding: 4px;"><b>Telefone 1:</b> ${dadosCliente.FONE1_CLIENTE || ''}</td>
-                                <td style="border: 1px solid #858796; padding: 4px;"><b>Telefone 2:</b> ${dadosCliente.FONE2_CLIENTE || ''}</td>
-                                <td style="border: 1px solid #858796; padding: 4px; width: 50%;"><b>Email:</b> ${dadosCliente.EMANFE_CLIENTE || ''}</td>
-                            </tr>
-                        </table>
-                    `).css({
-                        position: 'absolute',
-                        top: '55mm',
-                        left: '0',
-                        right: '0'
-                    });
-                    layoutDiv.append(tabelaInfo);
-
-                    // Adiciona texto da nota promissória
-                    const textoNota = $(`
-                        <div class="texto-nota">
-                            <p>
-                                Pagarei por essa única via de NOTA PROMISSÓRIA à Sementes São Francisco S/A, 
-                                pessoa jurídica, estabelecida a BR 060 Km22, Zona Rural, município de Rio Verde/GO, 
-                                inscrita no CNPJ sob nº 09.022.330/0001-52 e inscrição estadual nº 10.549.711-8 ou à sua ordem.
-                            </p>
-                        </div>
-                    `);
-                    layoutDiv.append(textoNota);
-
-                    // Adiciona tabela com valores e vencimento
-                    const tabelaValores = $(`
-                        <table class="tabela-valores">
-                         <thead>
+                        // Tabela com informações do cliente
+                        const tabelaInfo = $(`
+                            <table style="
+                                border-collapse: collapse;
+                                width: 175mm;
+                                margin: 0 auto;
+                                font-size: 10px;
+                                text-align: left;
+                            ">
                                 <tr>
-                                    <th colspan="5" style="border: 1px solid #000; padding: 4px; background-color: #f2f2f2; font-weight: bold;">
-                                        DETALHAMENTO COMPLETO DA NOTA PROMISSÓRIA
-                                    </th>
+                                    <td style="border: 1px solid #858796; padding: 4px;" colspan="3"><b>Nome/Razão Social:</b> ${dadosCliente.NOME_CLIENTE || ''}</td>
                                 </tr>
                                 <tr>
-                                    <th style="border: 1px solid #000; padding: 4px;">Nota Promissória Nº:</th>
-                                    <th style="border: 1px solid #000; padding: 4px;">Data da Emissão</th>
-                                    <th style="border: 1px solid #000; padding: 4px;">Nº Pedido</th>
-                                    <th style="border: 1px solid #000; padding: 4px;">Valor</th>
-                                    <th style="border: 1px solid #000; padding: 4px;">Vencimento</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    <td style="border: 1px solid #858796; padding: 4px; "><b>Tipo Pessoa:</b> ${dadosCliente.TIPO_PESSOA === 'PF' ? 'Física' : dadosCliente.TIPO_PESSOA === 'PJ' ? 'Jurídica' : ''}</td>
+                                    <td style="border: 1px solid #858796; padding: 4px;"><b>CPF/CNPJ:</b> ${formatarCPFCNPJ(dadosCliente.CGC_CPF_CLIENTE, dadosCliente.TIPO_PESSOA)}</td>
+                                    <td style="border: 1px solid #858796; padding: 4px; "><b>Insc. Estadual:</b> ${dadosCliente.INSEST_CLIENTE || ''}</td>
+                                </tr>                                    
                                 <tr>
-                                    <td style="border: 1px solid #000; padding: 4px;">${dadosCliente.CODIGO_PEDIDO} / ${index + 1}</td>
-                                    <td style="border: 1px solid #000; padding: 4px;">${formatarDataPorExtenso(formatarData(dadosCliente.DATA_PEDIDO))}</td>
-                                    <td style="border: 1px solid #000; padding: 4px;">${dadosCliente.CODIGO_PEDIDO}</td>
-                                    <td style="border: 1px solid #000; padding: 4px;">${formatarMoeda(parcela.valor_total)}</td>
-                                    <td style="border: 1px solid #000; padding: 4px;">${formatarDataPorExtenso(formatarData(parcela.vencimento))}</td>
-                                </tr>
-                                <tr>
-                                    <th style="border: 1px solid #000; padding: 4px;">Valor por extenso</th>
-                                    <td style="border: 1px solid #000; padding: 4px;" colspan="4">${numeroPorExtenso(parcela.valor_total)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    `);
-                    layoutDiv.append(tabelaValores);
-
-                    // Adiciona local e data
-                    const localData = $(`
-                        <div class="local-data">
-                            Rio Verde-GO, ${formatarData(new Date())}
-                        </div>
-                    `);
-                    layoutDiv.append(localData);
-
-                    // Adiciona área de assinatura
-                    const assinatura = $(`
-                        <div class="assinatura-container">
-                            <div class="linha-assinatura"></div>
-                            <div class="texto-assinatura">${dadosCliente.NOME_CLIENTE || ''}</div>
-                            <div class="texto-assinatura">${formatarCPFCNPJ(dadosCliente.CGC_CPF_CLIENTE, dadosCliente.TIPO_PESSOA) || ''}</div>
-                        </div>
-                    `);
-                    layoutDiv.append(assinatura);
-
-                    // Adiciona seção de AVALISTAS formatada como na imagem
-                    const avalistasSection = $(`
-                        <div class="avalistas-container">
-                            <table class="tabela-avalistas">
-                                <tr>
-                                    <th colspan="2" style="border: 1px solid #000; padding: 4px; background-color: #f2f2f2; font-weight: bold; text-align: center;"><b>DADOS DOS AVALISTAS (SE HOUVEREM)</b></th>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid #000; padding: 4px; width: 50%;">
-                                        <b>NOME DO AVALISTA 1:</b> ${avalistas[0] ? avalistas[0].NOME_CLIENTE_S_ID : ''}
-                                    </td>
-                                    <td style="border: 1px solid #000; padding: 4px; width: 50%;">
-                                        <b>NOME DO AVALISTA 2:</b> ${avalistas[1] ? avalistas[1].NOME_CLIENTE_S_ID : ''}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid #000; padding: 4px;">
-                                        <b>CPF/CNPJ Nº:</b> ${avalistas[0] ? formatarCPFCNPJ(avalistas[0].CGC_CPF_CLIENTE, avalistas[0].TIPO_PESSOA)  : ''}
-                                    </td>
-                                    <td style="border: 1px solid #000; padding: 4px;">
-                                        <b>CPF/CNPJ Nº:</b> ${avalistas[1] ? formatarCPFCNPJ(avalistas[1].CGC_CPF_CLIENTE, avalistas[1].TIPO_PESSOA) : ''}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid #000; padding: 4px;">
-                                        <b>ENDEREÇO DE COBRANÇA 1:</b> ${avalistas[0] ? avalistas[0].ENDERECO_CLIENTE : ''}
-                                    </td>
-                                    <td style="border: 1px solid #000; padding: 4px;">
-                                        <b>ENDEREÇO DE COBRANÇA 2:</b> ${avalistas[1] ? avalistas[1].ENDERECO_CLIENTE : ''}
-                                    </td>
+                                    <td style="border: 1px solid #858796; padding: 4px;"><b>Telefone 1:</b> ${dadosCliente.FONE1_CLIENTE || ''}</td>
+                                    <td style="border: 1px solid #858796; padding: 4px;"><b>Telefone 2:</b> ${dadosCliente.FONE2_CLIENTE || ''}</td>
+                                    <td style="border: 1px solid #858796; padding: 4px; width: 50%;"><b>Email:</b> ${dadosCliente.EMANFE_CLIENTE || ''}</td>
                                 </tr>
                             </table>
+                        `).css({
+                            position: 'absolute',
+                            top: '55mm',
+                            left: '0',
+                            right: '0'
+                        });
+                        layoutDiv.append(tabelaInfo);
 
-                            <div class="assinaturas-avalistas">
-                                <div class="assinatura-avalista">
-                                    <div class="linha-assinatura"></div>
-                                    <div class="nome-avalista">${avalistas[0] ? avalistas[0].NOME_CLIENTE_S_ID : 'Avalista 1'}</div>
-                                    <div class="nome-avalista">${avalistas[0] ? formatarCPFCNPJ(avalistas[0].CGC_CPF_CLIENTE, avalistas[0].TIPO_PESSOA) : ''}</div>
-                                </div>
-                                <div class="assinatura-avalista">
-                                    <div class="linha-assinatura"></div>
-                                    <div class="nome-avalista">${avalistas[1] ? avalistas[1].NOME_CLIENTE_S_ID : 'Avalista 2'}</div>
-                                    <div class="nome-avalista">${avalistas[1] ? formatarCPFCNPJ(avalistas[1].CGC_CPF_CLIENTE, avalistas[1].TIPO_PESSOA) : ''}</div>
+                        // Adiciona texto da nota promissória
+                        const textoNota = $(`
+                            <div class="texto-nota">
+                                <p>
+                                    Pagarei por essa única via de NOTA PROMISSÓRIA à Sementes São Francisco S/A, 
+                                    pessoa jurídica, estabelecida a BR 060 Km22, Zona Rural, município de Rio Verde/GO, 
+                                    inscrita no CNPJ sob nº 09.022.330/0001-52 e inscrição estadual nº 10.549.711-8 ou à sua ordem.
+                                </p>
+                            </div>
+                        `);
+                        layoutDiv.append(textoNota);
+
+                        // Adiciona tabela com valores e vencimento
+                        const tabelaValores = $(`
+                            <table class="tabela-valores">
+                            <thead>
+                                    <tr>
+                                        <th colspan="5" style="border: 1px solid #000; padding: 4px; background-color: #f2f2f2; font-weight: bold;">
+                                            DETALHAMENTO COMPLETO DA NOTA PROMISSÓRIA
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: 1px solid #000; padding: 4px;">Nota Promissória Nº:</th>
+                                        <th style="border: 1px solid #000; padding: 4px;">Data da Emissão</th>
+                                        <th style="border: 1px solid #000; padding: 4px;">Nº Pedido</th>
+                                        <th style="border: 1px solid #000; padding: 4px;">Valor</th>
+                                        <th style="border: 1px solid #000; padding: 4px;">Vencimento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 4px;">${dadosCliente.CODIGO_PEDIDO} / ${index + 1}</td>
+                                        <td style="border: 1px solid #000; padding: 4px;">${formatarDataPorExtenso(formatarData(dadosCliente.DATA_PEDIDO))}</td>
+                                        <td style="border: 1px solid #000; padding: 4px;">${dadosCliente.CODIGO_PEDIDO}</td>
+                                        <td style="border: 1px solid #000; padding: 4px;">${formatarMoeda(parcela.valor_total)}</td>
+                                        <td style="border: 1px solid #000; padding: 4px;">${formatarDataPorExtenso(formatarData(parcela.vencimento))}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: 1px solid #000; padding: 4px;">Valor por extenso</th>
+                                        <td style="border: 1px solid #000; padding: 4px;" colspan="4">${numeroPorExtenso(parcela.valor_total)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `);
+                        layoutDiv.append(tabelaValores);
+
+                        // Adiciona local e data
+                        const localData = $(`
+                            <div class="local-data">
+                                Rio Verde-GO, ${formatarData(new Date())}
+                            </div>
+                        `);
+                        layoutDiv.append(localData);
+
+                        // Adiciona área de assinatura
+                        const assinatura = $(`
+                            <div class="assinatura-container">
+                                <div class="linha-assinatura"></div>
+                                <div class="texto-assinatura">${dadosCliente.NOME_CLIENTE || ''}</div>
+                                <div class="texto-assinatura">${formatarCPFCNPJ(dadosCliente.CGC_CPF_CLIENTE, dadosCliente.TIPO_PESSOA) || ''}</div>
+                            </div>
+                        `);
+                        layoutDiv.append(assinatura);
+
+                        // Adiciona seção de AVALISTAS formatada como na imagem
+                        const avalistasSection = $(`
+                            <div class="avalistas-container">
+                                <table class="tabela-avalistas">
+                                    <tr>
+                                        <th colspan="2" style="border: 1px solid #000; padding: 4px; background-color: #f2f2f2; font-weight: bold; text-align: center;"><b>DADOS DOS AVALISTAS (SE HOUVEREM)</b></th>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 4px; width: 50%;">
+                                            <b>NOME DO AVALISTA 1:</b> ${avalistas[0] ? avalistas[0].NOME_CLIENTE_S_ID : ''}
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 4px; width: 50%;">
+                                            <b>NOME DO AVALISTA 2:</b> ${avalistas[1] ? avalistas[1].NOME_CLIENTE_S_ID : ''}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 4px;">
+                                            <b>CPF/CNPJ Nº:</b> ${avalistas[0] ? formatarCPFCNPJ(avalistas[0].CGC_CPF_CLIENTE, avalistas[0].TIPO_PESSOA)  : ''}
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 4px;">
+                                            <b>CPF/CNPJ Nº:</b> ${avalistas[1] ? formatarCPFCNPJ(avalistas[1].CGC_CPF_CLIENTE, avalistas[1].TIPO_PESSOA) : ''}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 4px;">
+                                            <b>ENDEREÇO DE COBRANÇA 1:</b> ${avalistas[0] ? avalistas[0].ENDERECO_CLIENTE : ''}
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 4px;">
+                                            <b>ENDEREÇO DE COBRANÇA 2:</b> ${avalistas[1] ? avalistas[1].ENDERECO_CLIENTE : ''}
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <div class="assinaturas-avalistas">
+                                    <div class="assinatura-avalista">
+                                        <div class="linha-assinatura"></div>
+                                        <div class="nome-avalista">${avalistas[0] ? avalistas[0].NOME_CLIENTE_S_ID : 'Avalista 1'}</div>
+                                        <div class="nome-avalista">${avalistas[0] ? formatarCPFCNPJ(avalistas[0].CGC_CPF_CLIENTE, avalistas[0].TIPO_PESSOA) : ''}</div>
+                                    </div>
+                                    <div class="assinatura-avalista">
+                                        <div class="linha-assinatura"></div>
+                                        <div class="nome-avalista">${avalistas[1] ? avalistas[1].NOME_CLIENTE_S_ID : 'Avalista 2'}</div>
+                                        <div class="nome-avalista">${avalistas[1] ? formatarCPFCNPJ(avalistas[1].CGC_CPF_CLIENTE, avalistas[1].TIPO_PESSOA) : ''}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `);
-                    layoutDiv.append(avalistasSection);
+                        `);
+                        layoutDiv.append(avalistasSection);
 
 
-                    // Adiciona termos e condições
-                    const termosSection = $(`
-                        <div class="termos-container">
-                            <p class="termo-item">
-                                • As informações e dados pessoais eventualmente coletados pelas Partes em razão da execução do presente Compromisso deverão ser utilizadas exclusivamente para os fins do Compromisso, sendo expressamente proibida a distribuição ou compartilhamento de quaisquer dados das Partes e/ou de seus respectivos acionistas, administradores, colaboradores, subcontratados e parceiros, obrigando-se as Partes ainda a: (a) observar os princípios da Lei 13.709 de 14 de agosto de 2018 no tratamento de dados pessoais ("LGPD"); (b) tomar as providências cabíveis decorrentes do início da vigência da LGPD, e (c) adotar as medidas de segurança, técnicas e organizacionais apropriadas para proteger os dados coletados, de forma que sejam armazenados conforme as melhores práticas de mercado e em estrito cumprimento à LGPD.
-                            </p>
+                        // Adiciona termos e condições
+                        const termosSection = $(`
+                            <div class="termos-container">
+                                <p class="termo-item">
+                                    • As informações e dados pessoais eventualmente coletados pelas Partes em razão da execução do presente Compromisso deverão ser utilizadas exclusivamente para os fins do Compromisso, sendo expressamente proibida a distribuição ou compartilhamento de quaisquer dados das Partes e/ou de seus respectivos acionistas, administradores, colaboradores, subcontratados e parceiros, obrigando-se as Partes ainda a: (a) observar os princípios da Lei 13.709 de 14 de agosto de 2018 no tratamento de dados pessoais ("LGPD"); (b) tomar as providências cabíveis decorrentes do início da vigência da LGPD, e (c) adotar as medidas de segurança, técnicas e organizacionais apropriadas para proteger os dados coletados, de forma que sejam armazenados conforme as melhores práticas de mercado e em estrito cumprimento à LGPD.
+                                </p>
+                                
+                                <p class="termo-item">
+                                    • As Partes admitem como válida a formalização e assinatura do presente instrumento por meio eletrônico, incluindo todas as páginas de assinatura e eventuais anexos, bem como declaram que representam a integralidade dos termos entre elas acordados, substituindo quaisquer outros acordos anteriores formalizados por qualquer outro meio, verbal, escrito, físico ou digital, nos termos dos art. 107, 219 e 220 do Código Civil.
+                                </p>
+                                
+                                <p class="termo-item">
+                                    • As partes concordam e aceitam que as assinaturas deste Contrato sejam realizadas de forma física ou por qualquer meio eletrônico, ainda que não utilizem certificado digital, nos termos do artigo 10, parágrafo 2º da MP 2.200-2/2001. Este instrumento, eletronicamente assinado, é aceito pelas Partes como prova documental e título executivo extrajudicial, para todos os fins e efeitos.
+                                </p>
+                            </div>
+                        `);
+                        layoutDiv.append(termosSection);
                             
-                            <p class="termo-item">
-                                • As Partes admitem como válida a formalização e assinatura do presente instrumento por meio eletrônico, incluindo todas as páginas de assinatura e eventuais anexos, bem como declaram que representam a integralidade dos termos entre elas acordados, substituindo quaisquer outros acordos anteriores formalizados por qualquer outro meio, verbal, escrito, físico ou digital, nos termos dos art. 107, 219 e 220 do Código Civil.
-                            </p>
-                            
-                            <p class="termo-item">
-                                • As partes concordam e aceitam que as assinaturas deste Contrato sejam realizadas de forma física ou por qualquer meio eletrônico, ainda que não utilizem certificado digital, nos termos do artigo 10, parágrafo 2º da MP 2.200-2/2001. Este instrumento, eletronicamente assinado, é aceito pelas Partes como prova documental e título executivo extrajudicial, para todos os fins e efeitos.
-                            </p>
-                        </div>
-                    `);
-                    layoutDiv.append(termosSection);
-                        
-                    // Adiciona o layout na seção
-                    $("#print-area-nota-promissoria").append(layoutDiv);
+                        // Adiciona o layout na seção
+                        $("#print-area-nota-promissoria").append(layoutDiv);
+                    }
                 });
 
                 // Aqui você pega o container inteiro
