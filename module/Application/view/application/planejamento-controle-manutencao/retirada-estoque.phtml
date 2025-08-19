@@ -62,7 +62,7 @@
             showBorders: true,
             groupPanel: { visible: true },
             grouping: {
-                autoExpandAll: false // deixa todos os grupos fechados inicialmente
+                autoExpandAll: true // deixa todos os grupos fechados inicialmente
             },
             pager: { visible: true },
             paging: { pageSize: 500 },
@@ -178,10 +178,15 @@
             },
             // Prepara a toolbar e captura a instância do botão (onInitialized)
             onToolbarPreparing: function(e) {
-                // evita duplicar o botão caso onToolbarPreparing seja chamado novamente
+                // Evita duplicar os botões caso onToolbarPreparing seja chamado novamente
                 e.toolbarOptions.items = e.toolbarOptions.items.filter(function(item) {
-                    return item.name !== 'marcarRetirada';
+                    return item.name !== 'marcarRetirada' && 
+                        item.name !== 'expandAll' && 
+                        item.name !== 'collapseAll' && 
+                        item.name !== 'refresh';
                 });
+                
+                // Botão Marcar Retirada
                 e.toolbarOptions.items.unshift({
                     name: 'marcarRetirada',
                     location: "after",
@@ -190,11 +195,9 @@
                         text: "Marcar Retirada",
                         icon: "check",
                         type: "success",
-                        disabled: true, // começa desabilitado
-                        // captura a instância do botão para controlar depois
+                        disabled: true,
                         onInitialized: function(evt) {
                             marcarRetiradaButton = evt.component;
-                            // garante estado correto (se já houver seleção)
                             try {
                                 const gridInstance = $('#gridRetiradaItens').dxDataGrid('instance');
                                 const keys = gridInstance ? gridInstance.getSelectedRowKeys() : [];
@@ -219,9 +222,52 @@
                             ).done(function(confirmed) {
                                 if (!confirmed) return;
                                 
-                                // Abre o popup do termo com os itens selecionados
                                 openTermoRetiradaPopup(selectedRows);
                             });
+                        }
+                    }
+                });
+
+                // Botão Expandir Todos (mantido igual ao original)
+                e.toolbarOptions.items.push({
+                    name: 'expandAll',
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll(); // Expande todos os grupos
+                        }
+                    }
+                });
+
+                // Botão Colapsar Todos (mantido igual ao original)
+                e.toolbarOptions.items.push({
+                    name: 'collapseAll',
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress", // Corrigi o nome do ícone de "compress"
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll(); // Colapsa todos os grupos
+                        }
+                    }
+                });
+
+                // Botão Atualizar
+                e.toolbarOptions.items.push({
+                    name: 'refresh',
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh",
+                        text: "Atualizar",
+                        onClick: function() {
+                            e.component.refresh(); // Atualiza a grid
                         }
                     }
                 });
@@ -238,8 +284,17 @@
 
         // Adicione esta função para gerar o termo de retirada
         function openTermoRetiradaPopup(selectedItems) {
+            // Agrupar itens por OS
+            const itensPorOS = {};
+            selectedItems.forEach(item => {
+                if (!itensPorOS[item.nr_ordem_servico]) {
+                    itensPorOS[item.nr_ordem_servico] = [];
+                }
+                itensPorOS[item.nr_ordem_servico].push(item);
+            });
+
             let termoPopup = $('#popupTermoRetirada').dxPopup({
-                width: 800,
+                width: 900,
                 height: 'auto',
                 title: 'Termo de Retirada de Materiais',
                 dragEnabled: true,
@@ -299,29 +354,34 @@
                         scrollByContent: true
                     });
 
-                    const termoContent = $(`
-                        <div id="termoRetiradaContent" style="padding: 20px; font-family: Arial, sans-serif;">
-                            <section id="print-termo-area">
+                    const termoContent = $('<div id="termoRetiradaContent" style="font-family: Arial, sans-serif;"></div>');
+
+                    // Criar uma página separada para cada OS
+                    Object.keys(itensPorOS).forEach((osNumber) => {
+                        const itensOS = itensPorOS[osNumber];
+                        
+                        const osPage = $(`
+                            <div class="os-page" style="padding: 20px; page-break-after: always;">
                                 <div style="text-align: center; margin-bottom: 20px;">
-                                    <h2>TERMO DE RETIRADA DE MATERIAIS</h2>
+                                    <h2>TERMO DE RETIRADA DE MATERIAIS - OS: ${osNumber}</h2>
                                     <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
                                 </div>
                                 
                                 <div style="margin-bottom: 20px;">
-                                    <p><strong>Reponsável por gerar Requisição: </strong> <?php echo $this->usuarioSessaoNome ?></p>
+                                    <p><strong>Responsável por gerar Requisição: </strong> <?php echo $this->usuarioSessaoNome ?></p>
                                 </div>
                                 
                                 <div style="margin-bottom: 20px;">
                                     <h3>Itens Retirados:</h3>
                                     <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
                                         <thead>
-                                            <tr style="background-color: #f5f5f5;">
+                                            <tr style="background-color: #f8f9fa;">
                                                 <th style="border: 1px solid #000; padding: 8px;">Código</th>
                                                 <th style="border: 1px solid #000; padding: 8px;">Descrição</th>
                                                 <th style="border: 1px solid #000; padding: 8px;">Quantidade</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="termo-itens-body"></tbody>
+                                        <tbody id="termo-os-${osNumber}-body"></tbody>
                                     </table>
                                 </div>
                                 
@@ -337,30 +397,23 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div style="margin-top: 30px; font-size: 12px; text-align: justify;">
-                                    <p><strong>Observações:</strong> Os materiais relacionados acima foram retirados do almoxarifado para utilização na manutenção conforme ordem de serviço especificada. O recebedor assume a responsabilidade pelo uso adequado dos materiais.</p>
-                                </div>
-                            </section>
-                        </div>
-                    `);
+                            </div>
+                        `);
 
-                    // Preencher a tabela com os itens selecionados
-                    const tbody = termoContent.find('#termo-itens-body');
-                    let totalGeral = 0;
+                        // Preencher itens desta OS
+                        const tbody = osPage.find(`#termo-os-${osNumber}-body`);
+                        itensOS.forEach(item => {
+                            const row = `
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 6px;">${item.cod_produto}</td>
+                                    <td style="border: 1px solid #000; padding: 6px;">${item.descricao_produto}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">${parseFloat(item.qtd_utilizada).toFixed(4)}</td>
+                                </tr>
+                            `;
+                            tbody.append(row);
+                        });
 
-                    selectedItems.forEach(item => {
-                        const custoTotal = item.qtd_utilizada * item.custo_unitario;
-                        totalGeral += custoTotal;
-
-                        const row = `
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 6px;">${item.cod_produto}</td>
-                                <td style="border: 1px solid #000; padding: 6px;">${item.descricao_produto}</td>
-                                <td style="border: 1px solid #000; padding: 6px; text-align: right;">${parseFloat(item.qtd_utilizada).toFixed(4)}</td>
-                            </tr>
-                        `;
-                        tbody.append(row);
+                        termoContent.append(osPage);
                     });
 
                     scrollableContent.find('.dx-scrollview-content').append(termoContent);
@@ -373,7 +426,7 @@
 
         // Função para imprimir o termo
         function printTermoRetirada() {
-            const printArea = document.getElementById('print-termo-area');
+            const printArea = document.getElementById('termoRetiradaContent');
             if (!printArea) return;
 
             const iframe = document.createElement('iframe');
@@ -387,27 +440,47 @@
 
             const doc = iframe.contentWindow.document;
             
-            let styles = "";
-            document.querySelectorAll("style, link[rel='stylesheet']").forEach(node => {
-                styles += node.outerHTML;
-            });
-
             doc.open();
             doc.write(`
                 <html>
                     <head>
                         <title>Termo de Retirada</title>
                         <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; }
-                            table { width: 100%; border-collapse: collapse; }
-                            th, td { border: 1px solid #000; padding: 8px; }
+                            body { 
+                                font-family: Arial, sans-serif; 
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .os-page {
+                                padding: 20px;
+                                page-break-after: always;
+                                height: 100vh;
+                                box-sizing: border-box;
+                            }
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                            }
+                            th, td { 
+                                border: 1px solid #000; 
+                                padding: 8px; 
+                            }
+                            th {
+                                background-color: #f8f9fa;
+                            }
                             @media print {
-                                body { margin: 0; padding: 20px; }
-                                .no-print { display: none; }
+                                body { 
+                                    margin: 0; 
+                                    padding: 0;
+                                }
+                                .os-page {
+                                    padding: 15mm;
+                                    page-break-after: always;
+                                }
                             }
                         </style>
                     </head>
-                    <body>${printArea.outerHTML}</body>
+                    <body>${printArea.innerHTML}</body>
                 </html>
             `);
             doc.close();

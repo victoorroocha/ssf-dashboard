@@ -1081,7 +1081,8 @@ class PlanejamentoControleManutencaoRepository
                         ,im.custo_total 
                         ,im.flg_retirado
                     FROM itens_manutencao im 
-                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao ";
+                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao 
+                    WHERE (im.flg_retirado = false or im.flg_retirado is null)";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
