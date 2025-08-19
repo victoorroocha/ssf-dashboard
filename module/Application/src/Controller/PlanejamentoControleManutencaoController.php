@@ -776,7 +776,11 @@ class PlanejamentoControleManutencaoController extends BaseController
             if (!isset($session->user)) {
                 return $this->redirect()->toRoute('login');
             }
-            return new ViewModel();
+            $usuarioSessao = $session->user;
+
+            return new ViewModel([
+                'usuarioSessaoNome' => $usuarioSessao['nome']
+            ]);
         }
         public function listarItensPendentesAction()
         {
@@ -795,6 +799,9 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
         public function marcarRetiradaAction()
         {
+            $session = new Container('auth');
+            $usuarioSessao = $session->user;
+
             if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
                 return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
             }
@@ -806,7 +813,7 @@ class PlanejamentoControleManutencaoController extends BaseController
             }
 
             try {
-                $this->PlanejamentoControleManutencaoRepository->marcarRetirada($data);
+                $this->PlanejamentoControleManutencaoRepository->marcarRetirada($data, $usuarioSessao);
                 return new JsonModel([
                     'success' => true,
                     'message' => count($data['ids']) . ' item(s) marcado(s) como retirado(s) com sucesso!',

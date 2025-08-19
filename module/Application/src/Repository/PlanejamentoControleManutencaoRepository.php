@@ -992,7 +992,7 @@ class PlanejamentoControleManutencaoRepository
                             ':unidade_medida' => $item['unidade_medida'] ?? null,
                             ':qtd_utilizada' => $item['qtd_utilizada'] ?? 0,
                             ':qtd_estoque' => $item['qtd_estoque'] ?? 0,
-                            ':preco_medio_unitario' => $item['preco_medio'] ?? null,
+                            ':preco_medio_unitario' => $item['preco_medio_unitario'] ?? null,
                             ':custo_unitario' => $item['custo_unitario'] ?? null,
                             ':observacao' => $item['observacao'] ?? null,
                             ':data_utilizacao' => $item['data_utilizacao'] ?? null,
@@ -1079,9 +1079,9 @@ class PlanejamentoControleManutencaoRepository
                         ,im.qtd_utilizada 
                         ,im.custo_unitario 
                         ,im.custo_total 
+                        ,im.flg_retirado
                     FROM itens_manutencao im 
-                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao 
-                    WHERE (im.flg_retirado = false or im.flg_retirado = null)";
+                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao ";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -1090,20 +1090,20 @@ class PlanejamentoControleManutencaoRepository
             }
             return $data;
         }
-        public function marcarRetirada(array $data)
+        public function marcarRetirada(array $data, $usuarioSessao)
         {
             if (empty($data['ids']) || !is_array($data['ids'])) {
                 throw new \InvalidArgumentException('Nenhum item informado para retirada.');
             }
 
-            $sql = "UPDATE itens_manutencao 
-                    SET flg_retirado = TRUE
-                    WHERE id = :id";
-
+            $sql = "UPDATE itens_manutencao SET flg_retirado = true, data_retirada = NOW(), id_usuario_retirada = :user_id WHERE id = :id";
             $stmt = $this->adapter->createStatement($sql);
 
             foreach ($data['ids'] as $id) {
-                $stmt->execute([':id' => $id]);
+                $stmt->execute([
+                    ':id' => $id,
+                    ':user_id' => $usuarioSessao['id']
+                ]);
             }
         }
     #endRegion
