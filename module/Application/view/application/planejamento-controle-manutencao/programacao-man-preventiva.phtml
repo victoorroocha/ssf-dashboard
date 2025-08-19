@@ -368,7 +368,7 @@
                 {
                     dataField: 'centro_custo_id',
                     caption: 'Centro de Custo',
-                    width: 200,
+                    width: 230,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
                             load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
@@ -381,6 +381,7 @@
                 {
                     dataField: 'area_tecnica_id',
                     caption: 'Área Técnica',
+                    alignment: 'center',
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
                             load: () => $.getJSON('/planejamento-controle-manutencao/listar-areas')
@@ -406,6 +407,7 @@
                     caption: 'Data Programada',
                     dataType: 'date',
                     alignment: 'center',
+                    width: 150,
                 },
                 {
                     dataField: 'proxima_execucao',
@@ -414,17 +416,19 @@
                     sortOrder: 'asc',
                     dataType: 'date',
                     alignment: 'center',
+                    width: 150,
                 },
                 { 
                     dataField: 'periodicidade_dias', 
                     caption: 'Periodicidade (dias)', 
                     alignment: 'center',
+                    width: 130,
                 },
                 { 
                     dataField: 'dias_aviso', 
                     caption: 'Dias Aviso', 
                     alignment: 'center',
-                    visible: false
+                    width: 120,
                 },
                 { dataField: 'info_servico', caption: 'Check-List', visible: false },
                 { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },

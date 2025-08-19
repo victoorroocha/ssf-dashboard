@@ -1667,7 +1667,9 @@
                                 });
 
                                 const { jsPDF } = window.jspdf;
-                                const pdf = new jsPDF('p', 'mm', 'a4');
+                                // const pdf = new jsPDF('p', 'mm', 'a4');
+                                const pdf = new jsPDF('p', 'mm', 'a4', true);
+
                                 const pageWidth = pdf.internal.pageSize.getWidth();
                                 const pageHeight = pdf.internal.pageSize.getHeight();
                                 const margemMm = 30 * 0.264583;
@@ -2052,7 +2054,8 @@
 
                 try {
                     const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    // const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdf = new jsPDF('p', 'mm', 'a4', true);
 
                     const divs = container.querySelectorAll('.layout-ssf');
 
@@ -2060,7 +2063,7 @@
                         const div = divs[i];
                         const canvas = await html2canvas(
                             div, { 
-                                scale: 3, 
+                                scale: 2, 
                                 useCORS: true, 
                                 backgroundColor: null,
                                 onclone: (clonedDoc) => {
@@ -2070,10 +2073,12 @@
                                 }
                             }
                         );
-                        const imgData = canvas.toDataURL('image/png', 1.0);
+                        // const imgData = canvas.toDataURL('image/png', 1.0);
+                        const imgData = canvas.toDataURL('image/jpeg', 0.7);
 
                         if (i > 0) pdf.addPage(); // adiciona nova página se não for a primeira
-                        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                        // pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
                     }
 
                     pdf.save(`nota-promissoria-${dadosCliente.ID_CLIENTE}.pdf`);
