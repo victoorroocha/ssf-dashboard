@@ -1000,53 +1000,35 @@ class PlanejamentoControleManutencaoController extends BaseController
     {
         $request = $this->getRequest();
         $search = strtoupper($this->params()->fromQuery('search', ''));
+        $key = $this->params()->fromQuery('key', '');
 
         $ands = "";
+        if (!empty($key)) {
+            $ands .= "AND E210EST.CODPRO = '{$key}'";
+        }
         if (!empty($search)) {
-            $ands .= "AND REGEXP_REPLACE(TRIM(MVP.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ')), '\s+', ' ') LIKE '%{$search}%'";
+            $ands .= "AND E210EST.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\\s+', ' ') || ' - ' || REGEXP_REPLACE(TRIM(DEP.DESDEP), '\\s+', ' ') LIKE '%{$search}%'";
         }
 
-        $sql = "WITH UltimaMovimentacao AS (
-                    SELECT 
-                        MVP.CODEMP,
-                        MVP.CODPRO,
-                        REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ') AS DESPRO,
-                        PRO.UNIMED,
-                        MVP.CODDEP,
-                        REGEXP_REPLACE(TRIM(DEP.DESDEP), '\s+', ' ') AS DESDEP,
-                        MVP.DATMOV,
-                        MVP.SEQMOV,
-                        MVP.ESTEOS,
-                        MVP.PRMEST,
-                        MVP.QTDEST,
-                        MVP.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\s+', ' ') AS PRODUTO_DISPLAY,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY MVP.CODPRO
-                            ORDER BY MVP.DATMOV DESC, MVP.SEQMOV DESC
-                        ) AS RN
-                    FROM E210MVP MVP
-                    LEFT JOIN E075PRO PRO ON PRO.CODEMP = MVP.CODEMP AND PRO.CODPRO = MVP.CODPRO
-                    LEFT JOIN E205DEP DEP ON DEP.CODEMP = MVP.CODEMP AND DEP.CODDEP = MVP.CODDEP
-                    WHERE MVP.CODEMP = 5
-                    AND PRO.SITPRO = 'A'
-                    AND MVP.QTDEST > 0
-                    {$ands}
-                )
-                SELECT * FROM (
-                    SELECT 
-                        CODEMP,
-                        CODPRO,
-                        DESPRO,
-                        UNIMED,
-                        CODDEP,
-                        DESDEP,
-                        QTDEST,
-                        PRMEST,
-                        PRODUTO_DISPLAY
-                    FROM UltimaMovimentacao
-                    WHERE RN = 1
-                    ORDER BY DESPRO, DESDEP
-                )";
+        $sql = "SELECT 
+                    E210EST.CODEMP,
+                    E210EST.CODPRO,
+                    REGEXP_REPLACE(TRIM(PRO.DESPRO), '\\s+', ' ') AS DESPRO,
+                    E210EST.UNIMED,
+                    E210EST.CODDEP,
+                    REGEXP_REPLACE(TRIM(DEP.DESDEP), '\\s+', ' ') AS DESDEP,
+                    E210EST.QTDEST,
+                    (SELECT AVG(PRMEST) FROM E210MVP WHERE CODPRO = E210EST.CODPRO AND CODDEP = E210EST.CODDEP ) AS PRMEST,
+                    E210EST.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(PRO.DESPRO), '\\s+', ' ') || ' - ' || REGEXP_REPLACE(TRIM(DEP.DESDEP), '\\s+', ' ') AS PRODUTO_DISPLAY
+                FROM E210EST  
+                LEFT JOIN E075PRO PRO ON PRO.CODEMP = E210EST.CODEMP AND PRO.CODPRO = E210EST.CODPRO
+                LEFT JOIN E205DEP DEP ON DEP.CODEMP = E210EST.CODEMP AND DEP.CODDEP = E210EST.CODDEP
+                WHERE E210EST.CODEMP = 5
+                AND PRO.SITPRO = 'A'
+                AND E210EST.QTDEST > 0
+                AND E210EST.CODDEP = 1
+                {$ands}
+                ORDER BY E210EST.CODPRO, E210EST.CODDEP";
 
         try {
             $result = $this->oracleService->executeQuery($sql);
@@ -1070,6 +1052,10 @@ class PlanejamentoControleManutencaoController extends BaseController
             ]);
         }
     }
+
+
+
+
 
 
 }

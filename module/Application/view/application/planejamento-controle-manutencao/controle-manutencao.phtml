@@ -200,7 +200,7 @@
 <script>
     $(document).ready(function () {
         var produtosLookup = []; 
-        getLookupProdutos();
+        // getLookupProdutos();
 
         let controleManutencaoGrid = $('#gridControleManutencao').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
@@ -910,7 +910,7 @@
             $('<div id="popupFinalizar">').appendTo('body');
 
             let finalizarPopup = $('#popupFinalizar').dxPopup({
-                width: 1300,
+                width: 1400,
                 height: 880,
                 title: 'Apontamentos da OS',
                 visible: false,
@@ -1048,7 +1048,7 @@
                                                             $('<div id="gridApontamentos">').appendTo(itemElement).dxDataGrid({
                                                                 dataSource: apontamentos,
                                                                 width: '100%',
-                                                                height: 550,
+                                                                height: 595,
                                                                 keyExpr: 'id',
                                                                 showBorders: true,
                                                                 columnAutoWidth: true,
@@ -1148,8 +1148,8 @@
 
                                                             $('<div id="gridItensManutencao">').appendTo(itemElement).dxDataGrid({
                                                                 dataSource: itensUtilizados,
-                                                                width: 'auto',
-                                                                height: 550,
+                                                                width: '100%',
+                                                                height: 595,
                                                                 keyExpr: 'id',
                                                                 showBorders: true,
                                                                 columnAutoWidth: true,
@@ -1227,53 +1227,67 @@
                                                                         lookup: {
                                                                             dataSource: new DevExpress.data.CustomStore({
                                                                                 key: 'CODPRO',
-                                                                                loadMode: 'processed',
-                                                                                cacheRawData: true,
-                                                                                load: function (loadOptions) {
-                                                                                    return new Promise((resolve) => {
-                                                                                        const searchValue = (loadOptions.searchValue || '').toUpperCase();
-                                                                                        let resultado = [];
+                                                                                load: function(loadOptions) {
+                                                                                    const deferred = $.Deferred();
+                                                                                    const searchValue = (loadOptions.searchValue || '').toUpperCase();
 
-                                                                                        if (!searchValue) {
-                                                                                            resultado = produtosLookup.slice(0, 50);
-                                                                                        } else {
-                                                                                            resultado = produtosLookup.filter(item =>
-                                                                                                item.PRODUTO_DISPLAY.toUpperCase().includes(searchValue)
-                                                                                            );
+                                                                                    $.ajax({
+                                                                                        url: '/planejamento-controle-manutencao/get-produtos-estoque-lookup',
+                                                                                        dataType: 'json',
+                                                                                        data: { search: searchValue },
+                                                                                        success: function(result) {
+                                                                                            if (result.success) {
+                                                                                                deferred.resolve({
+                                                                                                    data: result.data
+                                                                                                });
+                                                                                            } else {
+                                                                                                deferred.resolve({ data: [] });
+                                                                                            }
+                                                                                        },
+                                                                                        error: function() {
+                                                                                            deferred.resolve({ data: [] });
                                                                                         }
-
-                                                                                        resolve({ data: resultado, totalCount: resultado.length });
                                                                                     });
+
+                                                                                    return deferred.promise();
                                                                                 },
-                                                                                byKey: function (key) {
-                                                                                    return new Promise((resolve, reject) => {
-                                                                                        const encontrado = produtosLookup.find(item => item.CODPRO == key);
-                                                                                        encontrado ? resolve(encontrado) : reject(`Produto com CODPRO ${key} não encontrado`);
+                                                                                byKey: function(key) {
+                                                                                    return $.ajax({
+                                                                                        url: '/planejamento-controle-manutencao/get-produtos-estoque-lookup',
+                                                                                        dataType: 'json',
+                                                                                        data: { key: key }
+                                                                                    }).then(result => {
+                                                                                        return result.success && result.data.length > 0 ? result.data[0] : null;
                                                                                     });
                                                                                 }
                                                                             }),
                                                                             displayExpr: 'PRODUTO_DISPLAY',
                                                                             valueExpr: 'CODPRO',
                                                                             searchEnabled: true,
-                                                                            minSearchLength: 3,
-                                                                            searchExpr: 'PRODUTO_DISPLAY'
+                                                                            minSearchLength: 0,
+                                                                            deferRendering: false
                                                                         },
-                                                                        setCellValue: function (newData, value) {
-                                                                            const produto = produtosLookup.find(p => p.CODPRO == value);
-                                                                            if (produto) {
-                                                                                Object.assign(newData, {
-                                                                                    cod_produto: produto.CODPRO,
-                                                                                    descricao_produto: produto.DESPRO,
-                                                                                    cod_deposito: produto.CODDEP,
-                                                                                    descricao_deposito: produto.DESDEP,
-                                                                                    unidade_medida: produto.UNIMED,
-                                                                                    qtd_estoque: produto.QTDEST,
-                                                                                    preco_medio: produto.PRMEST,
-                                                                                    custo_unitario: produto.PRMEST
-                                                                                });
-                                                                            }
+                                                                        setCellValue: function(newData, value) {
+                                                                            return $.ajax({
+                                                                                url: '/planejamento-controle-manutencao/get-produtos-estoque-lookup',
+                                                                                dataType: 'json',
+                                                                                data: { key: value }
+                                                                            }).then(result => {
+                                                                                if (result.success && result.data && result.data.length > 0) {
+                                                                                    const produto = result.data[0];
+                                                                                    Object.assign(newData, {
+                                                                                        cod_produto: produto.CODPRO,
+                                                                                        descricao_produto: produto.DESPRO,
+                                                                                        cod_deposito: produto.CODDEP,
+                                                                                        descricao_deposito: produto.DESDEP,
+                                                                                        unidade_medida: produto.UNIMED,
+                                                                                        qtd_estoque: produto.QTDEST,
+                                                                                        preco_medio: produto.PRMEST,
+                                                                                        custo_unitario: produto.PRMEST
+                                                                                    });
+                                                                                }
+                                                                            });
                                                                         },
-                                                                        visible: false,
                                                                         validationRules: [{ type: 'required' }]
                                                                     },
                                                                     { dataField: 'descricao_produto', caption: 'Descrição', allowEditing: false },
@@ -1522,7 +1536,7 @@
                                             <div class="field"><span class="label">Equipamento:</span><div class="value os-equipamento"></div></div>
                                             <div class="field"><span class="label">Centro de Custo:</span><div class="value os-centro-custo"></div></div>
                                             <div class="field"><span class="label">Área de atuação:</span><div class="value os-local"></div></div>
-                                            <div class="field full"><span class="label">Defeito Relatado:</span><div class="value os-defeito"></div></div>
+                                            <div class="field full" style="display: none;"><span class="label">Defeito Relatado:</span><div class="value os-defeito"></div></div>
                                         </div>
                                     </div>
 
@@ -1538,7 +1552,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="section">
+                                    <div class="section" id="section-itens" style="display: none;">
                                         <div class="section-title">Itens Utilizados</div>
                                         <div class="field-group">
                                             <table class="os-itens-utilizados" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px;">
@@ -1557,7 +1571,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="section">
+                                    <div class="section" id="section-observacoes" style="display: none;">
                                         <div class="section-title">Observações Finais</div>
                                         <div class="field-group">
                                             <div class="field full"><div class="value os-observacoes"></div></div>
@@ -1565,6 +1579,7 @@
                                     </div>
 
                                     <br />
+
                                     <div class="signature">Assinatura do Responsável</div>
                                 </div>
                             </section>
@@ -1597,7 +1612,14 @@
                                 $('.os-equipamento').text(dados?.nome_equipamento || '');
                                 $('.os-centro-custo').text(dados?.centro_custo_id || '');
                                 $('.os-local').text(dados?.area_tecnica || '');
-                                $('.os-defeito').text(dados?.descricao_defeito || '');
+                                
+                                const fieldDefeito = $('.os-defeito').closest('.field.full');
+                                if (dados?.descricao_defeito && dados.descricao_defeito.trim() !== '') {
+                                    $('.os-defeito').text(dados.descricao_defeito);
+                                    fieldDefeito.show(); // exibe a seção
+                                } else {
+                                    fieldDefeito.hide(); // mantém escondida caso vazio
+                                }
 
                                 // Execução do Serviço
                                 $('.os-data-programada').text(dados?.data_programada || '');
@@ -1605,46 +1627,40 @@
                                 $('.os-data-final').text(dados?.data_final || '');
                                 $('.os-descricao').text(dados?.info_servico || '');
                                 $('.os-tecnico').text(dados?.nome_tecnico || '');
-                                $('.os-tecnico-executor').text(dados?.nome_tecnico_exec || '');
+                                $('.os-tecnico-executor').text(dados?.nome_tecnico_exec || (dados?.nome_tecnico || ''));
 
                                 // Itens utilizados
-                                const tbody = document.querySelector('.os-itens-utilizados tbody');
+                                const secItens = document.getElementById('section-itens');
+                                const tbody = secItens.querySelector('tbody');
                                 tbody.innerHTML = '';
 
-                                dadosItens.forEach(item => {
-                                    const row = document.createElement('tr');
+                                if (dadosItens && dadosItens.length > 0) {
+                                    dadosItens.forEach(item => {
+                                        const row = document.createElement('tr');
+                                        const qtdFormatada = Number(item.qtd_utilizada).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                                        const custoUnitarioFormatado = Number(item.custo_unitario).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                                        const custoTotalFormatado = Number(item.custo_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                                        const iconeRetirado = item.flg_retirado ? '<span style="color: green;">&#10003;</span>' : '<span style="color: red;">&#10007;</span>';
 
-                                    const qtdFormatada = Number(item.qtd_utilizada).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-                                    const custoUnitarioFormatado = Number(item.custo_unitario).toLocaleString('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL',
-                                        minimumFractionDigits: 4,
-                                        maximumFractionDigits: 4
+                                        row.innerHTML = `
+                                            <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_produto}</td>
+                                            <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_deposito}</td>
+                                            <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${qtdFormatada}</td>
+                                            <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoUnitarioFormatado}</td>
+                                            <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoTotalFormatado}</td>
+                                            <td style="border: 1px solid #ccc; padding: 2px; text-align: center;">${iconeRetirado}</td>
+                                        `;
+                                        tbody.appendChild(row);
                                     });
-                                    const custoTotalFormatado = Number(item.custo_total).toLocaleString('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL',
-                                        minimumFractionDigits: 4,
-                                        maximumFractionDigits: 4
-                                    });
+                                    secItens.style.display = 'block';
+                                }
 
-                                    const iconeRetirado = item.flg_retirado
-                                        ? '<span style="color: green;">&#10003;</span>'
-                                        : '<span style="color: red;">&#10007;</span>';
-
-                                    row.innerHTML = `
-                                        <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_produto}</td>
-                                        <td style="border: 1px solid #ccc; padding: 2px;">${item.descricao_deposito}</td>
-                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${qtdFormatada}</td>
-                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoUnitarioFormatado}</td>
-                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: right;">${custoTotalFormatado}</td>
-                                        <td style="border: 1px solid #ccc; padding: 2px; text-align: center;">${iconeRetirado}</td>
-                                    `;
-                                    tbody.appendChild(row);
-                                });
-
-                                // Observações Finais
-                                $('.os-observacoes').text(dados?.observacoes || '');
+                                // Observações
+                                const secObs = document.getElementById('section-observacoes');
+                                if (dados?.observacoes && dados.observacoes.trim() !== '') {
+                                    $('.os-observacoes').text(dados.observacoes);
+                                    secObs.style.display = 'block';
+                                }
                             } catch (err) {
                                 DevExpress.ui.notify('Erro ao preencher OS: ' + err.message, 'error', 4000);
                             }
