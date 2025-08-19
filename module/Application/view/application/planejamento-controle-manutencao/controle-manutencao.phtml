@@ -1224,6 +1224,7 @@
                                                                     {
                                                                         dataField: 'cod_produto',
                                                                         caption: 'Produto',
+                                                                        width: 200,
                                                                         lookup: {
                                                                             dataSource: new DevExpress.data.CustomStore({
                                                                                 key: 'CODPRO',
@@ -1282,7 +1283,7 @@
                                                                                         descricao_deposito: produto.DESDEP,
                                                                                         unidade_medida: produto.UNIMED,
                                                                                         qtd_estoque: produto.QTDEST,
-                                                                                        preco_medio: produto.PRMEST,
+                                                                                        preco_medio_unitario: produto.PRMEST,
                                                                                         custo_unitario: produto.PRMEST
                                                                                     });
                                                                                 }
@@ -1313,7 +1314,7 @@
                                                                         format: { type: 'fixedPoint', precision: 4 }
                                                                     },
                                                                     {
-                                                                        dataField: 'preco_medio',
+                                                                        dataField: 'preco_medio_unitario',
                                                                         caption: 'Preço Médio',
                                                                         allowEditing: false,
                                                                         alignment: 'right',
@@ -1341,7 +1342,7 @@
                                                                         format: { type: 'currency', currency: 'BRL', precision: 4 },
                                                                         validationRules: [{ type: 'required' }]
                                                                     },
-                                                                    { dataField: 'observacao', caption: 'Observação', width: 200 }
+                                                                    { dataField: 'observacao', caption: 'Observação', width: 200, visible: false }
                                                                 ],
                                                                 onRowUpdating: function (e) {
                                                                     e.newData = { ...e.oldData, ...e.newData };

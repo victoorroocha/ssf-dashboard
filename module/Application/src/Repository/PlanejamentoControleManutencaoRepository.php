@@ -771,8 +771,11 @@ class PlanejamentoControleManutencaoRepository
 
             if (isset($data['data_inicio']) && $data['data_inicio'] !== null) {
                 $data['status'] = 'Em Execução';
+            } 
+            if (empty($data['data_inicio'])) {
+                $data['status'] = 'Pendente';
             }
-
+            
             // validação campo setorID
             if (isset($data['setor_id']) && empty($data['setor_id'])) {
                 throw new \InvalidArgumentException('Setor é obrigatório para a ordem de serviço.');
@@ -897,7 +900,7 @@ class PlanejamentoControleManutencaoRepository
 
             return $data;
         }
-        public function apontamentosManutencaoOs(array $data)
+        public function apontamentosManutencaoOs(array $data, $usuarioSessao)
         {
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
@@ -915,13 +918,15 @@ class PlanejamentoControleManutencaoRepository
                             tecnico_id,
                             data_inicio,
                             data_fim,
-                            observacao
+                            observacao,
+                            id_usuario_apontamento
                         ) VALUES (
                             :id_manutencao,
                             :tecnico_id,
                             :data_inicio,
                             :data_fim,
-                            :observacao
+                            :observacao,
+                            :id_usuario_apontamento
                         )
                     ";
 
@@ -932,6 +937,7 @@ class PlanejamentoControleManutencaoRepository
                             ':data_inicio' => $apontamentos['data_inicio'] ?? null,
                             ':data_fim' => $apontamentos['data_fim'] ?? null,
                             ':observacao' => $apontamentos['observacao'] ?? null,
+                            ':id_usuario_apontamento' => $usuarioSessao['id']
                         ];
 
                         $this->adapter->createStatement($sqlInsertApontamentos)->execute($paramsInsertApontamentos);
@@ -953,10 +959,12 @@ class PlanejamentoControleManutencaoRepository
                             descricao_deposito,
                             unidade_medida,
                             qtd_utilizada,
+                            qtd_estoque,
                             preco_medio_unitario,
                             custo_unitario,
                             observacao,
-                            data_utilizacao
+                            data_utilizacao,
+                            id_usuario_apontamento
                         ) VALUES (
                             :id_manutencao,
                             :cod_produto,
@@ -965,10 +973,12 @@ class PlanejamentoControleManutencaoRepository
                             :descricao_deposito,
                             :unidade_medida,
                             :qtd_utilizada,
+                            :qtd_estoque,
                             :preco_medio_unitario,
                             :custo_unitario,
                             :observacao,
-                            :data_utilizacao
+                            :data_utilizacao,
+                            :id_usuario_apontamento
                         )
                     ";
 
@@ -981,10 +991,12 @@ class PlanejamentoControleManutencaoRepository
                             ':descricao_deposito' => $item['descricao_deposito'] ?? null,
                             ':unidade_medida' => $item['unidade_medida'] ?? null,
                             ':qtd_utilizada' => $item['qtd_utilizada'] ?? 0,
+                            ':qtd_estoque' => $item['qtd_estoque'] ?? 0,
                             ':preco_medio_unitario' => $item['preco_medio'] ?? null,
                             ':custo_unitario' => $item['custo_unitario'] ?? null,
                             ':observacao' => $item['observacao'] ?? null,
-                            ':data_utilizacao' => $item['data_utilizacao'] ?? null
+                            ':data_utilizacao' => $item['data_utilizacao'] ?? null,
+                            ':id_usuario_apontamento' => $usuarioSessao['id']
                         ];
 
                         $this->adapter->createStatement($sqlInsertItens)->execute($paramsInsertItens);

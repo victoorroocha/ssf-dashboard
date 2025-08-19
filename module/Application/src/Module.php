@@ -102,26 +102,37 @@ class Module
 
     public function checkAuthentication(MvcEvent $e)
     {
-        $routeMatch = $e->getRouteMatch();  // Obtém as informações de rota
-        $session = new Container('auth');  // Obtém a sessão de autenticação
+        $routeMatch = $e->getRouteMatch();
+        $session = new Container('auth');
 
-        // Verifica se a ação requer autenticação
-        $controllerName = $routeMatch->getParam('controller'); // Nome do controlador
+        $controllerName = $routeMatch->getParam('controller');
 
-        // Verifica se o controlador está dentro do namespace protegido
         if (strpos($controllerName, 'Application\Controller') === 0) {
             if (!isset($session->user)) {
-                // Realiza o redirecionamento diretamente com a aplicação
-                $application = $e->getApplication();
-                $url = $application->getServiceManager()->get('ViewHelperManager')->get('url');
-                $url = $url('login');  // Gera a URL para o login
-
-                // Redireciona para a página de login
+                $request  = $e->getRequest();
                 $response = $e->getResponse();
+
+                // Se for AJAX → retorna JSON 401
+                if ($request->isXmlHttpRequest()) {
+                    $response->setStatusCode(401);
+                    $response->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+                    $response->setContent(json_encode([
+                        'success' => false,
+                        'redirect' => '/login'
+                    ]));
+                    return $response;
+                }
+
+                // Caso normal (navegador) → redireciona
+                $application = $e->getApplication();
+                $urlHelper   = $application->getServiceManager()->get('ViewHelperManager')->get('url');
+                $url         = $urlHelper('login');
+
                 $response->getHeaders()->addHeaderLine('Location', $url);
-                $response->setStatusCode(302);  // Status para redirecionamento
+                $response->setStatusCode(302);
                 return $response;
             }
         }
     }
+
 }

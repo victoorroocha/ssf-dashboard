@@ -20,71 +20,70 @@ abstract class BaseController extends AbstractActionController
 
     public function onDispatch(\Laminas\Mvc\MvcEvent $e)
     {
-        // Obtém o nome da action atual
         $action = $e->getRouteMatch()->getParam('action');
 
-        // Se for 'gerarOsPreventiva', libera direto, pula checagem de sessão
+        // Libera essa action específica
         if ($action === 'gerar-os-preventiva') {
             return parent::onDispatch($e);
         }
 
-        // Inicializa a sessão auth (se ainda não inicializada)
         if (!isset($this->session)) {
             $this->session = new \Laminas\Session\Container('auth');
         }
 
-        // Verifica se o usuário está autenticado
+        $request = $this->getRequest();
+        $acceptsJson =
+            $request->isXmlHttpRequest() ||
+            ($request->getHeaders()->has('Accept') &&
+            strpos($request->getHeaders()->get('Accept')->getFieldValue(), 'application/json') !== false);
+
+        // 1) Sessão inexistente/expirada
         if (!isset($this->session->user)) {
+            if ($acceptsJson) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Sessão expirada. Faça login novamente.'
+                ], 401); // Unauthorized
+            }
             return $this->redirect()->toRoute('login');
         }
 
-        if ($this->session->user['role'] != 'Administrador') {
-            // === Validação por MENU/ROTA ===
-            $currentPath = $this->getRequest()->getUri()->getPath();
-
-            if (!$this->usuarioTemAcessoMenu($this->session->user['id'], $currentPath) 
-                && ($currentPath != '/')
-                && ($currentPath != '/login')
-                && ($currentPath != '/logout')
-                && ($currentPath != '/usuario/perfil-usuario')
+        // 2) Validação por MENU/ROTA (não admin)
+        if ($this->session->user['role'] !== 'Administrador') {
+            $currentPath = $request->getUri()->getPath();
+            if (
+                !$this->usuarioTemAcessoMenu($this->session->user['id'], $currentPath) &&
+                !in_array($currentPath, ['/', '/login', '/logout', '/usuario/perfil-usuario'], true)
             ) {
+                if ($acceptsJson) {
+                    return $this->jsonResponse([
+                        'success' => false,
+                        'message' => 'Acesso negado ao menu/rota.'
+                    ], 403);
+                }
                 return $this->redirect()->toRoute('error', ['action' => 'unauthorized']);
             }
         }
 
-        // Obtém a role do usuário da sessão
+        // 3) ACL por controller/action
         $role = $this->session->user['role'];
-
-        // Obtém o nome da controller e da action atual
         $controller = $e->getRouteMatch()->getParam('controller');
-
-        // Remove o namespace da controller para obter o nome simples
         $controller = substr($controller, strrpos($controller, '\\') + 1);
+        $actionCamel = str_replace('Action', '', $this->kebabToCamelCase($action));
 
-        // Converte o nome da action de kebab-case para camelCase
-        $action = $this->kebabToCamelCase($action);
-
-        // Remove o sufixo "Action" do nome da action (caso exista)
-        $action = str_replace('Action', '', $action);
-
-        // Verifica se o usuário tem permissão para acessar a action atual
-        if (!$this->acl->isAllowed($role, $controller, $action)) {
-            // Verifica se a action retorna JSON
-            if ($this->isJsonAction()) {
-                // Retorna uma resposta JSON com erro de permissão
+        if (!$this->acl->isAllowed($role, $controller, $actionCamel)) {
+            if ($acceptsJson) {
                 return $this->jsonResponse([
                     'success' => false,
                     'message' => 'Você não tem permissão para acessar este recurso.'
-                ], 403); // Código HTTP 403: Forbidden
+                ], 403);
             }
-
-            // Caso contrário, redireciona para a página de erro
             return $this->redirect()->toRoute('error', ['action' => 'unauthorized']);
         }
 
-        // Continua a execução normal da action
         return parent::onDispatch($e);
     }
+
 
     /**
      * Verifica se a action retorna JSON.

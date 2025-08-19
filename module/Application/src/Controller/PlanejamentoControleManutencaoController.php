@@ -697,6 +697,9 @@ class PlanejamentoControleManutencaoController extends BaseController
         }
         public function apontamentosManutencaoOsAction()
         {
+            $session = new Container('auth');
+            $usuarioSessao = $session->user;
+
             $request = $this->getRequest();
 
             if (!$request->isPost()) {
@@ -710,7 +713,7 @@ class PlanejamentoControleManutencaoController extends BaseController
             }
 
             try {
-                $this->PlanejamentoControleManutencaoRepository->apontamentosManutencaoOs($dados);
+                $this->PlanejamentoControleManutencaoRepository->apontamentosManutencaoOs($dados, $usuarioSessao);
                 return new JsonModel(['success' => true, 'message' => 'Controle finalizado com sucesso']);
             } catch (\Exception $e) {
                 return new JsonModel(['success' => false, 'message' => 'Erro ao finalizar: ' . $e->getMessage()]);
