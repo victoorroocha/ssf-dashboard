@@ -619,6 +619,7 @@
             });
             form.itemOption('setor_id', {
                 visible: false,
+                validationRules: []
             });
 
             // Mostra e adiciona obrigatoriedade ao campo correto
@@ -633,7 +634,8 @@
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
                 form.itemOption('setor_id', {
-                    visible: true
+                    visible: true,
+                    validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
             }
         }

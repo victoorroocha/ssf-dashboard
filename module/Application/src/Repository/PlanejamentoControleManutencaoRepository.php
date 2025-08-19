@@ -758,7 +758,7 @@ class PlanejamentoControleManutencaoRepository
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
                 $data['tipo_ordem_servico'] = 'Equipamento';
 
-                 // Busca o setor_id do equipamento
+                // Busca o setor_id do equipamento
                 $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['setor_id'])) {
@@ -773,6 +773,19 @@ class PlanejamentoControleManutencaoRepository
                 $data['status'] = 'Em Execução';
             }
 
+            // validação campo setorID
+            if (isset($data['setor_id']) && empty($data['setor_id'])) {
+                throw new \InvalidArgumentException('Setor é obrigatório para a ordem de serviço.');
+            }
+            // validação campo tipo_manutencao_id
+            if (isset($data['tipo_manutencao_id']) && empty($data['tipo_manutencao_id'])) {
+                throw new \InvalidArgumentException('Tipo de manutenção é obrigatório para a ordem de serviço.');
+            }
+            // validação campo area_tecnica_id
+            if (isset($data['area_tecnica_id']) && empty($data['area_tecnica_id'])) {
+                throw new \InvalidArgumentException('Área técnica é obrigatória para a ordem de serviço.');
+            }
+
             $params = [
                 ':data_solicitacao' => $data['data_solicitacao'] ?? null,
                 ':nome_solicitante' => $data['nome_solicitante'] ?? null,
@@ -783,7 +796,7 @@ class PlanejamentoControleManutencaoRepository
                 ':centro_custo_id' => $data['centro_custo_id'] ?? null,
                 ':tipo_manutencao_id' => $data['tipo_manutencao_id'],
                 ':area_tecnica_id' => $data['area_tecnica_id'],
-                ':tecnico_id' => $data['tecnico_id'],
+                ':tecnico_id' => $data['tecnico_id'] ?? null,
                 ':descricao_defeito' => $data['descricao_defeito'] ?? null,
                 ':data_inicio' => $data['data_inicio'] ?? null,
                 ':tempo_previsto' => $data['tempo_previsto'] ?? null,
