@@ -855,164 +855,6 @@ class PlanejamentoControleManutencaoRepository
             // Chama a atualização dos status dos equipamentos
             $this->atualizarStatusEquipamentos();
         }
-        public function validarOsApontamentos($id)
-        {
-            $sql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
-            $statement = $this->adapter->createStatement($sql);
-            $statement->prepare();
-            $statement->execute(['id' => $id]);
-
-            $result = $statement->getResource()->fetch();
-
-            if ($result && $result['total'] > 0) {
-                return [
-                    'success' => true,
-                    'message' => 'OS válida para apontamentos.'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'Ordem de Serviço não encontrada ou já finalizada.'
-                ];
-            }
-        }
-        public function getApontamentosPorOS($osId)
-        {
-            $sql = "SELECT * FROM apontamentos_manutencao WHERE id_manutencao = :id";
-            $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
-            
-            $data = [];
-            foreach ($result as $row) {
-                $data[] = $row;
-            }
-
-            return $data;
-        }
-        public function getItensUtilizadosPorOS($osId)
-        {
-            $sql = "SELECT * FROM itens_manutencao WHERE id_manutencao = :id";
-            $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
-            
-            $data = [];
-            foreach ($result as $row) {
-                $data[] = $row;
-            }
-
-            return $data;
-        }
-        public function apontamentosManutencaoOs(array $data, $usuarioSessao)
-        {
-            $this->adapter->getDriver()->getConnection()->beginTransaction();
-
-            $id_manutencao = intval($data['id_os']);
-
-            try {
-                // Remove itens anteriores, se houver
-                $this->adapter->createStatement('DELETE FROM apontamentos_manutencao WHERE id_manutencao = :id')->execute([':id' => $id_manutencao]);
-
-                // Insere os novos Apontamentos
-                if (!empty($data['apontamentos']) && is_array($data['apontamentos'])) {
-                    $sqlInsertApontamentos = "
-                        INSERT INTO apontamentos_manutencao (
-                            id_manutencao,
-                            tecnico_id,
-                            data_inicio,
-                            data_fim,
-                            observacao,
-                            id_usuario_apontamento
-                        ) VALUES (
-                            :id_manutencao,
-                            :tecnico_id,
-                            :data_inicio,
-                            :data_fim,
-                            :observacao,
-                            :id_usuario_apontamento
-                        )
-                    ";
-
-                    foreach ($data['apontamentos'] as $apontamentos) {
-                        $paramsInsertApontamentos = [
-                            ':id_manutencao' => $id_manutencao,
-                            ':tecnico_id' => $apontamentos['tecnico_id'] ?? null,
-                            ':data_inicio' => $apontamentos['data_inicio'] ?? null,
-                            ':data_fim' => $apontamentos['data_fim'] ?? null,
-                            ':observacao' => $apontamentos['observacao'] ?? null,
-                            ':id_usuario_apontamento' => $usuarioSessao['id']
-                        ];
-
-                        $this->adapter->createStatement($sqlInsertApontamentos)->execute($paramsInsertApontamentos);
-                    }
-                }
-
-
-                // Remove itens anteriores, se houver
-                $this->adapter->createStatement('DELETE FROM itens_manutencao WHERE id_manutencao = :id')->execute([':id' => $id_manutencao]);
-
-                // Insere os novos itens
-                if (!empty($data['itens']) && is_array($data['itens'])) {
-                    $sqlInsertItens = "
-                        INSERT INTO itens_manutencao (
-                            id_manutencao,
-                            cod_produto,
-                            descricao_produto,
-                            cod_deposito,
-                            descricao_deposito,
-                            unidade_medida,
-                            qtd_utilizada,
-                            qtd_estoque,
-                            preco_medio_unitario,
-                            custo_unitario,
-                            observacao,
-                            data_utilizacao,
-                            id_usuario_apontamento
-                        ) VALUES (
-                            :id_manutencao,
-                            :cod_produto,
-                            :descricao_produto,
-                            :cod_deposito,
-                            :descricao_deposito,
-                            :unidade_medida,
-                            :qtd_utilizada,
-                            :qtd_estoque,
-                            :preco_medio_unitario,
-                            :custo_unitario,
-                            :observacao,
-                            :data_utilizacao,
-                            :id_usuario_apontamento
-                        )
-                    ";
-
-                    foreach ($data['itens'] as $item) {
-                        $paramsInsertItens = [
-                            ':id_manutencao' => $id_manutencao,
-                            ':cod_produto' => $item['cod_produto'] ?? null,
-                            ':descricao_produto' => $item['descricao_produto'] ?? null,
-                            ':cod_deposito' => $item['cod_deposito'] ?? null,
-                            ':descricao_deposito' => $item['descricao_deposito'] ?? null,
-                            ':unidade_medida' => $item['unidade_medida'] ?? null,
-                            ':qtd_utilizada' => $item['qtd_utilizada'] ?? 0,
-                            ':qtd_estoque' => $item['qtd_estoque'] ?? 0,
-                            ':preco_medio_unitario' => $item['preco_medio_unitario'] ?? null,
-                            ':custo_unitario' => $item['custo_unitario'] ?? null,
-                            ':observacao' => $item['observacao'] ?? null,
-                            ':data_utilizacao' => $item['data_utilizacao'] ?? null,
-                            ':id_usuario_apontamento' => $usuarioSessao['id']
-                        ];
-
-                        $this->adapter->createStatement($sqlInsertItens)->execute($paramsInsertItens);
-                    }
-                }
-
-                // Atualiza status de equipamentos
-                $this->atualizarStatusEquipamentos();
-
-                $this->adapter->getDriver()->getConnection()->commit();
-
-            } catch (\Exception $e) {
-                $this->adapter->getDriver()->getConnection()->rollback();
-                throw $e;
-            }
-        }
         public function finalizarOs(array $data)
         {
             $this->adapter->getDriver()->getConnection()->beginTransaction();
@@ -1064,6 +906,169 @@ class PlanejamentoControleManutencaoRepository
                 throw $e;
             }
         }
+
+        public function validarOsApontamentos($id)
+        {
+            $sql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
+            $statement = $this->adapter->createStatement($sql);
+            $statement->prepare();
+            $statement->execute(['id' => $id]);
+
+            $result = $statement->getResource()->fetch();
+
+            if ($result && $result['total'] > 0) {
+                return [
+                    'success' => true,
+                    'message' => 'OS válida para apontamentos.'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Ordem de Serviço não encontrada ou já finalizada.'
+                ];
+            }
+        }
+
+        #region Itens Apontamentos
+            public function getItensUtilizadosPorOS($osId)
+            {
+                $sql = "SELECT * FROM itens_manutencao WHERE id_manutencao = :id order by id asc";
+                $result = $this->adapter->createStatement($sql)->execute([':id' => $osId]);
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = $row;
+                }
+
+                return $data;
+            }
+            public function salvarApontamentoItem(array $data)
+            {
+                $params = [
+                    ':id_manutencao' => $data['id_manutencao'],
+                    ':cod_produto' => $data['cod_produto'] ?? null,
+                    ':descricao_produto' => $data['descricao_produto'] ?? null,
+                    ':cod_deposito' => $data['cod_deposito'] ?? null,
+                    ':descricao_deposito' => $data['descricao_deposito'] ?? null,
+                    ':unidade_medida' => $data['unidade_medida'] ?? null,
+                    ':qtd_utilizada' => $data['qtd_utilizada'] ?? 0,
+                    ':qtd_estoque' => $data['qtd_estoque'] ?? 0,
+                    ':preco_medio_unitario' => $data['preco_medio_unitario'] ?? 0,
+                    ':custo_unitario' => $data['custo_unitario'] ?? 0,
+                    ':observacao' => $data['observacao'] ?? null,
+                    ':data_utilizacao' => $data['data_utilizacao'] ?? null,
+                    ':id_usuario_apontamento' => $data['id_usuario_apontamento'] ?? null, // Já está pronto
+                    ':flg_retirado' => $data['flg_retirado'] ?? false,
+                    ':id_usuario_retirada' => $data['id_usuario_retirada'] ?? null,
+                    ':data_retirada' => $data['data_retirada'] ?? null
+                ];
+
+                if (!empty($data['id'])) {
+                    // Update
+                    $sql = "UPDATE itens_manutencao SET
+                                id_manutencao = :id_manutencao,
+                                cod_produto = :cod_produto,
+                                descricao_produto = :descricao_produto,
+                                cod_deposito = :cod_deposito,
+                                descricao_deposito = :descricao_deposito,
+                                unidade_medida = :unidade_medida,
+                                qtd_utilizada = :qtd_utilizada,
+                                qtd_estoque = :qtd_estoque,
+                                preco_medio_unitario = :preco_medio_unitario,
+                                custo_unitario = :custo_unitario,
+                                observacao = :observacao,
+                                data_utilizacao = :data_utilizacao,
+                                id_usuario_apontamento = :id_usuario_apontamento,
+                                flg_retirado = :flg_retirado,
+                                id_usuario_retirada = :id_usuario_retirada,
+                                data_retirada = :data_retirada
+                            WHERE id = :id";
+                    $params[':id'] = $data['id'];
+                } else {
+                    // Insert
+                    $sql = "INSERT INTO itens_manutencao (
+                                id_manutencao, cod_produto, descricao_produto, cod_deposito, descricao_deposito,
+                                unidade_medida, qtd_utilizada, qtd_estoque, preco_medio_unitario, custo_unitario,
+                                observacao, data_utilizacao, id_usuario_apontamento, flg_retirado, id_usuario_retirada, data_retirada
+                            ) VALUES (
+                                :id_manutencao, :cod_produto, :descricao_produto, :cod_deposito, :descricao_deposito,
+                                :unidade_medida, :qtd_utilizada, :qtd_estoque, :preco_medio_unitario, :custo_unitario,
+                                :observacao, :data_utilizacao, :id_usuario_apontamento, :flg_retirado, :id_usuario_retirada, :data_retirada
+                            )";
+                }
+
+                $this->adapter->createStatement($sql)->execute($params);
+            }
+            public function excluirApontamentoItem($id)
+            {
+                $sql = "DELETE FROM itens_manutencao WHERE id = :id";
+                $this->adapter->createStatement($sql)->execute([':id' => $id]);
+            }
+        #endRegion
+
+        #region Apontamentos horas
+            public function getApontamentosPorOS($osId)
+            {
+                $sql = "SELECT * FROM apontamentos_manutencao WHERE id_manutencao = :id order by id";
+                $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
+                
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = $row;
+                }
+
+                return $data;
+            }
+            public function salvarApontamentoHoras(array $data)
+            {
+                $params = [
+                    ':id_manutencao' => $data['id_manutencao'],
+                    ':tecnico_id' => $data['tecnico_id'] ?? null,
+                    ':data_inicio' => $data['data_inicio'] ?? null,
+                    ':data_fim' => $data['data_fim'] ?? null,
+                    ':observacao' => $data['observacao'] ?? null,
+                    ':id_usuario_apontamento' => $data['id_usuario_apontamento'] ?? null // Agora vem do controller
+                ];
+
+                // Converter datas para formato PostgreSQL se necessário
+                if (!empty($params[':data_inicio']) && is_string($params[':data_inicio'])) {
+                    $params[':data_inicio'] = date('Y-m-d H:i:s', strtotime($params[':data_inicio']));
+                }
+                
+                if (!empty($params[':data_fim']) && is_string($params[':data_fim'])) {
+                    $params[':data_fim'] = date('Y-m-d H:i:s', strtotime($params[':data_fim']));
+                }
+
+                if (!empty($data['id'])) {
+                    // Update
+                    $sql = "UPDATE apontamentos_manutencao SET
+                                id_manutencao = :id_manutencao,
+                                tecnico_id = :tecnico_id,
+                                data_inicio = :data_inicio,
+                                data_fim = :data_fim,
+                                observacao = :observacao,
+                                id_usuario_apontamento = :id_usuario_apontamento
+                            WHERE id = :id";
+                    $params[':id'] = $data['id'];
+                } else {
+                    // Insert
+                    $sql = "INSERT INTO apontamentos_manutencao (
+                                id_manutencao, tecnico_id, data_inicio, data_fim, 
+                                observacao, id_usuario_apontamento
+                            ) VALUES (
+                                :id_manutencao, :tecnico_id, :data_inicio, :data_fim, 
+                                :observacao, :id_usuario_apontamento
+                            )";
+                }
+
+                $this->adapter->createStatement($sql)->execute($params);
+            }
+            public function excluirApontamentoHoras($id)
+            {
+                $sql = "DELETE FROM apontamentos_manutencao WHERE id = :id";
+                $this->adapter->createStatement($sql)->execute([':id' => $id]);
+            }
+        #endRegion
     #endRegion
 
     #region Controle Retirada Itens

@@ -25,6 +25,18 @@ class PlanejamentoControleManutencaoController extends BaseController
         $this->PlanejamentoControleManutencaoRepository = $PlanejamentoControleManutencaoRepository;
     }
 
+    // Método para obter usuário da sessão (você precisa implementar conforme sua aplicação)
+    private function getUsuarioSessao()
+    {
+        // Exemplo de como obter o usuário da sessão
+        $session = new Container('auth');
+        if ($session->offsetExists('user')) {
+            return $session->offsetGet('user');
+        }
+        
+        return null;
+    }
+
     #region Cadastro Areas Técnicas
         public function cadastroAreaAction()
         {
@@ -663,38 +675,6 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao validar: ' . $e->getMessage()]);
             }
         }
-        public function getApontamentosOsAction()
-        {
-            $request = $this->getRequest();
-            $osId = (int)$this->params()->fromQuery('id');
-
-            if (!$osId) {
-                return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
-            }
-
-            try {
-                $dados = $this->PlanejamentoControleManutencaoRepository->getApontamentosPorOS($osId);
-                return new JsonModel($dados);
-            } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao buscar apontamentos: ' . $e->getMessage()]);
-            }
-        }
-        public function getItensUtilizadosOsAction()
-        {
-            $request = $this->getRequest();
-            $osId = (int)$this->params()->fromQuery('id');
-
-            if (!$osId) {
-                return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
-            }
-
-            try {
-                $dados = $this->PlanejamentoControleManutencaoRepository->getItensUtilizadosPorOS($osId);
-                return new JsonModel($dados);
-            } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao buscar itens: ' . $e->getMessage()]);
-            }
-        }
         public function apontamentosManutencaoOsAction()
         {
             $session = new Container('auth');
@@ -767,6 +747,134 @@ class PlanejamentoControleManutencaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao finalizar: ' . $e->getMessage()]);
             }
         }
+
+        #region Itens Apontamentos
+            public function getItensUtilizadosOsAction()
+            {
+                $request = $this->getRequest();
+                $osId = (int)$this->params()->fromQuery('id');
+
+                if (!$osId) {
+                    return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
+                }
+
+                try {
+                    $dados = $this->PlanejamentoControleManutencaoRepository->getItensUtilizadosPorOS($osId);
+                    return new JsonModel(['success' => true, 'data' => $dados]);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao buscar itens: ' . $e->getMessage()]);
+                }
+            }
+            public function salvarApontamentoItemAction()
+            {
+                if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                    return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+                }
+
+                $data = json_decode($this->getRequest()->getContent(), true);
+                
+                // Obter usuário da sessão
+                $usuarioSessao = $this->getUsuarioSessao();
+                
+                if (!$usuarioSessao || !isset($usuarioSessao['id'])) {
+                    return new JsonModel(['success' => false, 'message' => 'Usuário não autenticado.']);
+                }
+
+                // Adicionar ID do usuário da sessão apenas para inserts (novos itens)
+                if (empty($data['id'])) {
+                    $data['id_usuario_apontamento'] = $usuarioSessao['id'];
+                }
+                // Para updates, mantenha o usuário original que fez o apontamento
+
+                try {
+                    $this->PlanejamentoControleManutencaoRepository->salvarApontamentoItem($data);
+                    return new JsonModel([
+                        'success' => true,
+                        'message' => $this->getRequest()->isPut() ? 'Item atualizado com sucesso!' : 'Item adicionado com sucesso!',
+                    ]);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao salvar Item: ' . $e->getMessage()]);
+                }
+            }
+            public function excluirApontamentoItemAction()
+            {
+                if (!$this->getRequest()->isDelete()) {
+                    return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+                }
+
+                $data = json_decode($this->getRequest()->getContent(), true);
+
+                try {
+                    $this->PlanejamentoControleManutencaoRepository->excluirApontamentoItem($data['id']);
+                    return new JsonModel(['success' => true, 'message' => 'Item excluído com sucesso!']);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao excluir Item: ' . $e->getMessage()]);
+                }
+            }
+        #endRegion
+
+        #region Apontamentos Horas
+            public function getApontamentosOsAction()
+            {
+                $request = $this->getRequest();
+                $osId = (int)$this->params()->fromQuery('id');
+
+                if (!$osId) {
+                    return new JsonModel(['success' => false, 'message' => 'ID da OS não informado']);
+                }
+
+                try {
+                    $dados = $this->PlanejamentoControleManutencaoRepository->getApontamentosPorOS($osId);
+                    return new JsonModel(['success' => true, 'data' => $dados]);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao buscar apontamentos: ' . $e->getMessage()]);
+                }
+            }
+            public function salvarApontamentoHorasAction()
+            {
+                if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                    return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+                }
+
+                $data = json_decode($this->getRequest()->getContent(), true);
+                
+                // Obter usuário da sessão
+                $usuarioSessao = $this->getUsuarioSessao(); // Método que você precisa implementar para obter o usuário da sessão
+                
+                if (!$usuarioSessao || !isset($usuarioSessao['id'])) {
+                    return new JsonModel(['success' => false, 'message' => 'Usuário não autenticado.']);
+                }
+
+                // Adicionar ID do usuário da sessão
+                $data['id_usuario_apontamento'] = $usuarioSessao['id'];
+
+                try {
+                    $this->PlanejamentoControleManutencaoRepository->salvarApontamentoHoras($data);
+                    return new JsonModel([
+                        'success' => true,
+                        'message' => $this->getRequest()->isPut() ? 'Apontamento atualizado com sucesso!' : 'Apontamento adicionado com sucesso!',
+                    ]);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao salvar apontamento: ' . $e->getMessage()]);
+                }
+            }
+            public function excluirApontamentoHorasAction()
+            {
+                if (!$this->getRequest()->isDelete()) {
+                    return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+                }
+
+                $data = json_decode($this->getRequest()->getContent(), true);
+
+                try {
+                    $this->PlanejamentoControleManutencaoRepository->excluirApontamentoHoras($data['id']);
+                    return new JsonModel(['success' => true, 'message' => 'Apontamento excluído com sucesso!']);
+                } catch (\Exception $e) {
+                    return new JsonModel(['success' => false, 'message' => 'Erro ao excluir apontamento: ' . $e->getMessage()]);
+                }
+            }
+        #endRegion
+
     #endRegion
 
     #region Controle Retiradas Estoque
