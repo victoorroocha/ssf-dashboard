@@ -711,19 +711,19 @@ class CreditoECobrancaController extends BaseController
                         $tipos = [
                             'GERMO' => [
                                 'vencimento' => $row['VENCIMENTO_GERMOPLASMA'],
-                                'valor' => floatval($row['PRECO_TOTAL_GERMOPLASMA'])
+                                'valor' => floatval($row['PRECO_TOTAL_GERMOPLASMA_SALDO_REAL'])
                             ],
                             'ROYAL' => [
                                 'vencimento' => $row['VENCIMENTO_ROYALTIES'],
-                                'valor' => floatval($row['PRECO_TOTAL_ROYALTIES'])
+                                'valor' => floatval($row['PRECO_TOTAL_ROYALTIES_SALDO_REAL'])
                             ],
                             'TSI' => [
                                 'vencimento' => $row['VENCIMENTO_TSI'],
-                                'valor' => floatval($row['PRECO_TOTAL_TSI'])
+                                'valor' => floatval($row['PRECO_TOTAL_TSI_SALDO_REAL'])
                             ],
                             'FRETE' => [
                                 'vencimento' => $row['VENCIMENTO_FRETE'],
-                                'valor' => floatval($row['PRECO_TOTAL_FRETE'])
+                                'valor' => floatval($row['PRECO_TOTAL_FRETE_SALDO_REAL'])
                             ]
                         ];
 
