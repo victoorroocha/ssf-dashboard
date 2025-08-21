@@ -741,8 +741,7 @@ class PlanejamentoControleManutencaoRepository
                                 select count(*) qtd from itens_manutencao im where im.id_manutencao = cm.id
                             ) A
                         ) as qtd_apontamentos
-                    FROM controle_manutencao cm
-                    ORDER BY data_programada DESC";
+                    FROM controle_manutencao cm";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
