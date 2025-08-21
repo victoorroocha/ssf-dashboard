@@ -93,6 +93,7 @@
                 { dataField: 'descricao_produto', caption: 'Produto' },
                 { dataField: 'cod_deposito', caption: 'Código Depósito', width: 120, alignment: 'center' },
                 { dataField: 'descricao_deposito', caption: 'Depósito', alignment: 'center' },
+                { dataField: 'enderecamento_produto', caption: 'Endereçamento', alignment: 'center' },
                 {
                     dataField: 'qtd_utilizada',
                     caption: 'Quantidade',
@@ -354,46 +355,75 @@
                         scrollByContent: true
                     });
 
-                    const termoContent = $('<div id="termoRetiradaContent" style="font-family: Arial, sans-serif;"></div>');
+                    const termoContent = $('<div id="termoRetiradaContent" style="font-family: Arial, sans-serif; color: #333;"></div>');
 
-                    // Criar uma página separada para cada OS
                     Object.keys(itensPorOS).forEach((osNumber) => {
                         const itensOS = itensPorOS[osNumber];
-                        
+                        const centroCustoId = itensOS.length > 0 ? itensOS[0].centro_custo_id : '';
+                        const responsaveis = [...new Set(itensOS.map(item => item.usuarios_apontamento))].join(', ');
+                        const dataGeracao = new Date().toLocaleDateString('pt-BR');
+
                         const osPage = $(`
-                            <div class="os-page" style="padding: 20px; page-break-after: always;">
-                                <div style="text-align: center; margin-bottom: 20px;">
-                                    <h2>TERMO DE RETIRADA DE MATERIAIS - OS: ${osNumber}</h2>
-                                    <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
-                                </div>
+                            <div class="os-page" style="padding: 30px; border: 1px solid #ccc; border-radius: 10px; background: #fff; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); page-break-after: always;">
                                 
-                                <div style="margin-bottom: 20px;">
-                                    <p><strong>Responsável por gerar Requisição: </strong> <?php echo $this->usuarioSessaoNome ?></p>
+                                <!-- Cabeçalho com Título -->
+                                <div style="text-align: center; margin-bottom: 25px;">
+                                    <h2 style="margin: 0; font-size: 24px; color: #222; text-transform: uppercase; letter-spacing: 1px;">Termo de Retirada de Materiais</h2>
+                                    <p style="margin: 5px 0; font-size: 13px; color: #666;">Documento interno de controle</p>
                                 </div>
-                                
+
+                                <!-- Bloco com informações principais -->
+                                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; font-size: 14px; background: #fafafa;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="padding: 8px; font-weight: bold; width: 180px;">Número da OS:</td>
+                                            <td style="padding: 8px;">${osNumber}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; font-weight: bold;">Centro de Custo:</td>
+                                            <td style="padding: 8px;">${centroCustoId}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; font-weight: bold;">Data de Geração:</td>
+                                            <td style="padding: 8px;">${dataGeracao}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; font-weight: bold;">Responsável(is):</td>
+                                            <td style="padding: 8px;">${responsaveis}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <!-- Lista dos Itens -->
                                 <div style="margin-bottom: 20px;">
-                                    <h3>Itens Retirados:</h3>
-                                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+                                    <h3 style="margin-bottom: 10px; font-size: 16px; color: #222;">Itens Retirados</h3>
+                                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;">
                                         <thead>
-                                            <tr style="background-color: #f8f9fa;">
-                                                <th style="border: 1px solid #000; padding: 8px;">Código</th>
-                                                <th style="border: 1px solid #000; padding: 8px;">Descrição</th>
-                                                <th style="border: 1px solid #000; padding: 8px;">Quantidade</th>
+                                            <tr style="background-color: #f1f1f1;">
+                                                <th style="border: 1px solid #ccc; padding: 8px;">Código</th>
+                                                <th style="border: 1px solid #ccc; padding: 8px;">Descrição</th>
+                                                <th style="border: 1px solid #ccc; padding: 8px;">Endereçamento</th>
+                                                <th style="border: 1px solid #ccc; padding: 8px; text-align: right;">Quantidade</th>
                                             </tr>
                                         </thead>
                                         <tbody id="termo-os-${osNumber}-body"></tbody>
                                     </table>
                                 </div>
-                                
+
+                                <!-- Assinaturas -->
                                 <div style="margin-top: 40px;">
                                     <div style="display: flex; justify-content: space-between;">
-                                        <div style="width: 45%; text-align: center;">
-                                            <p>_________________________________________</p>
-                                            <p><strong>Responsável pelo Almoxarifado</strong></p>
+                                        <!-- Coluna 1 -->
+                                        <div style="width: 45%; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; min-height: 70px;">
+                                            <p style="margin: 0;"><?php echo htmlspecialchars($this->usuarioSessaoNome); ?></p>
+                                            <p style="margin: 0;">_________________________________________</p>
+                                            <p style="margin: 0;"><strong>Responsável pelo Almoxarifado</strong></p>
                                         </div>
-                                        <div style="width: 45%; text-align: center;">
-                                            <p>_________________________________________</p>
-                                            <p><strong>Responsável pela Retirada</strong></p>
+
+                                        <!-- Coluna 2 -->
+                                        <div style="width: 45%; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; min-height: 70px;">
+                                            <p style="margin: 0;">_________________________________________</p>
+                                            <p style="margin: 0;"><strong>Responsável pela Retirada</strong></p>
                                         </div>
                                     </div>
                                 </div>
@@ -405,9 +435,10 @@
                         itensOS.forEach(item => {
                             const row = `
                                 <tr>
-                                    <td style="border: 1px solid #000; padding: 6px;">${item.cod_produto}</td>
-                                    <td style="border: 1px solid #000; padding: 6px;">${item.descricao_produto}</td>
-                                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">${parseFloat(item.qtd_utilizada).toFixed(4)}</td>
+                                    <td style="border: 1px solid #ccc; padding: 6px;">${item.cod_produto}</td>
+                                    <td style="border: 1px solid #ccc; padding: 6px;">${item.descricao_produto}</td>
+                                    <td style="border: 1px solid #ccc; padding: 6px;">${item.enderecamento_produto}</td>
+                                    <td style="border: 1px solid #ccc; padding: 6px; text-align: right;">${parseFloat(item.qtd_utilizada).toFixed(4)}</td>
                                 </tr>
                             `;
                             tbody.append(row);
@@ -419,6 +450,93 @@
                     scrollableContent.find('.dx-scrollview-content').append(termoContent);
                     contentElement.append(scrollableContent);
                 }
+
+
+                // contentTemplate: function(contentElement) {
+                //     const scrollableContent = $("<div>").dxScrollView({
+                //         height: 'calc(80vh - 100px)',
+                //         showScrollbar: "onHover",
+                //         direction: "vertical",
+                //         scrollByContent: true
+                //     });
+
+                //     const termoContent = $('<div id="termoRetiradaContent" style="font-family: Arial, sans-serif;"></div>');
+
+                //     // Criar uma página separada para cada OS
+                //     Object.keys(itensPorOS).forEach((osNumber) => {
+                //         const itensOS = itensPorOS[osNumber];
+
+                //         // Pega o centro de custo do primeiro item
+                //         const centroCustoId = itensOS.length > 0 ? itensOS[0].centro_custo_id : '';
+                        
+                //         const osPage = $(`
+                //             <div class="os-page" style="padding: 20px; page-break-after: always;">
+                //                 <div style="text-align: center; margin-bottom: 20px;">
+                //                     <h2>TERMO DE RETIRADA DE MATERIAIS - OS: ${osNumber}</h2>
+                //                     <p>Centro de Custo: <strong>${centroCustoId}</strong></p>
+                //                     <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+                //                 </div>
+                                
+                //                 <div style="margin-bottom: 20px;">
+                //                     <p><strong>Responsável(is) por gerar Requisição: </strong> ${[...new Set(itensOS.map(item => item.usuarios_apontamento))].join(', ')}</p>
+                //                 </div>
+                                
+                //                 <div style="margin-bottom: 20px;">
+                //                     <h3>Itens Retirados:</h3>
+                //                     <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+                //                         <thead>
+                //                             <tr style="background-color: #f8f9fa;">
+                //                                 <th style="border: 1px solid #000; padding: 8px;">Código</th>
+                //                                 <th style="border: 1px solid #000; padding: 8px;">Descrição</th>
+                //                                 <th style="border: 1px solid #000; padding: 8px;">Endereçamento</th>
+                //                                 <th style="border: 1px solid #000; padding: 8px;">Quantidade</th>
+                //                             </tr>
+                //                         </thead>
+                //                         <tbody id="termo-os-${osNumber}-body"></tbody>
+                //                     </table>
+                //                 </div>
+                                
+                                // <div style="margin-top: 40px;">
+                                //     <div style="display: flex; justify-content: space-between;">
+                                //         <!-- Coluna 1 -->
+                                //         <div style="width: 45%; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; min-height: 70px;">
+                                //             <p style="margin: 0;"><?php //echo htmlspecialchars($this->usuarioSessaoNome); ?></p>
+                                //             <p style="margin: 0;">_________________________________________</p>
+                                //             <p style="margin: 0;"><strong>Responsável pelo Almoxarifado</strong></p>
+                                //         </div>
+
+                                //         <!-- Coluna 2 -->
+                                //         <div style="width: 45%; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; min-height: 70px;">
+                                //             <p style="margin: 0;">_________________________________________</p>
+                                //             <p style="margin: 0;"><strong>Responsável pela Retirada</strong></p>
+                                //         </div>
+                                //     </div>
+                                // </div>
+
+
+                //             </div>
+                //         `);
+
+                //         // Preencher itens desta OS
+                //         const tbody = osPage.find(`#termo-os-${osNumber}-body`);
+                //         itensOS.forEach(item => {
+                //             const row = `
+                //                 <tr>
+                //                     <td style="border: 1px solid #000; padding: 6px;">${item.cod_produto}</td>
+                //                     <td style="border: 1px solid #000; padding: 6px;">${item.descricao_produto}</td>
+                //                     <td style="border: 1px solid #000; padding: 6px;">${item.enderecamento_produto}</td>
+                //                     <td style="border: 1px solid #000; padding: 6px; text-align: right;">${parseFloat(item.qtd_utilizada).toFixed(4)}</td>
+                //                 </tr>
+                //             `;
+                //             tbody.append(row);
+                //         });
+
+                //         termoContent.append(osPage);
+                //     });
+
+                //     scrollableContent.find('.dx-scrollview-content').append(termoContent);
+                //     contentElement.append(scrollableContent);
+                // }
             }).dxPopup('instance');
 
             termoPopup.show();

@@ -754,19 +754,21 @@ class PlanejamentoControleManutencaoRepository
         }
         public function salvarControleManutencao(array $data)
         {
-            // Alimenta tipo_ordem_servico
+            // se for equipamento alimenta setor e centro de custo com cadastro equipamento.
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
-                $data['tipo_ordem_servico'] = 'Equipamento';
-
                 // Busca o setor_id do equipamento
                 $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['setor_id'])) {
                     $data['setor_id'] = $result['setor_id']; // Sobrescreve o setor vindo do form
                 }
-            } 
-            if (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
-                $data['tipo_ordem_servico'] = 'Centro de Custo';
+
+                // Busca o centro de custo do equipamento
+                $sqlSetor = "SELECT centro_custo FROM equipamentos WHERE id = :id";
+                $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
+                if ($result && isset($result['centro_custo'])) {
+                    $data['centro_custo_id'] = $result['centro_custo']; // Sobrescreve o setor vindo do form
+                }
             } 
 
             if (isset($data['data_inicio']) && $data['data_inicio'] !== null) {
@@ -906,7 +908,6 @@ class PlanejamentoControleManutencaoRepository
                 throw $e;
             }
         }
-
         public function validarOsApontamentos($id)
         {
             $sql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
@@ -951,6 +952,8 @@ class PlanejamentoControleManutencaoRepository
                     ':cod_deposito' => $data['cod_deposito'] ?? null,
                     ':descricao_deposito' => $data['descricao_deposito'] ?? null,
                     ':unidade_medida' => $data['unidade_medida'] ?? null,
+                    ':classe_produto' => $data['classe_produto'] ?? null,
+                    ':enderecamento_produto' => $data['enderecamento_produto'] ?? null,
                     ':qtd_utilizada' => $data['qtd_utilizada'] ?? 0,
                     ':qtd_estoque' => $data['qtd_estoque'] ?? 0,
                     ':preco_medio_unitario' => $data['preco_medio_unitario'] ?? 0,
@@ -972,6 +975,8 @@ class PlanejamentoControleManutencaoRepository
                                 cod_deposito = :cod_deposito,
                                 descricao_deposito = :descricao_deposito,
                                 unidade_medida = :unidade_medida,
+                                classe_produto = :classe_produto,
+                                enderecamento_produto = :enderecamento_produto,
                                 qtd_utilizada = :qtd_utilizada,
                                 qtd_estoque = :qtd_estoque,
                                 preco_medio_unitario = :preco_medio_unitario,
@@ -988,11 +993,11 @@ class PlanejamentoControleManutencaoRepository
                     // Insert
                     $sql = "INSERT INTO itens_manutencao (
                                 id_manutencao, cod_produto, descricao_produto, cod_deposito, descricao_deposito,
-                                unidade_medida, qtd_utilizada, qtd_estoque, preco_medio_unitario, custo_unitario,
+                                unidade_medida, classe_produto, enderecamento_produto, qtd_utilizada, qtd_estoque, preco_medio_unitario, custo_unitario,
                                 observacao, data_utilizacao, id_usuario_apontamento, flg_retirado, id_usuario_retirada, data_retirada
                             ) VALUES (
                                 :id_manutencao, :cod_produto, :descricao_produto, :cod_deposito, :descricao_deposito,
-                                :unidade_medida, :qtd_utilizada, :qtd_estoque, :preco_medio_unitario, :custo_unitario,
+                                :unidade_medida, :classe_produto, :enderecamento_produto, :qtd_utilizada, :qtd_estoque, :preco_medio_unitario, :custo_unitario,
                                 :observacao, :data_utilizacao, :id_usuario_apontamento, :flg_retirado, :id_usuario_retirada, :data_retirada
                             )";
                 }
@@ -1081,12 +1086,16 @@ class PlanejamentoControleManutencaoRepository
                         ,im.descricao_produto 
                         ,im.cod_deposito 
                         ,im.descricao_deposito 
+                        ,im.enderecamento_produto
                         ,im.qtd_utilizada 
                         ,im.custo_unitario 
                         ,im.custo_total 
                         ,im.flg_retirado
+                        ,ua.nome as usuarios_apontamento
+                        ,cm.centro_custo_id 
                     FROM itens_manutencao im 
                     LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao 
+                    LEFT JOIN usuario ua on ua.id = im.id_usuario_apontamento 
                     WHERE (im.flg_retirado = false or im.flg_retirado is null)";
             $result = $this->adapter->createStatement($sql)->execute();
 

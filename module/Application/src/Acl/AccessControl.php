@@ -176,9 +176,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -192,6 +195,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -308,9 +312,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -324,6 +331,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -439,9 +447,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -455,6 +466,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -570,9 +582,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -586,6 +601,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -701,9 +717,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -717,6 +736,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -832,9 +852,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -848,6 +871,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
@@ -963,9 +987,12 @@ class AccessControl
             'validarOsApontamentos',
             'getApontamentosOs',
             'getItensUtilizadosOs',
-            'apontamentosManutencaoOs',
             'getInfoOrdemServico',
             'finalizarOs',
+            'salvarApontamentoItem',
+            'excluirApontamentoItem',
+            'salvarApontamentoHoras',
+            'excluirApontamentoHoras',
             
             // Controle Retiradas Estoque
             'retiradaEstoque',
@@ -979,6 +1006,7 @@ class AccessControl
             
             // Lookups
             'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);

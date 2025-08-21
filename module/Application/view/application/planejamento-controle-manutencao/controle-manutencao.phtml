@@ -341,11 +341,15 @@
                     }
                 ]
             },
-            pager: {
-                visible: true
-            },
             paging: {
-                pageSize: 500
+                pageSize: 500,
+            },
+            pager: {
+                visible: true,
+                allowedPageSizes: [5, 10, 100, 200, 500],
+                showPageSizeSelector: true,
+                showInfo: true,
+                showNavigationButtons: true,
             },
             headerFilter: {
                 visible: true,
@@ -502,14 +506,66 @@
                                 showDataBeforeSearch: true
                             } 
                         },
-                        { 
-                            dataField: 'centro_custo_id', 
+                        {
+                            dataField: 'centro_custo_id',
                             colSpan: 2,
-                            editorType: 'dxSelectBox', 
-                            label: { text: 'Centro de Custo' }, 
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Centro de Custo' },
                             visible: false,
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') 
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'ID',
+                                        load: function (loadOptions) {
+                                            const deferred = $.Deferred();
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: {
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || [];
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || data.length
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function (key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: { key: key }
+                                            }).then(result => {
+                                                const item = (result.data || []).find(d => d.ID == key);
+                                                return item || null;
+                                            });
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30
+                                }),
+                                valueExpr: 'ID',
+                                displayExpr: 'DSC',
+                                searchEnabled: true,
+                                searchExpr: ['DSC'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            }
                         },
+
                         { 
                             dataField: 'setor_id', 
                             label: { text: 'Setor' }, 
@@ -596,14 +652,33 @@
                 },
                 { dataField: 'nome_solicitante', caption: 'Solicitante', visible: false },
                 { dataField: 'tipo_ordem_servico', caption: 'Tipo Ordem Serviço', visible: false, width: 200 },
-                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'dsc_equipamento', valueExpr: 'id' } },
+                { 
+                    dataField: 'equipamento_id', 
+                    caption: 'Equipamento', 
+                    width: 300, 
+                    lookup: { 
+                        dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), 
+                        displayExpr: 'dsc_equipamento', 
+                        valueExpr: 'id' 
+                    },
+                    setCellValue: function(newData, value, currentRowData) {
+                        newData.equipamento_id = value;
+
+                        // Pega o item selecionado no lookup (que já tem centro_custo_id)
+                        const selectedItem = this.lookup.items.find(item => item.id === value);
+
+                        if (selectedItem) {
+                            newData.centro_custo_id = selectedItem.centro_custo;
+                        }
+                    }
+                },
                 {
                     dataField: 'centro_custo_id',
                     caption: 'Centro de Custo',
                     width: 200,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-centros-custo')
                         }),
                         displayExpr: 'DSC',
                         valueExpr: 'ID'
@@ -613,7 +688,7 @@
                 { 
                     dataField: 'setor_id', 
                     caption: 'Setor', 
-                    groupIndex: 0,
+                    // groupIndex: 0,
                     lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores') }), displayExpr: 'nome', valueExpr: 'id' }, 
                     width: 160
                 },
@@ -716,8 +791,7 @@
             },
             onEditingStart: function(e) {
                 // Determina o tipo_ordem_servico baseado nos campos preenchidos
-                const tipo = e.data.equipamento_id ? 'Equipamento' : 
-                            e.data.centro_custo_id ? 'Centro de Custo' : null;
+                const tipo = e.data.tipo_ordem_servico;
 
                 setTimeout(() => {
                     const form = $(".dx-popup-content .dx-form").dxForm("instance");
@@ -759,6 +833,23 @@
                         if (form) {
                             // Atualiza valor no formData
                             form.option('formData.tipo_ordem_servico', args.value);
+
+                            // // Zera valores no formData
+                            // form.updateData('equipamento_id', null);
+                            // form.updateData('centro_custo_id', null);
+                            // form.updateData('setor_id', null);
+
+                            // Também zera no newData (para o DataGrid)
+                            if (e.row && e.row.data) {
+                                if (args.value === 'Centro de Custo') {
+                                    e.row.data.equipamento_id = null;
+                                    e.row.data.centro_custo_id = null;
+                                } else if (args.value === 'Equipamento') {
+                                    e.row.data.equipamento_id = null;
+                                    e.row.data.centro_custo_id = null;
+                                    e.row.data.setor_id = null;
+                                }
+                            }
 
                             // Atualiza visibilidade e obrigatoriedade
                             atualizarVisibilidadeForm(form);
@@ -889,9 +980,15 @@
                     visible: true,
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
+                form.itemOption('centro_custo_id', {
+                    visible: true,
+                    disabled: true, // bloqueia edição
+                    validationRules: []
+                });
             } else if (tipoOrdemServico === 'Centro de Custo') {
                 form.itemOption('centro_custo_id', {
                     visible: true,
+                    disabled: false,
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
                 form.itemOption('setor_id', {
@@ -1074,6 +1171,16 @@
                                                             keyExpr: 'id',
                                                             showBorders: true,
                                                             columnAutoWidth: true,
+                                                            paging: {
+                                                                pageSize: 10,
+                                                            },
+                                                            pager: {
+                                                                visible: true,
+                                                                allowedPageSizes: [5, 10, 'Todos'],
+                                                                showPageSizeSelector: true,
+                                                                showInfo: true,
+                                                                showNavigationButtons: true,
+                                                            },
                                                             editing: {
                                                                 mode: 'form',
                                                                 allowAdding: true,
@@ -1124,13 +1231,14 @@
                                                             },
                                                             columns: [
                                                                 { dataField: 'id', caption: 'ID', alignment: 'center', width: 80 },
-                                                                { dataField: 'tecnico_id', caption: 'Técnico Responsável', width: 200, visible: false, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos') }), displayExpr: 'nome', valueExpr: 'id' } },
+                                                                { dataField: 'tecnico_id', caption: 'Técnico Responsável', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-tecnicos') }), displayExpr: 'nome', valueExpr: 'id' } },
                                                                 {
                                                                     dataField: 'data_inicio',
                                                                     caption: 'Início',
                                                                     dataType: 'datetime',
                                                                     format: 'dd/MM/yyyy HH:mm',
                                                                     width: 160,
+                                                                    alignment: 'center',
                                                                     serialize: function(value) {
                                                                         return value ? DevExpress.localization.formatDate(value, 'yyyy-MM-ddTHH:mm:ss') : null;
                                                                     }
@@ -1141,6 +1249,7 @@
                                                                     dataType: 'datetime',
                                                                     format: 'dd/MM/yyyy HH:mm',
                                                                     width: 160,
+                                                                    alignment: 'center',
                                                                     serialize: function(value) {
                                                                         return value ? DevExpress.localization.formatDate(value, 'yyyy-MM-ddTHH:mm:ss') : null;
                                                                     }
@@ -1157,7 +1266,7 @@
                                                                 {
                                                                     dataField: 'observacao',
                                                                     caption: 'Observação',
-                                                                    width: 300
+                                                                    width: 200
                                                                 }
                                                             ],
                                                             onRowUpdating: function (e) {
@@ -1270,32 +1379,45 @@
                                                             keyExpr: 'id',
                                                             showBorders: true,
                                                             columnAutoWidth: true,
+                                                            paging: {
+                                                                pageSize: 10,
+                                                            },
+                                                            pager: {
+                                                                visible: true,
+                                                                allowedPageSizes: [5, 10, 'Todos'],
+                                                                showPageSizeSelector: true,
+                                                                showInfo: true,
+                                                                showNavigationButtons: true,
+                                                            },
                                                             editing: {
                                                                 mode: 'form',
                                                                 allowAdding: true,
-                                                                allowUpdating: true,
+                                                                allowUpdating: function(options) {
+                                                                    // Não permite Alterar se o item já foi retirado
+                                                                    return !options.row.data.flg_retirado;
+                                                                },
                                                                 allowDeleting: function(options) {
                                                                     // Não permite deletar se o item já foi retirado
                                                                     return !options.row.data.flg_retirado;
                                                                 },
                                                                 useIcons: true,
                                                                 form: {
-                                                                    colCount: 2,
+                                                                    colCount: 3,
                                                                     labelLocation: 'top',
                                                                     items: [
-                                                                        'cod_produto',
                                                                         {
-                                                                            dataField: 'data_utilizacao',
-                                                                            editorType: 'dxDateBox',
-                                                                            label: { text: 'Data Utilização' },
-                                                                            colSpan: 2,
-                                                                            editorOptions: { type: 'date' },
-                                                                            validationRules: [{ type: 'required', message: 'Data Utilização é obrigatória' }]
+                                                                            dataField: 'cod_produto',
+                                                                            colSpan: 2
+                                                                        },
+                                                                        {
+                                                                            dataField: 'classe_produto',
+                                                                            editorOptions: { readOnly: true }
                                                                         },
                                                                         'cod_deposito',
                                                                         {
                                                                             dataField: 'descricao_deposito',
-                                                                            editorOptions: { readOnly: true }
+                                                                            editorOptions: { readOnly: true },
+                                                                            colSpan: 2,
                                                                         },
                                                                         {
                                                                             dataField: 'qtd_estoque',
@@ -1311,7 +1433,19 @@
                                                                             editorOptions: {
                                                                                 readOnly: true,
                                                                                 format: { type: 'currency', currency: 'BRL', precision: 4 }
-                                                                            }
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            dataField: 'enderecamento_produto',
+                                                                            editorOptions: { readOnly: true }
+                                                                        },
+                                                                        {
+                                                                            dataField: 'data_utilizacao',
+                                                                            editorType: 'dxDateBox',
+                                                                            label: { text: 'Data Utilização' },
+                                                                            colSpan: 1,
+                                                                            editorOptions: { type: 'date' },
+                                                                            validationRules: [{ type: 'required', message: 'Data Utilização é obrigatória' }]
                                                                         },
                                                                         {
                                                                             dataField: 'qtd_utilizada',
@@ -1319,6 +1453,7 @@
                                                                             editorOptions: {
                                                                                 format: { type: 'fixedPoint', precision: 4 }
                                                                             },
+                                                                            colSpan: 1,
                                                                             validationRules: [{ type: 'required' }]
                                                                         },
                                                                         {
@@ -1327,14 +1462,15 @@
                                                                             editorOptions: {
                                                                                 format: { type: 'currency', currency: 'BRL', precision: 4 }
                                                                             },
+                                                                            colSpan: 1,
                                                                             validationRules: [{ type: 'required' }]
                                                                         },
                                                                         {
                                                                             dataField: 'observacao',
-                                                                            colSpan: 2,
+                                                                            colSpan: 3,
                                                                             editorType: 'dxTextArea',
                                                                             label: { text: 'Observação' },
-                                                                            editorOptions: { height: 100, width: '100%' },
+                                                                            editorOptions: { height: 50, width: '100%' },
                                                                             validationRules: [{ type: 'required', message: 'Observação é obrigatória' }]
                                                                         }
                                                                     ]
@@ -1346,6 +1482,7 @@
                                                                     dataField: 'cod_produto',
                                                                     caption: 'Produto',
                                                                     width: 200,
+                                                                    visible: false,
                                                                     lookup: {
                                                                         dataSource: new DevExpress.data.CustomStore({
                                                                             key: 'CODPRO',
@@ -1370,7 +1507,6 @@
                                                                                         deferred.resolve({ data: [] });
                                                                                     }
                                                                                 });
-
                                                                                 return deferred.promise();
                                                                             },
                                                                             byKey: function(key) {
@@ -1403,6 +1539,8 @@
                                                                                     cod_deposito: produto.CODDEP,
                                                                                     descricao_deposito: produto.DESDEP,
                                                                                     unidade_medida: produto.UNIMED,
+                                                                                    classe_produto: produto.CLAPRO,
+                                                                                    enderecamento_produto: produto.CODEND,
                                                                                     qtd_estoque: produto.QTDEST,
                                                                                     preco_medio_unitario: produto.PRMEST,
                                                                                     custo_unitario: produto.PRMEST
@@ -1411,6 +1549,14 @@
                                                                         });
                                                                     },
                                                                     validationRules: [{ type: 'required' }]
+                                                                },
+                                                                {
+                                                                    dataField: 'descricao_produto',
+                                                                    caption: 'Produto',
+                                                                    allowEditing: false,
+                                                                    calculateDisplayValue: function(rowData) {
+                                                                        return rowData.cod_produto + ' - ' + rowData.descricao_produto;
+                                                                    }
                                                                 },
                                                                 {
                                                                     dataField: 'data_utilizacao',
@@ -1424,6 +1570,8 @@
                                                                 { dataField: 'cod_deposito', caption: 'Código Depósito', allowEditing: false, visible: false },
                                                                 { dataField: 'descricao_deposito', caption: 'Depósito', allowEditing: false },
                                                                 { dataField: 'unidade_medida', caption: 'Unidade', allowEditing: false, width: 80, visible: false },
+                                                                { dataField: 'classe_produto', caption: 'Classe', allowEditing: false, width: 80, visible: false },
+                                                                { dataField: 'enderecamento_produto', caption: 'Endereçamento', allowEditing: false, width: 80, visible: false },
                                                                 {
                                                                     dataField: 'qtd_estoque',
                                                                     caption: 'Qtd. Estoque',
@@ -1431,7 +1579,8 @@
                                                                     alignment: 'right',
                                                                     width: 120,
                                                                     dataType: 'number',
-                                                                    format: { type: 'fixedPoint', precision: 4 }
+                                                                    format: { type: 'fixedPoint', precision: 4 }, 
+                                                                    visible: false
                                                                 },
                                                                 {
                                                                     dataField: 'preco_medio_unitario',
@@ -1440,7 +1589,8 @@
                                                                     alignment: 'right',
                                                                     width: 120,
                                                                     dataType: 'number',
-                                                                    format: { type: 'currency', currency: 'BRL', precision: 4 }
+                                                                    format: { type: 'currency', currency: 'BRL', precision: 4 }, 
+                                                                    visible: false
                                                                 },
                                                                 {
                                                                     dataField: 'qtd_utilizada',
