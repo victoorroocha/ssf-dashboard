@@ -313,7 +313,8 @@
                                 placeholder: 'Digite para buscar...',
                                 showClearButton: true,
                                 showDataBeforeSearch: true
-                            }
+                            },
+                            validationRules: [{ type: 'required', message: 'Centro de Custo obrigatório' }]
                         },
                         { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } }
                     ]
