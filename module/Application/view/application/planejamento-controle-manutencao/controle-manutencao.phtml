@@ -729,7 +729,7 @@
                     sortOrder: 'asc',
                     calculateSortValue: function(rowData) {
                         // Forçar a ordem: Pendente < Finalizada
-                        const order = { 'pendente': 0, 'em execução': 0, 'finalizada': 2 };
+                        const order = { 'pendente': 0, 'em execução': 1, 'finalizada': 2 };
                         return order[(rowData.status || '').toLowerCase()] ?? 99;
                     }
                 },
