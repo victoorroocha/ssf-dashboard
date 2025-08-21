@@ -257,7 +257,64 @@
                             editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') ,
                             validationRules: [{ type: 'required', message: 'Setor obrigatório' }]
                         },
-                        { dataField: 'centro_custo', colSpan: 2, editorType: 'dxSelectBox', label: { text: 'Centro de Custo' }, editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') },
+                        {
+                            dataField: 'centro_custo_id',
+                            colSpan: 2,
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Centro de Custo' },
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'ID',
+                                        load: function (loadOptions) {
+                                            const deferred = $.Deferred();
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: {
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || [];
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || data.length
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function (key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: { key: key }
+                                            }).then(result => {
+                                                const item = (result.data || []).find(d => d.ID == key);
+                                                return item || null;
+                                            });
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30
+                                }),
+                                valueExpr: 'ID',
+                                displayExpr: 'DSC',
+                                searchEnabled: true,
+                                searchExpr: ['DSC'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            }
+                        },
                         { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } }
                     ]
                 },
@@ -295,11 +352,12 @@
                     }
                 },
                 {
-                    dataField: 'centro_custo',
+                    dataField: 'centro_custo_id',
                     caption: 'Centro de Custo',
+                    width: 200,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-centros-custo')
                         }),
                         displayExpr: 'DSC',
                         valueExpr: 'ID'

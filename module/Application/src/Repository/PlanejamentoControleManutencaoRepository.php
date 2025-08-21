@@ -551,22 +551,22 @@ class PlanejamentoControleManutencaoRepository
             $status_programacao = $data['status_programacao'] ?? 'Ativa';
             $periodicidade_dias = isset($data['periodicidade_dias']) ? (int)$data['periodicidade_dias'] : null;
 
-            // Definir tipo_ordem_servico e setor_id conforme regras
+            // se for equipamento alimenta setor e centro de custo com cadastro equipamento.
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
-                $data['tipo_ordem_servico'] = 'Equipamento';
-
                 // Busca o setor_id do equipamento
                 $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
-                $resultSetor = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
-                if ($resultSetor && isset($resultSetor['setor_id'])) {
-                    $data['setor_id'] = $resultSetor['setor_id']; // Sobrescreve o setor vindo do form
+                $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
+                if ($result && isset($result['setor_id'])) {
+                    $data['setor_id'] = $result['setor_id']; // Sobrescreve o setor vindo do form
                 }
-            } elseif (isset($data['centro_custo_id']) && !empty($data['centro_custo_id'])) {
-                $data['tipo_ordem_servico'] = 'Centro de Custo';
-            } else {
-                // Caso não tenha nem equipamento nem centro de custo, lance exceção ou defina padrão
-                throw new \InvalidArgumentException("Informe equipamento ou centro de custo.");
-            }
+
+                // Busca o centro de custo do equipamento
+                $sqlSetor = "SELECT centro_custo FROM equipamentos WHERE id = :id";
+                $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
+                if ($result && isset($result['centro_custo'])) {
+                    $data['centro_custo_id'] = $result['centro_custo']; // Sobrescreve o setor vindo do form
+                }
+            } 
 
             if (!empty($data['id'])) {
                 // Busca dados atuais para comparar

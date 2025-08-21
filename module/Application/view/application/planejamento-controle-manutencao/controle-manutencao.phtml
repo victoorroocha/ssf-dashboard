@@ -565,7 +565,6 @@
                                 showDataBeforeSearch: true
                             }
                         },
-
                         { 
                             dataField: 'setor_id', 
                             label: { text: 'Setor' }, 
@@ -834,12 +833,7 @@
                         if (form) {
                             // Atualiza valor no formData
                             form.option('formData.tipo_ordem_servico', args.value);
-
-                            // // Zera valores no formData
-                            // form.updateData('equipamento_id', null);
-                            // form.updateData('centro_custo_id', null);
-                            // form.updateData('setor_id', null);
-
+                            
                             // Também zera no newData (para o DataGrid)
                             if (e.row && e.row.data) {
                                 if (args.value === 'Centro de Custo') {

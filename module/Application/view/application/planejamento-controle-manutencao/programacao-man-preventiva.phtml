@@ -272,7 +272,7 @@
                                 }),
                                 valueExpr: 'id',
                                 searchEnabled: true,
-                                searchExpr: ['codigo', 'nome', 'setor_nome', 'centro_custo', 'observacoes'],
+                                searchExpr: ['codigo', 'nome', 'setor_nome', 'centro_custo'],
                                 searchTimeout: 500,
                                 minSearchLength: 0,
                                 itemTemplate: function(data) {
@@ -298,13 +298,64 @@
                                 showDataBeforeSearch: true
                             } 
                         },
-                        { 
-                            dataField: 'centro_custo_id', 
+                        {
+                            dataField: 'centro_custo_id',
                             colSpan: 3,
-                            editorType: 'dxSelectBox', 
-                            label: { text: 'Centro de Custo' }, 
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Centro de Custo' },
                             visible: false,
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-centro-custo-lookup', 'DSC', 'ID', 'Selecione o centro de custo') 
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'ID',
+                                        load: function (loadOptions) {
+                                            const deferred = $.Deferred();
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: {
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || [];
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || data.length
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function (key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
+                                                dataType: 'json',
+                                                data: { key: key }
+                                            }).then(result => {
+                                                const item = (result.data || []).find(d => d.ID == key);
+                                                return item || null;
+                                            });
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30
+                                }),
+                                valueExpr: 'ID',
+                                displayExpr: 'DSC',
+                                searchEnabled: true,
+                                searchExpr: ['DSC'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            }
                         },
                         {
                             dataField: 'nome_solicitante',
@@ -364,14 +415,33 @@
             },
             columns: [
                 { dataField: 'tipo_ordem_servico', caption: 'Tipo Ordem Serviço', visible: false, width: 200 },
-                { dataField: 'equipamento_id', caption: 'Equipamento', width: 300, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), displayExpr: 'dsc_equipamento', valueExpr: 'id' } },
+                { 
+                    dataField: 'equipamento_id', 
+                    caption: 'Equipamento', 
+                    width: 300, 
+                    lookup: { 
+                        dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-manutencao/listar-equipamentos') }), 
+                        displayExpr: 'dsc_equipamento', 
+                        valueExpr: 'id' 
+                    },
+                    setCellValue: function(newData, value, currentRowData) {
+                        newData.equipamento_id = value;
+
+                        // Pega o item selecionado no lookup (que já tem centro_custo_id)
+                        const selectedItem = this.lookup.items.find(item => item.id === value);
+
+                        if (selectedItem) {
+                            newData.centro_custo_id = selectedItem.centro_custo;
+                        }
+                    }
+                },
                 {
                     dataField: 'centro_custo_id',
                     caption: 'Centro de Custo',
                     width: 230,
                     lookup: {
                         dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/get-centro-custo-lookup')
+                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-centros-custo')
                         }),
                         displayExpr: 'DSC',
                         valueExpr: 'ID'
@@ -487,8 +557,7 @@
             },
             onEditingStart: function(e) {
                 // Determina o tipo_ordem_servico baseado nos campos preenchidos
-                const tipo = e.data.equipamento_id ? 'Equipamento' :
-                            e.data.centro_custo_id ? 'Centro de Custo' : null;
+                const tipo = e.data.tipo_ordem_servico;
 
                 setTimeout(() => {
                     const form = $(".dx-popup-content .dx-form").dxForm("instance");
@@ -530,6 +599,18 @@
                         if (form) {
                             // Atualiza valor no formData
                             form.option('formData.tipo_ordem_servico', args.value);
+                            
+                            // Também zera no newData (para o DataGrid)
+                            if (e.row && e.row.data) {
+                                if (args.value === 'Centro de Custo') {
+                                    e.row.data.equipamento_id = null;
+                                    e.row.data.centro_custo_id = null;
+                                } else if (args.value === 'Equipamento') {
+                                    e.row.data.equipamento_id = null;
+                                    e.row.data.centro_custo_id = null;
+                                    e.row.data.setor_id = null;
+                                }
+                            }
 
                             // Atualiza visibilidade e obrigatoriedade
                             atualizarVisibilidadeForm(form);
@@ -628,9 +709,15 @@
                     visible: true,
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
+                form.itemOption('centro_custo_id', {
+                    visible: true,
+                    disabled: true, // bloqueia edição
+                    validationRules: []
+                });
             } else if (tipoOrdemServico === 'Centro de Custo') {
                 form.itemOption('centro_custo_id', {
                     visible: true,
+                    disabled: false,
                     validationRules: [{ type: 'required', message: 'Campo obrigatório' }]
                 });
                 form.itemOption('setor_id', {
