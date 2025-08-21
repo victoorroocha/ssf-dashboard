@@ -745,10 +745,11 @@
                                 return e.row.data.status !== 'Finalizada';
                             }
                         },
-                        {
+                       {
                             name: 'delete',
                             visible: function (e) {
-                                return e.row.data.qtd_apontamentos === 0;
+                                // Só mostra o botão se não houver apontamentos e a OS não estiver finalizada
+                                return e.row.data.qtd_apontamentos === 0 && e.row.data.status !== 'Finalizada';
                             }
                         },
                         {
