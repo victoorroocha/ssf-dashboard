@@ -461,8 +461,6 @@ class CreditoECobrancaRepository
                 ORDER BY CODIGOSAFRA"; 
     }
 
-
-
     #region Controle Documentos
         public function getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null)
         {
@@ -574,21 +572,6 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
-        public function getStatusDuplicatasQuery($idPedido)
-        {
-            if (!empty($idPedido)) {
-                $sql = "SELECT
-                            count(distinct dbp.id_parcela_pedido) qtd
-                        FROM duplicata_boleto_pedido dbp
-                        WHERE dbp.duplicata_recebido  = true
-                        and dbp.id_pedido = {$idPedido}
-                        GROUP by dbp.id_pedido;";
-            } else {
-                $sql = "";
-            }
-
-            return $sql;
-        }
         public function getStatusCPRQuery($idPedido, $tipoPessoa)
         {
             if (!empty($idPedido) && !empty($tipoPessoa)) {
@@ -599,6 +582,24 @@ class CreditoECobrancaRepository
                         where g.ativo = true 
                         and gp.ativo = true
                         and g.flg_cpr = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusNotaPromissoriaQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_nota_promissoria = true
                         and id_pedido = {$idPedido}
                         AND g.tipo_pessoa = '{$tipoPessoa}'";
             } else {
@@ -719,7 +720,6 @@ class CreditoECobrancaRepository
                     $ands
                     FETCH FIRST 30 ROWS ONLY";  
         }
-        
         public function getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra)
         {
             if (!empty($grupoClienteID) && !empty($codigoSafra)) {
@@ -887,7 +887,58 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
+        public function getControleDocumentosQuery($idPedido)
+        {
+            if (!empty($idPedido)) {
+                $sql = "SELECT * FROM controle_documentos where id_pedido = {$idPedido}";
+            } else {
+                $sql = "";
+            }
 
+            return $sql;
+        }
+        public function marcarDocumentosEnviados(array $data)
+        {
+            $this->adapter->getDriver()->getConnection()->beginTransaction();
+
+            try {
+                // Verifica se o registro já existe
+                $sqlSelect = "SELECT COUNT(*) AS total FROM controle_documentos WHERE id_pedido = :id_pedido";
+                $result = $this->adapter->query($sqlSelect, [':id_pedido' => $data['id_pedido']])->current();
+
+                if ($result && $result['total'] > 0) {
+                    // Atualiza o registro existente
+                    $sqlUpdate = "UPDATE controle_documentos
+                                SET flg_documento_enviado = TRUE
+                                WHERE id_pedido = :id_pedido";
+
+                    $paramsUpdate = [
+                        ':id_pedido' => $data['ID_PEDIDO']
+                    ];
+
+                    $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
+
+                } else {
+                    // Insere um novo registro
+                    $sqlInsert = "INSERT INTO controle_documentos (id_pedido, codigo_pedido, id_cliente, flg_documento_enviado)
+                                VALUES (:id_pedido, :codigo_pedido, :id_cliente, TRUE)";
+
+                    $paramsInsert = [
+                        ':id_pedido' => $data['ID_PEDIDO'],
+                        ':codigo_pedido' => $data['CODIGO_PEDIDO'],
+                        ':id_cliente' => isset($data['ID_CLIENTE']) ? $data['ID_CLIENTE'] : null
+                    ];
+
+                    $this->adapter->createStatement($sqlInsert)->execute($paramsInsert);
+                }
+
+                $this->adapter->getDriver()->getConnection()->commit();
+
+            } catch (\Exception $e) {
+                $this->adapter->getDriver()->getConnection()->rollback();
+                throw $e;
+            }
+        }
 
         #region Cadastro Documentos
             public function listarDocumentos($skip, $take, $sort = null)
@@ -972,7 +1023,7 @@ class CreditoECobrancaRepository
         #region Cadastro Garantias
             public function listarGarantias($skip, $take, $sort = null)
             {
-                $sql = 'SELECT id, dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, tipo_pessoa FROM garantias order by id';
+                $sql = 'SELECT id, dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, flg_nota_promissoria, tipo_pessoa FROM garantias order by id';
 
                 if ($sort) {
                     $sort = json_decode($sort, true);
@@ -1009,9 +1060,9 @@ class CreditoECobrancaRepository
                 }
 
                 $sql = 'INSERT INTO garantias 
-                        (dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, tipo_pessoa) 
+                        (dsc_garantia, ativo, flg_instrumento_fianca, flg_confissao_divida, flg_cpr, flg_garantia_obrigatorio, flg_nota_promissoria, tipo_pessoa) 
                         VALUES 
-                        (:dsc_garantia, :ativo, :flg_instrumento_fianca, :flg_confissao_divida, :flg_cpr, :flg_garantia_obrigatorio, :tipo_pessoa)';
+                        (:dsc_garantia, :ativo, :flg_instrumento_fianca, :flg_confissao_divida, :flg_cpr, :flg_garantia_obrigatorio, :flg_nota_promissoria, :tipo_pessoa)';
                         
                 $statement = $this->adapter->createStatement($sql);
                 $statement->execute([
@@ -1021,6 +1072,7 @@ class CreditoECobrancaRepository
                     ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
                     ':flg_cpr' => $data['flg_cpr'] ?? false,
                     ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                    ':flg_nota_promissoria' => $data['flg_nota_promissoria'] ?? false,
                     ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                 ]);
             }
@@ -1033,6 +1085,7 @@ class CreditoECobrancaRepository
                         flg_confissao_divida = :flg_confissao_divida,
                         flg_cpr = :flg_cpr,
                         flg_garantia_obrigatorio = :flg_garantia_obrigatorio,
+                        flg_nota_promissoria = :flg_nota_promissoria,
                         tipo_pessoa = :tipo_pessoa
                         WHERE id = :id';
                         
@@ -1044,6 +1097,7 @@ class CreditoECobrancaRepository
                     ':flg_confissao_divida' => $data['flg_confissao_divida'] ?? false,
                     ':flg_cpr' => $data['flg_cpr'] ?? false,
                     ':flg_garantia_obrigatorio' => $data['flg_garantia_obrigatorio'] ?? false,
+                    ':flg_nota_promissoria' => $data['flg_nota_promissoria'] ?? false,
                     ':tipo_pessoa' => !empty($data['tipo_pessoa']) ? $data['tipo_pessoa'] : null,
                     ':id' => $data['id'],
                 ]);
@@ -1554,9 +1608,6 @@ class CreditoECobrancaRepository
                     ORDER BY 3 desc
                     FETCH FIRST 10 ROWS ONLY";  
         }
-
-
-
         public function getDetalhesPedidosEmitidosPedidos($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
         {
             $ands = "";
@@ -1916,6 +1967,5 @@ class CreditoECobrancaRepository
                         SELECT id_pedido FROM garantias_pedido gp WHERE ativo = true
                     ) A";  
         }
-
     #endregion
 }

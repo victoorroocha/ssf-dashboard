@@ -97,7 +97,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Diretor', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 
@@ -233,7 +234,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Gerente', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 
@@ -368,7 +370,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Coordenador', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 
@@ -503,7 +506,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Encarregado', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 
@@ -638,7 +642,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Analista', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 
@@ -773,7 +778,8 @@ class AccessControl
             'detalhesCardsMonitoramentoPedidosSafra',
             'dashboardPropostasDocumentos',
             'listarDadosPropostasDocumentos',
-            'fetchPedidosStatusControleDocumentos'
+            'fetchPedidosStatusControleDocumentos',
+            'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Assistente', 'ControladoriaController', [
             'divergenciasCentrosCustoContas', 

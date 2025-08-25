@@ -512,7 +512,7 @@
                                         // Visiveis
                                         {
                                             type: "buttons",      
-                                            width: 100,            
+                                            width: 150,            
                                             fixed: true,
                                             fixedPosition: "left",
                                             buttons: [
@@ -537,7 +537,7 @@
                                                         imprimirDocumentosPedido(data);
                                                     }
                                                 },
-                                               {
+                                                {
                                                     hint: "Gerar Nota Promissória",
                                                     icon: "fa fa-file",
                                                     visible: function(e) {
@@ -549,7 +549,19 @@
                                                         // gerarNotaPromissoria(data);
                                                         selecionarAvalistasPopup(data);
                                                     }
-                                                }
+                                                },
+                                                {
+                                                    hint: 'Documentos Enviados?',
+                                                    icon: 'check',
+                                                    visible: function (e) {
+                                                        const data = e.row.data;
+                                                        return data.FLG_DOCUMENTO_ENVIADO != true;
+                                                    },
+                                                    onClick: function (e) {
+                                                        const data = e.row.data;
+                                                        marcarDocumentosEnviados(data);
+                                                    }
+                                                },
                                             ]
                                         },
                                         { dataField: 'ID_PEDIDO', caption: 'Pedido ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
@@ -691,8 +703,8 @@
                                         },
                                         { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_DOCUMENTO_PEDIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_DUPLICATA_PEDIDO', caption: 'Status Duplicatas', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_CPR_PEDIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_PROMISSORIA_PEDIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_INST_FIANCA_PEDIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_CONFISSAO_DIVIDA_PEDIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
@@ -990,6 +1002,16 @@
                                             }
                                         });
                                     },
+                                    onCellPrepared: function(e) {
+                                        if (e.rowType === "data" && e.column) {
+                                            // Acessando as propriedades de e.data em minúsculo
+                                            const flg_documento_enviado = e.data['FLG_DOCUMENTO_ENVIADO'];
+
+                                            if ((flg_documento_enviado == true)) {
+                                                $(e.cellElement).css("background-color", "#6ee977"); 
+                                            }
+                                        }
+                                    },
                                 }).dxDataGrid('instance');
                             } else {
                                 // Se o formulário for inválido
@@ -1126,7 +1148,7 @@
                                         },
                                         {
                                             itemType: "group",
-                                            caption: "Duplicatas e Boletos",
+                                            caption: "Boletos",
                                             colCount: 1,
                                             items: [
                                                 {
@@ -1171,30 +1193,9 @@
                                                                         $("<div>").dxCheckBox({ value: options.value, disabled: true }).appendTo(container);
                                                                     }
                                                                 },
-                                                                {
-                                                                    dataField: "DUPLICATA_EMITIDA",
-                                                                    caption: "Duplicata Emitida",
-                                                                    dataType: "boolean",
-                                                                    width: 130,
-                                                                    allowEditing: false,
-                                                                    cellTemplate: function(container, options) {
-                                                                        container.css('background-color', '#f5f5f5'); // cinza claro
-                                                                        $("<div>").dxCheckBox({ value: options.value, disabled: true }).appendTo(container);
-                                                                    }
-                                                                },
                                                                 { 
                                                                     dataField: "BOLETO_RECEBIDO", 
                                                                     caption: "Boleto Recebido", 
-                                                                    dataType: "boolean", 
-                                                                    width: 130,
-                                                                    cellTemplate: function(container, options) {
-                                                                        container.css('background-color', '#ffffff'); // branco para editável
-                                                                        $("<div>").dxCheckBox({ value: options.value }).appendTo(container);
-                                                                    }
-                                                                },
-                                                                { 
-                                                                    dataField: "DUPLICATA_RECEBIDO", 
-                                                                    caption: "Duplicata Recebida", 
                                                                     dataType: "boolean", 
                                                                     width: 130,
                                                                     cellTemplate: function(container, options) {
@@ -2294,6 +2295,31 @@
                 console.error('Erro ao gerar PDF em branco:', error);
                 DevExpress.ui.notify('Erro ao gerar modelo em branco: ' + error.message, 'error', 5000);
             }
+        }
+        function marcarDocumentosEnviados(data) {
+            DevExpress.ui.dialog.confirm(
+                "Marcar Envio de Documentos?",
+                "Confirmação"
+            ).then(function (result) {
+                if (!result) return; // Usuário clicou "Não"
+
+                $.ajax({
+                    url: '/credito-e-cobranca/marcar-documentos-enviados',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (response.success) {
+                        DevExpress.ui.notify('Documentos enviados para assinatura com sucesso!', 'success', 3000);
+                        $('#gridContainer').dxDataGrid('instance').refresh();
+                    } else {
+                        DevExpress.ui.notify(response.message || 'Erro ao sinalizar documentos como enviados', 'error', 3000);
+                    }
+                }).fail(function () {
+                    DevExpress.ui.notify('Erro na requisição para marcar documentos como enviados ', 'error', 3000);
+                });
+            });
         }
 
         // Função para formatar data

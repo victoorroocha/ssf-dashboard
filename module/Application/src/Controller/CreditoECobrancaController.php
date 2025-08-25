@@ -612,31 +612,7 @@ class CreditoECobrancaController extends BaseController
                                 $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido';
                             }
                         }
-
-                        // Busca Status Duplicatas
-                        $sqlStatusDuplicatas = $this->creditoECobrancaRepository->getStatusDuplicatasQuery($idPedido);
-                        if ($sqlStatusDuplicatas) {
-                            $stmtStatusDuplicata = $this->pgAdapter->query($sqlStatusDuplicatas);
-                            $resStatusDuplicata = $stmtStatusDuplicata->execute();
-                            $statusDuplicatasPedido = $resStatusDuplicata->current();
-
-                            // Busca Total Duplicatas e Boletos
-                            $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
-                            if ($sqlDuplicataBoleto) {
-                                $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
-                            }
-                            $totalDuplicatas = count($resDuplicataBoleto);
-                            $duplicatasRecebidos = isset($statusDuplicatasPedido['qtd']) ? $statusDuplicatasPedido['qtd'] : 0; 
-                            
-                            if ($duplicatasRecebidos === 0) {
-                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Pendente';
-                            } elseif ($duplicatasRecebidos < $totalDuplicatas) {
-                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido Parcial';
-                            } else {
-                                $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido';
-                            }
-                        }
-
+                        
                         // Busca Status CPR Pedido
                         $sqlStatusCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);
                         if ($sqlStatusCPR) {
@@ -650,6 +626,22 @@ class CreditoECobrancaController extends BaseController
                                 $result[$key]['STATUS_CPR_PEDIDO'] = '-';
                             } else {
                                 $result[$key]['STATUS_CPR_PEDIDO'] = 'Recebido';
+                            }
+                        }
+
+                        // Busca Status Nota Promissoria Pedido
+                        $sqlStatusPromissoria = $this->creditoECobrancaRepository->getStatusNotaPromissoriaQuery($idPedido, $tipoPessoa);
+                        if ($sqlStatusPromissoria) {
+                            $stmtStatusPromissoria = $this->pgAdapter->query($sqlStatusPromissoria);
+                            $resStatusPromissoria = $stmtStatusPromissoria->execute();
+                            $statusPromissoriaPedido = $resStatusPromissoria->current();
+                            
+                            $promissoriaRecebidos = $statusPromissoriaPedido['qtd']; 
+
+                            if ($promissoriaRecebidos === 0) {
+                                $result[$key]['STATUS_PROMISSORIA_PEDIDO'] = '-';
+                            } else {
+                                $result[$key]['STATUS_PROMISSORIA_PEDIDO'] = 'Recebido';
                             }
                         }
 
@@ -704,10 +696,19 @@ class CreditoECobrancaController extends BaseController
                             }
                         }
 
+                        // Busca Controle Documentos
+                        $sqlControleDocumentos = $this->creditoECobrancaRepository->getControleDocumentosQuery($idPedido);
+                        if ($sqlControleDocumentos) {
+                            $stmtControleDoc = $this->pgAdapter->query($sqlControleDocumentos);
+                            $resControleDoc = $stmtControleDoc->execute();
+                            $controleDocumentos = $resControleDoc->current();
+                            
+                            $result[$key]['FLG_DOCUMENTO_ENVIADO'] = $controleDocumentos['flg_documento_enviado'] ?? false;
+                        }
+
 
                         // Monta objeto com os Vencimentos
                         $vencimentosAgrupados = [];
-
                         $tipos = [
                             'GERMO' => [
                                 'vencimento' => $row['VENCIMENTO_GERMOPLASMA'],
@@ -726,7 +727,6 @@ class CreditoECobrancaController extends BaseController
                                 'valor' => floatval($row['PRECO_TOTAL_FRETE_SALDO_REAL'])
                             ]
                         ];
-
                         foreach ($tipos as $dados) {
                             $venc = $dados['vencimento'];
                             $valor = $dados['valor'];
@@ -744,7 +744,6 @@ class CreditoECobrancaController extends BaseController
                                 }
                             }
                         }
-
                         $listaVencimentos = [];
                         foreach ($vencimentosAgrupados as $dataVenc => $totalValor) {
                             $listaVencimentos[] = [
@@ -752,12 +751,10 @@ class CreditoECobrancaController extends BaseController
                                 'valor_total' => number_format($totalValor, 2, '.', '') 
                             ];
                         }
-
                         // Ordena o array por vencimento (data crescente)
                         usort($listaVencimentos, function($a, $b) {
                             return strtotime($a['vencimento']) - strtotime($b['vencimento']);
                         });
-
                         $result[$key]['VENCIMENTOS_ANO_SAFRA'] = $listaVencimentos;
 
 
@@ -1321,6 +1318,27 @@ class CreditoECobrancaController extends BaseController
                     'success' => false,
                     'message' => 'Erro ao processar requisição: ' . $e->getMessage()
                 ]);
+            }
+        }
+        public function marcarDocumentosEnviadosAction()
+        {
+            $request = $this->getRequest();
+           
+            if (!$request->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+            }
+
+            $dados = json_decode($request->getContent(), true);
+
+            if (empty($dados['ID_PEDIDO'])) {
+                return new JsonModel(['success' => false, 'message' => 'ID_PEDIDO não informado']);
+            }
+
+            try {
+                $this->creditoECobrancaRepository->marcarDocumentosEnviados($dados);
+                return new JsonModel(['success' => true, 'message' => 'Documentos Enviados com sucesso']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao sinalizar: ' . $e->getMessage()]);
             }
         }
     #endregion
