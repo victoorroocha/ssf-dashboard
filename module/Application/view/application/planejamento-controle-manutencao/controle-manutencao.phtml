@@ -766,7 +766,7 @@
                             hint: 'Finalizar OS',
                             icon: 'check',
                             visible: function (e) {
-                                return e.row.data.status !== 'Finalizada';
+                                  return e.row.data.status !== 'Finalizada' && !!e.row.data.data_inicio;
                             },
                             onClick: function (e) {
                                 finalizarOS(e.row.data);

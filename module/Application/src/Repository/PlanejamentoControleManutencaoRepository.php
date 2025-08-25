@@ -699,12 +699,13 @@ class PlanejamentoControleManutencaoRepository
 
                 if ($check['total'] == 0) {
                     $insertSql = "INSERT INTO controle_manutencao 
-                        (data_programada, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, nome_solicitante, prioridade,
+                        (data_programada, data_solicitacao, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, nome_solicitante, prioridade,
                         tipo_manutencao_id, area_tecnica_id, status, info_servico, observacoes, programacao_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                     $this->adapter->query($insertSql, [
                         $prog['proxima_execucao'],  // data_programada
+                        $prog['proxima_execucao'],  // data_solicitacao
                         $prog['setor_id'],          // setor_id
                         $prog['tipo_ordem_servico'],// tipo_ordem_servico
                         $prog['equipamento_id'],    // equipamento_id
