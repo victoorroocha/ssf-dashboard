@@ -566,7 +566,8 @@ class CreditoECobrancaRepository
                     GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                     ORDER BY P.CREATED_AT desc
                     ) A
-                    WHERE A.TIPO_PRAZO = 'Prazo Safra'";  
+                    WHERE A.TIPO_PRAZO = 'Prazo Safra'
+                    ORDER BY A.NOME_CLIENTE ASC";  
             } else {
                 return "SELECT * FROM (
                     SELECT  
@@ -647,6 +648,7 @@ class CreditoECobrancaRepository
                     ) A
                     WHERE A.TIPO_PRAZO = 'Prazo Safra'
                     {$andsFilter}
+                    ORDER BY A.NOME_CLIENTE ASC
                     OFFSET {$skip} ROWS FETCH NEXT {$take} ROWS ONLY";  
             }
         }
@@ -753,7 +755,8 @@ class CreditoECobrancaRepository
                     ORDER BY P.CREATED_AT desc
                     ) A
                     WHERE A.TIPO_PRAZO = 'Prazo Safra'
-                    {$andsFilter}";  
+                    {$andsFilter}
+                    ORDER BY A.NOME_CLIENTE ASC";  
         }
         public function getDadosSoftsulPedidoDashboardQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null)
         {
@@ -844,7 +847,8 @@ class CreditoECobrancaRepository
                     GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                     ORDER BY P.CREATED_AT desc
                     ) A
-                    WHERE A.TIPO_PRAZO = 'Prazo Safra'";  
+                    WHERE A.TIPO_PRAZO = 'Prazo Safra'
+                    ORDER BY A.NOME_CLIENTE ASC";  
            
         }
         private function parseDxFilter($filter) {
