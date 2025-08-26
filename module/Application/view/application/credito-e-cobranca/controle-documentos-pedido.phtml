@@ -372,47 +372,64 @@
                                 
                                 // Realize a ação de filtrar, como enviar uma requisição
                                 dataGrid = $('#gridContainer').dxDataGrid({
-                                    dataSource: new DevExpress.data.CustomStore({
-                                        key: 'ID_PEDIDO',
-                                        loadMode: "processed",
-                                        load: function(loadOptions) {
+                                    dataSource: new DevExpress.data.DataSource({
+                                        store: new DevExpress.data.CustomStore({
+                                            key: 'ID_PEDIDO',
+                                            load: function (loadOptions) {
+                                                const deferred = $.Deferred();
+                                                const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                                const skip = loadOptions.skip || 0;
+                                                const take = loadOptions.take || 30;
 
-                                            let params = {
-                                                skip: loadOptions.skip || 0, 
-                                                take: loadOptions.take || 500, 
-                                                sort: loadOptions.sort ? JSON.stringify(loadOptions.sort) : null,
-                                                codigosafra: filtros.codigosafra || null,
-                                                emissao_inicio: filtros.emissao_inicio || null,
-                                                emissao_fim: filtros.emissao_fim || null,
-                                            };
+                                                console.log('loadOptions', loadOptions);
 
-                                            return $.ajax({
-                                                url: '/credito-e-cobranca/list-pedidos',
-                                                method: 'GET',
-                                                dataType: 'json',
-                                                data: params,  // Passa os filtros armazenados na variável global
-                                            }).then(response => {
-                                                if (response.success) {
+                                                let params = {
+                                                    search: searchValue,  
+                                                    skip: skip, 
+                                                    take: take, 
+                                                    codigosafra: filtros.codigosafra || null,
+                                                    emissao_inicio: filtros.emissao_inicio || null,
+                                                    emissao_fim: filtros.emissao_fim || null,
+                                                };
+
+                                                 // Se existir filtro no loadOptions, manda para o backend em JSON
+                                                if (loadOptions.filter) {
+                                                    params.filter = JSON.stringify(loadOptions.filter);
+                                                }
+                                                 // Se existir filtro no loadOptions, manda para o backend em JSON
+                                                if (loadOptions.sort) {
+                                                    params.sort = JSON.stringify(loadOptions.sort);
+                                                }
+
+                                                return $.ajax({
+                                                    url: '/credito-e-cobranca/list-pedidos',
+                                                    dataType: 'json',
+                                                    data: params
+                                                }).then(result => {
+                                                    const data = result.data || [];
                                                     return {
-                                                        data: response.data,
-                                                        totalCount: response.totalCount // Informar a quantidade total de registros
+                                                        data: data,
+                                                        totalCount: result.totalCount
                                                     };
-                                                } else {
-                                                    DevExpress.ui.notify(response.message, "error", 3000);
+                                                }).catch(() => {
                                                     return { data: [], totalCount: 0 };
-                                                }
-                                            }).catch(error => {
-                                                if (error.responseJSON) {
-                                                    DevExpress.ui.notify(error.responseJSON.message, "error", 3000);
-                                                    return { data: [], totalCount: 0 };
-                                                } else {
-                                                    DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
-                                                    return { data: [], totalCount: 0 };
-                                                }
-                                            });
-                                        },
+                                                });
+                                            },
+                                            byKey: function (key) {
+                                                return $.ajax({
+                                                    url: '/credito-e-cobranca/list-pedidos',
+                                                    dataType: 'json',
+                                                    data: { key: key }
+                                                }).then(result => {
+                                                    const item = (result.data || []).find(d => d.ID == key);
+                                                    return item || null;
+                                                });
+                                            }
+                                        }),
+                                        paginate: true,
+                                        pageSize: 30
                                     }),
-                                    height: 900,
+                                    height: 600,
                                     width: '100%',
                                     columnAutoWidth: true,
                                     elementAttr: {
@@ -430,7 +447,7 @@
                                         }
                                     },
                                     groupPanel: {
-                                        visible: true,
+                                        visible: false,
                                     },
                                     toolbar: {
                                         items: [
@@ -485,17 +502,25 @@
                                         showCheckBoxesMode: 'none'
                                     },
                                     hoverStateEnabled: true,
-                                    pager: {
-                                        visible: true
+                                    scrolling: {
+                                        mode: "virtual", 
+                                        preloadEnabled: true,
+                                        useNative: false
                                     },
                                     paging: {
-                                        pageSize: 500
+                                        pageSize: 30
+                                    },
+                                    remoteOperations: {
+                                        paging: true,      
+                                        filtering: true,
+                                        sorting: true,
+                                        groupPaging: true
                                     },
                                     headerFilter: {
-                                        visible: true,
+                                        visible: false,
                                     },
                                     filterRow: {
-                                        visible: true,
+                                        visible: false,
                                         applyFilter: 'auto',
                                     },
                                     export: {
@@ -505,8 +530,10 @@
                                     },
                                     searchPanel: {
                                         visible: true,
-                                        width: 240,
-                                        placeholder: 'Procure...',
+                                        width: 400,
+                                        placeholder: 'Procure pelo Número do Pedido, ID Pedido, Cliente...',
+                                        highlightSearchText: true, 
+                                        searchVisibleColumnsOnly: false  
                                     },
                                     columns: [
                                         // Visiveis
@@ -528,8 +555,8 @@
                                                     hint: "Imprimir Documentos",
                                                     icon: "fa fa-print", 
                                                     visible: function(e) {
-                                                        const docStatus = e.row?.data?.STATUS_DOCUMENTO_PEDIDO;
-                                                        const garStatus = e.row?.data?.STATUS_GARANTIA_PEDIDO;
+                                                        const docStatus = e.row?.data?.STATUS_DOCUMENTO_RECEBIDO;
+                                                        const garStatus = e.row?.data?.STATUS_GARANTIA_RECEBIDO;
                                                         return docStatus !== 'Pendente' || garStatus !== 'Pendente';
                                                     },
                                                     onClick: function(e) {
@@ -550,18 +577,6 @@
                                                         selecionarAvalistasPopup(data);
                                                     }
                                                 },
-                                                {
-                                                    hint: 'Documentos Enviados?',
-                                                    icon: 'check',
-                                                    visible: function (e) {
-                                                        const data = e.row.data;
-                                                        return data.FLG_DOCUMENTO_ENVIADO != true;
-                                                    },
-                                                    onClick: function (e) {
-                                                        const data = e.row.data;
-                                                        marcarDocumentosEnviados(data);
-                                                    }
-                                                },
                                             ]
                                         },
                                         { dataField: 'ID_PEDIDO', caption: 'Pedido ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
@@ -576,14 +591,15 @@
                                             format: 'dd/MM/yyyy',
                                             editorOptions: {
                                                 displayFormat: 'dd/MM/yyyy' 
-                                            },
+                                            }, 
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
-                                        { dataField: 'MAE_PEDIDO_ID', caption: 'Pedido Mãe', allowEditing: false, alignment: 'center', width: 150, visible: false  },
-                                        { dataField: 'ORIGEM_PEDIDO_ID', caption: 'Pedido Origem', allowEditing: false, alignment: 'center', width: 150, visible: false  },
-                                        { dataField: 'ID_CLIENTE', caption: 'Cliente ID', allowEditing: false, alignment: 'center', width: 100 },
-                                        { dataField: 'NOME_CLIENTE', caption: 'Cliente', allowEditing: false, width: 'auto' },
-                                        { dataField: 'VENDEDOR_ID', caption: 'Vendedor ID', allowEditing: false, alignment: 'center', width: 100 },
-                                        { dataField: 'NOME_VENDEDOR', caption: 'Vendedor', allowEditing: false, width: 'auto' },
+                                        { dataField: 'MAE_PEDIDO_ID', caption: 'Pedido Mãe', allowEditing: false, alignment: 'center', width: 150, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'ORIGEM_PEDIDO_ID', caption: 'Pedido Origem', allowEditing: false, alignment: 'center', width: 150, visible: false, allowFiltering: false, allowHeaderFiltering: false   },
+                                        { dataField: 'ID_CLIENTE', caption: 'Cliente ID', allowEditing: false, alignment: 'center', width: 100  },
+                                        { dataField: 'NOME_CLIENTE', caption: 'Cliente', allowEditing: false, width: 'auto'  },
+                                        { dataField: 'VENDEDOR_ID', caption: 'Vendedor ID', allowEditing: false, alignment: 'center', width: 100, allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'NOME_VENDEDOR', caption: 'Vendedor', allowEditing: false, width: 'auto', allowFiltering: false, allowHeaderFiltering: false  },
                                         {
                                             dataField: 'TIPO_PESSOA',
                                             caption: 'Tipo Pessoa',
@@ -598,9 +614,10 @@
                                             },
                                             validationRules: [
                                                 { type: 'required', message: 'Tipo Pessoa é obrigatório' }
-                                            ]
+                                            ], 
+                                            allowFiltering: false, allowHeaderFiltering: false 
                                         },
-                                        { dataField: 'QUANTIDADE', caption: 'Quantidade', allowEditing: false, alignment: 'center' },
+                                        { dataField: 'QUANTIDADE', caption: 'Quantidade', allowEditing: false, alignment: 'center', allowFiltering: false, allowHeaderFiltering: false },
                                         { 
                                             dataField: 'PRECO_TOTAL_GERMOPLASMA', 
                                             caption: 'Germoplasma', 
@@ -608,7 +625,7 @@
                                             alignment: 'right', 
                                             width: 'auto', 
                                             dataType: 'number', 
-                                            format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                            format: { type: 'currency', currency: 'BRL', precision: 2 }, allowFiltering: false, allowHeaderFiltering: false
                                         },
                                         { 
                                             dataField: 'VENCIMENTO_GERMOPLASMA', 
@@ -620,9 +637,9 @@
                                             format: 'dd/MM/yyyy',
                                             editorOptions: {
                                                 displayFormat: 'dd/MM/yyyy' 
-                                            },
+                                            }, allowFiltering: false, allowHeaderFiltering: false
                                         },
-                                        { dataField: 'PAGAMENTO_GERMOPLASTMA', caption: 'Pag. Germo', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'PAGAMENTO_GERMOPLASTMA', caption: 'Pag. Germo', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { 
                                             dataField: 'PRECO_TOTAL_ROYALTIES', 
                                             caption: 'Royalties', 
@@ -630,7 +647,8 @@
                                             alignment: 'right', 
                                             width: 'auto', 
                                             dataType: 'number', 
-                                            format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                            format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
                                         { 
                                             dataField: 'VENCIMENTO_ROYALTIES', 
@@ -644,7 +662,7 @@
                                                 displayFormat: 'dd/MM/yyyy' 
                                             },
                                         },
-                                        { dataField: 'PAGAMENTO_ROYALTIES', caption: 'Pag. Royalties', allowEditing: false,  width: 'auto', alignment: 'center'  },
+                                        { dataField: 'PAGAMENTO_ROYALTIES', caption: 'Pag. Royalties', allowEditing: false,  width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { 
                                             dataField: 'PRECO_TOTAL_TSI', 
                                             caption: 'TSI', 
@@ -652,7 +670,8 @@
                                             alignment: 'right', 
                                             width: 'auto', 
                                             dataType: 'number', 
-                                            format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                            format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
                                         { 
                                             dataField: 'VENCIMENTO_TSI', 
@@ -664,9 +683,10 @@
                                             format: 'dd/MM/yyyy',
                                             editorOptions: {
                                                 displayFormat: 'dd/MM/yyyy' 
-                                            },
+                                            }, 
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
-                                        { dataField: 'PAGAMENTO_TSI', caption: 'Pag. TSI', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'PAGAMENTO_TSI', caption: 'Pag. TSI', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { 
                                             dataField: 'PRECO_TOTAL_FRETE', 
                                             caption: 'Frete', 
@@ -675,6 +695,7 @@
                                             width: 'auto', 
                                             dataType: 'number', 
                                             format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
                                         { 
                                             dataField: 'VENCIMENTO_FRETE', 
@@ -686,40 +707,68 @@
                                             format: 'dd/MM/yyyy',
                                             editorOptions: {
                                                 displayFormat: 'dd/MM/yyyy' 
-                                            },
+                                            }, allowFiltering: false, allowHeaderFiltering: false
                                         },
-                                        { dataField: 'PAGAMENTO_FRETE', caption: 'Pag. Frete', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'PRECO_TOTAL', caption: 'Valor Total Pedido', allowEditing: false, 
+                                        { dataField: 'PAGAMENTO_FRETE', caption: 'Pag. Frete', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { 
+                                            dataField: 'PRECO_TOTAL', caption: 'Valor Total Pedido', allowEditing: false, 
                                             alignment: 'right', 
                                             width: 'auto', 
                                             dataType: 'number', 
-                                            format: { type: 'currency', currency: 'BRL', precision: 2 },
+                                            format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                                            allowFiltering: false, allowHeaderFiltering: false
                                         },
-                                        { dataField: 'PRECO_TOTAL_PRAZO_SAFRA', caption: 'Valor Total Prazo Safra', allowEditing: false, 
+                                        { 
+                                            dataField: 'PRECO_TOTAL_PRAZO_SAFRA', caption: 'Valor Total Prazo Safra', allowEditing: false, 
                                             alignment: 'right', 
                                             width: 'auto', 
                                             dataType: 'number', 
-                                            format: { type: 'currency', currency: 'BRL', precision: 2 },  
+                                            format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                                            allowFiltering: false, allowHeaderFiltering: false 
                                         },
-                                        { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_DOCUMENTO_PEDIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_CPR_PEDIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_PROMISSORIA_PEDIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_INST_FIANCA_PEDIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_PEDIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'STATUS_GARANTIA_PEDIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center'  },
-                                        { dataField: 'GRUPO_CLIENTE', caption: 'Grupo Cliente ID', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'NOME_GRUPO_CLIENTE', caption: 'Grupo Cliente Nome', allowEditing: false, alignment: 'center', visible: false },
-                                        { dataField: 'CODIGOSAFRA', caption: 'Safra Pedido', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'CGC_CPF_CLIENTE', caption: 'CPF/CNPJ', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'ENDERECO_CLIENTE', caption: 'Cliente Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'CPL_ENDERECO_CLIENTE', caption: 'Cliente Complemento Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'CEP_CLIENTE', caption: 'Cliente CEP', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'BAIRRO_CLIENTE', caption: 'Cliente Bairro', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'CIDADE_CLIENTE', caption: 'Cliente Cidade', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'ESTADO_CLIENTE', caption: 'Cliente Estado', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'FONE1_CLIENTE', caption: 'Cliente Fone 1', allowEditing: false, alignment: 'center', width: 60, visible: false },
-                                        { dataField: 'FONE2_CLIENTE', caption: 'Cliente Fone 2', allowEditing: false, alignment: 'center', width: 60, visible: false },
+                                        { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                                                                
+                                        // STATUS ENVIADOS
+                                        { 
+                                            dataField: 'STATUS_DOCUMENTO_ENVIADO', caption: 'Status Documentos Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            allowSorting: true, sortIndex: 2, sortOrder: "asc"
+                                        },
+                                        { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_PROMISSORIA_ENVIADO', caption: 'Status Nota Promissória Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_INST_FIANCA_ENVIADO', caption: 'Status Instrumento Fiança Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_ENVIADO', caption: 'Status Confissão de Divida Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { 
+                                            dataField: 'STATUS_GARANTIA_ENVIADO', caption: 'Status Garantias Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            allowSorting: true, sortIndex: 3, sortOrder: "asc"
+                                        },
+                                        
+                                        // STATUS RECEBIDOS
+                                        { 
+                                            dataField: 'STATUS_DOCUMENTO_RECEBIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            allowSorting: true, sortIndex: 0, sortOrder: "desc"
+                                        },
+                                        { dataField: 'STATUS_CPR_RECEBIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_PROMISSORIA_RECEBIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_INST_FIANCA_RECEBIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_RECEBIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { 
+                                            dataField: 'STATUS_GARANTIA_RECEBIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            allowSorting: true, sortIndex: 1, sortOrder: "desc"
+                                        },
+
+
+                                        { dataField: 'GRUPO_CLIENTE', caption: 'Grupo Cliente ID', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'NOME_GRUPO_CLIENTE', caption: 'Grupo Cliente Nome', allowEditing: false, alignment: 'center', visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'CODIGOSAFRA', caption: 'Safra Pedido', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'CGC_CPF_CLIENTE', caption: 'CPF/CNPJ', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'ENDERECO_CLIENTE', caption: 'Cliente Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'CPL_ENDERECO_CLIENTE', caption: 'Cliente Complemento Endereço', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'CEP_CLIENTE', caption: 'Cliente CEP', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'BAIRRO_CLIENTE', caption: 'Cliente Bairro', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'CIDADE_CLIENTE', caption: 'Cliente Cidade', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'ESTADO_CLIENTE', caption: 'Cliente Estado', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'FONE1_CLIENTE', caption: 'Cliente Fone 1', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
+                                        { dataField: 'FONE2_CLIENTE', caption: 'Cliente Fone 2', allowEditing: false, alignment: 'center', width: 60, visible: false, allowFiltering: false, allowHeaderFiltering: false },
                                     ],
                                     summary: {
                                         totalItems: [
@@ -1003,12 +1052,39 @@
                                         });
                                     },
                                     onCellPrepared: function(e) {
-                                        if (e.rowType === "data" && e.column) {
-                                            // Acessando as propriedades de e.data em minúsculo
-                                            const flg_documento_enviado = e.data['FLG_DOCUMENTO_ENVIADO'];
-
-                                            if ((flg_documento_enviado == true)) {
-                                                $(e.cellElement).css("background-color", "#6ee977"); 
+                                        if (e.column) {
+                                            const columnName = e.column.dataField;
+                                            
+                                            // Para células de dados
+                                            if (e.rowType === "data") {
+                                                // Aplica cor diferente para colunas de status ENVIADO
+                                                if (columnName && columnName.includes('_ENVIADO')) {
+                                                    $(e.cellElement).css("background-color", "#e8f5e8"); // Verde claro
+                                                    $(e.cellElement).css("font-weight", "bold");
+                                                }
+                                                
+                                                // Opcional: cor diferente para colunas de status RECEBIDO
+                                                if (columnName && columnName.includes('_RECEBIDO')) {
+                                                    $(e.cellElement).css("background-color", "#fff3cd"); // Amarelo claro
+                                                    $(e.cellElement).css("font-weight", "bold");
+                                                }
+                                            }
+                                            
+                                            // Para células de cabeçalho (header) - tons mais escuros
+                                            if (e.rowType === "header") {
+                                                // Aplica cor mais escura para cabeçalhos de colunas ENVIADO
+                                                if (columnName && columnName.includes('_ENVIADO')) {
+                                                    $(e.cellElement).css("background-color", "#c8e6c9"); // Verde médio (mais escuro)
+                                                    $(e.cellElement).css("font-weight", "bold");
+                                                    $(e.cellElement).css("color", "#1b5e20"); // Texto verde escuro para melhor contraste
+                                                }
+                                                
+                                                // Opcional: cor mais escura para cabeçalhos de colunas RECEBIDO
+                                                if (columnName && columnName.includes('_RECEBIDO')) {
+                                                    $(e.cellElement).css("background-color", "#ffecb3"); // Amarelo médio (mais escuro)
+                                                    $(e.cellElement).css("font-weight", "bold");
+                                                    $(e.cellElement).css("color", "#7d6608"); // Texto marrom escuro para melhor contraste
+                                                }
                                             }
                                         }
                                     },
@@ -1042,15 +1118,25 @@
                                 const formContainer = $("<div>").attr("id", "formDocumentosGarantias");
 
                                 const formData = {};
+
                                 const documentos = response.data.documentos || [];
+                                const documentosEnviados = response.data.documentosEnviados || [];
+
                                 const garantias = response.data.garantias || [];
+                                const garantiasEnviados = response.data.garantiasEnviados || [];
 
                                 documentos.forEach(doc => {
                                     formData[`documento_${doc.id_documento}`] = !!doc.ativo;
                                 });
+                                documentosEnviados.forEach(docEnv => {
+                                    formData[`documento_enviado_${docEnv.id_documento}`] = !!docEnv.ativo;
+                                });
 
                                 garantias.forEach(gar => {
                                     formData[`garantia_${gar.id_garantia}`] = !!gar.ativo;
+                                });
+                                garantiasEnviados.forEach(garEnv => {
+                                    formData[`garantia_enviado_${garEnv.id_garantia}`] = !!garEnv.ativo;
                                 });
 
                                 // Preenche observação do pedido
@@ -1071,6 +1157,42 @@
                                                 data: JSON.stringify({
                                                     id_pedido: idPedido,
                                                     id_documento: doc.id_documento,
+                                                    checked: e.value,
+                                                    grupoClienteID: grupoClienteID,
+                                                    codigoSafra: codigoSafra
+                                                }),
+                                                success: function () {
+                                                    DevExpress.ui.notify(
+                                                        e.value ? "Documento vinculado com sucesso." : "Documento desvinculado com sucesso.",
+                                                        "success", 2000
+                                                    );
+                                                },
+                                                error: function () {
+                                                    DevExpress.ui.notify(
+                                                        e.value ? "Erro ao vincular documento." : "Erro ao desvincular documento.",
+                                                        "error", 2000
+                                                    );
+                                                }
+                                            });
+                                        }
+                                    },
+                                    label: { visible: false }
+                                }));
+                                const documentosEnviadosItems = documentosEnviados.map(docEnv => ({
+                                    dataField: `documento_enviado_${docEnv.id_documento}`,
+                                    editorType: "dxCheckBox",
+                                    editorOptions: {
+                                        text: docEnv.dsc_documento,
+                                        width: '100%',
+                                        elementAttr: { class: "custom-checkbox" },
+                                        onValueChanged: function (e) {
+                                            $.ajax({
+                                                url: "/credito-e-cobranca/toggle-documento-enviado-pedido",
+                                                method: "POST",
+                                                contentType: "application/json",
+                                                data: JSON.stringify({
+                                                    id_pedido: idPedido,
+                                                    id_documento: docEnv.id_documento,
                                                     checked: e.value,
                                                     grupoClienteID: grupoClienteID,
                                                     codigoSafra: codigoSafra
@@ -1129,6 +1251,42 @@
                                     },
                                     label: { visible: false }
                                 }));
+                                const garantiasEnviadosItems = garantiasEnviados.map(garEnv => ({
+                                    dataField: `garantia_enviado_${garEnv.id_garantia}`,
+                                    editorType: "dxCheckBox",
+                                    editorOptions: {
+                                        text: garEnv.dsc_garantia,
+                                        width: '100%',
+                                        elementAttr: { class: "custom-checkbox" },
+                                        onValueChanged: function (e) {
+                                            $.ajax({
+                                                url: "/credito-e-cobranca/toggle-garantia-enviado-pedido",
+                                                method: "POST",
+                                                contentType: "application/json",
+                                                data: JSON.stringify({
+                                                    id_pedido: idPedido,
+                                                    id_garantia: garEnv.id_garantia,
+                                                    checked: e.value,
+                                                    grupoClienteID: grupoClienteID,
+                                                    codigoSafra: codigoSafra
+                                                }),
+                                                success: function () {
+                                                    DevExpress.ui.notify(
+                                                        e.value ? "Garantia vinculada com sucesso." : "Garantia desvinculada com sucesso.",
+                                                        "success", 2000
+                                                    );
+                                                },
+                                                error: function () {
+                                                    DevExpress.ui.notify(
+                                                        e.value ? "Erro ao vincular garantia." : "Erro ao desvincular garantia.",
+                                                        "error", 2000
+                                                    );
+                                                }
+                                            });
+                                        }
+                                    },
+                                    label: { visible: false }
+                                }));
 
                                 formContainer.dxForm({
                                     formData: formData,
@@ -1138,13 +1296,39 @@
                                             itemType: "group",
                                             caption: "Documentos",
                                             colCount: 2,
-                                            items: documentosItems
+                                            items: [
+                                                {
+                                                    itemType: "group",
+                                                    caption: "Documentos Enviados",
+                                                    colCount: 1,
+                                                    items: documentosEnviadosItems
+                                                },
+                                                {
+                                                    itemType: "group",
+                                                    caption: "Documentos Recebidos",
+                                                    colCount: 1,
+                                                    items: documentosItems
+                                                }
+                                            ]
                                         },
                                         {
                                             itemType: "group",
                                             caption: "Garantias",
                                             colCount: 2,
-                                            items: garantiasItems
+                                            items: [
+                                                {
+                                                    itemType: "group",
+                                                    caption: "Garantias Enviadas",
+                                                    colCount: 1,
+                                                    items: garantiasEnviadosItems
+                                                },
+                                                {
+                                                    itemType: "group",
+                                                    caption: "Garantias Recebidas",
+                                                    colCount: 1,
+                                                    items: garantiasItems
+                                                }
+                                            ]
                                         },
                                         {
                                             itemType: "group",
@@ -2473,7 +2657,36 @@
             
             return documento; // Retorna original se não for possível formatar
         }
+        // Função para processar filtros do DataGrid
+        function processFilter(filter) {
+            if (!filter) return {};
+            
+            if (Array.isArray(filter)) {
+                // Filtro simples [field, operator, value]
+                if (filter.length === 3) {
+                    return {
+                        field: filter[0],
+                        operator: filter[1],
+                        value: filter[2]
+                    };
+                }
+                // Filtro complexo
+                else if (filter.length > 3) {
+                    return filter.map(f => processFilter(f));
+                }
+            }
+            return filter;
+        }
 
+        // Função para processar ordenação
+        function processSort(sort) {
+            if (!sort) return {};
+            
+            return sort.map(s => ({
+                selector: s.selector,
+                desc: s.desc || false
+            }));
+        }
 
         function criarTabelaDuplicatasBoletos(data) {
             // Cria tabela

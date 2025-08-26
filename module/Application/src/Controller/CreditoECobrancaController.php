@@ -569,12 +569,18 @@ class CreditoECobrancaController extends BaseController
             $codigoSafra = $this->params()->fromQuery('codigosafra', null);
             $emissao_inicio = $this->params()->fromQuery('emissao_inicio', null);
             $emissao_fim = $this->params()->fromQuery('emissao_fim', null);
-            $skip = $this->params()->fromQuery('skip', null);
-            $take = $this->params()->fromQuery('take', null);
+
+            $search = strtoupper(trim($this->params()->fromQuery('search', '')));
+            $key = $this->params()->fromQuery('key', '');
+            $skip = (int) $this->params()->fromQuery('skip', 0);
+            $take = (int) $this->params()->fromQuery('take', 30);
+
+            $filter = $this->params()->fromQuery('filter', null);
+            $filterArray = $filter ? json_decode($filter, true) : null;
 
             try {
                 // Consulta no Softsul todos pedidos
-                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
+                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $filterArray) : '';
 
                 $params = [];
                 if ($codigoSafra) {
@@ -589,122 +595,33 @@ class CreditoECobrancaController extends BaseController
                     // Executa a consulta Oracle, caso tenha uma consulta
                     $result = $this->oracleService->executeQuery($sql, $params);
 
+                    // Contagem total para paginação
+                    $countSql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoCountQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $filterArray) : '';
+                    $countResult = $this->oracleService->executeQuery($countSql);
+                    $totalCount = (int)$countResult[0]['TOTAL'] ?? 0;
+
                     // Processa os dados do Oracle
                     foreach ($result as $key => $row) {
                         $idPedido = $row['ID_PEDIDO'];
                         $tipoPessoa = $row['TIPO_PESSOA'];
 
-                        // Busca Status Documentos Pedido
-                        $sqlStatusDocumentos = $this->creditoECobrancaRepository->getStatusDocumentoQuery($idPedido, $tipoPessoa);
-                        if ($sqlStatusDocumentos) {
-                            $stmtStatusDoc = $this->pgAdapter->query($sqlStatusDocumentos);
-                            $resStatusDoc = $stmtStatusDoc->execute();
-                            $statusDocumentosPedido = $resStatusDoc->current();
-                            
-                            $totalDocumentos = $statusDocumentosPedido['qtd_documentos_obrigatorios']; 
-                            $documentosRecebidos = $statusDocumentosPedido['qtd']; 
+                        // Convertendo a codificação para UTF-8
+                        $result[$key]['ID_PEDIDO'] = intval($row['ID_PEDIDO']);
+                        $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
+                        $result[$key]['ENDERECO_CLIENTE'] = utf8_encode($row['ENDERECO_CLIENTE']);
+                        $result[$key]['BAIRRO_CLIENTE'] = utf8_encode($row['BAIRRO_CLIENTE']);
+                        $result[$key]['CIDADE_CLIENTE'] = utf8_encode($row['CIDADE_CLIENTE']);
+                        $result[$key]['ESTADO_CLIENTE'] = utf8_encode($row['ESTADO_CLIENTE']);
+                        $result[$key]['CPL_ENDERECO_CLIENTE'] = utf8_encode($row['CPL_ENDERECO_CLIENTE']);
+                        $result[$key]['NOME_GRUPO_CLIENTE'] = utf8_encode($row['NOME_GRUPO_CLIENTE']);
+                        $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
+                        $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
+                        $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
 
-                            if ($documentosRecebidos === 0) {
-                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Pendente';
-                            } elseif ($documentosRecebidos < $totalDocumentos) {
-                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido Parcial';
-                            } else {
-                                $result[$key]['STATUS_DOCUMENTO_PEDIDO'] = 'Recebido';
-                            }
-                        }
-                        
-                        // Busca Status CPR Pedido
-                        $sqlStatusCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);
-                        if ($sqlStatusCPR) {
-                            $stmtStatusCPR = $this->pgAdapter->query($sqlStatusCPR);
-                            $resStatusCPR = $stmtStatusCPR->execute();
-                            $statusCPRPedido = $resStatusCPR->current();
-                            
-                            $CPRRecebidos = $statusCPRPedido['qtd']; 
-
-                            if ($CPRRecebidos === 0) {
-                                $result[$key]['STATUS_CPR_PEDIDO'] = '-';
-                            } else {
-                                $result[$key]['STATUS_CPR_PEDIDO'] = 'Recebido';
-                            }
-                        }
-
-                        // Busca Status Nota Promissoria Pedido
-                        $sqlStatusPromissoria = $this->creditoECobrancaRepository->getStatusNotaPromissoriaQuery($idPedido, $tipoPessoa);
-                        if ($sqlStatusPromissoria) {
-                            $stmtStatusPromissoria = $this->pgAdapter->query($sqlStatusPromissoria);
-                            $resStatusPromissoria = $stmtStatusPromissoria->execute();
-                            $statusPromissoriaPedido = $resStatusPromissoria->current();
-                            
-                            $promissoriaRecebidos = $statusPromissoriaPedido['qtd']; 
-
-                            if ($promissoriaRecebidos === 0) {
-                                $result[$key]['STATUS_PROMISSORIA_PEDIDO'] = '-';
-                            } else {
-                                $result[$key]['STATUS_PROMISSORIA_PEDIDO'] = 'Recebido';
-                            }
-                        }
-
-                        // Busca Status Instrumento Fiança Pedido
-                        $sqlStatusInstrumentoFianca = $this->creditoECobrancaRepository->getStatusInstrumentoFiancaQuery($idPedido, $tipoPessoa);
-                        if ($sqlStatusInstrumentoFianca) {
-                            $stmtStatusInstrumentoFianca = $this->pgAdapter->query($sqlStatusInstrumentoFianca);
-                            $resStatusInstrumentoFianca = $stmtStatusInstrumentoFianca->execute();
-                            $statusInstrumentoFiancaPedido = $resStatusInstrumentoFianca->current();
-                            
-                            $instrumentoFiancaRecebidos = $statusInstrumentoFiancaPedido['qtd']; 
-
-                            if ($instrumentoFiancaRecebidos === 0) {
-                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = '-';
-                            } else {
-                                $result[$key]['STATUS_INST_FIANCA_PEDIDO'] = 'Recebido';
-                            }
-                        }
-                        
-                        // Busca Status Confissão Divida Pedido
-                        $sqlConfissaoDivida = $this->creditoECobrancaRepository->getStatusConfissaoDividaQuery($idPedido, $tipoPessoa);
-                        if ($sqlConfissaoDivida) {
-                            $stmtStatusConfissaoDivida = $this->pgAdapter->query($sqlConfissaoDivida);
-                            $resStatusConfissaoDivida = $stmtStatusConfissaoDivida->execute();
-                            $statusConfissaoDividaPedido = $resStatusConfissaoDivida->current();
-                            
-                            $confissaoDividaRecebidos = $statusConfissaoDividaPedido['qtd']; 
-
-                            if ($confissaoDividaRecebidos === 0) {
-                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = '-';
-                            } else {
-                                $result[$key]['STATUS_CONFISSAO_DIVIDA_PEDIDO'] = 'Recebido';
-                            }
-                        }
-
-                        // Busca Status Recebimentos Garantias Pedido
-                        $sqlGarantias = $this->creditoECobrancaRepository->getStatusGarantiasQuery($idPedido, $tipoPessoa);
-                        if ($sqlGarantias) {
-                            $stmtStatusGarantias = $this->pgAdapter->query($sqlGarantias);
-                            $resStatusGarantias = $stmtStatusGarantias->execute();
-                            $statusGarantiasPedido = $resStatusGarantias->current();
-                            
-                            $totalGarantias = $statusGarantiasPedido['qtd_garantias']; 
-                            $garantiasRecebidos = $statusGarantiasPedido['qtd']; 
-
-                            if ($garantiasRecebidos === 0) {
-                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Pendente';
-                            } elseif ($garantiasRecebidos < $totalGarantias) {
-                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido Parcial';
-                            } else {
-                                $result[$key]['STATUS_GARANTIA_PEDIDO'] = 'Recebido';
-                            }
-                        }
-
-                        // Busca Controle Documentos
-                        $sqlControleDocumentos = $this->creditoECobrancaRepository->getControleDocumentosQuery($idPedido);
-                        if ($sqlControleDocumentos) {
-                            $stmtControleDoc = $this->pgAdapter->query($sqlControleDocumentos);
-                            $resControleDoc = $stmtControleDoc->execute();
-                            $controleDocumentos = $resControleDoc->current();
-                            
-                            $result[$key]['FLG_DOCUMENTO_ENVIADO'] = $controleDocumentos['flg_documento_enviado'] ?? false;
-                        }
+                        // Alimenta Status Documentos
+                        $statusRecebido = $this->getStatusRecebido($idPedido, $tipoPessoa);
+                        $statusEnviado = $this->getStatusEnviado($idPedido, $tipoPessoa);
+                        $result[$key] = array_merge($result[$key] ?? [], $statusRecebido, $statusEnviado);
 
 
                         // Monta objeto com os Vencimentos
@@ -756,40 +673,141 @@ class CreditoECobrancaController extends BaseController
                             return strtotime($a['vencimento']) - strtotime($b['vencimento']);
                         });
                         $result[$key]['VENCIMENTOS_ANO_SAFRA'] = $listaVencimentos;
-
-
-
-                        // Convertendo a codificação para UTF-8
-                        $result[$key]['NOME_CLIENTE'] = utf8_encode($row['NOME_CLIENTE']);
-                        $result[$key]['ENDERECO_CLIENTE'] = utf8_encode($row['ENDERECO_CLIENTE']);
-                        $result[$key]['BAIRRO_CLIENTE'] = utf8_encode($row['BAIRRO_CLIENTE']);
-                        $result[$key]['CIDADE_CLIENTE'] = utf8_encode($row['CIDADE_CLIENTE']);
-                        $result[$key]['ESTADO_CLIENTE'] = utf8_encode($row['ESTADO_CLIENTE']);
-                        $result[$key]['CPL_ENDERECO_CLIENTE'] = utf8_encode($row['CPL_ENDERECO_CLIENTE']);
-                        $result[$key]['NOME_GRUPO_CLIENTE'] = utf8_encode($row['NOME_GRUPO_CLIENTE']);
-                        $result[$key]['NOME_VENDEDOR'] = utf8_encode($row['NOME_VENDEDOR']);
-                        $result[$key]['PRECO_TOTAL_GERMOPLASMA'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_GERMOPLASMA']));
-                        $result[$key]['PRECO_TOTAL_TSI'] = floatval(str_replace(',', '.', $row['PRECO_TOTAL_TSI']));
                     }
                 }
 
-                $totalCount = count($result); // Contagem total de registros
-                $pagedData = $result; // Aplica paginação
-
-                // Retorna os dados como JSON
                 return new JsonModel([
                     'success' => true,
-                    'data' => $pagedData,
+                    'data' => $result,
                     'totalCount' => $totalCount
                 ]);
             } catch (\Exception $e) {
-
                 return new JsonModel([
                     'success' => false,
                     'message' => $e->getMessage()
                 ]);
             }
         }
+        private function executePgQuery($sql, $defaultValue = null)
+        {
+            if (!$sql) {
+                return $defaultValue;
+            }
+
+            try {
+                $stmt = $this->pgAdapter->query($sql);
+                $result = $stmt->execute();
+                return $result->current();
+            } catch (\Exception $e) {
+                // Log error
+                return $defaultValue;
+            }
+        }
+        public function getStatusRecebido($idPedido, $tipoPessoa)
+        {
+            $status = [];
+
+            // Documentos
+            $sqlDocumentos = $this->creditoECobrancaRepository->getStatusDocumentoQuery($idPedido, $tipoPessoa);
+            $docData = $this->executePgQuery($sqlDocumentos, ['qtd' => 0, 'qtd_total' => 0]);
+            $status['STATUS_DOCUMENTO_RECEBIDO'] = $this->getStatusRecebidoText($docData['qtd'], $docData['qtd_total']);
+
+            // CPR
+            $sqlCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);
+            $cprData = $this->executePgQuery($sqlCPR, ['qtd' => 0]);
+            $status['STATUS_CPR_RECEBIDO'] = $this->getStatusRecebidoText($cprData['qtd']);
+
+            // Nota Promissória
+            $sqlPromissoria = $this->creditoECobrancaRepository->getStatusNotaPromissoriaQuery($idPedido, $tipoPessoa);
+            $promissoriaData = $this->executePgQuery($sqlPromissoria, ['qtd' => 0]);
+            $status['STATUS_PROMISSORIA_RECEBIDO'] = $this->getStatusRecebidoText($promissoriaData['qtd']);
+
+            // Instrumento Fiança
+            $sqlInstrumentoFianca = $this->creditoECobrancaRepository->getStatusInstrumentoFiancaQuery($idPedido, $tipoPessoa);
+            $instrumentoFiancaData = $this->executePgQuery($sqlInstrumentoFianca, ['qtd' => 0]);
+            $status['STATUS_INST_FIANCA_RECEBIDO'] = $this->getStatusRecebidoText($instrumentoFiancaData['qtd']);
+
+            // Confissão Dívida
+            $sqlConfissaoDivida = $this->creditoECobrancaRepository->getStatusConfissaoDividaQuery($idPedido, $tipoPessoa);
+            $confissaoDividaData = $this->executePgQuery($sqlConfissaoDivida, ['qtd' => 0]);
+            $status['STATUS_CONFISSAO_DIVIDA_RECEBIDO'] = $this->getStatusRecebidoText($confissaoDividaData['qtd']);
+
+            // Garantias
+            $sqlGarantias = $this->creditoECobrancaRepository->getStatusGarantiasQuery($idPedido, $tipoPessoa);
+            $garantiasData = $this->executePgQuery($sqlGarantias, ['qtd' => 0, 'qtd_total' => 0]);
+            $status['STATUS_GARANTIA_RECEBIDO'] = $this->getStatusRecebidoText($garantiasData['qtd'], $garantiasData['qtd_total']);
+
+            return $status;
+        }
+        public function getStatusEnviado($idPedido, $tipoPessoa)
+        {
+            $status = [];
+
+            // Documentos
+            $sqlDocumentos = $this->creditoECobrancaRepository->getStatusDocumentoEnviadoQuery($idPedido, $tipoPessoa);
+            $docData = $this->executePgQuery($sqlDocumentos, ['qtd' => 0, 'qtd_total' => 0]);
+            $status['STATUS_DOCUMENTO_ENVIADO'] = $this->getStatusEnviadoText($docData['qtd'], $docData['qtd_total']);
+
+            // CPR
+            $sqlCPR = $this->creditoECobrancaRepository->getStatusCPREnviadoQuery($idPedido, $tipoPessoa);
+            $cprData = $this->executePgQuery($sqlCPR, ['qtd' => 0]);
+            $status['STATUS_CPR_ENVIADO'] = $this->getStatusEnviadoText($cprData['qtd']);
+
+            // Nota Promissória
+            $sqlPromissoria = $this->creditoECobrancaRepository->getStatusNotaPromissoriaEnviadoQuery($idPedido, $tipoPessoa);
+            $promissoriaData = $this->executePgQuery($sqlPromissoria, ['qtd' => 0]);
+            $status['STATUS_PROMISSORIA_ENVIADO'] = $this->getStatusEnviadoText($promissoriaData['qtd']);
+
+            // Instrumento Fiança
+            $sqlInstrumentoFianca = $this->creditoECobrancaRepository->getStatusInstrumentoFiancaEnviadoQuery($idPedido, $tipoPessoa);
+            $instrumentoFiancaData = $this->executePgQuery($sqlInstrumentoFianca, ['qtd' => 0]);
+            $status['STATUS_INST_FIANCA_ENVIADO'] = $this->getStatusEnviadoText($instrumentoFiancaData['qtd']);
+
+            // Confissão Dívida
+            $sqlConfissaoDivida = $this->creditoECobrancaRepository->getStatusConfissaoDividaEnviadoQuery($idPedido, $tipoPessoa);
+            $confissaoDividaData = $this->executePgQuery($sqlConfissaoDivida, ['qtd' => 0]);
+            $status['STATUS_CONFISSAO_DIVIDA_ENVIADO'] = $this->getStatusEnviadoText($confissaoDividaData['qtd']);
+
+            // Garantias
+            $sqlGarantias = $this->creditoECobrancaRepository->getStatusGarantiasEnviadoQuery($idPedido, $tipoPessoa);
+            $garantiasData = $this->executePgQuery($sqlGarantias, ['qtd' => 0, 'qtd_total' => 0]);
+            $status['STATUS_GARANTIA_ENVIADO'] = $this->getStatusEnviadoText($garantiasData['qtd'], $garantiasData['qtd_total']);
+
+            return $status;
+        }
+        private function getStatusRecebidoText($received, $total = null)
+        {
+            if ($total === null) {
+                // Para status binários (recebido/não recebido)
+                return $received === 0 ? '-' : 'Recebido';
+            }
+
+            // Para status com quantidade total
+            if ($received === 0) {
+                return 'Pendente';
+            } elseif ($received < $total) {
+                return 'Recebido Parcial';
+            } else {
+                return 'Recebido';
+            }
+        }
+        private function getStatusEnviadoText($received, $total = null)
+        {
+            if ($total === null) {
+                return $received === 0 ? '-' : 'Enviado';
+            }
+
+            if ($received === 0) {
+                return 'Não Enviado';
+            } elseif ($received < $total) {
+                return 'Enviado Parcial';
+            } else {
+                return 'Enviado';
+            }
+        }
+
+
+
         public function listDocumentosPedidoAction()
         {
             if (!$this->oracleService) {
@@ -817,77 +835,101 @@ class CreditoECobrancaController extends BaseController
                     'garantias' => [],
                     'duplicatasBoletos' => [],
                     'observacaoPedido' => [],
+                    'documentosEnviados' => [],
+                    'garantiasEnviados' => [],
                 ];
 
                 if ($idPedido) {
-                    // Busca documentos
-                    $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoQuery($idPedido, $tipoPessoa);
-                    if ($sqlDocumentos) {
-                        $stmtDoc = $this->pgAdapter->query($sqlDocumentos);
-                        $resDoc = $stmtDoc->execute();
-                        foreach ($resDoc as $row) {
-                            $result['documentos'][] = $row;
-                        }
-                    }
-
-                    // Busca garantias
-                    $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoQuery($idPedido, $tipoPessoa);
-                    if ($sqlGarantias) {
-                        $stmtGar = $this->pgAdapter->query($sqlGarantias);
-                        $resGar = $stmtGar->execute();
-                        foreach ($resGar as $row) {
-                            $result['garantias'][] = $row;
-                        }
-                    }
-
-                    // Busca Duplicatas e Boletos
-                    $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
-                    if ($sqlDuplicataBoleto) {
-                        $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
-                        
-                        foreach ($resDuplicataBoleto as $row) {
-                            $idParcelaPedido = $row['ID'];
-
-                            // Inicializa valores padrão
-                            $boletoRecebido = false;
-                            $duplicataRecebido = false;
-
-                            // Busca Duplicatas e Boletos no PostgreSQL
-                            $sqlDuplicatasBoletos = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoPostgresQuery($idPedido, $idParcelaPedido);
-                            if ($sqlDuplicatasBoletos) {
-                                $stmtDulpBol = $this->pgAdapter->query($sqlDuplicatasBoletos);
-                                $resDupBol = $stmtDulpBol->execute();
-                                $pgRow = $resDupBol->current();
-                                
-                                if ($pgRow) {
-                                    $boletoRecebido = $pgRow['boleto_recebido'] ?? false;
-                                    $duplicataRecebido = $pgRow['duplicata_recebido'] ?? false;
-                                }
+                        // Busca documentos
+                        $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoQuery($idPedido, $tipoPessoa);
+                        if ($sqlDocumentos) {
+                            $stmtDoc = $this->pgAdapter->query($sqlDocumentos);
+                            $resDoc = $stmtDoc->execute();
+                            foreach ($resDoc as $row) {
+                                $result['documentos'][] = $row;
                             }
-
-                            // Converte campos Oracle
-                            $row['DUPLICATA_EMITIDA'] = intval($row['DUPLICATA_EMITIDA']) === 1;
-                            $row['BOLETO_EMITIDO'] = intval($row['BOLETO_EMITIDO']) === 1;
-
-                            // Adiciona campos do PostgreSQL
-                            $row['BOLETO_RECEBIDO'] = $boletoRecebido;
-                            $row['DUPLICATA_RECEBIDO'] = $duplicataRecebido;
-
-                            $result['duplicatasBoletos'][] = $row;
                         }
-                    }
 
-                    // Busca observações (última inserida, por exemplo)
-                    $sqlObservacoes = $this->creditoECobrancaRepository->getObservacoesPedidoQuery($idPedido);
-                    if ($sqlObservacoes) {
-                        $stmtObs = $this->pgAdapter->query($sqlObservacoes);
-                        $resObs = $stmtObs->execute();
-                        $pgRowObs = $resObs->current();
-
-                        if ($pgRowObs) {
-                            $result['observacaoPedido'] = $pgRowObs;
+                        // Busca garantias
+                        $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoQuery($idPedido, $tipoPessoa);
+                        if ($sqlGarantias) {
+                            $stmtGar = $this->pgAdapter->query($sqlGarantias);
+                            $resGar = $stmtGar->execute();
+                            foreach ($resGar as $row) {
+                                $result['garantias'][] = $row;
+                            }
                         }
-                    }
+
+                        // Busca Duplicatas e Boletos
+                        $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
+                        if ($sqlDuplicataBoleto) {
+                            $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
+                            
+                            foreach ($resDuplicataBoleto as $row) {
+                                $idParcelaPedido = $row['ID'];
+
+                                // Inicializa valores padrão
+                                $boletoRecebido = false;
+                                $duplicataRecebido = false;
+
+                                // Busca Duplicatas e Boletos no PostgreSQL
+                                $sqlDuplicatasBoletos = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoPostgresQuery($idPedido, $idParcelaPedido);
+                                if ($sqlDuplicatasBoletos) {
+                                    $stmtDulpBol = $this->pgAdapter->query($sqlDuplicatasBoletos);
+                                    $resDupBol = $stmtDulpBol->execute();
+                                    $pgRow = $resDupBol->current();
+                                    
+                                    if ($pgRow) {
+                                        $boletoRecebido = $pgRow['boleto_recebido'] ?? false;
+                                        $duplicataRecebido = $pgRow['duplicata_recebido'] ?? false;
+                                    }
+                                }
+
+                                // Converte campos Oracle
+                                $row['DUPLICATA_EMITIDA'] = intval($row['DUPLICATA_EMITIDA']) === 1;
+                                $row['BOLETO_EMITIDO'] = intval($row['BOLETO_EMITIDO']) === 1;
+
+                                // Adiciona campos do PostgreSQL
+                                $row['BOLETO_RECEBIDO'] = $boletoRecebido;
+                                $row['DUPLICATA_RECEBIDO'] = $duplicataRecebido;
+
+                                $result['duplicatasBoletos'][] = $row;
+                            }
+                        }
+
+                        // Busca observações (última inserida, por exemplo)
+                        $sqlObservacoes = $this->creditoECobrancaRepository->getObservacoesPedidoQuery($idPedido);
+                        if ($sqlObservacoes) {
+                            $stmtObs = $this->pgAdapter->query($sqlObservacoes);
+                            $resObs = $stmtObs->execute();
+                            $pgRowObs = $resObs->current();
+
+                            if ($pgRowObs) {
+                                $result['observacaoPedido'] = $pgRowObs;
+                            }
+                        }
+
+
+                        
+                        // Busca documentos
+                        $sqlDocumentos = $this->creditoECobrancaRepository->getDocumentosPedidoEnviadoQuery($idPedido, $tipoPessoa);
+                        if ($sqlDocumentos) {
+                            $stmtDoc = $this->pgAdapter->query($sqlDocumentos);
+                            $resDoc = $stmtDoc->execute();
+                            foreach ($resDoc as $row) {
+                                $result['documentosEnviados'][] = $row;
+                            }
+                        }
+
+                        // Busca garantias
+                        $sqlGarantias = $this->creditoECobrancaRepository->getGarantiasPedidoEnviadoQuery($idPedido, $tipoPessoa);
+                        if ($sqlGarantias) {
+                            $stmtGar = $this->pgAdapter->query($sqlGarantias);
+                            $resGar = $stmtGar->execute();
+                            foreach ($resGar as $row) {
+                                $result['garantiasEnviados'][] = $row;
+                            }
+                        }
                 }
 
                 return new JsonModel([
@@ -1054,6 +1096,111 @@ class CreditoECobrancaController extends BaseController
                 ]);
             }
         }
+        public function toggleDocumentoEnviadoPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $idPedido = $body['id_pedido'] ?? null;
+            $idDocumento = $body['id_documento'] ?? null;
+            $checked = $body['checked'] ?? null;
+            $grupoClienteID = $body['grupoClienteID'] ?? null;
+            $codigoSafra = $body['codigoSafra'] ?? null;
+
+            if (!$idDocumento || !isset($checked)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+                 // Verifica se o serviço Oracle está disponível
+                if (!$this->oracleService) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Serviço Oracle não disponível'
+                    ]);
+                }
+
+                if (intval($grupoClienteID) > 0 && intval($codigoSafra) > 0) {
+                    // Busca Pedidos GrupoCliente e Safra
+                    $params = [];
+                    $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                    if ($sqlPedidosGrupoCliente) {
+                    // Executa a consulta Oracle, caso tenha uma consulta
+                        $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
+                    }
+                    
+                    if (count($resPedidosGrupoCliente) > 0) {
+                        foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                            if ($checked) {
+                                // Insere ou atualiza para ativo = true
+                                $sql = "
+                                    INSERT INTO documentos_pedido_enviado (id_pedido, id_documento, ativo)
+                                    VALUES (:id_pedido, :id_documento, true)
+                                    ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                                    SET ativo = EXCLUDED.ativo
+                                ";
+                            } else {
+                                // Atualiza para ativo = false
+                                $sql = "
+                                    UPDATE documentos_pedido_enviado
+                                    SET ativo = false
+                                    WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                                ";
+                            }
+
+                            $statement = $this->pgAdapter->query($sql);
+                            $statement->execute([
+                                'id_pedido' => $pedido['ID_PEDIDO'],
+                                'id_documento' => $idDocumento
+                            ]);
+                        }
+                    } 
+                } else {
+                    if ($checked) {
+                        // Insere ou atualiza para ativo = true
+                        $sql = "
+                            INSERT INTO documentos_pedido_enviado (id_pedido, id_documento, ativo)
+                            VALUES (:id_pedido, :id_documento, true)
+                            ON CONFLICT (id_pedido, id_documento) DO UPDATE
+                            SET ativo = EXCLUDED.ativo
+                        ";
+                    } else {
+                        // Atualiza para ativo = false
+                        $sql = "
+                            UPDATE documentos_pedido_enviado
+                            SET ativo = false
+                            WHERE id_pedido = :id_pedido AND id_documento = :id_documento
+                        ";
+                    }
+
+                    $statement = $this->pgAdapter->query($sql);
+                    $statement->execute([
+                        'id_pedido' => $idPedido,
+                        'id_documento' => $idDocumento
+                    ]);
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $checked ? 'Documento vinculado com sucesso.' : 'Documento desvinculado com sucesso.'
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
         public function toggleGarantiaPedidoAction()
         {
             $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
@@ -1136,6 +1283,110 @@ class CreditoECobrancaController extends BaseController
                         // Atualiza para ativo = false
                         $sql = "
                             UPDATE garantias_pedido
+                            SET ativo = false
+                            WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                        ";
+                    }
+                    $statement = $this->pgAdapter->query($sql);
+                    $statement->execute([
+                        'id_pedido' => $idPedido,
+                        'id_garantia' => $idGarantia
+                    ]);
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $checked ? 'Garantia vinculada com sucesso.' : 'Garantia desvinculada com sucesso.'
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao processar requisição: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function toggleGarantiaEnviadoPedidoAction()
+        {
+            $this->getResponse()->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+
+            $body = json_decode($this->getRequest()->getContent(), true);
+
+            $idPedido = $body['id_pedido'] ?? null;
+            $idGarantia = $body['id_garantia'] ?? null;
+            $checked = $body['checked'] ?? null;
+            $grupoClienteID = $body['grupoClienteID'] ?? null;
+            $codigoSafra = $body['codigoSafra'] ?? null;
+
+            if (!$idGarantia || !isset($checked)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Parâmetros obrigatórios ausentes.'
+                ]);
+            }
+
+            try {
+                if (!$this->pgAdapter) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Adaptador PostgreSQL não disponível.'
+                    ]);
+                }
+                // Verifica se o serviço Oracle está disponível
+                if (!$this->oracleService) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Serviço Oracle não disponível'
+                    ]);
+                }
+
+                if (intval($grupoClienteID) > 0 && intval($codigoSafra) > 0) {
+                    // Busca Pedidos GrupoCliente e Safra
+                    $params = [];
+                    $sqlPedidosGrupoCliente = $this->creditoECobrancaRepository->getPedidosGrupoClienteSafra($grupoClienteID, $codigoSafra);
+                    if ($sqlPedidosGrupoCliente) {
+                        // Executa a consulta Oracle, caso tenha uma consulta
+                        $resPedidosGrupoCliente = $this->oracleService->executeQuery($sqlPedidosGrupoCliente, $params);
+                    }
+
+                    if (count($resPedidosGrupoCliente) > 0) {
+                        foreach ($resPedidosGrupoCliente as $key => $pedido) {
+                            if ($checked) {
+                                // Insere ou atualiza para ativo = true
+                                $sql = "
+                                    INSERT INTO garantias_pedido_enviado (id_pedido, id_garantia, ativo)
+                                    VALUES (:id_pedido, :id_garantia, true)
+                                    ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                                    SET ativo = EXCLUDED.ativo
+                                ";
+                            } else {
+                                // Atualiza para ativo = false
+                                $sql = "
+                                    UPDATE garantias_pedido_enviado
+                                    SET ativo = false
+                                    WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
+                                ";
+                            }
+
+                            $statement = $this->pgAdapter->query($sql);
+                            $statement->execute([
+                                'id_pedido' => $pedido['ID_PEDIDO'],
+                                'id_garantia' => $idGarantia
+                            ]);
+                        }
+                    } 
+                } else {
+                    if ($checked) {
+                        // Insere ou atualiza para ativo = true
+                        $sql = "
+                            INSERT INTO garantias_pedido_enviado (id_pedido, id_garantia, ativo)
+                            VALUES (:id_pedido, :id_garantia, true)
+                            ON CONFLICT (id_pedido, id_garantia) DO UPDATE
+                            SET ativo = EXCLUDED.ativo
+                        ";
+                    } else {
+                        // Atualiza para ativo = false
+                        $sql = "
+                            UPDATE garantias_pedido_enviado
                             SET ativo = false
                             WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
                         ";
@@ -1318,27 +1569,6 @@ class CreditoECobrancaController extends BaseController
                     'success' => false,
                     'message' => 'Erro ao processar requisição: ' . $e->getMessage()
                 ]);
-            }
-        }
-        public function marcarDocumentosEnviadosAction()
-        {
-            $request = $this->getRequest();
-           
-            if (!$request->isPost()) {
-                return new JsonModel(['success' => false, 'message' => 'Método inválido']);
-            }
-
-            $dados = json_decode($request->getContent(), true);
-
-            if (empty($dados['ID_PEDIDO'])) {
-                return new JsonModel(['success' => false, 'message' => 'ID_PEDIDO não informado']);
-            }
-
-            try {
-                $this->creditoECobrancaRepository->marcarDocumentosEnviados($dados);
-                return new JsonModel(['success' => true, 'message' => 'Documentos Enviados com sucesso']);
-            } catch (\Exception $e) {
-                return new JsonModel(['success' => false, 'message' => 'Erro ao sinalizar: ' . $e->getMessage()]);
             }
         }
     #endregion

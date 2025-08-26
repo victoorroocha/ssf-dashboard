@@ -462,9 +462,10 @@ class CreditoECobrancaRepository
     }
 
     #region Controle Documentos
-        public function getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null)
+        public function getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null, $key = null, $search = null, $skip, $take, $filterArray = null)
         {
             $ands = "";
+            $andsFilter = "";
             if (!empty($codigoSafra)) {
                 $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
             }
@@ -472,7 +473,22 @@ class CreditoECobrancaRepository
                 $emissao_fim = !empty($emissao_fim) ? $emissao_fim : date('Y-m-d');
                 $ands .= " AND P.CREATED_AT BETWEEN TO_DATE('{$emissao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$emissao_fim}', 'YYYY-MM-DD')";
             }
-        
+
+            if (!empty($search)) {
+                $ands .= " AND (P.ID LIKE '%$search%' OR P.CODIGO LIKE '%$search%')";
+            }
+            if (!empty($key)) {
+                $ands .= " AND P.ID = $key";
+            }
+
+            if ($filterArray) {
+                $parsedFilter = $this->parseDxFilter($filterArray);
+                if (!empty($parsedFilter)) {
+                    $andsFilter .= " AND ($parsedFilter)";
+                }
+            }
+            
+
             return "SELECT * FROM (
                     SELECT  
                          P.ID AS ID_PEDIDO
@@ -550,14 +566,171 @@ class CreditoECobrancaRepository
                     GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                     ORDER BY P.CREATED_AT desc
                     ) A
-                    WHERE A.TIPO_PRAZO = 'Prazo Safra'";  
+                    WHERE A.TIPO_PRAZO = 'Prazo Safra'
+                    {$andsFilter}
+                    OFFSET {$skip} ROWS FETCH NEXT {$take} ROWS ONLY";  
         }
+        public function getDadosSoftsulPedidoCountQuery($codigoSafra, $emissao_inicio = null, $emissao_fim = null, $key = null, $search = null, $skip, $take, $filterArray = null)
+        {
+            $ands = "";
+            $andsFilter = "";
+            if (!empty($codigoSafra)) {
+                $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
+            }
+            if (!empty($emissao_inicio)) {
+                $emissao_fim = !empty($emissao_fim) ? $emissao_fim : date('Y-m-d');
+                $ands .= " AND P.CREATED_AT BETWEEN TO_DATE('{$emissao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$emissao_fim}', 'YYYY-MM-DD')";
+            }
+
+            if (!empty($search)) {
+                $ands .= " AND (P.ID LIKE '%$search%' OR P.CODIGO LIKE '%$search%')";
+            }
+            if (!empty($key)) {
+                $ands .= " AND P.ID = $key";
+            }
+            if ($filterArray) {
+                $parsedFilter = $this->parseDxFilter($filterArray);
+                if (!empty($parsedFilter)) {
+                    $andsFilter .= " AND ($parsedFilter)";
+                }
+            }
+
+            return "SELECT COUNT(*) AS TOTAL FROM (
+                    SELECT  
+                         P.ID AS ID_PEDIDO
+                        ,P.CODIGO AS CODIGO_PEDIDO
+                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                        ,P.CODIGOSAFRA 
+                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                        ,CLI.NOME AS NOME_CLIENTE
+                        ,max(CLISENIOR.CGCCPF) CGC_CPF_CLIENTE
+                        ,max(CLISENIOR.ENDCLI) ENDERECO_CLIENTE
+                        ,max(CLISENIOR.CPLEND) CPL_ENDERECO_CLIENTE
+                        ,max(CLISENIOR.CEPCLI) CEP_CLIENTE
+                        ,max(CLISENIOR.BAICLI) BAIRRO_CLIENTE
+                        ,max(CLISENIOR.CIDCLI) CIDADE_CLIENTE
+                        ,max(CLISENIOR.SIGUFS) ESTADO_CLIENTE
+                        ,max(CLISENIOR.FONCLI) FONE1_CLIENTE
+                        ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
+                        ,max(CLISENIOR.INSEST) INSEST_CLIENTE
+                        ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
+                        ,p.RTV_USER_ID AS VENDEDOR_ID
+		                ,vend.NAME AS NOME_VENDEDOR
+                        ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
+                        ,nvl(MAX(E069GRE.NOMGRE), 'SEM GRUPO CLIENTE') AS NOME_GRUPO_CLIENTE
+                        ,SUM(IP.QUANT) AS QUANTIDADE
+                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) - NVL((SELECT SUM(VALOR) FROM web.RECEBIMENTOS r WHERE PEDIDO_ID = P.ID AND TIPO = 'G'),0) AS PRECO_TOTAL_GERMOPLASMA_SALDO_REAL
+                        ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
+                        ,MAX(GM.DESCRICAO) AS PAGAMENTO_GERMOPLASTMA
+                        ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) AS PRECO_TOTAL_ROYALTIES  
+                        ,SUM(NVL(IP.PRECO_TOTAL_ROYALTIES ,0)) - NVL((SELECT SUM(VALOR) FROM web.RECEBIMENTOS r WHERE PEDIDO_ID = P.ID AND TIPO = 'R'),0) AS PRECO_TOTAL_ROYALTIES_SALDO_REAL  
+                        ,TO_CHAR(MAX(P.VENCIMENTO_ROYALTIES), 'YYYY-MM-DD') AS VENCIMENTO_ROYALTIES
+                        ,MAX(RM.DESCRICAO) AS PAGAMENTO_ROYALTIES
+                        ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) AS PRECO_TOTAL_TSI
+                        ,SUM(NVL(IP.PRECO_TOTAL_TSI ,0)) - NVL((SELECT SUM(VALOR) FROM web.RECEBIMENTOS r WHERE PEDIDO_ID = P.ID AND TIPO = 'T'),0) AS PRECO_TOTAL_TSI_SALDO_REAL 
+                        ,TO_CHAR(MAX(P.VENCIMENTO_TSI), 'YYYY-MM-DD') AS VENCIMENTO_TSI
+                        ,MAX(TM.DESCRICAO) AS PAGAMENTO_TSI
+                        ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL_FRETE
+                        ,MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) - NVL((SELECT SUM(VALOR) FROM web.RECEBIMENTOS r WHERE PEDIDO_ID = P.ID AND TIPO = 'F'),0) AS PRECO_TOTAL_FRETE_SALDO_REAL  
+                        ,TO_CHAR(MAX(P.VENCIMENTO_FRETE), 'YYYY-MM-DD') AS VENCIMENTO_FRETE
+                        ,MAX(FM.DESCRICAO) AS PAGAMENTO_FRETE
+                        ,SUM(NVL(IP.PRECO_TOTAL,0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
+                        ,(  CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_ROYALTIES, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO) THEN SUM(NVL(IP.PRECO_TOTAL_TSI, 0)) ELSE 0 END +
+                            CASE WHEN EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO) THEN MAX(NVL(P.PRECO_TOTAL_FRETE, 0)) ELSE 0 END
+                        ) AS PRECO_TOTAL_PRAZO_SAFRA
+                        ,CASE WHEN 
+                                EXTRACT(YEAR FROM MAX(P.VENCIMENTO_GERMOPLASMA)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_ROYALTIES)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_TSI)) > EXTRACT(YEAR FROM S.INICIO)
+                            OR EXTRACT(YEAR FROM MAX(P.VENCIMENTO_FRETE)) > EXTRACT(YEAR FROM S.INICIO)
+                            THEN 'Prazo Safra'
+                            ELSE 'Prazo Ano'
+                        END AS TIPO_PRAZO
+                    FROM web.pedidos_v2 p
+                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.CODIGOCLIFOR
+                    LEFT JOIN SAPIENS.E069GRE E069GRE ON E069GRE.CODGRE = CLISENIOR.CODGRE
+                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                    {$ands}
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                    ORDER BY P.CREATED_AT desc
+                    ) A
+                    WHERE A.TIPO_PRAZO = 'Prazo Safra'
+                    {$andsFilter}";  
+        }
+        private function parseDxFilter($filter) {
+            if (!is_array($filter)) {
+                return '';
+            }
+
+            // Caso seja simples: [campo, operador, valor]
+            if (count($filter) === 3 && is_string($filter[0])) {
+                list($field, $operator, $value) = $filter;
+
+                switch (strtolower($operator)) {
+                    case '=':
+                        return "$field = " . (is_numeric($value) ? $value : "'$value'");
+                    case '<>':
+                        return "$field <> " . (is_numeric($value) ? $value : "'$value'");
+                    case '>':
+                    case '<':
+                    case '>=':
+                    case '<=':
+                        return "$field $operator " . (is_numeric($value) ? $value : "'$value'");
+                    case 'contains':
+                        return "UPPER($field) LIKE UPPER('%" . addslashes($value) . "%')";
+                    case 'startswith':
+                        return "UPPER($field) LIKE UPPER('" . addslashes($value) . "%')";
+                    case 'endswith':
+                        return "UPPER($field) LIKE UPPER('%" . addslashes($value) . "')";
+                    default:
+                        return '';
+                }
+            }
+
+            // Caso tenha vários AND/OR em sequência
+            $sqlParts = [];
+            $logic = null;
+
+            foreach ($filter as $item) {
+                if (is_string($item)) {
+                    $logic = strtoupper($item); // AND ou OR
+                } else {
+                    $sqlParts[] = $this->parseDxFilter($item);
+                }
+            }
+
+            if (!empty($sqlParts)) {
+                return '(' . implode(" $logic ", $sqlParts) . ')';
+            }
+
+            return '';
+        }
+
+        // Recebido STATUS
         public function getStatusDocumentoQuery($idPedido, $tipoPessoa)
         {
             if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql = "SELECT 
                             count(distinct dp.id_documento) qtd
-                            ,(select count(distinct id) from documentos where documentos.flg_documento_obrigatorio = true and documentos.ativo = true AND documentos.tipo_pessoa = '{$tipoPessoa}') qtd_documentos_obrigatorios
+                            ,(select count(distinct id) from documentos where documentos.flg_documento_obrigatorio = true and documentos.ativo = true AND documentos.tipo_pessoa = '{$tipoPessoa}') qtd_total
                         FROM documentos_pedido dp
                         LEFT JOIN documentos d ON d.id = dp.id_documento 
                         WHERE d.ativo = true 
@@ -675,7 +848,7 @@ class CreditoECobrancaRepository
                                     and garantias.tipo_pessoa = '{$tipoPessoa}'
                                 ) THEN 1 ELSE 0 end +
                                 (select count(distinct id) from garantias where garantias.ativo = true and flg_instrumento_fianca = false and flg_cpr = false and flg_confissao_divida = false AND garantias.tipo_pessoa = '{$tipoPessoa}')
-                            ) qtd_garantias
+                            ) qtd_total
                         FROM garantias_pedido gp
                         LEFT JOIN garantias g ON g.id = gp.id_garantia 
                         WHERE g.ativo = true 
@@ -689,6 +862,147 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
+
+        // Enviado STATUS
+        public function getStatusDocumentoEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                            count(distinct dp.id_documento) qtd
+                            ,(select count(distinct id) from documentos where documentos.flg_documento_obrigatorio = true and documentos.ativo = true AND documentos.tipo_pessoa = '{$tipoPessoa}') qtd_total
+                        FROM documentos_pedido_enviado dp
+                        LEFT JOIN documentos d ON d.id = dp.id_documento 
+                        WHERE d.ativo = true 
+                        AND d.flg_documento_obrigatorio = true
+                        AND dp.ativo = true
+                        AND id_pedido = {$idPedido}
+                        AND d.tipo_pessoa = '{$tipoPessoa}'
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusCPREnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido_enviado gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_cpr = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusNotaPromissoriaEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido_enviado gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_nota_promissoria = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusInstrumentoFiancaEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido_enviado gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_instrumento_fianca = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusConfissaoDividaEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                             count(*) as qtd
+                        from garantias_pedido_enviado gp
+                        left join garantias g on g.id = gp.id_garantia 
+                        where g.ativo = true 
+                        and gp.ativo = true
+                        and g.flg_confissao_divida = true
+                        and id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getStatusGarantiasEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT 
+                            count(distinct gp.id_garantia) qtd
+                            ,(
+                                --Considera apenas 1 flg_instrumento_fianca
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_instrumento_fianca = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end + 
+                                --Considera apenas 1 flg_cpr
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_cpr = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end +
+                                --Considera apenas 1 flg_confissao_divida
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_confissao_divida = true
+                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
+                                ) THEN 1 ELSE 0 end +
+                                (select count(distinct id) from garantias where garantias.ativo = true and flg_instrumento_fianca = false and flg_cpr = false and flg_confissao_divida = false AND garantias.tipo_pessoa = '{$tipoPessoa}')
+                            ) qtd_total
+                        FROM garantias_pedido_enviado gp
+                        LEFT JOIN garantias g ON g.id = gp.id_garantia 
+                        WHERE g.ativo = true 
+                        AND gp.ativo = true
+                        AND gp.id_pedido = {$idPedido}
+                        AND g.tipo_pessoa = '{$tipoPessoa}'
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+
+
         public function getDadosClientesSeniorAvalistasQuery($search, $key = null)
         {
             // Acrescenta filtro de pesquisa se houver
@@ -823,6 +1137,26 @@ class CreditoECobrancaRepository
 
             return $sql;
         }
+        public function getDocumentosPedidoEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql = "SELECT DISTINCT
+                            d.id AS id_documento,
+                            dp.id_pedido,
+                            d.dsc_documento,
+                            COALESCE(dp.ativo, false) AS ativo
+                        FROM documentos d
+                        LEFT JOIN documentos_pedido_enviado dp ON dp.id_documento = d.id AND dp.id_pedido = {$idPedido}
+                        WHERE d.ativo = true
+                        and d.tipo_pessoa = '{$tipoPessoa}'
+                        ORDER BY d.id
+                ";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
         public function getObservacoesPedidoQuery($idPedido)
         {
             if (!empty($idPedido)) {
@@ -843,6 +1177,25 @@ class CreditoECobrancaRepository
                             COALESCE(garantias_pedido.ativo, false) as ativo
                         FROM garantias
                         LEFT JOIN garantias_pedido ON garantias_pedido.id_garantia = garantias.id AND garantias_pedido.id_pedido = {$idPedido}
+                        WHERE garantias.ativo = true
+                        and garantias.tipo_pessoa = '{$tipoPessoa}'
+                        ORDER BY id_garantia";
+            } else {
+                $sql = "";
+            }
+
+            return $sql;
+        }
+        public function getGarantiasPedidoEnviadoQuery($idPedido, $tipoPessoa)
+        {
+            if (!empty($idPedido) && !empty($tipoPessoa)) {
+                $sql =" SELECT DISTINCT
+                            garantias.id as id_garantia,
+                            garantias_pedido_enviado.id_pedido,
+                            garantias.dsc_garantia,
+                            COALESCE(garantias_pedido_enviado.ativo, false) as ativo
+                        FROM garantias
+                        LEFT JOIN garantias_pedido_enviado ON garantias_pedido_enviado.id_garantia = garantias.id AND garantias_pedido_enviado.id_pedido = {$idPedido}
                         WHERE garantias.ativo = true
                         and garantias.tipo_pessoa = '{$tipoPessoa}'
                         ORDER BY id_garantia";
