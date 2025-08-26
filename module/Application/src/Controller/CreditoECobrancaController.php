@@ -574,14 +574,15 @@ class CreditoECobrancaController extends BaseController
             $key = $this->params()->fromQuery('key', '');
             $skip = (int) $this->params()->fromQuery('skip', 0);
             $take = (int) $this->params()->fromQuery('take', 30);
+            $isLoadingAll = $this->params()->fromQuery('isLoadingAll', false);
 
             $filter = $this->params()->fromQuery('filter', null);
             $filterArray = $filter ? json_decode($filter, true) : null;
-
+            
             try {
                 // Consulta no Softsul todos pedidos
-                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $filterArray) : '';
-
+                $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $isLoadingAll, $filterArray) : '';
+                
                 $params = [];
                 if ($codigoSafra) {
                     $params['codigoSafra'] = $codigoSafra;
@@ -596,7 +597,7 @@ class CreditoECobrancaController extends BaseController
                     $result = $this->oracleService->executeQuery($sql, $params);
 
                     // Contagem total para paginação
-                    $countSql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoCountQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $filterArray) : '';
+                    $countSql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoCountQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $isLoadingAll, $filterArray) : '';
                     $countResult = $this->oracleService->executeQuery($countSql);
                     $totalCount = (int)$countResult[0]['TOTAL'] ?? 0;
 
@@ -805,8 +806,6 @@ class CreditoECobrancaController extends BaseController
                 return 'Enviado';
             }
         }
-
-
 
         public function listDocumentosPedidoAction()
         {
@@ -3140,7 +3139,7 @@ class CreditoECobrancaController extends BaseController
 
         try {
             // Consulta no Softsul todos pedidos
-            $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
+            $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoDashboardQuery($codigoSafra, $emissao_inicio, $emissao_fim) : '';
 
             $params = [];
             if ($codigoSafra) {
@@ -3179,29 +3178,29 @@ class CreditoECobrancaController extends BaseController
                         }
                     }
 
-                    // Busca Status Duplicatas
-                    $sqlStatusDuplicatas = $this->creditoECobrancaRepository->getStatusDuplicatasQuery($idPedido);
-                    if ($sqlStatusDuplicatas) {
-                        $stmtStatusDuplicata = $this->pgAdapter->query($sqlStatusDuplicatas);
-                        $resStatusDuplicata = $stmtStatusDuplicata->execute();
-                        $statusDuplicatasPedido = $resStatusDuplicata->current();
+                    // // Busca Status Duplicatas
+                    // $sqlStatusDuplicatas = $this->creditoECobrancaRepository->getStatusDuplicatasQuery($idPedido);
+                    // if ($sqlStatusDuplicatas) {
+                    //     $stmtStatusDuplicata = $this->pgAdapter->query($sqlStatusDuplicatas);
+                    //     $resStatusDuplicata = $stmtStatusDuplicata->execute();
+                    //     $statusDuplicatasPedido = $resStatusDuplicata->current();
 
-                        // Busca Total Duplicatas e Boletos
-                        $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
-                        if ($sqlDuplicataBoleto) {
-                            $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
-                        }
-                        $totalDuplicatas = count($resDuplicataBoleto);
-                        $duplicatasRecebidos = isset($statusDuplicatasPedido['qtd']) ? $statusDuplicatasPedido['qtd'] : 0; 
+                    //     // Busca Total Duplicatas e Boletos
+                    //     $sqlDuplicataBoleto = $this->creditoECobrancaRepository->getDuplicatasBoletosPedidoOracleQuery($idPedido);
+                    //     if ($sqlDuplicataBoleto) {
+                    //         $resDuplicataBoleto = $this->oracleService->executeQuery($sqlDuplicataBoleto);
+                    //     }
+                    //     $totalDuplicatas = count($resDuplicataBoleto);
+                    //     $duplicatasRecebidos = isset($statusDuplicatasPedido['qtd']) ? $statusDuplicatasPedido['qtd'] : 0; 
                         
-                        if ($duplicatasRecebidos === 0) {
-                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Pendente';
-                        } elseif ($duplicatasRecebidos < $totalDuplicatas) {
-                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido Parcial';
-                        } else {
-                            $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido';
-                        }
-                    }
+                    //     if ($duplicatasRecebidos === 0) {
+                    //         $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Pendente';
+                    //     } elseif ($duplicatasRecebidos < $totalDuplicatas) {
+                    //         $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido Parcial';
+                    //     } else {
+                    //         $result[$key]['STATUS_DUPLICATA_PEDIDO'] = 'Recebido';
+                    //     }
+                    // }
 
                     // Busca Status CPR Pedido
                     $sqlStatusCPR = $this->creditoECobrancaRepository->getStatusCPRQuery($idPedido, $tipoPessoa);

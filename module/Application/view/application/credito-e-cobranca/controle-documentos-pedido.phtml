@@ -270,7 +270,7 @@
             formData: {
                 codigosafra: '163',
                 emissao_inicio: null,
-                emissao_fim: null,
+                emissao_fim: null
             },
             items: [
                 {
@@ -337,6 +337,45 @@
                         },
                     ]
                 },
+                // {
+                //     itemType: "group",
+                //     colCount: 2,
+                //     caption: "Filtrar por Status",
+                //     items: [
+                //         {
+                //             dataField: "filtro_documento_enviado",
+                //             label: { text: "Documentos Enviados" },
+                //             editorType: "dxCheckBox",
+                //             editorOptions: {
+                //                 value: false
+                //             }
+                //         },
+                //         {
+                //             dataField: "filtro_documento_recebido",
+                //             label: { text: "Documentos Recebidos" },
+                //             editorType: "dxCheckBox",
+                //             editorOptions: {
+                //                 value: false
+                //             }
+                //         },
+                //         {
+                //             dataField: "filtro_garantia_enviado",
+                //             label: { text: "Garantias Enviadas" },
+                //             editorType: "dxCheckBox",
+                //             editorOptions: {
+                //                 value: false
+                //             }
+                //         },
+                //         {
+                //             dataField: "filtro_garantia_recebido",
+                //             label: { text: "Garantias Recebidas" },
+                //             editorType: "dxCheckBox",
+                //             editorOptions: {
+                //                 value: false
+                //             }
+                //         }
+                //     ]
+                // },
                 {
                     itemType: "button",
                     horizontalAlignment: "left",
@@ -375,30 +414,36 @@
                                     dataSource: new DevExpress.data.DataSource({
                                         store: new DevExpress.data.CustomStore({
                                             key: 'ID_PEDIDO',
+                                            cacheEnabled: true,
+                                            cacheTimeout: 300000,  // 5 minutos em milissegundos
+                                            cacheLoadOptions: {
+                                                // Define quais operações devem usar cache
+                                                filter: true,     // Cache para filtros
+                                                sort: true,       // Cache para ordenação
+                                                group: true,      // Cache para agrupamento
+                                                search: true      // Cache para pesquisas
+                                            },
                                             load: function (loadOptions) {
                                                 const deferred = $.Deferred();
                                                 const searchValue = (loadOptions.searchValue || '').toUpperCase();
                                                 const skip = loadOptions.skip || 0;
                                                 const take = loadOptions.take || 30;
+                                                const isLoadingAll = loadOptions.isLoadingAll || false;
 
-                                                console.log('loadOptions', loadOptions);
 
                                                 let params = {
                                                     search: searchValue,  
                                                     skip: skip, 
                                                     take: take, 
+                                                    isLoadingAll: isLoadingAll,
                                                     codigosafra: filtros.codigosafra || null,
                                                     emissao_inicio: filtros.emissao_inicio || null,
-                                                    emissao_fim: filtros.emissao_fim || null,
+                                                    emissao_fim: filtros.emissao_fim || null
                                                 };
 
                                                  // Se existir filtro no loadOptions, manda para o backend em JSON
                                                 if (loadOptions.filter) {
                                                     params.filter = JSON.stringify(loadOptions.filter);
-                                                }
-                                                 // Se existir filtro no loadOptions, manda para o backend em JSON
-                                                if (loadOptions.sort) {
-                                                    params.sort = JSON.stringify(loadOptions.sort);
                                                 }
 
                                                 return $.ajax({
@@ -482,8 +527,8 @@
                                                 options: {
                                                     icon: "refresh", // Ícone de refresh
                                                     onClick: function() {
-                                                        // Lógica para atualizar/recarregar os dados da grid
-                                                        $("#gridContainer").dxDataGrid("instance").refresh(); // Atualiza a grid
+                                                         var dataSource = $("#gridContainer").dxDataGrid("getDataSource");
+                                                        dataSource.reload(); // Força recarregamento e atualiza cache
                                                     },
                                                     text: "Atualizar" // Texto exibido no botão
                                                 }
@@ -527,6 +572,7 @@
                                         enabled: true,
                                         fileName: "Controle Documentos Pedido",
                                         allowExportSelectedData: false,
+                                        exportAll: true,
                                     },
                                     searchPanel: {
                                         visible: true,
@@ -731,7 +777,6 @@
                                         // STATUS ENVIADOS
                                         { 
                                             dataField: 'STATUS_DOCUMENTO_ENVIADO', caption: 'Status Documentos Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
-                                            allowSorting: true, sortIndex: 2, sortOrder: "asc"
                                         },
                                         { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { dataField: 'STATUS_PROMISSORIA_ENVIADO', caption: 'Status Nota Promissória Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
@@ -739,13 +784,11 @@
                                         { dataField: 'STATUS_CONFISSAO_DIVIDA_ENVIADO', caption: 'Status Confissão de Divida Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { 
                                             dataField: 'STATUS_GARANTIA_ENVIADO', caption: 'Status Garantias Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
-                                            allowSorting: true, sortIndex: 3, sortOrder: "asc"
                                         },
                                         
                                         // STATUS RECEBIDOS
                                         { 
                                             dataField: 'STATUS_DOCUMENTO_RECEBIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
-                                            allowSorting: true, sortIndex: 0, sortOrder: "desc"
                                         },
                                         { dataField: 'STATUS_CPR_RECEBIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { dataField: 'STATUS_PROMISSORIA_RECEBIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
@@ -753,7 +796,6 @@
                                         { dataField: 'STATUS_CONFISSAO_DIVIDA_RECEBIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                         { 
                                             dataField: 'STATUS_GARANTIA_RECEBIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
-                                            allowSorting: true, sortIndex: 1, sortOrder: "desc"
                                         },
 
 
