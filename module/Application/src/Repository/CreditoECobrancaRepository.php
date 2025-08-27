@@ -998,40 +998,41 @@ class CreditoECobrancaRepository
             if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql = "SELECT 
                             count(distinct gp.id_garantia) qtd
-                            ,(
-                                --Considera apenas 1 flg_instrumento_fianca
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_instrumento_fianca = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end + 
-                                --Considera apenas 1 flg_cpr
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_cpr = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end +
-                                --Considera apenas 1 flg_confissao_divida
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_confissao_divida = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end +
-                                 --Considera apenas 1 flg_nota_promissoria
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_nota_promissoria = true
-                                    and garantias.tipo_pessoa = 'PF'
-                                ) THEN 1 ELSE 0 end 
-                            ) qtd_total
+                            ,(select count(distinct id) from garantias where garantias.flg_garantia_obrigatorio = true and garantias.ativo = true AND garantias.tipo_pessoa = 'PF') qtd_total
+                            -- ,(
+                            --     --Considera apenas 1 flg_instrumento_fianca
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_instrumento_fianca = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end + 
+                            --     --Considera apenas 1 flg_cpr
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_cpr = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end +
+                            --     --Considera apenas 1 flg_confissao_divida
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_confissao_divida = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end +
+                            --      --Considera apenas 1 flg_nota_promissoria
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_nota_promissoria = true
+                            --         and garantias.tipo_pessoa = 'PF'
+                            --     ) THEN 1 ELSE 0 end 
+                            -- ) qtd_total
                         FROM garantias_pedido gp
                         LEFT JOIN garantias g ON g.id = gp.id_garantia 
                         WHERE g.ativo = true 
@@ -1144,40 +1145,41 @@ class CreditoECobrancaRepository
             if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql = "SELECT 
                             count(distinct gp.id_garantia) qtd
-                            ,(
-                                --Considera apenas 1 flg_instrumento_fianca
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_instrumento_fianca = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end + 
-                                --Considera apenas 1 flg_cpr
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_cpr = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end +
-                                --Considera apenas 1 flg_confissao_divida
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_confissao_divida = true
-                                    and garantias.tipo_pessoa = '{$tipoPessoa}'
-                                ) THEN 1 ELSE 0 end +
-                                 --Considera apenas 1 flg_nota_promissoria
-                                CASE WHEN EXISTS (
-                                    SELECT 1
-                                    from garantias 
-                                    where garantias.ativo = true
-                                    and garantias.flg_nota_promissoria = true
-                                    and garantias.tipo_pessoa = 'PF'
-                                ) THEN 1 ELSE 0 end 
-                            ) qtd_total
+                            ,(select count(distinct id) from garantias where garantias.flg_garantia_obrigatorio = true and garantias.ativo = true AND garantias.tipo_pessoa = 'PF') qtd_total
+                            -- ,(
+                            --     --Considera apenas 1 flg_instrumento_fianca
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_instrumento_fianca = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end + 
+                            --     --Considera apenas 1 flg_cpr
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_cpr = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end +
+                            --     --Considera apenas 1 flg_confissao_divida
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_confissao_divida = true
+                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
+                            --     ) THEN 1 ELSE 0 end +
+                            --      --Considera apenas 1 flg_nota_promissoria
+                            --     CASE WHEN EXISTS (
+                            --         SELECT 1
+                            --         from garantias 
+                            --         where garantias.ativo = true
+                            --         and garantias.flg_nota_promissoria = true
+                            --         and garantias.tipo_pessoa = 'PF'
+                            --     ) THEN 1 ELSE 0 end 
+                            -- ) qtd_total
                         FROM garantias_pedido_enviado gp
                         LEFT JOIN garantias g ON g.id = gp.id_garantia 
                         WHERE g.ativo = true 

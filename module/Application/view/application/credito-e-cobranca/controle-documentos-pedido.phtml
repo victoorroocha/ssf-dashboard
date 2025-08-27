@@ -427,7 +427,7 @@
                                                 const deferred = $.Deferred();
                                                 const searchValue = (loadOptions.searchValue || '').toUpperCase();
                                                 const skip = loadOptions.skip || 0;
-                                                const take = loadOptions.take || 30;
+                                                const take = loadOptions.take || 500;
                                                 const isLoadingAll = loadOptions.isLoadingAll || false;
 
 
@@ -472,7 +472,7 @@
                                             }
                                         }),
                                         paginate: true,
-                                        pageSize: 30
+                                        pageSize: 500
                                     }),
                                     height: 600,
                                     width: '100%',
@@ -492,7 +492,7 @@
                                         }
                                     },
                                     groupPanel: {
-                                        visible: false,
+                                        visible: true,
                                     },
                                     toolbar: {
                                         items: [
@@ -553,19 +553,19 @@
                                         useNative: false
                                     },
                                     paging: {
-                                        pageSize: 100
+                                        pageSize: 500
                                     },
                                     remoteOperations: {
-                                        paging: true,      
-                                        filtering: true,
-                                        sorting: true,
-                                        groupPaging: true
+                                        paging: false,      
+                                        filtering: false,
+                                        sorting: false,
+                                        groupPaging: false
                                     },
                                     headerFilter: {
-                                        visible: false,
+                                        visible: true,
                                     },
                                     filterRow: {
-                                        visible: false,
+                                        visible: true,
                                         applyFilter: 'auto',
                                     },
                                     export: {
@@ -776,26 +776,26 @@
                                                                                 
                                         // STATUS ENVIADOS
                                         { 
-                                            dataField: 'STATUS_DOCUMENTO_ENVIADO', caption: 'Status Documentos Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            dataField: 'STATUS_DOCUMENTO_ENVIADO', caption: 'Status Documentos Envio', allowEditing: false, width: 'auto', alignment: 'center',
                                         },
-                                        { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_PROMISSORIA_ENVIADO', caption: 'Status Nota Promissória Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_INST_FIANCA_ENVIADO', caption: 'Status Instrumento Fiança Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_ENVIADO', caption: 'Status Confissão de Divida Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_PROMISSORIA_ENVIADO', caption: 'Status Nota Promissória Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_INST_FIANCA_ENVIADO', caption: 'Status Instrumento Fiança Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_ENVIADO', caption: 'Status Confissão de Divida Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { 
-                                            dataField: 'STATUS_GARANTIA_ENVIADO', caption: 'Status Garantias Envio', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            dataField: 'STATUS_GARANTIA_ENVIADO', caption: 'Status Garantias Envio', allowEditing: false, width: 'auto', alignment: 'center',
                                         },
                                         
                                         // STATUS RECEBIDOS
                                         { 
-                                            dataField: 'STATUS_DOCUMENTO_RECEBIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            dataField: 'STATUS_DOCUMENTO_RECEBIDO', caption: 'Status Documentos', allowEditing: false, width: 'auto', alignment: 'center',
                                         },
-                                        { dataField: 'STATUS_CPR_RECEBIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_PROMISSORIA_RECEBIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_INST_FIANCA_RECEBIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
-                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_RECEBIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'STATUS_CPR_RECEBIDO', caption: 'Status CPR', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_PROMISSORIA_RECEBIDO', caption: 'Status Nota Promissória', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_INST_FIANCA_RECEBIDO', caption: 'Status Instrumento Fiança', allowEditing: false, width: 'auto', alignment: 'center'  },
+                                        { dataField: 'STATUS_CONFISSAO_DIVIDA_RECEBIDO', caption: 'Status Confissão de Divida', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { 
-                                            dataField: 'STATUS_GARANTIA_RECEBIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false,
+                                            dataField: 'STATUS_GARANTIA_RECEBIDO', caption: 'Status Garantias', allowEditing: false, width: 'auto', alignment: 'center',
                                         },
 
 
