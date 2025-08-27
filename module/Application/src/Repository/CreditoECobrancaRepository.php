@@ -567,7 +567,7 @@ class CreditoECobrancaRepository
                     ORDER BY P.CREATED_AT desc
                     ) A
                     WHERE A.TIPO_PRAZO = 'Prazo Safra'
-                    ORDER BY A.NOME_CLIENTE ASC";  
+                    ORDER BY A.NOME_CLIENTE, A.DATA_PEDIDO ASC";  
             } else {
                 return "SELECT * FROM (
                     SELECT  
@@ -648,7 +648,7 @@ class CreditoECobrancaRepository
                     ) A
                     WHERE A.TIPO_PRAZO = 'Prazo Safra'
                     {$andsFilter}
-                    ORDER BY A.NOME_CLIENTE ASC
+                    ORDER BY A.NOME_CLIENTE, A.DATA_PEDIDO ASC
                     OFFSET {$skip} ROWS FETCH NEXT {$take} ROWS ONLY";  
             }
         }
