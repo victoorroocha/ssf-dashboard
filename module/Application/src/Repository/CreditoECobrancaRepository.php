@@ -1023,7 +1023,14 @@ class CreditoECobrancaRepository
                                     and garantias.flg_confissao_divida = true
                                     and garantias.tipo_pessoa = '{$tipoPessoa}'
                                 ) THEN 1 ELSE 0 end +
-                                (select count(distinct id) from garantias where garantias.ativo = true and flg_instrumento_fianca = false and flg_cpr = false and flg_confissao_divida = false AND garantias.tipo_pessoa = '{$tipoPessoa}')
+                                 --Considera apenas 1 flg_nota_promissoria
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_nota_promissoria = true
+                                    and garantias.tipo_pessoa = 'PF'
+                                ) THEN 1 ELSE 0 end 
                             ) qtd_total
                         FROM garantias_pedido gp
                         LEFT JOIN garantias g ON g.id = gp.id_garantia 
@@ -1162,7 +1169,14 @@ class CreditoECobrancaRepository
                                     and garantias.flg_confissao_divida = true
                                     and garantias.tipo_pessoa = '{$tipoPessoa}'
                                 ) THEN 1 ELSE 0 end +
-                                (select count(distinct id) from garantias where garantias.ativo = true and flg_instrumento_fianca = false and flg_cpr = false and flg_confissao_divida = false AND garantias.tipo_pessoa = '{$tipoPessoa}')
+                                 --Considera apenas 1 flg_nota_promissoria
+                                CASE WHEN EXISTS (
+                                    SELECT 1
+                                    from garantias 
+                                    where garantias.ativo = true
+                                    and garantias.flg_nota_promissoria = true
+                                    and garantias.tipo_pessoa = 'PF'
+                                ) THEN 1 ELSE 0 end 
                             ) qtd_total
                         FROM garantias_pedido_enviado gp
                         LEFT JOIN garantias g ON g.id = gp.id_garantia 
