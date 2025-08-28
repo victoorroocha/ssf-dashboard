@@ -291,7 +291,7 @@
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Indica a quantidade ou valor total de solicitações de manutenção que já foram executadas e encerradas no período selecionado.
+                                                    Quantidade total de OS com status "Finalizada" dentro da data de solicitação filtrada.
                                                 </span>
                                             </span>
                                         </div>
@@ -302,13 +302,13 @@
 
                             <div class="card-column">
                                 <div class="dashboard-card">
-                                    <div class="indicator-card" style="background-color: #388E3C;" onclick="abrirPopup('PROGRAMADAS')">
+                                    <div class="indicator-card" style="background-color: #43A047;" onclick="abrirPopup('EM_EXECUCAO')">
                                         <div class="indicator-title">
-                                            SOLICITAÇÕES PROGRAMADAS
+                                            SOLICITAÇÕES EM EXECUÇÃO
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Representa as solicitações que possuem uma data de execução futura agendada, aguardando atendimento.
+                                                    Quantidade total de OS com status "Em Execução" dentro da data de solicitação filtrada. OS com data inicio ainda não finalizada.
                                                 </span>
                                             </span>
                                         </div>
@@ -325,7 +325,7 @@
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Mostra o total de solicitações que ainda não foram iniciadas ou programadas, aguardando tratativa.
+                                                    Quantidade total de OS com status "Pendente" dentro da data de solicitação filtrada. OS que não possui data inicio.
                                                 </span>
                                             </span>
                                         </div>
@@ -334,7 +334,24 @@
                                 </div>
                             </div>
 
-                             <div class="card-column">
+                            <div class="card-column">
+                                <div class="dashboard-card">
+                                    <div class="indicator-card" style="background-color: #388E3C;">
+                                        <div class="indicator-title">
+                                            SOLICITAÇÕES PROGRAMADAS
+                                            <span class="custom-tooltip">
+                                                <i class="fas fa-info-circle"></i>
+                                                <span class="tooltip-text">
+                                                    Quantidade total de Programações realizadas dentro do período filtrado.
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div class="indicator-value">0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-column">
                                 <div class="dashboard-card">
                                     <div class="indicator-card" style="background-color: #66BB6A;" onclick="abrirPopup('TOTAL')">
                                         <div class="indicator-title">
@@ -342,7 +359,7 @@
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Mostra o total de solicitações.
+                                                    Quantidade total de OS com data solicitação dentro do período filtrado.
                                                 </span>
                                             </span>
                                         </div>
@@ -359,7 +376,7 @@
                                             <span class="custom-tooltip">
                                                 <i class="fas fa-info-circle"></i>
                                                 <span class="tooltip-text">
-                                                    Valor total acumulado com os itens utilizados nas manutenções dentro do período filtrado.
+                                                    Valor total acumulado com os itens utilizados nas OS dentro do período filtrado.
                                                 </span>
                                             </span>
                                         </div>
@@ -585,6 +602,8 @@
                 data: formSelections,
                 success: function(response) {
                     if (response.success) {
+                        const paletaVerde = ["#2E7D32", "#66BB6A", "#A5D6A7"];
+
                         // INICIO CARDS
                             const resumo = response.data.resumoCards;
 
@@ -597,18 +616,16 @@
 
                             // Atualiza os valores nos cards conforme o índice dos elementos
                             document.querySelector('.card-column:nth-child(1) .indicator-value').textContent = resumo.finalizadas ?? 0;
-                            document.querySelector('.card-column:nth-child(2) .indicator-value').textContent = resumo.programadas ?? 0;
+                            document.querySelector('.card-column:nth-child(2) .indicator-value').textContent = resumo.em_execucao ?? 0;
                             document.querySelector('.card-column:nth-child(3) .indicator-value').textContent = resumo.pendentes ?? 0;
-                            document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = resumo.total ?? 0;
-                            document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = formatadorMoeda.format(Number(resumo.custo_total ?? 0));
+                            document.querySelector('.card-column:nth-child(4) .indicator-value').textContent = resumo.programadas ?? 0;
+                            document.querySelector('.card-column:nth-child(5) .indicator-value').textContent = resumo.total ?? 0;
+                            document.querySelector('.card-column:nth-child(6) .indicator-value').textContent = formatadorMoeda.format(Number(resumo.custo_total ?? 0));
 
                         // FIM CARDS
 
                         // INICIO TIPO MANUTENÇÃO
                             const dadosManutencao = response.data.porTipo ?? [];
-
-                            const paletaVerde = ["#2E7D32", "#66BB6A", "#A5D6A7"];
-
                             $("#graficoTipoManutencao").dxPieChart({
                                 type: "doughnut",
                                 palette: paletaVerde,
@@ -662,8 +679,7 @@
                         // FIM TIPO MANUTENÇÃO
 
                         // INICIO POR ÁREA DE DEFEITOS
-                            const dadosPorArea = response.data.porAreaTecnica ?? [];
-
+                            const dadosPorArea = (response.data.porAreaTecnica ?? []).sort((a, b) => b.quantidade - a.quantidade);
                             $("#graficoPorArea").dxChart({
                                 dataSource: dadosPorArea,
                                 rotated: false,
@@ -736,89 +752,65 @@
 
                         // INICIO POR EQUIPAMENTO
                             const dadosPorEquipamento = response.data.porEquipamento ?? [];
-
-                            const equipamentosMap = {};
-
-                            // Mapeia dados long para wide, considerando correção de nomes
-                            dadosPorEquipamento.forEach(({ equipamento, tipo, quantidade }) => {
-                            const tipoCorrigido = tipo === "Corrretiva" ? "Corretiva" : tipo;
-
-                            if (!equipamentosMap[equipamento]) {
-                                equipamentosMap[equipamento] = { equipamento };
-                            }
-
-                            equipamentosMap[equipamento][tipoCorrigido] = (equipamentosMap[equipamento][tipoCorrigido] || 0) + quantidade;
-                            });
-
-                            const equipamentosArray = Object.values(equipamentosMap);
-
-                            // Ordena do maior para o menor total
-                            equipamentosArray.sort((a, b) => {
-                            const somaA = Object.keys(a).reduce((acc, key) => key !== 'equipamento' ? acc + a[key] : acc, 0);
-                            const somaB = Object.keys(b).reduce((acc, key) => key !== 'equipamento' ? acc + b[key] : acc, 0);
-                            return somaB - somaA;
-                            });
-
                             // Pega top 10
-                            const dadosTop10 = equipamentosArray.slice(0, 10);
-
-                            // Extrai os tipos dinâmicos para series (todas as keys exceto 'equipamento')
-                            const tiposUnicos = Object.keys(dadosTop10[0] || {}).filter(k => k !== 'equipamento');
-
-                            // Monta config de series para o gráfico
-                            const seriesConfig = tiposUnicos.map(tipo => ({
-                            valueField: tipo,
-                            name: tipo
-                            }));
+                            const dadosTop10 = dadosPorEquipamento.slice(0, 10);
+                            // Ordena do maior para o menor quantidade
+                            dadosTop10.sort((a, b) => a.quantidade - b.quantidade);
 
                             // Renderiza gráfico
                             $("#graficoPorEquipamento").dxChart({
-                            dataSource: dadosTop10,
-                            rotated: true,
-                            palette: paletaVerde,
-                            title: {
-                                text: "Solicitações por Equipamento (Top 10)",
-                                font: { size: 16, weight: 600, color: "#1B5E20" },
-                                horizontalAlignment: "center"
-                            },
-                            tooltip: {
-                                enabled: true,
-                                customizeTooltip(arg) {
-                                return { text: `${arg.seriesName} em ${arg.argumentText}: ${arg.valueText} solicitações` };
-                                }
-                            },
-                            legend: {
-                                visible: true,
-                                verticalAlignment: "bottom",
-                                horizontalAlignment: "center",
-                                orientation: "horizontal",
-                                itemTextPosition: "right",
-                                font: { size: 12, color: "#1B5E20" },
-                                paddingLeftRight: 10,
-                                paddingTopBottom: 10
-                            },
-                            commonSeriesSettings: {
-                                type: "stackedBar",
-                                argumentField: "equipamento",
-                                label: { visible: true, font: { size: 12, weight: 600 } }
-                            },
-                            series: seriesConfig,
-                            valueAxis: {
-                                title: { text: "Quantidade", font: { color: "#1B5E20" } },
-                                grid: { visible: false }
-                            },
-                            argumentAxis: {
-                                title: { text: "Equipamento", font: { color: "#1B5E20" } },
-                                label: { font: { color: "#1B5E20" } },
-                                grid: { visible: false }
-                            },
-                            size: { height: 400 }
+                                dataSource: dadosTop10,
+                                rotated: true,
+                                palette: paletaVerde,
+                                title: {
+                                    text: "Solicitações por Equipamento (Top 10)",
+                                    font: { size: 16, weight: 600, color: "#1B5E20" },
+                                    horizontalAlignment: "center"
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    customizeTooltip(arg) {
+                                        return { text: `${arg.argumentText}: ${arg.valueText} solicitações` };
+                                    }
+                                },
+                                legend: {
+                                    visible: false
+                                },
+                                commonSeriesSettings: {
+                                    type: "bar",
+                                    argumentField: "equipamento",
+                                    label: { 
+                                        visible: true, 
+                                        font: { size: 12, weight: 600 },
+                                        format: {
+                                            type: "fixedPoint",
+                                            precision: 0
+                                        }
+                                    }
+                                },
+                                series: [{
+                                    valueField: "quantidade",
+                                    name: "Solicitações"
+                                }],
+                                valueAxis: {
+                                    title: { text: "Quantidade", font: { color: "#1B5E20" } },
+                                    grid: { visible: false }
+                                },
+                                argumentAxis: {
+                                    title: { text: "Equipamento", font: { color: "#1B5E20" } },
+                                    label: { 
+                                        font: { color: "#1B5E20" },
+                                        overlappingBehavior: "rotate",
+                                        rotationAngle: -45
+                                    },
+                                    grid: { visible: false }
+                                },
+                                size: { height: 500 }
                             });
-
                         // FIM POR EQUIPAMENTO
 
                         // INICIO POR SETOR
-                            const dadosPorSetor = response.data.porSetor ?? [];
+                            const dadosPorSetor = (response.data.porSetor ?? []).sort((a, b) => b.quantidade - a.quantidade);
 
                             $("#graficoPorSetor").dxChart({
                                 dataSource: dadosPorSetor,
@@ -875,16 +867,21 @@
                                         font: { color: "#1B5E20" }
                                     },
                                     grid: { visible: false },
-                                    label: { font: { color: "#1B5E20" } }
+                                    label: {
+                                        font: { color: "#1B5E20" },
+                                        rotationAngle: -45, // Deixa os labels inclinados
+                                        overlappingBehavior: "rotate" // Garante que eles não se sobreponham
+                                    }
                                 },
                                 size: {
                                     height: 350
                                 }
                             });
+
                         // FIM POR SETOR
 
                         // INICIO POR TÉCNICO
-                            const dadosPorTecnico = response.data.porTecnico ?? [];
+                            const dadosPorTecnico = (response.data.porTecnico ?? []).sort((a, b) => a.quantidade - b.quantidade);
 
                             $("#graficoPorTecnico").dxChart({
                                 dataSource: dadosPorTecnico,
@@ -960,8 +957,6 @@
             });
         });
     }
-
-
     function obterDadosControleManutencao(tipo) {
         $('#globalLoading').show();
 

@@ -587,7 +587,8 @@
                             label: { text: 'Técnico Responsável' }, 
                             editorType: 'dxSelectBox', 
                             colSpan: 2, 
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-tecnicos', 'nome', 'id', 'Selecione o técnico') ,
+                            validationRules: [{ type: 'required' }]
                         },
                         { 
                             dataField: 'tipo_manutencao_id', 

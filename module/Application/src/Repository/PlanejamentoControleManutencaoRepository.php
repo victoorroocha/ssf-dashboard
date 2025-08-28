@@ -862,6 +862,16 @@ class PlanejamentoControleManutencaoRepository
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
             try {
+                // 
+                $sqlValida = "SELECT cm.* FROM controle_manutencao cm WHERE cm.id = :id";
+                $resultValida = $this->adapter->query($sqlValida, [':id' => $data['id']])->current();
+                if (!$resultValida) {
+                    throw new \InvalidArgumentException('Ordem de serviço não encontrada.');
+                }
+                if (empty($resultValida['tecnico_id'])) {
+                    throw new \InvalidArgumentException('Técnico Responsável é obrigatório para finalizar a ordem de serviço.');
+                }
+
                 // Primeiro verifica se existem apontamentos para essa OS
                 $sqlCount = "SELECT COUNT(*) AS total FROM apontamentos_manutencao WHERE id_manutencao = :id";
                 $result = $this->adapter->query($sqlCount, [':id' => $data['id']])->current();
@@ -1126,18 +1136,17 @@ class PlanejamentoControleManutencaoRepository
     #region Dashboard Controle de Manutenção
         public function buscarResumoCards($dataInicio, $dataFim)
         {
-            $sql = "
-                SELECT
-                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Finalizada') AS finalizadas,
-                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Programada') AS programadas,
-                    COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Pendente') AS pendentes,
-                    COUNT(DISTINCT cm.id) AS total,
-                    COALESCE(SUM(im.custo_total), 0) AS custo_total
-                FROM controle_manutencao cm
-                LEFT JOIN itens_manutencao im ON cm.id = im.id_manutencao
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+            $sql = "SELECT
+                        COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Finalizada') AS finalizadas,
+                        COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Em Execução') AS em_execucao,
+                        COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Pendente') AS pendentes,
+                        (select count(distinct pmp.id) from programacao_manutencao_preventiva pmp where pmp.status_programacao = 'Ativa' and pmp.proxima_execucao BETWEEN :inicio AND :fim) as programadas,
+                        COUNT(DISTINCT cm.id) AS total,
+                        sum(im.custo_total) as custo_total
+                    FROM controle_manutencao cm
+                    LEFT JOIN itens_manutencao im ON cm.id = im.id_manutencao
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
             ";
-
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
                 'fim' => $dataFim
@@ -1147,14 +1156,12 @@ class PlanejamentoControleManutencaoRepository
         }
         public function buscarPorTipoManutencao($dataInicio, $dataFim)
         {
-            $sql = "
-                SELECT tm.nome AS tipo, COUNT(distinct cm.id) AS quantidade
-                FROM controle_manutencao cm
-                JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
-                GROUP BY tm.nome
+            $sql = "SELECT tm.nome AS tipo, COUNT(distinct cm.id) AS quantidade
+                    FROM controle_manutencao cm
+                    JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                    GROUP BY tm.nome
             ";
-
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
                 'fim' => $dataFim
@@ -1169,14 +1176,12 @@ class PlanejamentoControleManutencaoRepository
         }
         public function buscarPorAreaTecnica($dataInicio, $dataFim)
         {
-            $sql = "
-                SELECT at.nome AS area, COUNT(distinct cm.id) AS quantidade
-                FROM controle_manutencao cm
-                JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
-                GROUP BY at.nome
+            $sql = "SELECT at.nome AS area, COUNT(distinct cm.id) AS quantidade
+                    FROM controle_manutencao cm
+                    JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                    GROUP BY at.nome
             ";
-
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
                 'fim' => $dataFim
@@ -1191,18 +1196,15 @@ class PlanejamentoControleManutencaoRepository
         }
         public function buscarPorEquipamento($dataInicio, $dataFim)
         {
-            $sql = "
-                    SELECT 
+            $sql = "SELECT 
                         (e.codigo || '-' || e.nome) AS equipamento,
-                        tm.nome AS tipo,
                         COUNT(distinct cm.id) AS quantidade
                     FROM controle_manutencao cm
                     JOIN equipamentos e ON e.id = cm.equipamento_id
                     JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
-                    GROUP BY (e.codigo || '-' || e.nome), tm.nome
+                    GROUP BY (e.codigo || '-' || e.nome)
             ";
-
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
                 'fim' => $dataFim
@@ -1217,14 +1219,12 @@ class PlanejamentoControleManutencaoRepository
         }
         public function buscarPorSetor($dataInicio, $dataFim)
         {
-            $sql = "
-                SELECT s.nome AS setor, COUNT(distinct cm.id) AS quantidade
-                FROM controle_manutencao cm
-                JOIN setores s ON s.id = cm.setor_id
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
-                GROUP BY s.nome
+            $sql = "SELECT s.nome AS setor, COUNT(distinct cm.id) AS quantidade
+                    FROM controle_manutencao cm
+                    JOIN setores s ON s.id = cm.setor_id
+                    WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+                    GROUP BY s.nome
             ";
-
             $stmt = $this->adapter->createStatement($sql, [
                 'inicio' => $dataInicio,
                 'fim' => $dataFim
@@ -1241,11 +1241,10 @@ class PlanejamentoControleManutencaoRepository
         {
             // Consulta para buscar
             $sql = "SELECT 
-                        t.nome AS tecnico,
+                        case when t.nome is null then upper('Técnico Responsável não vinculado') else t.nome end AS tecnico,
                         COUNT(distinct cm.id) AS quantidade
-                    from apontamentos_manutencao am 
-                    left join tecnicos t on t.id = am.tecnico_id 
-                    left join controle_manutencao cm on cm.id = am.id_manutencao 
+                    from controle_manutencao cm 
+                    left join tecnicos t on t.id = cm.tecnico_id 
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY t.nome";
 
@@ -1263,27 +1262,27 @@ class PlanejamentoControleManutencaoRepository
         }
         public function getDetalhamentoCard($tipo = null, $dataInicio = null, $dataFim = null)
         {
-            $sqlBase = "
-                SELECT 
-                    LPAD(cm.id::text, 3, '0') AS nr_ordem_servico,
-                    eq.nome AS equipamento,
-                    s.nome AS setor,
-                    at.nome AS area_tecnica,
-                    tm.nome AS tipo_manutencao,
-                    t.nome AS nome_tecnico,
-                    cm.data_solicitacao,
-                    cm.data_inicio,
-                    cm.data_final,
-                    cm.status,
-                    COALESCE(SUM(im.custo_total), 0) AS custo_total
-                FROM controle_manutencao cm
-                INNER JOIN equipamentos eq ON eq.id = cm.equipamento_id
-                INNER JOIN setores s ON s.id = cm.setor_id
-                INNER JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
-                INNER JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
-                INNER JOIN tecnicos t ON t.id = cm.tecnico_id
-                LEFT JOIN itens_manutencao im ON im.id_manutencao = cm.id
-                WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
+            $sqlBase = "SELECT 
+                            LPAD(cm.id::text, 5, '0') AS nr_ordem_servico,
+                            eq.nome AS equipamento,
+                            cm.centro_custo_id,
+                            s.nome AS setor,
+                            at.nome AS area_tecnica,
+                            tm.nome AS tipo_manutencao,
+                            t.nome AS nome_tecnico,
+                            cm.data_solicitacao,
+                            cm.data_inicio,
+                            cm.data_final,
+                            cm.status,
+                            COALESCE(SUM(im.custo_total), 0) AS custo_total
+                        FROM controle_manutencao cm
+                        LEFT JOIN equipamentos eq ON eq.id = cm.equipamento_id
+                        LEFT JOIN setores s ON s.id = cm.setor_id
+                        LEFT JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                        LEFT JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                        LEFT JOIN tecnicos t ON t.id = cm.tecnico_id
+                        LEFT JOIN itens_manutencao im ON im.id_manutencao = cm.id
+                        WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
             ";
 
             // Adiciona filtro conforme o tipo
@@ -1291,8 +1290,8 @@ class PlanejamentoControleManutencaoRepository
                 case 'FINALIZADAS':
                     $sqlBase .= " AND cm.status = 'Finalizada'";
                     break;
-                case 'PROGRAMADAS':
-                    $sqlBase .= " AND cm.status = 'Programada'";
+                case 'EM_EXECUCAO':
+                    $sqlBase .= " AND cm.status = 'Em Execução'";
                     break;
                 case 'PENDENTES':
                     $sqlBase .= " AND cm.status = 'Pendente'";

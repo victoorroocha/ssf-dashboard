@@ -985,14 +985,16 @@ class PlanejamentoControleManutencaoController extends BaseController
 
                 $colunas = [
                     ['dataField' => 'nr_ordem_servico', 'caption' => 'Ordem Serviço', 'width' => 110, 'alignment' => 'center'],
-                    ['dataField' => 'nome_tecnico', 'caption' => 'Técnico'],
+                    ['dataField' => 'equipamento', 'caption' => 'Equipamento'],
+                    ['dataField' => 'centro_custo_id', 'caption' => 'Centro Custo', 'alignment' => 'center'],
+                    ['dataField' => 'setor', 'caption' => 'Setor'],
                     ['dataField' => 'area_tecnica', 'caption' => 'Área Técnica'],
                     ['dataField' => 'tipo_manutencao', 'caption' => 'Tipo'],
-                    ['dataField' => 'data_solicitacao', 'caption' => 'Solicitado em', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
-                    ['dataField' => 'data_inicio', 'caption' => 'Inicio', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
-                    ['dataField' => 'data_final', 'caption' => 'Fim', 'dataType' => 'date', 'format' => 'dd/MM/yyyy'],
-                    ['dataField' => 'status', 'caption' => 'Status'],
-                    ['dataField' => 'custo_total', 'caption' => 'Custo (R$)', 'dataType' => 'number', 'format' => ['type' => 'currency', 'currency' => 'BRL']]
+                    ['dataField' => 'data_solicitacao', 'caption' => 'Solicitado em', 'dataType' => 'date', 'format' => 'dd/MM/yyyy', 'alignment' => 'center'],
+                    ['dataField' => 'data_inicio', 'caption' => 'Inicio', 'dataType' => 'date', 'format' => 'dd/MM/yyyy', 'alignment' => 'center'],
+                    ['dataField' => 'data_final', 'caption' => 'Fim', 'dataType' => 'date', 'format' => 'dd/MM/yyyy', 'alignment' => 'center'],
+                    ['dataField' => 'status', 'caption' => 'Status', 'alignment' => 'center'],
+                    ['dataField' => 'custo_total', 'caption' => 'Custo (R$)', 'dataType' => 'number', 'format' => ['type' => 'currency', 'currency' => 'BRL', 'precision' => 2], 'alignment' => 'center']
                 ];
                 return new JsonModel([
                     'success' => true,
@@ -1143,7 +1145,6 @@ class PlanejamentoControleManutencaoController extends BaseController
             ]);
         }
     }
-
     public function getProdutosEstoqueLookupAction()
     {
         $request = $this->getRequest();
@@ -1203,10 +1204,6 @@ class PlanejamentoControleManutencaoController extends BaseController
             ]);
         }
     }
-
-
-
-
 
 
 }
