@@ -13,6 +13,40 @@
         border: 1px solid #ccc;
         color: #333;
     }
+
+
+    .custom-textarea-email .dx-texteditor-input {
+        text-align: center;
+    }
+    /* Estilo visual para campos readonly personalizados */
+    .force-readonly .dx-texteditor-input {
+        background-color: #f5f5f5 !important;
+        color: #555 !important;
+        cursor: not-allowed !important;
+    }
+    .force-readonly .dx-texteditor-container {
+        opacity: 1 !important;
+    }
+    .force-readonly .dx-button {
+        cursor: pointer !important;
+        opacity: 1 !important;
+        pointer-events: all !important;
+    }
+    .force-readonly .dx-button:hover {
+        background-color: #f0f0f0 !important;
+    }
+    /* Remove o cursor de texto (caret) */
+    .force-readonly .dx-texteditor-input {
+        caret-color: transparent !important;
+    }
+    /* Garante que o botão fique visível */
+    .custom-textarea-email .dx-button {
+        pointer-events: all !important;
+        opacity: 1 !important;
+    }
+
+
+
     .cabecalho-content {
         background-color: #006400;
         color: white;
@@ -337,45 +371,6 @@
                         },
                     ]
                 },
-                // {
-                //     itemType: "group",
-                //     colCount: 2,
-                //     caption: "Filtrar por Status",
-                //     items: [
-                //         {
-                //             dataField: "filtro_documento_enviado",
-                //             label: { text: "Documentos Enviados" },
-                //             editorType: "dxCheckBox",
-                //             editorOptions: {
-                //                 value: false
-                //             }
-                //         },
-                //         {
-                //             dataField: "filtro_documento_recebido",
-                //             label: { text: "Documentos Recebidos" },
-                //             editorType: "dxCheckBox",
-                //             editorOptions: {
-                //                 value: false
-                //             }
-                //         },
-                //         {
-                //             dataField: "filtro_garantia_enviado",
-                //             label: { text: "Garantias Enviadas" },
-                //             editorType: "dxCheckBox",
-                //             editorOptions: {
-                //                 value: false
-                //             }
-                //         },
-                //         {
-                //             dataField: "filtro_garantia_recebido",
-                //             label: { text: "Garantias Recebidas" },
-                //             editorType: "dxCheckBox",
-                //             editorOptions: {
-                //                 value: false
-                //             }
-                //         }
-                //     ]
-                // },
                 {
                     itemType: "button",
                     horizontalAlignment: "left",
@@ -594,7 +589,7 @@
                                                     icon: "fa fa-eye",  
                                                     onClick: function(e) {
                                                         const data = e.row.data;
-                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA, data.GRUPO_CLIENTE, data.CODIGOSAFRA);
+                                                        abrirPopupDocumentosPedido(data.ID_PEDIDO, data.TIPO_PESSOA, data.GRUPO_CLIENTE, data.CODIGOSAFRA, data.EMANFE_CLIENTE, data.INTNET_CLIENTE);
                                                     }
                                                 },
                                                 {
@@ -777,9 +772,6 @@
                                         { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
                                                                                 
                                         // STATUS ENVIADOS
-                                        { 
-                                            dataField: 'STATUS_DOCUMENTO_ENVIADO', caption: 'Status Documentos Envio', allowEditing: false, width: 'auto', alignment: 'center',
-                                        },
                                         { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_PROMISSORIA_ENVIADO', caption: 'Status Nota Promissória Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
                                         { dataField: 'STATUS_INST_FIANCA_ENVIADO', caption: 'Status Instrumento Fiança Envio', allowEditing: false, width: 'auto', alignment: 'center'  },
@@ -1139,7 +1131,7 @@
             ]
         });
 
-        function abrirPopupDocumentosPedido(idPedido, tipoPessoa, grupoClienteID, codigoSafra) {
+        function abrirPopupDocumentosPedido(idPedido, tipoPessoa, grupoClienteID, codigoSafra, email1, email2) {
             $.ajax({
                 url: "/credito-e-cobranca/list-documentos-pedido",
                 method: 'GET',
@@ -1160,7 +1152,7 @@
                                 const formData = {};
 
                                 const documentos = response.data.documentos || [];
-                                const documentosEnviados = response.data.documentosEnviados || [];
+                                // const documentosEnviados = response.data.documentosEnviados || [];
 
                                 const garantias = response.data.garantias || [];
                                 const garantiasEnviados = response.data.garantiasEnviados || [];
@@ -1168,9 +1160,9 @@
                                 documentos.forEach(doc => {
                                     formData[`documento_${doc.id_documento}`] = !!doc.ativo;
                                 });
-                                documentosEnviados.forEach(docEnv => {
-                                    formData[`documento_enviado_${docEnv.id_documento}`] = !!docEnv.ativo;
-                                });
+                                // documentosEnviados.forEach(docEnv => {
+                                //     formData[`documento_enviado_${docEnv.id_documento}`] = !!docEnv.ativo;
+                                // });
 
                                 garantias.forEach(gar => {
                                     formData[`garantia_${gar.id_garantia}`] = !!gar.ativo;
@@ -1218,42 +1210,42 @@
                                     },
                                     label: { visible: false }
                                 }));
-                                const documentosEnviadosItems = documentosEnviados.map(docEnv => ({
-                                    dataField: `documento_enviado_${docEnv.id_documento}`,
-                                    editorType: "dxCheckBox",
-                                    editorOptions: {
-                                        text: docEnv.dsc_documento,
-                                        width: '100%',
-                                        elementAttr: { class: "custom-checkbox" },
-                                        onValueChanged: function (e) {
-                                            $.ajax({
-                                                url: "/credito-e-cobranca/toggle-documento-enviado-pedido",
-                                                method: "POST",
-                                                contentType: "application/json",
-                                                data: JSON.stringify({
-                                                    id_pedido: idPedido,
-                                                    id_documento: docEnv.id_documento,
-                                                    checked: e.value,
-                                                    grupoClienteID: grupoClienteID,
-                                                    codigoSafra: codigoSafra
-                                                }),
-                                                success: function () {
-                                                    DevExpress.ui.notify(
-                                                        e.value ? "Documento vinculado com sucesso." : "Documento desvinculado com sucesso.",
-                                                        "success", 2000
-                                                    );
-                                                },
-                                                error: function () {
-                                                    DevExpress.ui.notify(
-                                                        e.value ? "Erro ao vincular documento." : "Erro ao desvincular documento.",
-                                                        "error", 2000
-                                                    );
-                                                }
-                                            });
-                                        }
-                                    },
-                                    label: { visible: false }
-                                }));
+                                // const documentosEnviadosItems = documentosEnviados.map(docEnv => ({
+                                //     dataField: `documento_enviado_${docEnv.id_documento}`,
+                                //     editorType: "dxCheckBox",
+                                //     editorOptions: {
+                                //         text: docEnv.dsc_documento,
+                                //         width: '100%',
+                                //         elementAttr: { class: "custom-checkbox" },
+                                //         onValueChanged: function (e) {
+                                //             $.ajax({
+                                //                 url: "/credito-e-cobranca/toggle-documento-enviado-pedido",
+                                //                 method: "POST",
+                                //                 contentType: "application/json",
+                                //                 data: JSON.stringify({
+                                //                     id_pedido: idPedido,
+                                //                     id_documento: docEnv.id_documento,
+                                //                     checked: e.value,
+                                //                     grupoClienteID: grupoClienteID,
+                                //                     codigoSafra: codigoSafra
+                                //                 }),
+                                //                 success: function () {
+                                //                     DevExpress.ui.notify(
+                                //                         e.value ? "Documento vinculado com sucesso." : "Documento desvinculado com sucesso.",
+                                //                         "success", 2000
+                                //                     );
+                                //                 },
+                                //                 error: function () {
+                                //                     DevExpress.ui.notify(
+                                //                         e.value ? "Erro ao vincular documento." : "Erro ao desvincular documento.",
+                                //                         "error", 2000
+                                //                     );
+                                //                 }
+                                //             });
+                                //         }
+                                //     },
+                                //     label: { visible: false }
+                                // }));
 
                                 const garantiasItems = garantias.map(gar => ({
                                     dataField: `garantia_${gar.id_garantia}`,
@@ -1328,21 +1320,136 @@
                                     label: { visible: false }
                                 }));
 
+                                formData.email1 = email1 || '';
+                                formData.email2 = email2 || '';
+
+
                                 formContainer.dxForm({
                                     formData: formData,
                                     labelLocation: "top",
                                     items: [
                                         {
                                             itemType: "group",
-                                            caption: "Documentos",
+                                            caption: "E-mails para envio do checklist",
                                             colCount: 2,
                                             items: [
                                                 {
-                                                    itemType: "group",
-                                                    caption: "Documentos Enviados",
-                                                    colCount: 1,
-                                                    items: documentosEnviadosItems
+                                                    dataField: 'email1',
+                                                    editorType: 'dxTextArea',
+                                                    editorOptions: {
+                                                        height: 40,
+                                                        stylingMode: "outlined",
+                                                        // NÃO use readOnly ou disabled aqui - vamos controlar via eventos
+                                                        buttons: [
+                                                            {
+                                                                name: 'copy',
+                                                                location: 'after',
+                                                                options: {
+                                                                    icon: 'copy',
+                                                                    hint: 'Copiar',
+                                                                    onClick: function (e) {
+                                                                        const textArea = e.component.$element().closest('.dx-textarea').dxTextArea('instance');
+                                                                        const emailValue = textArea.option('value');
+                                                                        
+                                                                        if (!emailValue) {
+                                                                            DevExpress.ui.notify("Nada para copiar", "warning", 1500);
+                                                                            return;
+                                                                        }
+                                                                        
+                                                                        copyToClipboard(emailValue);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ],
+                                                        placeholder: "Não há e-mail no cadastro do cliente...",
+                                                        elementAttr: {
+                                                            class: "custom-textarea-email",
+                                                            readonly: "true" // Atributo HTML direto
+                                                        },
+                                                        onKeyDown: function (e) {
+                                                            // Previne edição por teclado
+                                                            if (!e.event.ctrlKey && !e.event.metaKey) {
+                                                                e.event.preventDefault();
+                                                            }
+                                                        },
+                                                        onPaste: function (e) {
+                                                            e.event.preventDefault(); // Previne colagem
+                                                        },
+                                                        onCut: function (e) {
+                                                            e.event.preventDefault(); // Previne corte
+                                                        },
+                                                        onFocusIn: function (e) {
+                                                            // Adiciona estilo visual de readonly
+                                                            e.component.$element().addClass('force-readonly');
+                                                        }
+                                                    },
+                                                    label: {
+                                                        text: 'E-mail1',
+                                                        location: 'top',
+                                                        visible: true
+                                                    },
+                                                    cssClass: "observacao-field"
                                                 },
+                                                {
+                                                    dataField: 'email2',
+                                                    editorType: 'dxTextArea',
+                                                    editorOptions: {
+                                                        height: 40,
+                                                        stylingMode: "outlined",
+                                                        buttons: [
+                                                            {
+                                                                name: 'copy',
+                                                                location: 'after',
+                                                                options: {
+                                                                    icon: 'copy',
+                                                                    hint: 'Copiar',
+                                                                    onClick: function (e) {
+                                                                        const textArea = e.component.$element().closest('.dx-textarea').dxTextArea('instance');
+                                                                        const emailValue = textArea.option('value');
+                                                                        
+                                                                        if (!emailValue) {
+                                                                            DevExpress.ui.notify("Nada para copiar", "warning", 1500);
+                                                                            return;
+                                                                        }
+                                                                        
+                                                                        copyToClipboard(emailValue);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ],
+                                                        placeholder: "Não há e-mail no cadastro do cliente...",
+                                                        elementAttr: {
+                                                            class: "custom-textarea-email",
+                                                            readonly: "true" // Atributo HTML direto
+                                                        },
+                                                        onKeyDown: function (e) {
+                                                            if (!e.event.ctrlKey && !e.event.metaKey) {
+                                                                e.event.preventDefault();
+                                                            }
+                                                        },
+                                                        onPaste: function (e) {
+                                                            e.event.preventDefault();
+                                                        },
+                                                        onCut: function (e) {
+                                                            e.event.preventDefault();
+                                                        },
+                                                        onFocusIn: function (e) {
+                                                            e.component.$element().addClass('force-readonly');
+                                                        }
+                                                    },
+                                                    label: {
+                                                        text: 'E-mail2',
+                                                        location: 'top',
+                                                        visible: true
+                                                    },
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            itemType: "group",
+                                            caption: "Documentos",
+                                            colCount: 1,
+                                            items: [
                                                 {
                                                     itemType: "group",
                                                     caption: "Documentos Recebidos",
@@ -2726,6 +2833,39 @@
                 selector: s.selector,
                 desc: s.desc || false
             }));
+        }
+        function copyToClipboard(text) {
+            // Método moderno (HTTPS)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    DevExpress.ui.notify("Copiado!", "success", 1500);
+                }).catch(err => {
+                    console.error('Clipboard API failed:', err);
+                    useFallbackCopy(text);
+                });
+            } else {
+                // Método fallback (HTTP)
+                useFallbackCopy(text);
+            }
+        }
+        function useFallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                DevExpress.ui.notify(successful ? "Copiado!" : "Erro ao copiar", 
+                                    successful ? "success" : "error", 1500);
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                DevExpress.ui.notify("Erro ao copiar", "error", 1500);
+            } finally {
+                document.body.removeChild(textArea);
+            }
         }
 
         function criarTabelaDuplicatasBoletos(data) {

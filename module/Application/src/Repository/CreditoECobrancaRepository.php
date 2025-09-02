@@ -512,6 +512,7 @@ class CreditoECobrancaRepository
                         ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
                         ,max(CLISENIOR.INSEST) INSEST_CLIENTE
                         ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
+                        ,MAX(CLISENIOR.INTNET) INTNET_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
@@ -592,6 +593,7 @@ class CreditoECobrancaRepository
                         ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
                         ,max(CLISENIOR.INSEST) INSEST_CLIENTE
                         ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
+                        ,MAX(CLISENIOR.INTNET) INTNET_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
@@ -700,6 +702,7 @@ class CreditoECobrancaRepository
                         ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
                         ,max(CLISENIOR.INSEST) INSEST_CLIENTE
                         ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
+                        ,MAX(CLISENIOR.INTNET) INTNET_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
@@ -793,6 +796,7 @@ class CreditoECobrancaRepository
                         ,max(CLISENIOR.FONCL2) FONE2_CLIENTE
                         ,max(CLISENIOR.INSEST) INSEST_CLIENTE
                         ,max(CLISENIOR.EMANFE) EMANFE_CLIENTE
+                        ,MAX(CLISENIOR.INTNET) INTNET_CLIENTE
                         ,p.RTV_USER_ID AS VENDEDOR_ID
 		                ,vend.NAME AS NOME_VENDEDOR
                         ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
