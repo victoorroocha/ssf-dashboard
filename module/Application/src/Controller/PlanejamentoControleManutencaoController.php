@@ -1043,6 +1043,7 @@ class PlanejamentoControleManutencaoController extends BaseController
                 $result[$key]['MATRICULA'] = intval($row['MATRICULA']);
                 $result[$key]['NOME'] = utf8_encode($row['NOME']);
                 $result[$key]['DSC_CARGO'] = utf8_encode($row['DSC_CARGO']);
+                $result[$key]['NOME_COLABORADOR'] = utf8_encode($row['NOME_COLABORADOR']);
             }
 
             return new JsonModel([
