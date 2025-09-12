@@ -68,7 +68,7 @@ class ComercialController extends BaseController
                 // Processa os dados do Oracle
                 foreach ($listaClientes  as $key => $rowCliente) {
                     // Convertendo apenas as colunas de texto para UTF-8
-                    $textColumns = ['NOME_CLIENTE'];
+                    $textColumns = ['NOME_CLIENTE', 'CLIENTE_REGIAO'];
                     foreach ($textColumns as $col) {
                         if (isset($rowCliente[$col])) {
                             $rowCliente[$col] = utf8_encode($rowCliente[$col]);

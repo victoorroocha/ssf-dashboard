@@ -1036,6 +1036,22 @@ class PlanejamentoControleManutencaoRepository
             }
             public function salvarApontamentoHoras(array $data)
             {
+                 // Validação das datas (backend)
+                if (!empty($data['data_inicio']) && !empty($data['data_fim'])) {
+                    $start = date_create($data['data_inicio']);
+                    $end   = date_create($data['data_fim']);
+
+                    if (!$start) {
+                        throw new \Exception('Data de início inválida.');
+                    }
+                    if (!$end) {
+                        throw new \Exception('Data de fim inválida.');
+                    }
+                    if ($end < $start) {
+                        throw new \Exception('A data fim não pode ser menor que a data início.');
+                    }
+                }
+
                 $params = [
                     ':id_manutencao' => $data['id_manutencao'],
                     ':tecnico_id' => $data['tecnico_id'] ?? null,
@@ -1053,6 +1069,7 @@ class PlanejamentoControleManutencaoRepository
                 if (!empty($params[':data_fim']) && is_string($params[':data_fim'])) {
                     $params[':data_fim'] = date('Y-m-d H:i:s', strtotime($params[':data_fim']));
                 }
+
 
                 if (!empty($data['id'])) {
                     // Update

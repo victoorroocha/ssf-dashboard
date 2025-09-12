@@ -15,95 +15,96 @@ class ComercialRepository
                 SELECT 
                     D.*
                     ,CASE
-                        -- 🌟 1. Raiz Forte (Clientes premium: antigos, recorrentes, ticket médio alto, e TSI > 15%. São fiéis e altamente valiosos.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 3
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_TSI > 15
+                        -- 🌟 1. Raiz Forte (top ativos: TSI alto, volume alto, diversidade alta)
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI >= 15
+                            AND QTD_TOTAL >= 200
+                            AND MEDIA_BAGS_P_SAFRA >= 80
+                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 3
                         THEN 1
-                    
-                        -- 🌿 2. Sementes de Ouro (Clientes consistentes, com bom histórico de compra, ticket médio saudável e uso relevante de TSI. Um nível abaixo do topo, mas bem confiáveis.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 2
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_TSI > 10
+
+                        -- 🌿 2. Sementes de Ouro (ativos: TSI médio, volume médio, boa frequência)
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI >= 10
+                            AND PERC_TSI < 15
+                            AND QTD_TOTAL >= 100
+                            AND MEDIA_BAGS_P_SAFRA >= 50
+                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 2
                         THEN 2
-                    
-                        -- 🌱 3. Pé de Safra (Clientes ativos, ritmo mais espaçado, mas ainda assim envolvidos. Podem crescer.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
+
+                        -- 🌱 3. Pé de Safra (ativos: TSI baixo, volume menor, iniciando consistência)
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI < 10
+                            AND QTD_TOTAL >= 50
+                            AND MEDIA_BAGS_P_SAFRA >= 20
                         THEN 3
-                    
-                        -- 🌾 4. Terra Promissora (Clientes relativamente novos (6 meses da primeira compra), com excelente início — bom ticket, uso de TSI e já fazendo pedidos. Grande potencial de se tornarem premium.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND PERC_TSI > 10
-                            AND PRIMEIRO_PEDIDO_DIAS <= 180
+
+                        -- 🌾 4. Terra Promissora (ativos, crescimento elevado)
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_CRESCIMENTO_QUEDA > 20
                         THEN 4
-                    
-                        -- 🌿 5. Broto de Esperança (Clientes muito novos (até 6 meses da primeira compra), qualquer ticket.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND PRIMEIRO_PEDIDO_DIAS <= 180
+
+                        -- ⚠️ 5. Raiz Enfraquecida (ativos, mas em queda forte)
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_CRESCIMENTO_QUEDA <= -30
                         THEN 5
-                    
-                        -- 🌧️ 6. Chuva na Hora Errada (Clientes que pararam de comprar, ticket acima de 100k, já foram bons, mas sumiram com queda brusca nas compras. Valem contato para entender o que houve.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND PERC_TSI > 10
-                            AND ULTIMO_PEDIDO_DIAS > 380
+
+                        -- 🌿 6. Broto de Esperança (clientes novos)
+                        WHEN PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 6
-                        
-                        -- 😴 7. Solo Adormecido (Clientes que pararam de comprar, qualquer ticket)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND ULTIMO_PEDIDO_DIAS > 380
+
+                        -- 😴 7. Solo Adormecido (inativos há mais de 380 dias)
+                        WHEN ULTIMO_PEDIDO_DIAS > 380
                         THEN 7
-                        
+
                         ELSE null
                     END AS CATEGORIA_CLIENTE_ID
                     ,CASE
-                        -- 🌟 1. Raiz Forte (Clientes premium: antigos, recorrentes, ticket médio alto, e TSI > 15%. São fiéis e altamente valiosos.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 3
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_TSI > 15
+                        -- 🌟 1. Raiz Forte
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI >= 15
+                            AND QTD_TOTAL >= 200
+                            AND MEDIA_BAGS_P_SAFRA >= 80
+                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 3
                         THEN 'Raiz Forte'
-                    
-                        -- 🌿 2. Sementes de Ouro (Clientes consistentes, com bom histórico de compra, ticket médio saudável e uso relevante de TSI. Um nível abaixo do topo, mas bem confiáveis.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 2
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_TSI > 10
-                        THEN 'Sementes de Ouro' 
-                    
-                        -- 🌱 3. Pé de Safra (Clientes ativos, ritmo mais espaçado, mas ainda assim envolvidos. Podem crescer.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND PRIMEIRO_PEDIDO_DIAS > 180
-                            AND ULTIMO_PEDIDO_DIAS <= 380
+
+                        -- 🌿 2. Sementes de Ouro
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI >= 10
+                            AND PERC_TSI < 15
+                            AND QTD_TOTAL >= 100
+                            AND MEDIA_BAGS_P_SAFRA >= 50
+                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 2
+                        THEN 'Sementes de Ouro'
+
+                        -- 🌱 3. Pé de Safra
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_TSI < 10
+                            AND QTD_TOTAL >= 50
+                            AND MEDIA_BAGS_P_SAFRA >= 20
                         THEN 'Pé de Safra'
-                    
-                        -- 🌾 4. Terra Promissora (Clientes relativamente novos (6 meses da primeira compra), com excelente início — bom ticket, uso de TSI e já fazendo pedidos. Grande potencial de se tornarem premium.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND PERC_TSI > 10
-                            AND PRIMEIRO_PEDIDO_DIAS <= 180
+
+                        -- 🌾 4. Terra Promissora
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_CRESCIMENTO_QUEDA >= 10
                         THEN 'Terra Promissora'
-                    
-                        -- 🌿 5. Broto de Esperança (Clientes muito novos (até 6 meses da primeira compra), ticket menor que o Terra Promissora.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS > 0
-                            AND PRIMEIRO_PEDIDO_DIAS <= 180
+
+                        -- ⚠️ 5. Raiz Enfraquecida
+                        WHEN ULTIMO_PEDIDO_DIAS <= 380
+                            AND PERC_CRESCIMENTO_QUEDA < 10
+                        THEN 'Raiz Enfraquecida'
+
+                        -- 🌿 6. Broto de Esperança
+                        WHEN PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 'Broto de Esperança'
-                    
-                        -- 🌧️ 6. Chuva na Hora Errada (Clientes que pararam de comprar, ticket acima de 100k, já foram bons, mas sumiram com queda brusca nas compras. Valem contato para entender o que houve.)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND PERC_TSI > 10
-                            AND ULTIMO_PEDIDO_DIAS > 380
-                        THEN 'Chuva na Hora Errada'
-                        
-                        -- 😴 7. Solo Adormecido (Clientes que pararam de comprar, qualquer ticket)
-                        WHEN QTD_SAFRAS_PARTICIPADAS >= 1
-                            AND ULTIMO_PEDIDO_DIAS > 380
+
+                        -- 😴 7. Solo Adormecido
+                        WHEN ULTIMO_PEDIDO_DIAS > 380
                         THEN 'Solo Adormecido'
-                        
+
                         ELSE null
                     END AS CATEGORIA_CLIENTE
+
                 FROM (
                 SELECT  
                     C.*
@@ -118,6 +119,7 @@ class ComercialRepository
                 SELECT 
                     B.NOME_CLIENTE
                     ,B.CGCCPF_CLIENTE
+                    ,max(CLIENTE_REGIAO) AS CLIENTE_REGIAO
                     ,nvl(COUNT(DISTINCT B.ID_PEDIDO),0) AS QTD_PEDIDOS
                     ,nvl(sum(B.QTD_TOTAL),0) AS QTD_TOTAL
                     ,nvl(sum(B.QTD_B50),0) AS QTD_B50
