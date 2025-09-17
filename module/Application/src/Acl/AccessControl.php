@@ -53,6 +53,7 @@ class AccessControl
             'RecursosHumanosController',
             'ComercialController',
             'PlanejamentoControleManutencaoController',
+            'PlanejamentoControleProducaoController',
         ];
 
         foreach ($controllers as $controller) {

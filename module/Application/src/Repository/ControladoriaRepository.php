@@ -210,7 +210,7 @@ class ControladoriaRepository
                     id_grupo_contas,
                     id_pacote_contas 
                 FROM 
-                    plano_contas
+                    ctr_plano_contas
                 ORDER BY 
                     (string_to_array(regexp_replace(codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
                     (regexp_replace(codigo, \'[0-9]\', \'\', \'g\')) ASC;  -- Parte alfabética
@@ -228,7 +228,7 @@ class ControladoriaRepository
         }
         public function inserirPlanoConta(array $data)
         {
-            $sql = 'INSERT INTO plano_contas 
+            $sql = 'INSERT INTO ctr_plano_contas 
                     (parent_id, clacta, descta, codigo, ctared, natcta, anasin, id_grupo_contas, id_pacote_contas) 
                     VALUES 
                     (:parent_id, :clacta, :descta, :codigo, :ctared, :natcta, :anasin, :id_grupo_contas, :id_pacote_contas)';
@@ -248,7 +248,7 @@ class ControladoriaRepository
         }
         public function atualizarPlanoConta(array $data)
         {
-            $sql = 'UPDATE plano_contas 
+            $sql = 'UPDATE ctr_plano_contas 
                     SET 
                         parent_id = :parent_id, 
                         clacta = :clacta, 
@@ -282,13 +282,13 @@ class ControladoriaRepository
 
             try {
                $sql = 'WITH RECURSIVE contas_a_excluir AS (
-                            SELECT id FROM plano_contas WHERE id = :id
+                            SELECT id FROM ctr_plano_contas WHERE id = :id
                             UNION ALL
                             SELECT p.id 
-                            FROM plano_contas p
+                            FROM ctr_plano_contas p
                             INNER JOIN contas_a_excluir c ON p.parent_id = c.id
                         )
-                        DELETE FROM plano_contas WHERE id IN (SELECT id FROM contas_a_excluir);';
+                        DELETE FROM ctr_plano_contas WHERE id IN (SELECT id FROM contas_a_excluir);';
                 $statementFilhos = $this->adapter->createStatement($sql);
                 $statementFilhos->execute([':id' => $id]);
 
@@ -395,7 +395,7 @@ class ControladoriaRepository
     #region Cadastro Pacote Contas
         public function listarPacoteContas()
         {
-            $sql = 'SELECT id, nome, descricao, flg_ativo FROM pacote_contas ORDER BY nome';
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM ctr_pacote_contas ORDER BY nome';
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -416,7 +416,7 @@ class ControladoriaRepository
 
             if (!empty($data['id'])) {
                 // Atualizar
-                $sql = 'UPDATE pacote_contas SET 
+                $sql = 'UPDATE ctr_pacote_contas SET 
                             nome = :nome, 
                             descricao = :descricao,
                             flg_ativo = :flg_ativo
@@ -429,7 +429,7 @@ class ControladoriaRepository
                 ];
             } else {
                 // Inserir
-                $sql = 'INSERT INTO pacote_contas (nome, descricao, flg_ativo) 
+                $sql = 'INSERT INTO ctr_pacote_contas (nome, descricao, flg_ativo) 
                         VALUES (:nome, :descricao, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -447,13 +447,13 @@ class ControladoriaRepository
                 throw new \Exception('ID do Pacote de Contas não fornecido.');
             }
 
-            $sql = 'UPDATE pacote_contas SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE ctr_pacote_contas SET flg_ativo = false WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([':id' => $id]);
         }
         public function getLookupPacoteContas()
         {
-            $sql = 'SELECT id, nome, descricao FROM pacote_contas WHERE flg_ativo = true ORDER BY nome';
+            $sql = 'SELECT id, nome, descricao FROM ctr_pacote_contas WHERE flg_ativo = true ORDER BY nome';
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 

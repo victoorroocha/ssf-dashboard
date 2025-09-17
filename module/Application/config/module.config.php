@@ -13,6 +13,7 @@ use Application\Repository\RecursosHumanosRepository;  // Importar repositório
 use Application\Repository\ComercialRepository;  // Importar repositório
 use Application\Repository\VendasRepository;  // Importar repositório
 use Application\Repository\PlanejamentoControleManutencaoRepository;  // Importar repositório
+use Application\Repository\PlanejamentoControleProducaoRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
@@ -202,6 +203,21 @@ return [
                     ],
                 ],
             ],
+            // Planejamento Controle Produção
+            'planejamento-controle-producao' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/planejamento-controle-producao[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\PlanejamentoControleProducaoController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -226,6 +242,7 @@ return [
             Controller\ComercialController::class => Factory\GenericControllerFactory::class,
             Controller\VendasController::class => Factory\GenericControllerFactory::class,
             Controller\PlanejamentoControleManutencaoController::class => Factory\GenericControllerFactory::class,
+            Controller\PlanejamentoControleProducaoController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -287,6 +304,10 @@ return [
             'Application\Repository\PlanejamentoControleManutencaoRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\PlanejamentoControleManutencaoRepository($adapter);
+            },
+            'Application\Repository\PlanejamentoControleProducaoRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\PlanejamentoControleProducaoRepository($adapter);
             },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 

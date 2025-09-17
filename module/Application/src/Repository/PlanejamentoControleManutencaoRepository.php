@@ -16,7 +16,7 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Areas Técnicas
         public function listarAreas()
         {
-            $sql = 'SELECT id, nome, descricao, flg_ativo FROM areas_tecnicas ORDER BY nome'; 
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM pcm_areas_tecnicas ORDER BY nome'; 
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -37,7 +37,7 @@ class PlanejamentoControleManutencaoRepository
 
             if (!empty($data['id'])) {
                 // Atualizar
-                $sql = 'UPDATE areas_tecnicas SET 
+                $sql = 'UPDATE pcm_areas_tecnicas SET 
                             nome = :nome, 
                             descricao = :descricao,
                             flg_ativo = :flg_ativo
@@ -50,7 +50,7 @@ class PlanejamentoControleManutencaoRepository
                 ];
             } else {
                 // Inserir
-                $sql = 'INSERT INTO areas_tecnicas (nome, descricao, flg_ativo) 
+                $sql = 'INSERT INTO pcm_areas_tecnicas (nome, descricao, flg_ativo) 
                         VALUES (:nome, :descricao, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -68,13 +68,13 @@ class PlanejamentoControleManutencaoRepository
                 throw new \Exception('ID da área não fornecido.');
             }
 
-            $sql = 'UPDATE areas_tecnicas SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE pcm_areas_tecnicas SET flg_ativo = false WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([':id' => $id]);
         }
         public function getLookupAreas()
         {
-            $sql = 'SELECT id, nome, descricao FROM areas_tecnicas where flg_ativo = true ORDER BY nome'; 
+            $sql = 'SELECT id, nome, descricao FROM pcm_areas_tecnicas where flg_ativo = true ORDER BY nome'; 
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -95,7 +95,7 @@ class PlanejamentoControleManutencaoRepository
                         s.nome, 
                         s.descricao,
                         s.flg_ativo
-                    FROM setores s
+                    FROM pcm_setores s
                     ORDER BY s.nome';
 
             $statement = $this->adapter->createStatement($sql);
@@ -118,7 +118,7 @@ class PlanejamentoControleManutencaoRepository
 
             if (!empty($data['id'])) {
                 // Update
-                $sql = 'UPDATE setores SET 
+                $sql = 'UPDATE pcm_setores SET 
                             nome = :nome, 
                             descricao = :descricao,
                             flg_ativo = :flg_ativo
@@ -131,7 +131,7 @@ class PlanejamentoControleManutencaoRepository
                 ];
             } else {
                 // Insert
-                $sql = 'INSERT INTO setores (nome, descricao, flg_ativo) 
+                $sql = 'INSERT INTO pcm_setores (nome, descricao, flg_ativo) 
                         VALUES (:nome, :descricao, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -149,7 +149,7 @@ class PlanejamentoControleManutencaoRepository
                 throw new \Exception('ID do setor não fornecido.');
             }
 
-            $sql = 'UPDATE setores SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE pcm_setores SET flg_ativo = false WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([':id' => $id]);
         }
@@ -160,7 +160,7 @@ class PlanejamentoControleManutencaoRepository
                         s.nome, 
                         s.descricao,
                         s.flg_ativo
-                    FROM setores s
+                    FROM pcm_setores s
                     where s.flg_ativo = true
                     ORDER BY s.nome';
 
@@ -178,7 +178,7 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Tipos de Manutenção
         public function listarTiposManutencao()
         {
-            $sql = 'SELECT id, nome, descricao, flg_ativo FROM tipos_manutencao ORDER BY id';
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM pcm_tipos_manutencao ORDER BY id';
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -198,7 +198,7 @@ class PlanejamentoControleManutencaoRepository
 
             if (!empty($data['id'])) {
                 // Atualizar
-                $sql = 'UPDATE tipos_manutencao SET 
+                $sql = 'UPDATE pcm_tipos_manutencao SET 
                             nome = :nome, 
                             descricao = :descricao,
                             flg_ativo = :flg_ativo
@@ -211,7 +211,7 @@ class PlanejamentoControleManutencaoRepository
                 ];
             } else {
                 // Inserir
-                $sql = 'INSERT INTO tipos_manutencao (nome, descricao, flg_ativo) 
+                $sql = 'INSERT INTO pcm_tipos_manutencao (nome, descricao, flg_ativo) 
                         VALUES (:nome, :descricao, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -229,13 +229,13 @@ class PlanejamentoControleManutencaoRepository
                 throw new \Exception('ID do tipo de manutenção não fornecido.');
             }
 
-            $sql = 'UPDATE tipos_manutencao SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE pcm_tipos_manutencao SET flg_ativo = false WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([':id' => $id]);
         }
         public function getLookupTiposManutencao()
         {
-            $sql = "SELECT id, nome, descricao FROM tipos_manutencao where flg_ativo = true and nome not like 'Preventiva' ORDER BY nome";
+            $sql = "SELECT id, nome, descricao FROM pcm_tipos_manutencao where flg_ativo = true and nome not like 'Preventiva' ORDER BY nome";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -250,7 +250,7 @@ class PlanejamentoControleManutencaoRepository
     #region Cadastro Técnicos
         public function listarTecnicos()
         {
-            $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo FROM tecnicos ORDER BY id';
+            $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo FROM pcm_tecnicos ORDER BY id';
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -268,7 +268,7 @@ class PlanejamentoControleManutencaoRepository
             $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : true;
 
             if (!empty($data['id'])) {
-                $sql = 'UPDATE tecnicos SET 
+                $sql = 'UPDATE pcm_tecnicos SET 
                             nome = :nome, 
                             numcad = :numcad, 
                             cpf = :cpf, 
@@ -288,7 +288,7 @@ class PlanejamentoControleManutencaoRepository
                     ':id' => $data['id']
                 ];
             } else {
-                $sql = 'INSERT INTO tecnicos (nome, numcad, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo) 
+                $sql = 'INSERT INTO pcm_tecnicos (nome, numcad, cpf, cargo_funcao, contato, area_tecnica_id, flg_ativo) 
                         VALUES (:nome, :numcad, :cpf, :cargo_funcao, :contato, :area_tecnica_id, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -309,7 +309,7 @@ class PlanejamentoControleManutencaoRepository
                 throw new \Exception('ID do técnico não fornecido.');
             }
 
-            $sql = 'UPDATE tecnicos SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE pcm_tecnicos SET flg_ativo = false WHERE id = :id';
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
         }
         public function getLookupTecnicos()
@@ -322,8 +322,8 @@ class PlanejamentoControleManutencaoRepository
                         t.contato, 
                         t.area_tecnica_id,
                         at.nome as nome_area_tecnica
-                    FROM tecnicos t
-                    left join areas_tecnicas at on at.id = t.area_tecnica_id
+                    FROM pcm_tecnicos t
+                    left join pcm_areas_tecnicas at on at.id = t.area_tecnica_id
                     where t.flg_ativo = true 
                     ORDER BY at.nome, t.nome';
             $result = $this->adapter->createStatement($sql)->execute();
@@ -355,8 +355,8 @@ class PlanejamentoControleManutencaoRepository
                         e.status, 
                         e.observacoes, 
                         e.centro_custo 
-                    FROM equipamentos e
-                    left join setores s on s.id = e.setor_id 
+                    FROM pcm_equipamentos e
+                    left join pcm_setores s on s.id = e.setor_id 
                     ORDER BY codigo";
             $result = $this->adapter->createStatement($sql)->execute();
 
@@ -376,7 +376,7 @@ class PlanejamentoControleManutencaoRepository
                     throw new \Exception('Código do equipamento é obrigatório.');
                 }
                 // Verifica se já existe equipamento com o mesmo código (exceto o atual, se for update)
-                $sqlCheck = "SELECT COUNT(*) AS total FROM equipamentos WHERE codigo = :codigo";
+                $sqlCheck = "SELECT COUNT(*) AS total FROM pcm_equipamentos WHERE codigo = :codigo";
                 $paramsCheck = [':codigo' => $data['codigo']];
                 if (!empty($data['id'])) {
                     $sqlCheck .= " AND id <> :id";
@@ -389,7 +389,7 @@ class PlanejamentoControleManutencaoRepository
             #endregion
 
             if (!empty($data['id'])) {
-                $sql = 'UPDATE equipamentos SET codigo = :codigo, nome = :nome, setor_id = :setor_id, status = :status, observacoes = :observacoes, centro_custo = :centro_custo WHERE id = :id';
+                $sql = 'UPDATE pcm_equipamentos SET codigo = :codigo, nome = :nome, setor_id = :setor_id, status = :status, observacoes = :observacoes, centro_custo = :centro_custo WHERE id = :id';
                 $params = [
                     ':codigo' => $data['codigo'],
                     ':nome' => $data['nome'],
@@ -400,7 +400,7 @@ class PlanejamentoControleManutencaoRepository
                     ':id' => $data['id']
                 ];
             } else {
-                $sql = 'INSERT INTO equipamentos (codigo, nome, setor_id, status, observacoes, centro_custo) VALUES (:codigo, :nome, :setor_id, :status, :observacoes, :centro_custo)';
+                $sql = 'INSERT INTO pcm_equipamentos (codigo, nome, setor_id, status, observacoes, centro_custo) VALUES (:codigo, :nome, :setor_id, :status, :observacoes, :centro_custo)';
                 $params = [
                     ':codigo' => $data['codigo'],
                     ':nome' => $data['nome'],
@@ -415,7 +415,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function excluirEquipamento($id)
         {
-            $sql = 'DELETE FROM equipamentos WHERE id = :id';
+            $sql = 'DELETE FROM pcm_equipamentos WHERE id = :id';
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
         }
         public function getLookupEquipamentos($search = null, $key = null, $offset = 0, $limit = 30)
@@ -453,8 +453,8 @@ class PlanejamentoControleManutencaoRepository
                         e.status, 
                         e.observacoes, 
                         e.centro_custo 
-                    FROM equipamentos e
-                    LEFT JOIN setores s ON s.id = e.setor_id 
+                    FROM pcm_equipamentos e
+                    LEFT JOIN pcm_setores s ON s.id = e.setor_id 
                     WHERE status NOT LIKE 'Inativo'
                     {$ands}
                     ORDER BY codigo
@@ -464,8 +464,8 @@ class PlanejamentoControleManutencaoRepository
 
             // Query para contar o total de registros (para paginação)
             $countSql = "SELECT COUNT(*) as total 
-                        FROM equipamentos e
-                        LEFT JOIN setores s ON s.id = e.setor_id 
+                        FROM pcm_equipamentos e
+                        LEFT JOIN pcm_setores s ON s.id = e.setor_id 
                         WHERE status NOT LIKE 'Inativo'
                         {$ands}";
                         
@@ -489,12 +489,12 @@ class PlanejamentoControleManutencaoRepository
             try {
                 // Atualiza para "Em Manutenção" se a data_inicio for menor ou igual a hoje e não tiver data_fim ou data_fim maior que hoje
                 $sqlUpdateManutencao = "
-                    UPDATE equipamentos
+                    UPDATE pcm_equipamentos
                     SET status = 'Em Manutenção'
                     WHERE status <> 'Inativo' 
                     AND id IN (
                         SELECT DISTINCT equipamento_id
-                        FROM controle_manutencao
+                        FROM pcm_controle_manutencao
                         WHERE data_inicio <= CURRENT_DATE
                         AND (data_final IS NULL OR data_final > CURRENT_DATE)
                     )
@@ -503,12 +503,12 @@ class PlanejamentoControleManutencaoRepository
 
                 // Atualiza para "Ativo" se a última manutenção tiver data_fim menor ou igual a hoje ou não houver mais manutenção ativa
                 $sqlUpdateAtivo = "
-                    UPDATE equipamentos
+                    UPDATE pcm_equipamentos
                     SET status = 'Ativo'
                     WHERE status <> 'Inativo'
                     AND id NOT IN (
                         SELECT DISTINCT equipamento_id
-                        FROM controle_manutencao
+                        FROM pcm_controle_manutencao
                         WHERE data_inicio <= CURRENT_DATE
                         AND (data_final IS NULL OR data_final > CURRENT_DATE)
                     )
@@ -531,10 +531,10 @@ class PlanejamentoControleManutencaoRepository
                         eq.nome as nome_equipamento, 
                         at.nome as nome_area, 
                         st.nome as nome_setor
-                    FROM programacao_manutencao_preventiva pmp
-                    LEFT JOIN equipamentos eq ON eq.id = pmp.equipamento_id
-                    LEFT JOIN areas_tecnicas at ON at.id = pmp.area_tecnica_id
-                    LEFT JOIN setores st ON st.id = pmp.setor_id
+                    FROM pcm_programacao_manutencao_preventiva pmp
+                    LEFT JOIN pcm_equipamentos eq ON eq.id = pmp.equipamento_id
+                    LEFT JOIN pcm_areas_tecnicas at ON at.id = pmp.area_tecnica_id
+                    LEFT JOIN pcm_setores st ON st.id = pmp.setor_id
                     where 1=1
                     and pmp.status_programacao <> 'Cancelada'
                     ORDER BY pmp.proxima_execucao ASC";
@@ -554,14 +554,14 @@ class PlanejamentoControleManutencaoRepository
             // se for equipamento alimenta setor e centro de custo com cadastro equipamento.
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
                 // Busca o setor_id do equipamento
-                $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
+                $sqlSetor = "SELECT setor_id FROM pcm_equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['setor_id'])) {
                     $data['setor_id'] = $result['setor_id']; // Sobrescreve o setor vindo do form
                 }
 
                 // Busca o centro de custo do equipamento
-                $sqlSetor = "SELECT centro_custo FROM equipamentos WHERE id = :id";
+                $sqlSetor = "SELECT centro_custo FROM pcm_equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['centro_custo'])) {
                     $data['centro_custo_id'] = $result['centro_custo']; // Sobrescreve o setor vindo do form
@@ -570,7 +570,7 @@ class PlanejamentoControleManutencaoRepository
 
             if (!empty($data['id'])) {
                 // Busca dados atuais para comparar
-                $sqlSelect = "SELECT data_programada, periodicidade_dias FROM programacao_manutencao_preventiva WHERE id = :id";
+                $sqlSelect = "SELECT data_programada, periodicidade_dias FROM pcm_programacao_manutencao_preventiva WHERE id = :id";
                 $stmtSelect = $this->adapter->createStatement($sqlSelect);
                 $result = $stmtSelect->execute([':id' => $data['id']])->current();
 
@@ -584,7 +584,7 @@ class PlanejamentoControleManutencaoRepository
                     }
                 }
 
-                $sql = 'UPDATE programacao_manutencao_preventiva SET 
+                $sql = 'UPDATE pcm_programacao_manutencao_preventiva SET 
                             equipamento_id = :equipamento_id,
                             centro_custo_id = :centro_custo_id,
                             nome_solicitante = :nome_solicitante,
@@ -621,7 +621,7 @@ class PlanejamentoControleManutencaoRepository
 
             } else {
                 // Inserção nova
-                $sql = 'INSERT INTO programacao_manutencao_preventiva (
+                $sql = 'INSERT INTO pcm_programacao_manutencao_preventiva (
                     equipamento_id,
                     centro_custo_id,
                     nome_solicitante,
@@ -673,7 +673,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function atualizarStatusProgramacao($id, $status)
         {
-            $sql = 'UPDATE programacao_manutencao_preventiva SET status_programacao = :status WHERE id = :id';
+            $sql = 'UPDATE pcm_programacao_manutencao_preventiva SET status_programacao = :status WHERE id = :id';
             $this->adapter->createStatement($sql)->execute([
                 ':status' => $status,
                 ':id' => $id
@@ -681,7 +681,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function cancelarProgramacao(array $data)
         {
-            $sql = "UPDATE programacao_manutencao_preventiva SET status_programacao = 'Cancelada', motivo_cancelamento = :motivo WHERE id = :id";
+            $sql = "UPDATE pcm_programacao_manutencao_preventiva SET status_programacao = 'Cancelada', motivo_cancelamento = :motivo WHERE id = :id";
 
             $this->adapter->createStatement($sql)->execute([
                 ':motivo' => $data['motivo_cancelamento'],
@@ -690,15 +690,15 @@ class PlanejamentoControleManutencaoRepository
         }
         public function gerarOsPreventiva()
         {
-            $sql = "SELECT * FROM programacao_manutencao_preventiva WHERE status_programacao = 'Ativa' AND proxima_execucao <= CURRENT_DATE";
+            $sql = "SELECT * FROM pcm_programacao_manutencao_preventiva WHERE status_programacao = 'Ativa' AND proxima_execucao <= CURRENT_DATE";
             $programacoes = $this->adapter->query($sql, $this->adapter::QUERY_MODE_EXECUTE);
 
             foreach ($programacoes as $prog) {
-                $checkSql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE programacao_id = ? AND data_programada = ?";
+                $checkSql = "SELECT COUNT(*) AS total FROM pcm_controle_manutencao WHERE programacao_id = ? AND data_programada = ?";
                 $check = $this->adapter->query($checkSql, [$prog['id'], $prog['proxima_execucao']])->current();
 
                 if ($check['total'] == 0) {
-                    $insertSql = "INSERT INTO controle_manutencao 
+                    $insertSql = "INSERT INTO pcm_controle_manutencao 
                         (data_programada, data_solicitacao, setor_id, tipo_ordem_servico, equipamento_id, centro_custo_id, nome_solicitante, prioridade,
                         tipo_manutencao_id, area_tecnica_id, status, info_servico, observacoes, programacao_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -720,7 +720,7 @@ class PlanejamentoControleManutencaoRepository
                         $prog['id']                 // programacao_id
                     ]);
 
-                    $updateSql = "UPDATE programacao_manutencao_preventiva SET 
+                    $updateSql = "UPDATE pcm_programacao_manutencao_preventiva SET 
                                     data_ultima_execucao = proxima_execucao, 
                                     proxima_execucao = proxima_execucao + INTERVAL '{$prog['periodicidade_dias']} days' 
                                 WHERE id = ?";
@@ -737,12 +737,12 @@ class PlanejamentoControleManutencaoRepository
                         *,
                         (
                             select sum(qtd) from (
-                                select count(*) qtd from apontamentos_manutencao am where am.id_manutencao = cm.id
+                                select count(*) qtd from pcm_apontamentos_manutencao am where am.id_manutencao = cm.id
                                 union
-                                select count(*) qtd from itens_manutencao im where im.id_manutencao = cm.id
+                                select count(*) qtd from pcm_itens_manutencao im where im.id_manutencao = cm.id
                             ) A
                         ) as qtd_apontamentos
-                    FROM controle_manutencao cm";
+                    FROM pcm_controle_manutencao cm";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
@@ -757,14 +757,14 @@ class PlanejamentoControleManutencaoRepository
             // se for equipamento alimenta setor e centro de custo com cadastro equipamento.
             if (isset($data['equipamento_id']) && !empty($data['equipamento_id'])) {
                 // Busca o setor_id do equipamento
-                $sqlSetor = "SELECT setor_id FROM equipamentos WHERE id = :id";
+                $sqlSetor = "SELECT setor_id FROM pcm_equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['setor_id'])) {
                     $data['setor_id'] = $result['setor_id']; // Sobrescreve o setor vindo do form
                 }
 
                 // Busca o centro de custo do equipamento
-                $sqlSetor = "SELECT centro_custo FROM equipamentos WHERE id = :id";
+                $sqlSetor = "SELECT centro_custo FROM pcm_equipamentos WHERE id = :id";
                 $result = $this->adapter->createStatement($sqlSetor)->execute([':id' => $data['equipamento_id']])->current();
                 if ($result && isset($result['centro_custo'])) {
                     $data['centro_custo_id'] = $result['centro_custo']; // Sobrescreve o setor vindo do form
@@ -812,7 +812,7 @@ class PlanejamentoControleManutencaoRepository
             ];
 
             if (!empty($data['id'])) {
-                $sql = "UPDATE controle_manutencao SET 
+                $sql = "UPDATE pcm_controle_manutencao SET 
                             data_solicitacao = :data_solicitacao,
                             nome_solicitante = :nome_solicitante,
                             setor_id = :setor_id,
@@ -833,7 +833,7 @@ class PlanejamentoControleManutencaoRepository
                         WHERE id = :id";
                 $params[':id'] = $data['id'];
             } else {
-                $sql = "INSERT INTO controle_manutencao (
+                $sql = "INSERT INTO pcm_controle_manutencao (
                             data_solicitacao, nome_solicitante, setor_id, prioridade, tipo_ordem_servico,
                             equipamento_id, centro_custo_id, tecnico_id, tipo_manutencao_id, area_tecnica_id, descricao_defeito, 
                             data_inicio, tempo_previsto, data_final, status, info_servico, observacoes
@@ -851,7 +851,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function excluirControleManutencao($id)
         {
-            $sql = "DELETE FROM controle_manutencao WHERE id = :id";
+            $sql = "DELETE FROM pcm_controle_manutencao WHERE id = :id";
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
 
             // Chama a atualização dos status dos equipamentos
@@ -863,7 +863,7 @@ class PlanejamentoControleManutencaoRepository
 
             try {
                 // 
-                $sqlValida = "SELECT cm.* FROM controle_manutencao cm WHERE cm.id = :id";
+                $sqlValida = "SELECT cm.* FROM pcm_controle_manutencao cm WHERE cm.id = :id";
                 $resultValida = $this->adapter->query($sqlValida, [':id' => $data['id']])->current();
                 if (!$resultValida) {
                     throw new \InvalidArgumentException('Ordem de serviço não encontrada.');
@@ -873,21 +873,21 @@ class PlanejamentoControleManutencaoRepository
                 }
 
                 // Primeiro verifica se existem apontamentos para essa OS
-                $sqlCount = "SELECT COUNT(*) AS total FROM apontamentos_manutencao WHERE id_manutencao = :id";
+                $sqlCount = "SELECT COUNT(*) AS total FROM pcm_apontamentos_manutencao WHERE id_manutencao = :id";
                 $result = $this->adapter->query($sqlCount, [':id' => $data['id']])->current();
 
                 if ($result && $result['total'] > 0) {
                     // Tem apontamentos: usa data final e tempo execução calculados
-                    $sqlUpdate = "UPDATE controle_manutencao 
+                    $sqlUpdate = "UPDATE pcm_controle_manutencao 
                                     SET status = 'Finalizada', 
                                         data_final = (
                                             SELECT MAX(data_fim) 
-                                            FROM apontamentos_manutencao am 
+                                            FROM pcm_apontamentos_manutencao am 
                                             WHERE am.id_manutencao = :id
                                         ), 
                                         tempo_execucao = (
                                             SELECT (make_interval(secs => SUM(total_horas) * 3600))::time
-                                            FROM apontamentos_manutencao am
+                                            FROM pcm_apontamentos_manutencao am
                                             WHERE am.id_manutencao = :id
                                         )
                                     WHERE id = :id";
@@ -896,7 +896,7 @@ class PlanejamentoControleManutencaoRepository
                     ];
                 } else {
                     // Não tem apontamentos: data_final = NOW(), tempo_execucao = NULL
-                    $sqlUpdate = "UPDATE controle_manutencao
+                    $sqlUpdate = "UPDATE pcm_controle_manutencao
                                     SET status = 'Finalizada',
                                         data_final = NOW(),
                                         tempo_execucao = NULL
@@ -920,7 +920,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function validarOsApontamentos($id)
         {
-            $sql = "SELECT COUNT(*) AS total FROM controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
+            $sql = "SELECT COUNT(*) AS total FROM pcm_controle_manutencao WHERE status <> 'Finalizada' AND id = :id";
             $statement = $this->adapter->createStatement($sql);
             $statement->prepare();
             $statement->execute(['id' => $id]);
@@ -943,7 +943,7 @@ class PlanejamentoControleManutencaoRepository
         #region Itens Apontamentos
             public function getItensUtilizadosPorOS($osId)
             {
-                $sql = "SELECT * FROM itens_manutencao WHERE id_manutencao = :id order by id asc";
+                $sql = "SELECT * FROM pcm_itens_manutencao WHERE id_manutencao = :id order by id asc";
                 $result = $this->adapter->createStatement($sql)->execute([':id' => $osId]);
 
                 $data = [];
@@ -978,7 +978,7 @@ class PlanejamentoControleManutencaoRepository
 
                 if (!empty($data['id'])) {
                     // Update
-                    $sql = "UPDATE itens_manutencao SET
+                    $sql = "UPDATE pcm_itens_manutencao SET
                                 id_manutencao = :id_manutencao,
                                 cod_produto = :cod_produto,
                                 descricao_produto = :descricao_produto,
@@ -1001,7 +1001,7 @@ class PlanejamentoControleManutencaoRepository
                     $params[':id'] = $data['id'];
                 } else {
                     // Insert
-                    $sql = "INSERT INTO itens_manutencao (
+                    $sql = "INSERT INTO pcm_itens_manutencao (
                                 id_manutencao, cod_produto, descricao_produto, cod_deposito, descricao_deposito,
                                 unidade_medida, classe_produto, enderecamento_produto, qtd_utilizada, qtd_estoque, preco_medio_unitario, custo_unitario,
                                 observacao, data_utilizacao, id_usuario_apontamento, flg_retirado, id_usuario_retirada, data_retirada
@@ -1016,7 +1016,7 @@ class PlanejamentoControleManutencaoRepository
             }
             public function excluirApontamentoItem($id)
             {
-                $sql = "DELETE FROM itens_manutencao WHERE id = :id";
+                $sql = "DELETE FROM pcm_itens_manutencao WHERE id = :id";
                 $this->adapter->createStatement($sql)->execute([':id' => $id]);
             }
         #endRegion
@@ -1024,7 +1024,7 @@ class PlanejamentoControleManutencaoRepository
         #region Apontamentos horas
             public function getApontamentosPorOS($osId)
             {
-                $sql = "SELECT * FROM apontamentos_manutencao WHERE id_manutencao = :id order by id";
+                $sql = "SELECT * FROM pcm_apontamentos_manutencao WHERE id_manutencao = :id order by id";
                 $result = $this->adapter->createStatement($sql)->execute(['id' => $osId]);
                 
                 $data = [];
@@ -1073,7 +1073,7 @@ class PlanejamentoControleManutencaoRepository
 
                 if (!empty($data['id'])) {
                     // Update
-                    $sql = "UPDATE apontamentos_manutencao SET
+                    $sql = "UPDATE pcm_apontamentos_manutencao SET
                                 id_manutencao = :id_manutencao,
                                 tecnico_id = :tecnico_id,
                                 data_inicio = :data_inicio,
@@ -1084,7 +1084,7 @@ class PlanejamentoControleManutencaoRepository
                     $params[':id'] = $data['id'];
                 } else {
                     // Insert
-                    $sql = "INSERT INTO apontamentos_manutencao (
+                    $sql = "INSERT INTO pcm_apontamentos_manutencao (
                                 id_manutencao, tecnico_id, data_inicio, data_fim, 
                                 observacao, id_usuario_apontamento
                             ) VALUES (
@@ -1097,7 +1097,7 @@ class PlanejamentoControleManutencaoRepository
             }
             public function excluirApontamentoHoras($id)
             {
-                $sql = "DELETE FROM apontamentos_manutencao WHERE id = :id";
+                $sql = "DELETE FROM pcm_apontamentos_manutencao WHERE id = :id";
                 $this->adapter->createStatement($sql)->execute([':id' => $id]);
             }
         #endRegion
@@ -1120,8 +1120,8 @@ class PlanejamentoControleManutencaoRepository
                         ,im.flg_retirado
                         ,ua.nome as usuarios_apontamento
                         ,cm.centro_custo_id 
-                    FROM itens_manutencao im 
-                    LEFT JOIN controle_manutencao cm on cm.id = im.id_manutencao 
+                    FROM pcm_itens_manutencao im 
+                    LEFT JOIN pcm_controle_manutencao cm on cm.id = im.id_manutencao 
                     LEFT JOIN usuario ua on ua.id = im.id_usuario_apontamento 
                     WHERE (im.flg_retirado = false or im.flg_retirado is null)";
             $result = $this->adapter->createStatement($sql)->execute();
@@ -1138,7 +1138,7 @@ class PlanejamentoControleManutencaoRepository
                 throw new \InvalidArgumentException('Nenhum item informado para retirada.');
             }
 
-            $sql = "UPDATE itens_manutencao SET flg_retirado = true, data_retirada = NOW(), id_usuario_retirada = :user_id WHERE id = :id";
+            $sql = "UPDATE pcm_itens_manutencao SET flg_retirado = true, data_retirada = NOW(), id_usuario_retirada = :user_id WHERE id = :id";
             $stmt = $this->adapter->createStatement($sql);
 
             foreach ($data['ids'] as $id) {
@@ -1157,11 +1157,11 @@ class PlanejamentoControleManutencaoRepository
                         COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Finalizada') AS finalizadas,
                         COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Em Execução') AS em_execucao,
                         COUNT(DISTINCT cm.id) FILTER (WHERE status = 'Pendente') AS pendentes,
-                        (select count(distinct pmp.id) from programacao_manutencao_preventiva pmp where pmp.status_programacao = 'Ativa' and pmp.proxima_execucao BETWEEN :inicio AND :fim) as programadas,
+                        (select count(distinct pmp.id) from pcm_programacao_manutencao_preventiva pmp where pmp.status_programacao = 'Ativa' and pmp.proxima_execucao BETWEEN :inicio AND :fim) as programadas,
                         COUNT(DISTINCT cm.id) AS total,
                         sum(im.custo_total) as custo_total
-                    FROM controle_manutencao cm
-                    LEFT JOIN itens_manutencao im ON cm.id = im.id_manutencao
+                    FROM pcm_controle_manutencao cm
+                    LEFT JOIN pcm_itens_manutencao im ON cm.id = im.id_manutencao
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
             ";
             $stmt = $this->adapter->createStatement($sql, [
@@ -1174,8 +1174,8 @@ class PlanejamentoControleManutencaoRepository
         public function buscarPorTipoManutencao($dataInicio, $dataFim)
         {
             $sql = "SELECT tm.nome AS tipo, COUNT(distinct cm.id) AS quantidade
-                    FROM controle_manutencao cm
-                    JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                    FROM pcm_controle_manutencao cm
+                    JOIN pcm_tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY tm.nome
             ";
@@ -1194,8 +1194,8 @@ class PlanejamentoControleManutencaoRepository
         public function buscarPorAreaTecnica($dataInicio, $dataFim)
         {
             $sql = "SELECT at.nome AS area, COUNT(distinct cm.id) AS quantidade
-                    FROM controle_manutencao cm
-                    JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
+                    FROM pcm_controle_manutencao cm
+                    JOIN pcm_areas_tecnicas at ON at.id = cm.area_tecnica_id
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY at.nome
             ";
@@ -1216,9 +1216,9 @@ class PlanejamentoControleManutencaoRepository
             $sql = "SELECT 
                         (e.codigo || '-' || e.nome) AS equipamento,
                         COUNT(distinct cm.id) AS quantidade
-                    FROM controle_manutencao cm
-                    JOIN equipamentos e ON e.id = cm.equipamento_id
-                    JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                    FROM pcm_controle_manutencao cm
+                    JOIN pcm_equipamentos e ON e.id = cm.equipamento_id
+                    JOIN pcm_tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY (e.codigo || '-' || e.nome)
             ";
@@ -1237,8 +1237,8 @@ class PlanejamentoControleManutencaoRepository
         public function buscarPorSetor($dataInicio, $dataFim)
         {
             $sql = "SELECT s.nome AS setor, COUNT(distinct cm.id) AS quantidade
-                    FROM controle_manutencao cm
-                    JOIN setores s ON s.id = cm.setor_id
+                    FROM pcm_controle_manutencao cm
+                    JOIN pcm_setores s ON s.id = cm.setor_id
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY s.nome
             ";
@@ -1260,8 +1260,8 @@ class PlanejamentoControleManutencaoRepository
             $sql = "SELECT 
                         case when t.nome is null then upper('Técnico Responsável não vinculado') else t.nome end AS tecnico,
                         COUNT(distinct cm.id) AS quantidade
-                    from controle_manutencao cm 
-                    left join tecnicos t on t.id = cm.tecnico_id 
+                    from pcm_controle_manutencao cm 
+                    left join pcm_tecnicos t on t.id = cm.tecnico_id 
                     WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
                     GROUP BY t.nome";
 
@@ -1292,13 +1292,13 @@ class PlanejamentoControleManutencaoRepository
                             cm.data_final,
                             cm.status,
                             COALESCE(SUM(im.custo_total), 0) AS custo_total
-                        FROM controle_manutencao cm
-                        LEFT JOIN equipamentos eq ON eq.id = cm.equipamento_id
-                        LEFT JOIN setores s ON s.id = cm.setor_id
-                        LEFT JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
-                        LEFT JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
-                        LEFT JOIN tecnicos t ON t.id = cm.tecnico_id
-                        LEFT JOIN itens_manutencao im ON im.id_manutencao = cm.id
+                        FROM pcm_controle_manutencao cm
+                        LEFT JOIN pcm_equipamentos eq ON eq.id = cm.equipamento_id
+                        LEFT JOIN pcm_setores s ON s.id = cm.setor_id
+                        LEFT JOIN pcm_areas_tecnicas at ON at.id = cm.area_tecnica_id
+                        LEFT JOIN pcm_tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                        LEFT JOIN pcm_tecnicos t ON t.id = cm.tecnico_id
+                        LEFT JOIN pcm_itens_manutencao im ON im.id_manutencao = cm.id
                         WHERE cm.data_solicitacao BETWEEN :inicio AND :fim
             ";
 
@@ -1366,18 +1366,18 @@ class PlanejamentoControleManutencaoRepository
                         cm.observacoes,
                         (
                             SELECT string_agg(DISTINCT t.nome, ', ')
-                            FROM apontamentos_manutencao am
-                            LEFT JOIN tecnicos t ON t.id = am.tecnico_id
+                            FROM pcm_apontamentos_manutencao am
+                            LEFT JOIN pcm_tecnicos t ON t.id = am.tecnico_id
                             WHERE am.id_manutencao = cm.id
                         ) AS nome_tecnico_exec,
                         t.nome as nome_tecnico,
                         cm.centro_custo_id
-                    FROM controle_manutencao cm
-                    LEFT JOIN setores s ON s.id = cm.setor_id
-                    LEFT JOIN equipamentos e ON e.id = cm.equipamento_id
-                    LEFT JOIN tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
-                    LEFT JOIN areas_tecnicas at ON at.id = cm.area_tecnica_id
-                    LEFT JOIN tecnicos t ON t.id = cm.tecnico_id
+                    FROM pcm_controle_manutencao cm
+                    LEFT JOIN pcm_setores s ON s.id = cm.setor_id
+                    LEFT JOIN pcm_equipamentos e ON e.id = cm.equipamento_id
+                    LEFT JOIN pcm_tipos_manutencao tm ON tm.id = cm.tipo_manutencao_id
+                    LEFT JOIN pcm_areas_tecnicas at ON at.id = cm.area_tecnica_id
+                    LEFT JOIN pcm_tecnicos t ON t.id = cm.tecnico_id
                     WHERE cm.id = :id";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);
@@ -1385,7 +1385,7 @@ class PlanejamentoControleManutencaoRepository
         }
         public function getInfoItensOrdemServico($id)
         {
-            $sql = "select * from itens_manutencao im
+            $sql = "select * from pcm_itens_manutencao im
                     WHERE im.id_manutencao = :id";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);

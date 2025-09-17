@@ -110,7 +110,7 @@ class CreditoECobrancaController extends BaseController
 
                 // Consulta no PostgreSQL para obter os registros da tabela controle_recebimento
                 $pgSql = new Sql($this->pgAdapter);
-                $selectPg = $pgSql->select('controle_recebimento');
+                $selectPg = $pgSql->select('crc_controle_recebimento');
                 // Adiciona filtro de codigoSafra, caso o parâmetro tenha sido passado
                 if (!empty($codigoSafra)) {
                     $selectPg->where(['codigosafra' => $codigoSafra]);
@@ -241,7 +241,7 @@ class CreditoECobrancaController extends BaseController
         }
 
         $sql = new Sql($this->pgAdapter);
-        $table = 'controle_recebimento';  // Nome da tabela no banco
+        $table = 'crc_controle_recebimento';  // Nome da tabela no banco
 
         try {
             // Formata os valores numéricos conforme necessário
@@ -309,7 +309,7 @@ class CreditoECobrancaController extends BaseController
         }
 
         $sql = new Sql($this->pgAdapter);
-        $table = 'controle_recebimento';  // Nome da tabela no banco
+        $table = 'crc_controle_recebimento';  // Nome da tabela no banco
 
         try {
             // Verifica se o registro existe antes de tentar excluir
@@ -1038,7 +1038,7 @@ class CreditoECobrancaController extends BaseController
                             if ($checked) {
                                 // Insere ou atualiza para ativo = true
                                 $sql = "
-                                    INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                                    INSERT INTO crc_documentos_pedido (id_pedido, id_documento, ativo)
                                     VALUES (:id_pedido, :id_documento, true)
                                     ON CONFLICT (id_pedido, id_documento) DO UPDATE
                                     SET ativo = EXCLUDED.ativo
@@ -1046,7 +1046,7 @@ class CreditoECobrancaController extends BaseController
                             } else {
                                 // Atualiza para ativo = false
                                 $sql = "
-                                    UPDATE documentos_pedido
+                                    UPDATE crc_documentos_pedido
                                     SET ativo = false
                                     WHERE id_pedido = :id_pedido AND id_documento = :id_documento
                                 ";
@@ -1063,7 +1063,7 @@ class CreditoECobrancaController extends BaseController
                     if ($checked) {
                         // Insere ou atualiza para ativo = true
                         $sql = "
-                            INSERT INTO documentos_pedido (id_pedido, id_documento, ativo)
+                            INSERT INTO crc_documentos_pedido (id_pedido, id_documento, ativo)
                             VALUES (:id_pedido, :id_documento, true)
                             ON CONFLICT (id_pedido, id_documento) DO UPDATE
                             SET ativo = EXCLUDED.ativo
@@ -1071,7 +1071,7 @@ class CreditoECobrancaController extends BaseController
                     } else {
                         // Atualiza para ativo = false
                         $sql = "
-                            UPDATE documentos_pedido
+                            UPDATE crc_documentos_pedido
                             SET ativo = false
                             WHERE id_pedido = :id_pedido AND id_documento = :id_documento
                         ";
@@ -1143,7 +1143,7 @@ class CreditoECobrancaController extends BaseController
                             if ($checked) {
                                 // Insere ou atualiza para ativo = true
                                 $sql = "
-                                    INSERT INTO documentos_pedido_enviado (id_pedido, id_documento, ativo)
+                                    INSERT INTO crc_documentos_pedido_enviado (id_pedido, id_documento, ativo)
                                     VALUES (:id_pedido, :id_documento, true)
                                     ON CONFLICT (id_pedido, id_documento) DO UPDATE
                                     SET ativo = EXCLUDED.ativo
@@ -1151,7 +1151,7 @@ class CreditoECobrancaController extends BaseController
                             } else {
                                 // Atualiza para ativo = false
                                 $sql = "
-                                    UPDATE documentos_pedido_enviado
+                                    UPDATE crc_documentos_pedido_enviado
                                     SET ativo = false
                                     WHERE id_pedido = :id_pedido AND id_documento = :id_documento
                                 ";
@@ -1168,7 +1168,7 @@ class CreditoECobrancaController extends BaseController
                     if ($checked) {
                         // Insere ou atualiza para ativo = true
                         $sql = "
-                            INSERT INTO documentos_pedido_enviado (id_pedido, id_documento, ativo)
+                            INSERT INTO crc_documentos_pedido_enviado (id_pedido, id_documento, ativo)
                             VALUES (:id_pedido, :id_documento, true)
                             ON CONFLICT (id_pedido, id_documento) DO UPDATE
                             SET ativo = EXCLUDED.ativo
@@ -1176,7 +1176,7 @@ class CreditoECobrancaController extends BaseController
                     } else {
                         // Atualiza para ativo = false
                         $sql = "
-                            UPDATE documentos_pedido_enviado
+                            UPDATE crc_documentos_pedido_enviado
                             SET ativo = false
                             WHERE id_pedido = :id_pedido AND id_documento = :id_documento
                         ";
@@ -1248,7 +1248,7 @@ class CreditoECobrancaController extends BaseController
                             if ($checked) {
                                 // Insere ou atualiza para ativo = true
                                 $sql = "
-                                    INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                                    INSERT INTO crc_garantias_pedido (id_pedido, id_garantia, ativo)
                                     VALUES (:id_pedido, :id_garantia, true)
                                     ON CONFLICT (id_pedido, id_garantia) DO UPDATE
                                     SET ativo = EXCLUDED.ativo
@@ -1256,7 +1256,7 @@ class CreditoECobrancaController extends BaseController
                             } else {
                                 // Atualiza para ativo = false
                                 $sql = "
-                                    UPDATE garantias_pedido
+                                    UPDATE crc_garantias_pedido
                                     SET ativo = false
                                     WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
                                 ";
@@ -1273,7 +1273,7 @@ class CreditoECobrancaController extends BaseController
                     if ($checked) {
                         // Insere ou atualiza para ativo = true
                         $sql = "
-                            INSERT INTO garantias_pedido (id_pedido, id_garantia, ativo)
+                            INSERT INTO crc_garantias_pedido (id_pedido, id_garantia, ativo)
                             VALUES (:id_pedido, :id_garantia, true)
                             ON CONFLICT (id_pedido, id_garantia) DO UPDATE
                             SET ativo = EXCLUDED.ativo
@@ -1281,7 +1281,7 @@ class CreditoECobrancaController extends BaseController
                     } else {
                         // Atualiza para ativo = false
                         $sql = "
-                            UPDATE garantias_pedido
+                            UPDATE crc_garantias_pedido
                             SET ativo = false
                             WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
                         ";
@@ -1352,7 +1352,7 @@ class CreditoECobrancaController extends BaseController
                             if ($checked) {
                                 // Insere ou atualiza para ativo = true
                                 $sql = "
-                                    INSERT INTO garantias_pedido_enviado (id_pedido, id_garantia, ativo)
+                                    INSERT INTO crc_garantias_pedido_enviado (id_pedido, id_garantia, ativo)
                                     VALUES (:id_pedido, :id_garantia, true)
                                     ON CONFLICT (id_pedido, id_garantia) DO UPDATE
                                     SET ativo = EXCLUDED.ativo
@@ -1360,7 +1360,7 @@ class CreditoECobrancaController extends BaseController
                             } else {
                                 // Atualiza para ativo = false
                                 $sql = "
-                                    UPDATE garantias_pedido_enviado
+                                    UPDATE crc_garantias_pedido_enviado
                                     SET ativo = false
                                     WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
                                 ";
@@ -1377,7 +1377,7 @@ class CreditoECobrancaController extends BaseController
                     if ($checked) {
                         // Insere ou atualiza para ativo = true
                         $sql = "
-                            INSERT INTO garantias_pedido_enviado (id_pedido, id_garantia, ativo)
+                            INSERT INTO crc_garantias_pedido_enviado (id_pedido, id_garantia, ativo)
                             VALUES (:id_pedido, :id_garantia, true)
                             ON CONFLICT (id_pedido, id_garantia) DO UPDATE
                             SET ativo = EXCLUDED.ativo
@@ -1385,7 +1385,7 @@ class CreditoECobrancaController extends BaseController
                     } else {
                         // Atualiza para ativo = false
                         $sql = "
-                            UPDATE garantias_pedido_enviado
+                            UPDATE crc_garantias_pedido_enviado
                             SET ativo = false
                             WHERE id_pedido = :id_pedido AND id_garantia = :id_garantia
                         ";
@@ -1453,7 +1453,7 @@ class CreditoECobrancaController extends BaseController
                     if (count($resPedidosGrupoCliente) > 0) {
                         foreach ($resPedidosGrupoCliente as $pedido) {
                             $sql = "
-                                INSERT INTO observacoes_pedido (id_pedido, observacao)
+                                INSERT INTO crc_observacoes_pedido (id_pedido, observacao)
                                 VALUES (:id_pedido, :observacao)
                                 ON CONFLICT (id_pedido) DO UPDATE
                                 SET observacao = EXCLUDED.observacao
@@ -1473,7 +1473,7 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 } else {
                     $sql = "
-                        INSERT INTO observacoes_pedido (id_pedido, observacao)
+                        INSERT INTO crc_observacoes_pedido (id_pedido, observacao)
                         VALUES (:id_pedido, :observacao)
                         ON CONFLICT (id_pedido) DO UPDATE
                         SET observacao = EXCLUDED.observacao
@@ -1529,7 +1529,7 @@ class CreditoECobrancaController extends BaseController
                     ]);
                 }
 
-                $sql = "INSERT INTO duplicata_boleto_pedido (
+                $sql = "INSERT INTO crc_duplicata_boleto_pedido (
                             id_pedido,
                             id_parcela_pedido,
                             boleto_recebido,
