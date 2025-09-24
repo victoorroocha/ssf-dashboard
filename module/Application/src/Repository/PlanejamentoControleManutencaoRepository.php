@@ -267,6 +267,19 @@ class PlanejamentoControleManutencaoRepository
 
             $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : true;
 
+             // 🔎 Verifica se CPF já existe
+            $sqlCheck = 'SELECT id FROM pcm_tecnicos WHERE cpf = :cpf';
+            $paramsCheck = [':cpf' => $data['cpf']];
+            $result = $this->adapter->createStatement($sqlCheck)->execute($paramsCheck)->current();
+
+            if ($result) {
+                // Se for INSERT ou se o CPF já pertencer a outro ID no UPDATE → erro
+                if (empty($data['id']) || $result['id'] != $data['id']) {
+                    throw new \Exception('Já existe um técnico cadastrado com este CPF.');
+                }
+            }
+
+
             if (!empty($data['id'])) {
                 $sql = 'UPDATE pcm_tecnicos SET 
                             nome = :nome, 

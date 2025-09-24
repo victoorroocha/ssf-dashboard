@@ -1095,7 +1095,9 @@
                                                                     // Adiciona o id_manutencao com o valor de osId
                                                                     const dadosComManutencao = {
                                                                         ...values,
-                                                                        id_manutencao: osId
+                                                                        id_manutencao: osId,
+                                                                        data_inicio: normalizarDatas(values.data_inicio),
+                                                                        data_fim: normalizarDatas(values.data_fim)
                                                                     };
                                                                     
                                                                     return $.ajax({
@@ -1121,7 +1123,9 @@
                                                                     const dadosComManutencao = {
                                                                         id: key,
                                                                         ...values,
-                                                                        id_manutencao: osId
+                                                                        id_manutencao: osId,
+                                                                        data_inicio: normalizarDatas(values.data_inicio),
+                                                                        data_fim: normalizarDatas(values.data_fim)
                                                                     };
                                                                     
                                                                     return $.ajax({
@@ -1200,7 +1204,8 @@
                                                                             label: { text: 'Início' },
                                                                             editorOptions: {
                                                                                 type: 'datetime',
-                                                                                displayFormat: 'dd/MM/yyyy HH:mm'
+                                                                                displayFormat: 'dd/MM/yyyy HH:mm',
+                                                                                useUtc: false
                                                                             },
                                                                             validationRules: [{ type: 'required' }]
                                                                         },
@@ -1210,7 +1215,8 @@
                                                                             label: { text: 'Fim' },
                                                                             editorOptions: {
                                                                                 type: 'datetime',
-                                                                                displayFormat: 'dd/MM/yyyy HH:mm'
+                                                                                displayFormat: 'dd/MM/yyyy HH:mm',
+                                                                                useUtc: false
                                                                             },
                                                                             validationRules: [{ type: 'required' }]
                                                                         },
@@ -1660,6 +1666,11 @@
 
             finalizarPopup.show();
         }
+
+        const normalizarDatas = (data) => {
+            if (!data) return null;
+            return DevExpress.localization.formatDate(new Date(data), 'yyyy-MM-dd HH:mm:ss');
+        };
         function finalizarOS(data) {
             DevExpress.ui.dialog.confirm(
                 "Tem certeza que deseja finalizar esta manutenção?\nApós finalizada, não será possível editar os dados.",
