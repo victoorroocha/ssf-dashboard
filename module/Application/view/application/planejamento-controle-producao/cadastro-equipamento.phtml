@@ -3,7 +3,7 @@
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Produção</h1>
     </div>
 
     <!-- Content Row -->
@@ -30,34 +30,28 @@
             dataSource: new DevExpress.data.CustomStore({
                 key: 'id',
                 load: function(loadOptions) {
-                    // Opcional: você pode adicionar paginação, filtros, ordenação aqui, se quiser
-                    // Por enquanto, só chama o endpoint direto sem params para simplificar
                     return $.ajax({
-                        url: '/planejamento-controle-manutencao/listar-equipamentos',
+                        url: '/planejamento-controle-producao/listar-equipamentos',
                         method: 'GET',
                         dataType: 'json'
                     }).then(response => {
                         if (response.success) {
                             return {
                                 data: response.data,
-                                totalCount: response.totalCount || response.data.length // se não tiver totalCount, usa length
+                                totalCount: response.totalCount || response.data.length
                             };
                         } else {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                             return { data: [], totalCount: 0 };
                         }
-                    }).catch(error => {
-                        if (error.responseJSON && error.responseJSON.message) {
-                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Erro ao carregar equipamentos!', 'error', 3000);
-                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar equipamentos!', 'error', 3000);
                         return { data: [], totalCount: 0 };
                     });
                 },
                 insert: function(values) {
                     return $.ajax({
-                        url: '/planejamento-controle-manutencao/salvar-equipamento',
+                        url: '/planejamento-controle-producao/salvar-equipamento',
                         method: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(values),
@@ -66,21 +60,17 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Equipamento salvo com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify('Equipamento salvo com sucesso!', 'success', 2000);
                         }
                         return response;
-                    }).catch(error => {
-                        if (error.responseJSON && error.responseJSON.message) {
-                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Erro ao salvar equipamento!', 'error', 3000);
-                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao salvar equipamento!', 'error', 3000);
                         return {};
                     });
                 },
                 update: function(key, values) {
                     return $.ajax({
-                        url: '/planejamento-controle-manutencao/salvar-equipamento',
+                        url: '/planejamento-controle-producao/salvar-equipamento',
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key, ...values }),
@@ -89,21 +79,17 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Equipamento atualizado com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify('Equipamento atualizado com sucesso!', 'success', 2000);
                         }
                         return response;
-                    }).catch(error => {
-                        if (error.responseJSON && error.responseJSON.message) {
-                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Erro ao atualizar equipamento!', 'error', 3000);
-                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar equipamento!', 'error', 3000);
                         return {};
                     });
                 },
                 remove: function(key) {
                     return $.ajax({
-                        url: '/planejamento-controle-manutencao/excluir-equipamento',
+                        url: '/planejamento-controle-producao/excluir-equipamento',
                         method: 'DELETE',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key }),
@@ -112,15 +98,11 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Equipamento excluído com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify('Equipamento excluído com sucesso!', 'success', 2000);
                         }
                         return response;
-                    }).catch(error => {
-                        if (error.responseJSON && error.responseJSON.message) {
-                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Erro ao excluir equipamento!', 'error', 3000);
-                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir equipamento!', 'error', 3000);
                         return {};
                     });
                 }
@@ -224,99 +206,34 @@
                     colCount: 2,
                     labelLocation: 'top',
                     items: [
-                        { dataField: 'nome', colSpan: 2, editorType: 'dxTextBox', label: { text: 'Nome do Equipamento' }, editorOptions: { width: '100%' }, validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                        { dataField: 'nome', editorType: 'dxTextBox', label: { text: 'Nome do Equipamento' }, validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                        { dataField: 'codigo', editorType: 'dxTextBox', label: { text: 'Código (TAG/Identificação)' }, validationRules: [{ type: 'required', message: 'TAG obrigatória' }] },
                         { 
-                            dataField: 'codigo', 
-                            editorType: 'dxTextBox', 
-                            label: { text: 'Código (TAG)' }, 
-                            editorOptions: { width: '100%' }, 
-                            validationRules: [{ type: 'required', message: 'Tag obrigatório' }]
+                            dataField: 'quantidade', editorType: 'dxNumberBox',
+                            editorOptions: {
+                                format: { type: 'fixedPoint', precision: 4 }
+                            },
+                            validationRules: [{ type: 'required' }]
                         },
+                        { 
+                            dataField: 'valor',  editorType: 'dxNumberBox',
+                            editorOptions: {
+                                format: { type: 'currency', currency: 'BRL', precision: 4 }
+                            },
+                            colSpan: 1,
+                            validationRules: [{ type: 'required' }] 
+                        },
+                        { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } },
                         {
                             dataField: 'status',
-                            editorType: 'dxSelectBox',
-                            label: { text: 'Status' },
+                            editorType: 'dxSwitch',
+                            label: { text: 'Ativo?' },
                             editorOptions: {
-                                items: ['Ativo', 'Inativo', 'Em Manutenção'],
-                                placeholder: 'Selecione o status',
-                                searchEnabled: true,
-                                showClearButton: true,
-                                value: 'Ativo',
-                                onInitialized: function(e) {
-                                    // tornar readonly se for novo registro
-                                    if (isNovoRegistro) {
-                                        e.component.option('disabled', true);
-                                    }
-                                }
-                            }
-                        },
-                        { 
-                            dataField: 'setor_id', 
-                            editorType: 'dxSelectBox', 
-                            label: { text: 'Setor' }, 
-                            editorOptions: getSelectBoxOptions('/planejamento-controle-manutencao/get-lookup-setores', 'nome', 'id', 'Selecione o setor') ,
-                            validationRules: [{ type: 'required', message: 'Setor obrigatório' }]
-                        },
-                        {
-                            dataField: 'centro_custo',
-                            colSpan: 2,
-                            editorType: 'dxSelectBox',
-                            label: { text: 'Centro de Custo' },
-                            editorOptions: {
-                                dataSource: new DevExpress.data.DataSource({
-                                    store: new DevExpress.data.CustomStore({
-                                        key: 'ID',
-                                        load: function (loadOptions) {
-                                            const deferred = $.Deferred();
-                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
-                                            const skip = loadOptions.skip || 0;
-                                            const take = loadOptions.take || 30;
-
-                                            return $.ajax({
-                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
-                                                dataType: 'json',
-                                                data: {
-                                                    search: searchValue,
-                                                    offset: skip,
-                                                    limit: take
-                                                }
-                                            }).then(result => {
-                                                const data = result.data || [];
-                                                return {
-                                                    data: data,
-                                                    totalCount: result.totalCount || data.length
-                                                };
-                                            }).catch(() => {
-                                                return { data: [], totalCount: 0 };
-                                            });
-                                        },
-                                        byKey: function (key) {
-                                            return $.ajax({
-                                                url: '/planejamento-controle-manutencao/get-centro-custo-lookup',
-                                                dataType: 'json',
-                                                data: { key: key }
-                                            }).then(result => {
-                                                const item = (result.data || []).find(d => d.ID == key);
-                                                return item || null;
-                                            });
-                                        }
-                                    }),
-                                    paginate: true,
-                                    pageSize: 30
-                                }),
-                                valueExpr: 'ID',
-                                displayExpr: 'DSC',
-                                searchEnabled: true,
-                                searchExpr: ['DSC'],
-                                searchTimeout: 500,
-                                minSearchLength: 0,
-                                placeholder: 'Digite para buscar...',
-                                showClearButton: true,
-                                showDataBeforeSearch: true
+                                switchedOnText: 'Ativo',
+                                switchedOffText: 'Inativo'
                             },
-                            validationRules: [{ type: 'required', message: 'Centro de Custo obrigatório' }]
-                        },
-                        { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } }
+                            colSpan: 2,
+                        }
                     ]
                 },
                 texts: {
@@ -324,68 +241,63 @@
                 }
             },
             columns: [
-                { dataField: 'nome', caption: 'Nome do Equipamento', validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
-                { dataField: 'codigo', caption: 'Código (TAG)', validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                { dataField: 'codigo', caption: 'Código (TAG/Identificação)', width: 120, alignment: 'center', },
+                { dataField: 'nome', caption: 'Nome do Equipamento' },
+                {
+                    dataField: 'quantidade',
+                    caption: 'Qtd. Total',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 150,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'quantidade_disponivel',
+                    caption: 'Qtd. Disponível',
+                    allowEditing: false,
+                    alignment: 'right',
+                    width: 150,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'valor',
+                    caption: 'Valor Unitário',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 120,
+                    dataType: 'number',
+                    format: { type: 'currency', currency: 'BRL', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                { 
+                    dataField: 'custo_total', caption: 'Custo Total', alignment: 'right',
+                    width: 120,
+                    dataType: 'number',
+                    allowEditing: false,
+                    format: { type: 'currency', currency: 'BRL', precision: 4 }
+                },
+                { dataField: 'observacoes', caption: 'Observações' },
                 {
                     dataField: 'status',
                     caption: 'Status',
-                    sortIndex: 0,
-                    sortOrder: 'asc',
-                    calculateSortValue: function(rowData) {
-                        const ordem = {
-                            'ativo': 0,
-                            'em manutenção': 1,
-                            'inativo': 2
-                        };
-                        return ordem[(rowData.status || '').toLowerCase()] ?? 99;
-                    }
+                    dataType: 'boolean',
+                    alignment: 'center',
+                    width: 120
                 },
-                {
-                    dataField: 'setor_id',
-                    caption: 'Setor',
-                    groupIndex: 0,
-                    lookup: {
-                        dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-setores')
-                        }),
-                        displayExpr: 'nome',
-                        valueExpr: 'id'
-                    }
-                },
-                {
-                    dataField: 'centro_custo',
-                    caption: 'Centro de Custo',
-                    width: 200,
-                    lookup: {
-                        dataSource: new DevExpress.data.CustomStore({
-                            load: () => $.getJSON('/planejamento-controle-manutencao/listar-centros-custo')
-                        }),
-                        displayExpr: 'DSC',
-                        valueExpr: 'ID'
-                    }
-                },
-                { dataField: 'observacoes', caption: 'Observações' }
             ],
             onInitNewRow: function(e) {
                 isNovoRegistro = true;
-                e.data.status = 'Ativo';
+                e.data.status = true;
             },
             onEditingStart: function(e) {
                 isNovoRegistro = false;
             },
             onRowUpdating: function(e) {
                 e.newData = { ...e.oldData, ...e.newData };
-            },
-            onRowPrepared: function (e) {
-                if (e.rowType === 'data') {
-                    const status = (e.data.status || '').toLowerCase();
-                    if (status === 'inativo') {
-                        e.rowElement.css({ backgroundColor: '#f8d7da', color: '#721c24' }); // vermelho clarinho e texto escuro
-                    }
-                    if (status === 'em manutenção') {
-                        e.rowElement.css({ backgroundColor: '#FFB347', color: '#5C3700' }); 
-                    }
-                }
             },
             onToolbarPreparing: function (e) {
                 // Aqui você pode personalizar ainda mais a barra de ferramentas
@@ -430,7 +342,17 @@
                         text: "Atualizar" 
                     }
                 });
-            },            
+            },     
+            onRowPrepared: function(e) {
+                if (e.rowType === "data") { // Apenas linhas de dados
+                    if (e.data.quantidade_disponivel === 0) {
+                        e.rowElement.css({
+                            "background-color": "#f8d7da", // Vermelho claro
+                            "color": "#721c24" // Opcional: texto vermelho escuro
+                        });
+                    }
+                }
+            },       
         });
 
         function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {

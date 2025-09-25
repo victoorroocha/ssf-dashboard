@@ -1370,7 +1370,7 @@ class PlanejamentoControleManutencaoRepository
                         cm.nome_solicitante,
                         s.nome AS nome_setor,
                         cm.prioridade,
-                        e.nome AS nome_equipamento,
+                        e.codigo || '-' || e.nome AS nome_equipamento,
                         tm.nome AS tipo_manutencao,
                         at.nome AS area_tecnica,
                         cm.descricao_defeito,

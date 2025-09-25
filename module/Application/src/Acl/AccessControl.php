@@ -203,6 +203,31 @@ class AccessControl
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
+        $this->acl->allow('Diretor', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
+        ]);
 
 
         // Gerente 
@@ -342,6 +367,31 @@ class AccessControl
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
+        $this->acl->allow('Gerente', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
+        ]);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'IndexController', ['index', 'filtrarDados']);
@@ -479,6 +529,31 @@ class AccessControl
             'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
+        ]);
+        $this->acl->allow('Coordenador', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
         ]);
 
         // Encarregado
@@ -618,6 +693,31 @@ class AccessControl
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
+        $this->acl->allow('Encarregado', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
+        ]);
 
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index', 'filtrarDados']);
@@ -755,6 +855,31 @@ class AccessControl
             'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
+        ]);
+        $this->acl->allow('Analista', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
         ]);
 
         // Assistente 
@@ -894,6 +1019,31 @@ class AccessControl
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
         ]);
+        $this->acl->allow('Assistente', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
+        ]);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'IndexController', ['index', 'filtrarDados']);
@@ -1030,6 +1180,31 @@ class AccessControl
             'listarCentrosCusto',
             'getCentroCustoLookup',
             'getProdutosEstoqueLookup'
+        ]);
+        $this->acl->allow('Auxiliar', 'PlanejamentoControleProducaoController', [
+           'cadastroDepartamento', 
+           'listarDepartamentos', 
+           'salvarDepartamento', 
+           'excluirDepartamento', 
+           'getLookupDepartamentos', 
+           'cadastroFuncionario', 
+           'listarFuncionarios', 
+           'salvarFuncionario', 
+           'excluirFuncionario', 
+           'getLookupFuncionarios', 
+           'cadastroEquipamento', 
+           'listarEquipamentos', 
+           'salvarEquipamento', 
+           'excluirEquipamento', 
+           'getLookupEquipamentos', 
+           'controleEmprestimo', 
+           'listarControlesEmprestimo', 
+           'salvarControleEmprestimo', 
+           'excluirControleEmprestimo', 
+           'getUsuariosSeniorLookup', 
+           'listarCentrosCusto', 
+           'getCentroCustoLookup', 
+           'getProdutosEstoqueLookup'
         ]);
 
         // Convidado

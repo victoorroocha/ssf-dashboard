@@ -13,32 +13,209 @@ class PlanejamentoControleProducaoRepository
         $this->adapter = $adapter;
     }
 
-    #region Cadastro Equipamentos
+    #region Cadastro Departamentos
+        public function listarDepartamentos()
+        {
+            $sql = 'SELECT id, nome, descricao, flg_ativo 
+                    FROM pcp_departamento 
+                    ORDER BY nome'; 
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function salvarDepartamento(array $data)
+        {
+            if (empty($data['nome'])) {
+                throw new \Exception('Nome do departamento é obrigatório.');
+            }
+
+            $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : false;
+
+            if (!empty($data['id'])) {
+                // Atualizar
+                $sql = 'UPDATE pcp_departamento SET 
+                            nome = :nome, 
+                            descricao = :descricao,
+                            flg_ativo = :flg_ativo
+                        WHERE id = :id';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                    ':id' => $data['id'],
+                ];
+            } else {
+                // Inserir
+                $sql = 'INSERT INTO pcp_departamento (nome, descricao, flg_ativo) 
+                        VALUES (:nome, :descricao, :flg_ativo)';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':descricao' => $data['descricao'] ?? null,
+                    ':flg_ativo' => $flgAtivo,
+                ];
+            }
+
+            $this->adapter->createStatement($sql)->execute($params);
+        }
+        public function excluirDepartamento($id)
+        {
+            if (empty($id)) {
+                throw new \Exception('ID do departamento não fornecido.');
+            }
+
+            $sql = 'UPDATE pcp_departamento SET flg_ativo = false WHERE id = :id';
+            $this->adapter->createStatement($sql)->execute([':id' => $id]);
+        }
+        public function getLookupDepartamentos()
+        {
+            $sql = 'SELECT id, nome, descricao 
+                    FROM pcp_departamento 
+                    WHERE flg_ativo = true 
+                    ORDER BY nome'; 
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    #endRegion
+
+    #region Cadastro Funcionários
+        public function listarFuncionarios()
+        {
+            $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, departamento_id, flg_ativo 
+                    FROM pcp_funcionario 
+                    ORDER BY id';
+            $result = $this->adapter->createStatement($sql)->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        public function salvarFuncionario(array $data)
+        {
+            if (empty($data['nome']) || empty($data['cpf']) || empty($data['cargo_funcao']) || empty($data['departamento_id'])) {
+                throw new \Exception('Nome, CPF, cargo/função e departamento são obrigatórios.');
+            }
+
+            $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : true;
+
+            // 🔎 Verifica se CPF já existe
+            $sqlCheck = 'SELECT id FROM pcp_funcionario WHERE cpf = :cpf';
+            $paramsCheck = [':cpf' => $data['cpf']];
+            $result = $this->adapter->createStatement($sqlCheck)->execute($paramsCheck)->current();
+
+            if ($result) {
+                if (empty($data['id']) || $result['id'] != $data['id']) {
+                    throw new \Exception('Já existe um funcionário cadastrado com este CPF.');
+                }
+            }
+
+            if (!empty($data['id'])) {
+                $sql = 'UPDATE pcp_funcionario SET 
+                            nome = :nome, 
+                            numcad = :numcad, 
+                            cpf = :cpf, 
+                            cargo_funcao = :cargo_funcao, 
+                            contato = :contato, 
+                            departamento_id = :departamento_id,
+                            flg_ativo = :flg_ativo
+                        WHERE id = :id';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':numcad' => $data['numcad'],
+                    ':cpf' => $data['cpf'],
+                    ':cargo_funcao' => $data['cargo_funcao'],
+                    ':contato' => $data['contato'] ?? null,
+                    ':departamento_id' => $data['departamento_id'],
+                    ':flg_ativo' => $flgAtivo,
+                    ':id' => $data['id']
+                ];
+            } else {
+                $sql = 'INSERT INTO pcp_funcionario (nome, numcad, cpf, cargo_funcao, contato, departamento_id, flg_ativo) 
+                        VALUES (:nome, :numcad, :cpf, :cargo_funcao, :contato, :departamento_id, :flg_ativo)';
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':numcad' => $data['numcad'],
+                    ':cpf' => $data['cpf'],
+                    ':cargo_funcao' => $data['cargo_funcao'],
+                    ':contato' => $data['contato'] ?? null,
+                    ':departamento_id' => $data['departamento_id'],
+                    ':flg_ativo' => $flgAtivo
+                ];
+            }
+
+            $this->adapter->createStatement($sql)->execute($params);
+        }
+        public function excluirFuncionario($id)
+        {
+            if (empty($id)) {
+                throw new \Exception('ID do funcionário não fornecido.');
+            }
+
+            $sql = 'UPDATE pcp_funcionario SET flg_ativo = false WHERE id = :id';
+            $this->adapter->createStatement($sql)->execute([':id' => $id]);
+        }
+        public function getLookupFuncionarios()
+        {
+            $sql = 'SELECT 
+                        f.id, 
+                        f.nome, 
+                        f.cpf, 
+                        f.cargo_funcao, 
+                        f.contato, 
+                        f.departamento_id,
+                        d.nome as nome_departamento
+                    FROM pcp_funcionario f
+                    LEFT JOIN pcp_departamento d ON d.id = f.departamento_id
+                    WHERE f.flg_ativo = true 
+                    ORDER BY d.nome, f.nome';
+            $result = $this->adapter->createStatement($sql)->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+    #endRegion
+
+    #region Cadastro Equipamentos 
         public function listarEquipamentos()
         {
             $sql = "SELECT 
                         e.id, 
                         e.codigo, 
                         e.nome, 
-                        e.codigo || '-' || e.nome ||
-                        COALESCE(
-                            CASE 
-                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
-                            END, 
-                            ''
-                        ) AS dsc_equipamento,
-                        e.setor_id, 
-                        s.nome as setor_nome,
-                        e.status, 
-                        e.observacoes, 
-                        e.centro_custo 
-                    FROM equipamentos e
-                    left join setores s on s.id = e.setor_id 
-                    ORDER BY codigo";
+                        e.quantidade,
+                        e.quantidade_disponivel,
+                        case when quantidade_disponivel = 0 then true else false end disabled,
+                        e.valor,
+                        e.custo_total,
+                        e.codigo || ' - ' || e.nome AS dsc_equipamento,
+                        e.observacoes,
+                        e.status
+                    FROM pcp_equipamentos e
+                    ORDER BY e.codigo";
+                    
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
             foreach ($result as $row) {
+                $row['quantidade'] = floatval($row['quantidade']);
+                $row['quantidade_disponivel'] = floatval($row['quantidade_disponivel']);
                 $data[] = $row;
             }
             return $data;
@@ -52,8 +229,9 @@ class PlanejamentoControleProducaoRepository
                 if (empty($data['codigo'])) {
                     throw new \Exception('Código do equipamento é obrigatório.');
                 }
+
                 // Verifica se já existe equipamento com o mesmo código (exceto o atual, se for update)
-                $sqlCheck = "SELECT COUNT(*) AS total FROM equipamentos WHERE codigo = :codigo";
+                $sqlCheck = "SELECT COUNT(*) AS total FROM pcp_equipamentos WHERE codigo = :codigo";
                 $paramsCheck = [':codigo' => $data['codigo']];
                 if (!empty($data['id'])) {
                     $sqlCheck .= " AND id <> :id";
@@ -66,25 +244,34 @@ class PlanejamentoControleProducaoRepository
             #endregion
 
             if (!empty($data['id'])) {
-                $sql = 'UPDATE equipamentos SET codigo = :codigo, nome = :nome, setor_id = :setor_id, status = :status, observacoes = :observacoes, centro_custo = :centro_custo WHERE id = :id';
+                $sql = 'UPDATE pcp_equipamentos 
+                        SET codigo = :codigo, 
+                            nome = :nome, 
+                            quantidade = :quantidade,
+                            valor = :valor,
+                            observacoes = :observacoes,
+                            status = :status
+                        WHERE id = :id';
                 $params = [
                     ':codigo' => $data['codigo'],
                     ':nome' => $data['nome'],
-                    ':setor_id' => $data['setor_id'],
-                    ':status' => $data['status'],
+                    ':quantidade' => $data['quantidade'] ?? null,
+                    ':valor' => $data['valor'] ?? null,
                     ':observacoes' => $data['observacoes'] ?? null,
-                    ':centro_custo' => $data['centro_custo'],
+                    ':status' => $data['status'] ?? null,
                     ':id' => $data['id']
                 ];
             } else {
-                $sql = 'INSERT INTO equipamentos (codigo, nome, setor_id, status, observacoes, centro_custo) VALUES (:codigo, :nome, :setor_id, :status, :observacoes, :centro_custo)';
+                $sql = 'INSERT INTO pcp_equipamentos (codigo, nome, quantidade, quantidade_disponivel, valor, observacoes, status) 
+                        VALUES (:codigo, :nome, :quantidade, :quantidade_disponivel, :valor, :observacoes, :status)';
                 $params = [
                     ':codigo' => $data['codigo'],
                     ':nome' => $data['nome'],
-                    ':setor_id' => $data['setor_id'],
-                    ':status' => $data['status'],
+                    ':quantidade' => $data['quantidade'] ?? null,
+                    ':quantidade_disponivel' => $data['quantidade'] ?? null, //na inserção mesma quantidade total.
+                    ':valor' => $data['valor'] ?? null,
                     ':observacoes' => $data['observacoes'] ?? null,
-                    ':centro_custo' => $data['centro_custo']
+                    ':status' => $data['status'] ?? null
                 ];
             }
 
@@ -92,58 +279,46 @@ class PlanejamentoControleProducaoRepository
         }
         public function excluirEquipamento($id)
         {
-            $sql = 'DELETE FROM equipamentos WHERE id = :id';
+            $sql = 'DELETE FROM pcp_equipamentos WHERE id = :id';
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
         }
         public function getLookupEquipamentos($search = null, $key = null, $offset = 0, $limit = 30)
         {
-            // Acrescenta filtro de pesquisa se houver
             $ands = "";
             if (!empty($search)) {
-                // Remove caracteres especiais para evitar problemas na busca
                 $searchTerm = str_replace(['%', '_'], ['\%', '\_'], $search);
-                
                 $ands .= " AND (e.codigo::text ILIKE '%{$searchTerm}%' 
                             OR e.nome::text ILIKE '%{$searchTerm}%' 
-                            OR s.nome::text ILIKE '%{$searchTerm}%' 
-                            OR e.observacoes::text ILIKE '%{$searchTerm}%' 
-                            OR e.centro_custo::text ILIKE '%{$searchTerm}%') ";
+                            OR e.observacoes::text ILIKE '%{$searchTerm}%') ";
             }
 
             if (!empty($key)) {
                 $ands .= " AND e.id = $key ";
             }
             
-            // Query principal com paginação
             $sql = "SELECT 
                         e.id, 
                         e.codigo, 
                         e.nome, 
-                        e.codigo || '-' || e.nome || COALESCE(
-                            CASE 
-                                WHEN e.observacoes IS NOT NULL AND e.observacoes <> '' THEN ' - Observação: ' || e.observacoes
-                            END, 
-                            ''
-                        ) AS dsc_equipamento,
-                        e.setor_id, 
-                        s.nome as setor_nome,
-                        e.status, 
-                        e.observacoes, 
-                        e.centro_custo 
-                    FROM equipamentos e
-                    LEFT JOIN setores s ON s.id = e.setor_id 
-                    WHERE status NOT LIKE 'Inativo'
+                        e.quantidade,
+                        e.quantidade_disponivel,
+                        case when quantidade_disponivel = 0 then true else false end disabled,
+                        e.valor,
+                        e.custo_total,
+                        e.codigo || ' - ' || e.nome AS dsc_equipamento,
+                        e.observacoes,
+                        e.status
+                    FROM pcp_equipamentos e
+                    WHERE 1=1
                     {$ands}
-                    ORDER BY codigo
-                    LIMIT $limit OFFSET $offset";  // Paginação incluída aqui
+                    ORDER BY e.codigo
+                    LIMIT $limit OFFSET $offset";
                     
             $result = $this->adapter->createStatement($sql)->execute();
 
-            // Query para contar o total de registros (para paginação)
             $countSql = "SELECT COUNT(*) as total 
-                        FROM equipamentos e
-                        LEFT JOIN setores s ON s.id = e.setor_id 
-                        WHERE status NOT LIKE 'Inativo'
+                        FROM pcp_equipamentos e
+                        WHERE 1=1
                         {$ands}";
                         
             $countResult = $this->adapter->createStatement($countSql)->execute()->current();
@@ -151,6 +326,8 @@ class PlanejamentoControleProducaoRepository
 
             $data = [];
             foreach ($result as $row) {
+                $row['quantidade'] = floatval($row['quantidade']);
+                $row['quantidade_disponivel'] = floatval($row['quantidade_disponivel']);
                 $data[] = $row;
             }
             
@@ -159,44 +336,127 @@ class PlanejamentoControleProducaoRepository
                 'totalCount' => $totalCount
             ];
         }
-        public function atualizarStatusEquipamentos() // Essa função atualiza o status dos equipamentos com base nas manutenções ativas
+        public function recalcularQuantidadeEquipamento($equipamentoId)
         {
-            $this->adapter->getDriver()->getConnection()->beginTransaction();
+            // 1. Pega a quantidade total cadastrada no equipamento
+            $sqlTotal = "SELECT quantidade FROM pcp_equipamentos WHERE id = :id";
+            $result = $this->adapter->createStatement($sqlTotal)->execute([':id' => $equipamentoId])->current();
+            $quantidadeTotal = $result ? (int)$result['quantidade'] : 0;
 
-            try {
-                // Atualiza para "Em Manutenção" se a data_inicio for menor ou igual a hoje e não tiver data_fim ou data_fim maior que hoje
-                $sqlUpdateManutencao = "
-                    UPDATE equipamentos
-                    SET status = 'Em Manutenção'
-                    WHERE status <> 'Inativo' 
-                    AND id IN (
-                        SELECT DISTINCT equipamento_id
-                        FROM controle_manutencao
-                        WHERE data_inicio <= CURRENT_DATE
-                        AND (data_final IS NULL OR data_final > CURRENT_DATE)
-                    )
-                ";
-                $this->adapter->createStatement($sqlUpdateManutencao)->execute();
+            // 2. Soma todos os empréstimos ativos para esse equipamento
+            $sqlEmprestimos = "SELECT COALESCE(SUM(quantidade_emprestimo), 0) AS total_emprestado
+                            FROM pcp_controle_emprestimo
+                            WHERE equipamento_id = :id";
+            $resultEmprestimos = $this->adapter->createStatement($sqlEmprestimos)->execute([':id' => $equipamentoId])->current();
+            $totalEmprestado = $resultEmprestimos ? (int)$resultEmprestimos['total_emprestado'] : 0;
 
-                // Atualiza para "Ativo" se a última manutenção tiver data_fim menor ou igual a hoje ou não houver mais manutenção ativa
-                $sqlUpdateAtivo = "
-                    UPDATE equipamentos
-                    SET status = 'Ativo'
-                    WHERE status <> 'Inativo'
-                    AND id NOT IN (
-                        SELECT DISTINCT equipamento_id
-                        FROM controle_manutencao
-                        WHERE data_inicio <= CURRENT_DATE
-                        AND (data_final IS NULL OR data_final > CURRENT_DATE)
-                    )
-                ";
-                $this->adapter->createStatement($sqlUpdateAtivo)->execute();
-                $this->adapter->getDriver()->getConnection()->commit();
+            // 3. Calcula o disponível
+            $quantidadeDisponivel = max(0, $quantidadeTotal - $totalEmprestado);
 
-            } catch (\Exception $e) {
-                $this->adapter->getDriver()->getConnection()->rollback();
-                throw $e;
+            // 4. Atualiza a tabela de equipamentos
+            $sqlUpdate = "UPDATE pcp_equipamentos 
+                        SET quantidade_disponivel = :disponivel
+                        WHERE id = :id";
+            $this->adapter->createStatement($sqlUpdate)->execute([
+                ':disponivel' => $quantidadeDisponivel,
+                ':id' => $equipamentoId
+            ]);
+        }
+    #endRegion
+
+    #region Controle de Empréstimo
+        public function listarControlesEmprestimo()
+        {
+            $sql = "SELECT 
+                        cm.*,
+                        pf.numcad as matricula,
+                        pd.nome as dsc_departamento,
+                        pe.quantidade_disponivel
+                    FROM pcp_controle_emprestimo cm
+                    LEFT JOIN pcp_funcionario pf on pf.id = cm.funcionario_id
+                    LEFT JOIN pcp_departamento pd on pd.id = pf.departamento_id
+                    LEFT JOIN pcp_equipamentos pe on pe.id = cm.equipamento_id";
+            $result = $this->adapter->createStatement($sql)->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $row['quantidade_emprestimo'] = floatval($row['quantidade_emprestimo']);
+                $row['quantidade_disponivel'] = floatval($row['quantidade_disponivel']);
+                $data[] = $row;
             }
+            return $data;
+        }
+        public function salvarControleEmprestimo(array $data)
+        {
+            // Validações
+            if (isset($data['quantidade_emprestimo']) && $data['quantidade_emprestimo'] > 0) {
+                $equipamentoId = $data['equipamento_id'];
+                $idAtual = $data['id'] ?? null;
+
+                // Buscar quantidade total do equipamento
+                $sqlTotal = "SELECT quantidade FROM pcp_equipamentos WHERE id = :id";
+                $equipamento = $this->adapter->createStatement($sqlTotal)->execute([':id' => $equipamentoId])->current();
+                $quantidadeTotal = (float)($equipamento['quantidade'] ?? 0);
+
+                // Somar todas as quantidades já emprestadas, exceto o registro atual se for edição
+                $sqlEmprestado = "SELECT COALESCE(SUM(quantidade_emprestimo),0) AS emprestado
+                                FROM pcp_controle_emprestimo
+                                WHERE equipamento_id = :equipamento_id
+                                " . (!empty($idAtual) ? "AND id <> :id" : "");
+                $params = [':equipamento_id' => $equipamentoId];
+                if (!empty($idAtual)) {
+                    $params[':id'] = $idAtual;
+                }
+                $emprestado = $this->adapter->createStatement($sqlEmprestado)->execute($params)->current();
+                $quantidadeEmprestada = (float)$emprestado['emprestado'];
+
+                // Calcula quantidade disponível
+                $quantidadeDisponivel = $quantidadeTotal - $quantidadeEmprestada;
+
+                if ($data['quantidade_emprestimo'] > $quantidadeDisponivel) {
+                    throw new \InvalidArgumentException('Quantidade a ser emprestada não pode ser superior a quantidade disponível!');
+                }
+            }
+
+            $params = [
+                ':data_emprestimo' => $data['data_emprestimo'] ?? null,
+                ':funcionario_id' => $data['funcionario_id'] ?? null,
+                ':equipamento_id' => $data['equipamento_id'] ?? null,
+                ':quantidade_emprestimo' => $data['quantidade_emprestimo'] ?? 0,
+                ':data_devolucao' => $data['data_devolucao'] ?? null,
+                ':observacoes' => $data['observacoes'] ?? null,
+            ];
+
+            if (!empty($data['id'])) {
+                $sql = "UPDATE pcp_controle_emprestimo SET 
+                            data_emprestimo = :data_emprestimo,
+                            funcionario_id = :funcionario_id,
+                            equipamento_id = :equipamento_id,
+                            quantidade_emprestimo = :quantidade_emprestimo,
+                            data_devolucao = :data_devolucao,
+                            observacoes = :observacoes
+                        WHERE id = :id";
+                $params[':id'] = $data['id'];
+            } else {
+                $sql = "INSERT INTO pcp_controle_emprestimo (
+                    data_emprestimo, funcionario_id, equipamento_id, 
+                    quantidade_emprestimo, data_devolucao, observacoes
+                ) VALUES (
+                    :data_emprestimo, :funcionario_id, :equipamento_id, 
+                    :quantidade_emprestimo, :data_devolucao, :observacoes
+                )";
+            }
+            $this->adapter->createStatement($sql)->execute($params);
+
+            // Sempre recalcula a quantidade disponível após salvar
+            if (!empty($data['equipamento_id'])) {
+                $this->recalcularQuantidadeEquipamento($data['equipamento_id']);
+            }
+        }
+        public function excluirControleEmprestimo($id)
+        {
+            $sql = "DELETE FROM pcp_controle_emprestimo WHERE id = :id";
+            $this->adapter->createStatement($sql)->execute([':id' => $id]);
         }
     #endRegion
 }

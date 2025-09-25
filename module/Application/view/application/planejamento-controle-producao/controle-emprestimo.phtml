@@ -1,0 +1,711 @@
+<style>
+    #print-area {
+        background: white;
+        width: 100%;
+        max-width: 100%; /* Alterado para ocupar toda a largura disponível */
+        margin: 0 auto; /* Centralizado */
+        padding: 15px; /* Reduzido para economizar espaço */
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 0.9em; /* Tamanho de fonte base reduzido */
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 8px; /* Reduzido */
+        margin-bottom: 15px; /* Reduzido */
+        flex-wrap: wrap;
+    }
+
+    .header h1 {
+        font-size: 1.25em; /* Usando em para escalabilidade */
+        margin: 0;
+        color: #0f172a;
+        font-weight: 600; /* Mais semântico que bold */
+    }
+
+    .header .numero-os {
+        font-size: 18px;
+        color: #ef4444;
+        font-weight: 500;
+    }
+
+    .section {
+        margin-bottom: 15px; /* Reduzido */
+    }
+
+    .section-title {
+        font-weight: 600;
+        background: #0f172a;
+        color: white;
+        padding: 5px 8px; /* Reduzido */
+        font-size: 0.95em; /* Reduzido */
+        border-radius: 3px; /* Adicionado para suavizar */
+        margin-bottom: 8px; /* Adicionado espaçamento */
+    }
+
+    .field-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px; /* Reduzido para economizar espaço */
+    }
+
+    .field {
+        flex: 1 1 calc(50% - 8px); /* Ajustado para o novo gap */
+        padding: 6px; /* Reduzido */
+        border: 1px solid #e2e8f0; /* Cor mais suave */
+        border-radius: 4px;
+        box-sizing: border-box;
+        background-color: #f8fafc; /* Fundo sutil para melhor legibilidade */
+    }
+    .field.third {
+        flex: 1 1 calc(33.333% - 8px); /* para 3 colunas com gap de 8px */
+    }
+
+    .field.full {
+        flex: 1 1 100%;
+    }
+
+    .label {
+        font-weight: 500; /* Mais suave que bold */
+        display: block;
+        margin-bottom: 2px; /* Reduzido */
+        font-size: 0.85em;
+        color: #475569; /* Cor mais suave */
+    }
+
+    .value {
+        font-size: 0.9em;
+        min-height: 1.2em; /* Baseado em em para escalabilidade */
+        word-break: break-word;
+        color: #1e293b; /* Cor mais escura para melhor contraste */
+        padding: 2px 0; /* Pequeno espaçamento interno */
+        white-space: pre-wrap; /* mantém quebras de linha do texto */
+        word-wrap: break-word; /* reforço para não estourar o layout */
+    }
+
+    .signature {
+        margin-top: 30px; /* Reduzido */
+        border-top: 1px dashed #cbd5e1; /* Cor mais suave */
+        text-align: center;
+        padding-top: 8px;
+        font-size: 0.9em;
+        color: #64748b; /* Cor mais suave */
+    }
+
+    /* #ordemServicoContent {
+        max-height: 90vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    } */
+
+    /* Adicionando responsividade para telas menores */
+    @media (max-width: 600px) {
+        .field {
+            flex: 1 1 100%; /* Em telas pequenas, campos ocupam linha inteira */
+        }
+        
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .header .numero-os {
+            align-self: flex-end;
+        }
+    }
+
+
+    @media print {
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        #print-area {
+            page-break-inside: avoid;
+        }
+
+        /* Evita quebra dentro das seções */
+        .section, .signature {
+            page-break-inside: avoid;
+            page-break-before: auto;
+            page-break-after: auto;
+        }
+
+        /* Força a assinatura a ir para a próxima página se não couber */
+        .signature {
+            page-break-before: always;
+        }
+    }
+
+
+    /* teste template equipamentos selectBox */
+    .equipamento-template {
+        padding: 8px;
+        line-height: 1.4;
+    }
+
+    .equipamento-header {
+        font-size: 14px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 3px;
+    }
+
+    .equipamento-details {
+        font-size: 12px;
+        color: #020202ff;
+    }
+
+    .equipamento-details div {
+        margin-bottom: 2px;
+    }
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Produção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Empréstimo</p>
+
+                    <div id="gridControleEmprestimo"></div>
+                    <div id="popupOS"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        var produtosLookup = []; 
+        // getLookupProdutos();
+
+        let controleEmprestimoGrid = $('#gridControleEmprestimo').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function () {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/listar-controles-emprestimo',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar controles!', 'error', 5000);
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function (values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-controle-emprestimo',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao salvar controle!', 'error', 5000);
+                        return {};
+                    });
+                },
+                update: function (key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-controle-emprestimo',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle atualizado com sucesso!', 'success', 5000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar controle!', 'error', 5000);
+                        return {};
+                    });
+                },
+                remove: function (key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/excluir-controle-emprestimo',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir controle!', 'error', 3000);
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            columnAutoWidth: true,
+            width: '100%',
+            height: 'auto',
+            showBorders: true,
+            columnChooser: {
+                enabled: true,
+                mode: "dragAndDrop", // or "select"
+                position: { 
+                    my: "right", 
+                    at: "right", 
+                    of: ".dx-datagrid-column-chooser-button" 
+                }
+            },
+            groupPanel: {
+                visible: true,
+            },
+            toolbar: {
+                items: [
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-expand", // ícone para expandir
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#gridControleEmprestimo").dxDataGrid("instance");
+                                grid.expandAll(); // Expande todos os grupos
+                            }
+                        }
+                    },
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-compress", // ícone para colapsar
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#gridControleEmprestimo").dxDataGrid("instance");
+                                grid.collapseAll(); // Colapsa todos os grupos
+                            }
+                        }
+                    },
+                    {
+                        name: "refresh", // Define o nome do botão
+                        location: "after", // Coloca o botão após os outros itens na toolbar
+                        widget: "dxButton",
+                        options: {
+                            icon: "refresh", // Ícone de refresh
+                            onClick: function() {
+                                // Lógica para atualizar/recarregar os dados da grid
+                                $("#gridControleEmprestimo").dxDataGrid("instance").refresh(); // Atualiza a grid
+                            },
+                            text: "Atualizar" // Texto exibido no botão
+                        }
+                    }
+                ]
+            },
+            paging: {
+                pageSize: 500,
+            },
+            pager: {
+                visible: true,
+                allowedPageSizes: [5, 10, 100, 200, 500],
+                showPageSizeSelector: true,
+                showInfo: true,
+                showNavigationButtons: true,
+            },
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            export: {
+                enabled: true,
+                fileName: "Controle Empréstimos",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            hoverStateEnabled: true,
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: true,
+                useIcons: true,
+                popup: {
+                    title: "Empréstimo",
+                    showTitle: true,
+                    width: '800px',
+                    resizeEnabled: true,
+                    autoResizeEnabled: true,
+                    height: 'auto', 
+                    // maxHeight: '95vh'
+                },
+                form: {
+                    colCount: 2,
+                    labelLocation: 'top',
+                    items: [
+                        { 
+                            dataField: 'data_emprestimo', 
+                            label: { text: 'Data Empréstimo' }, 
+                            editorType: 'dxDateBox', 
+                            editorOptions: { 
+                                type: 'date', 
+                                value: new Date() // define a data atual como padrão
+                            }, 
+                            colSpan: 2 
+                        },
+                        { 
+                            dataField: 'funcionario_id', 
+                            label: { text: 'Funcionário' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 2, 
+                            editorOptions: getSelectBoxOptions('/planejamento-controle-producao/get-lookup-funcionarios', 'nome', 'id', 'Selecione o funcionário') ,
+                            validationRules: [{ type: 'required' }]
+                        },
+                        { 
+                            dataField: 'equipamento_id', 
+                            label: { text: 'Equipamento' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 2, 
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'id',
+                                        load: function(loadOptions) {
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+                                            
+                                            return $.ajax({
+                                                url: '/planejamento-controle-producao/get-lookup-equipamentos',
+                                                dataType: 'json',
+                                                data: { 
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || result;
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || 1000
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function(key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-producao/get-lookup-equipamentos',
+                                                dataType: 'json',
+                                                data: { key: key }
+                                            }).then(result => {
+                                                const item = result.data || result;
+                                               
+                                                return item;
+                                            });
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30
+                                }),
+                                valueExpr: 'id',
+                                searchEnabled: true,
+                                searchExpr: ['codigo', 'nome'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                // ✅ Recarregar ao abrir
+                                onOpened: function(e) {
+                                    e.component.getDataSource().reload();
+                                },
+                                itemTemplate: function(data) {
+                                    const indisponivel = data.quantidade_disponivel === 0 ? " (Indisponível)" : "";
+                                    return `
+                                        <div class="equipamento-template">
+                                            <div class="equipamento-header">
+                                                <strong>${data.codigo || 'Sem código'}</strong> - ${data.nome || 'Sem nome'} <span style="color:darkred; font-weight:bold;">${indisponivel}</span>
+                                            </div>
+                                            <div class="equipamento-details">
+                                                <div><small><strong>Qtd. Total:</strong> ${data.quantidade}</small></div>
+                                                <div><small><strong>Qtd. Disponível:</strong> ${data.quantidade_disponivel}</small></div>
+                                                <div><small><strong>Observação:</strong> ${data.observacoes || 'Nenhuma'}</small></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                },
+                                displayExpr: function(item) {
+                                    return item ? `${item.codigo} - ${item.nome}` : '';
+                                },
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            } 
+                        },
+                        {
+                            dataField: 'quantidade_emprestimo',
+                            editorType: 'dxNumberBox',
+                            editorOptions: { format: { type: 'fixedPoint', precision: 4 } },
+                            validationRules: [
+                                { type: 'required' },
+                            ]
+                        },
+                        { 
+                            dataField: 'data_devolucao', 
+                            label: { text: 'Data Devolução' }, 
+                            editorType: 'dxDateBox', 
+                            editorOptions: { 
+                                type: 'date', 
+                                min: new Date()
+                            }, 
+                            colSpan: 2 
+                        },
+                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                    ]
+                }
+            },
+            columns: [
+                { 
+                    dataField: 'id', 
+                    caption: 'ID', 
+                    alignment: 'center', 
+                    width: 110,
+                    calculateDisplayValue: function(rowData) {
+                        return String(rowData.id).padStart(5, '0');
+                    }
+                },
+                { dataField: 'data_emprestimo', caption: 'Dt. Emprestimo', dataType: 'date', alignment: 'center', width: 150 },
+                { dataField: 'matricula', caption: 'Matricula', visible: true, alignment: 'center' },
+                { dataField: 'funcionario_id', caption: 'Funcionário', visible: true, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-producao/listar-funcionarios') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'dsc_departamento', caption: 'Departamento', visible: true },
+                { 
+                    dataField: 'equipamento_id', 
+                    caption: 'Equipamento', 
+                    lookup: { 
+                        dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-producao/listar-equipamentos') }), 
+                        displayExpr: 'dsc_equipamento', 
+                        valueExpr: 'id' 
+                    },
+                    setCellValue: function(newData, value, currentRowData) {
+                        newData.equipamento_id = value;
+
+                        // Pega o item selecionado no lookup (que já tem centro_custo_id)
+                        const selectedItem = this.lookup.items.find(item => item.id === value);
+                    }
+                },
+                {
+                    dataField: 'quantidade_emprestimo',
+                    caption: 'Qtd. Empréstimo',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 150,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                { dataField: 'data_devolucao', caption: 'Dt. Devolução', dataType: 'date', alignment: 'center', width: 150 },
+                { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
+                {
+                    type: 'buttons',
+                    width: 120,
+                    alignment: 'center',
+                    buttons: [
+                        {
+                            name: 'edit',
+                        },
+                        {
+                            name: 'delete',
+                        },
+                    ]
+                },
+            ],
+            columns: [
+                { 
+                    dataField: 'id', 
+                    caption: 'ID', 
+                    alignment: 'center', 
+                    width: 110,
+                    calculateDisplayValue: function(rowData) {
+                        return String(rowData.id).padStart(5, '0');
+                    }
+                },
+                { dataField: 'data_emprestimo', caption: 'Dt. Emprestimo', dataType: 'date', alignment: 'center', width: 150 },
+                { dataField: 'matricula', caption: 'Matricula', visible: true, alignment: 'center' },
+                { dataField: 'funcionario_id', caption: 'Funcionário', visible: true, lookup: { dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-producao/listar-funcionarios') }), displayExpr: 'nome', valueExpr: 'id' } },
+                { dataField: 'dsc_departamento', caption: 'Departamento', visible: true },
+                { 
+                    dataField: 'equipamento_id', 
+                    caption: 'Equipamento', 
+                    lookup: { 
+                        dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-producao/listar-equipamentos') }), 
+                        displayExpr: 'dsc_equipamento', 
+                        valueExpr: 'id' 
+                    },
+                    setCellValue: function(newData, value, currentRowData) {
+                        newData.equipamento_id = value;
+
+                        // Pega o item selecionado no lookup (que já tem centro_custo_id)
+                        const selectedItem = this.lookup.items.find(item => item.id === value);
+                    }
+                },
+                {
+                    dataField: 'quantidade_emprestimo',
+                    caption: 'Qtd. Empréstimo',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 150,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                { dataField: 'data_devolucao', caption: 'Dt. Devolução', dataType: 'date', alignment: 'center', width: 150 },
+                { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
+                {
+                    type: 'buttons',
+                    width: 120,
+                    alignment: 'center',
+                    buttons: [
+                        {
+                            name: 'edit',
+                        },
+                        {
+                            name: 'delete',
+                        },
+                    ]
+                },
+            ],
+            onInitNewRow: function(e) {
+                e.data.data_emprestimo = new Date();
+                
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                    if (form) {
+                        form.updateData('data_emprestimo', new Date());
+                    }
+                }, 100);
+            },
+            onRowUpdating: function (e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            },
+            onToolbarPreparing: function (e) {
+                // Aqui você pode personalizar ainda mais a barra de ferramentas
+                var toolbarItems = e.toolbarOptions.items;
+
+                // Adicionar os botões de expandir/colapsar
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll(); // Expande todos os grupos
+                        }
+                    }
+                });
+
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll(); // Colapsa todos os grupos
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    name: "refresh", // Adiciona o botão refresh na toolbar
+                    location: "after", // Coloca depois dos outros itens
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh", // Ícone do botão (ícone de atualização)
+                        onClick: function() {
+                            // Recarrega os dados da grid
+                            e.component.refresh(); // Atualiza a grid
+                        },
+                        text: "Atualizar" 
+                    }
+                });
+            },             
+        });
+
+
+        const normalizarDatas = (data) => {
+            if (!data) return null;
+            return DevExpress.localization.formatDate(new Date(data), 'yyyy-MM-dd HH:mm:ss');
+        };
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: 'raw',
+                    load: function () {
+                        return $.ajax({
+                            url: url,
+                            method: 'GET',
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, 'error', 3000);
+                                return [];
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true
+            };
+        }
+    });
+</script>

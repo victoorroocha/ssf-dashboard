@@ -1,0 +1,272 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Manutenção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Cadastro Departamentos</p>
+
+                    <div id="gridDepartamentos"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        let departamentosGrid = $('#gridDepartamentos').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function() {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/listar-departamentos',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao carregar departamento!', 'error', 3000);
+                        }
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function(values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-departamento',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Departamento salva com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao salvar Departamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                update: function(key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-departamento',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Departamento atualizada com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao atualizar Departamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                },
+                remove: function(key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/excluir-departamento',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Departamento excluída com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(error => {
+                        if (error.responseJSON && error.responseJSON.message) {
+                            DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
+                        } else {
+                            DevExpress.ui.notify('Erro ao excluir Departamento!', 'error', 3000);
+                        }
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            width: '100%',
+            columnAutoWidth: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            paging: {
+                pageSize: 20
+            },
+            pager: {
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 20, 50],
+                showInfo: true
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto'
+            },
+            headerFilter: {
+                visible: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Pesquisar...'
+            },
+            grouping: {
+                autoExpandAll: false
+            },
+            groupPanel: {
+                visible: false,
+                emptyPanelText: 'Arraste uma coluna aqui para agrupar'
+            },
+            export: {
+                enabled: true,
+                fileName: 'departamento',
+                allowExportSelectedData: false
+            },
+            toolbar: {
+                items: [
+                    'groupPanel',
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#gridDepartamentos').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'plus',
+                            hint: 'Adicionar Área',
+                            onClick: function () {
+                                $('#gridDepartamentos').dxDataGrid('instance').addRow();
+                            }
+                        }
+                    }
+                ]
+            },
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: false,
+                useIcons: true,
+                popup: {
+                    title: 'Departamento',
+                    showTitle: true,
+                    width: 450,
+                    height: 'auto',
+                    position: {
+                        my: 'center',
+                        at: 'center',
+                        of: window
+                    }
+                },
+                form: {
+                    colCount: 1, 
+                    labelLocation: 'top',
+                    items: [
+                        {
+                            dataField: 'nome',
+                            editorType: 'dxTextBox',
+                            label: { text: 'Departamento' },
+                            editorOptions: {
+                                width: '100%'
+                            },
+                            validationRules: [
+                                { type: 'required', message: 'Nome é obrigatório' }
+                            ]
+                        },
+                        {
+                            dataField: 'descricao',
+                            editorType: 'dxTextArea',
+                            label: { text: 'Descrição' },
+                            editorOptions: {
+                                height: 100,
+                                width: '100%'
+                            }
+                        },
+                        {
+                            dataField: 'flg_ativo',
+                            editorType: 'dxSwitch',
+                            label: { text: 'Ativo?' },
+                            editorOptions: {
+                                switchedOnText: 'Sim',
+                                switchedOffText: 'Não'
+                            }
+                        }
+                    ]
+                },
+                texts: {
+                    confirmDeleteMessage: 'Tem certeza que deseja excluir esta área? Esta ação não pode ser desfeita.'
+                }
+            },
+            columns: [
+                {
+                    dataField: 'nome',
+                    caption: 'Departamento',
+                    validationRules: [{ type: 'required', message: 'Departamento é obrigatório' }]
+                },
+                {
+                    dataField: 'descricao',
+                    caption: 'Descrição',
+                },
+                {
+                    dataField: 'flg_ativo',
+                    caption: 'Ativo?',
+                    dataType: 'boolean',
+                    alignment: 'center',
+                    width: 120
+                },
+            ],
+            onInitNewRow: function(e) {
+                e.data.flg_ativo = true;
+            },
+            onRowUpdating: function(e) {
+                e.newData = { ...e.oldData, ...e.newData };
+            }
+        });
+
+    });
+</script>

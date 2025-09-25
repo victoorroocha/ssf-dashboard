@@ -37,6 +37,196 @@ class PlanejamentoControleProducaoController extends BaseController
         return null;
     }
 
+    #region Cadastro Departamentos
+        public function cadastroDepartamentoAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarDepartamentosAction()
+        {
+            try {
+                $departamentos = $this->PlanejamentoControleProducaoRepository->listarDepartamentos();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $departamentos,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar departamentos: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function salvarDepartamentoAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->salvarDepartamento($data);
+                $message = $this->getRequest()->isPut() ? 
+                    'Departamento atualizado com sucesso!' : 
+                    'Departamento adicionado com sucesso!';
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar departamento: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirDepartamentoAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->excluirDepartamento($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Departamento excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir departamento: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function getLookupDepartamentosAction()
+        {
+            try {
+                $departamentos = $this->PlanejamentoControleProducaoRepository->getLookupDepartamentos();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $departamentos,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar departamentos: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endRegion
+
+    #region Cadastro Funcionários
+        public function cadastroFuncionarioAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarFuncionariosAction()
+        {
+            try {
+                $funcionarios = $this->PlanejamentoControleProducaoRepository->listarFuncionarios();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $funcionarios,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function salvarFuncionarioAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->salvarFuncionario($data);
+                $message = $this->getRequest()->isPut() ? 
+                    'Funcionário atualizado com sucesso!' : 
+                    'Funcionário adicionado com sucesso!';
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar funcionário: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirFuncionarioAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->excluirFuncionario($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Funcionário excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir funcionário: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function getLookupFuncionariosAction()
+        {
+            try {
+                $funcionarios = $this->PlanejamentoControleProducaoRepository->getLookupFuncionarios();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $funcionarios,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endRegion
+
     #region Cadastro Equipamentos
         public function cadastroEquipamentoAction()
         {
@@ -133,7 +323,62 @@ class PlanejamentoControleProducaoController extends BaseController
                 ]);
             }
         }
+    #endRegion    
+
+    #region Controle de Emprestimo
+        public function controleEmprestimoAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel();
+        }
+        public function listarControlesEmprestimoAction()
+        {
+            try {
+                $data = $this->PlanejamentoControleProducaoRepository->listarControlesEmprestimo();
+                return new JsonModel(['success' => true, 'data' => $data]);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao listar controles de empréstimo: ' . $e->getMessage()]);
+            }
+        }
+        public function salvarControleEmprestimoAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->salvarControleEmprestimo($data);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $this->getRequest()->isPut() ? 'Atualizado com sucesso!' : 'Adicionado com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()]);
+            }
+        }
+        public function excluirControleEmprestimoAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel(['success' => false, 'message' => 'Método não permitido.']);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->excluirControleEmprestimo($data['id']);
+                return new JsonModel(['success' => true, 'message' => 'Excluído com sucesso!']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao excluir: ' . $e->getMessage()]);
+            }
+        }
     #endRegion
+
 
     public function getUsuariosSeniorLookupAction()
     {
