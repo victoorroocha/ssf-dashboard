@@ -377,6 +377,50 @@ class PlanejamentoControleProducaoController extends BaseController
                 return new JsonModel(['success' => false, 'message' => 'Erro ao excluir: ' . $e->getMessage()]);
             }
         }
+        public function getInfoTermoEmprestimoAction()
+        {
+            try {
+                $id = (int) $this->params()->fromQuery('id'); 
+                if (!$id) {
+                    return new JsonModel(['success' => false, 'message' => 'ID não informado.']);
+                }
+                $data = $this->PlanejamentoControleProducaoRepository->getInfoTermoEmprestimo($id);
+
+                return new JsonModel(
+                    [
+                        'success' => true, 
+                        'data' => $data
+                    ]
+                );
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao buscar informações para termo de empréstimo: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function marcarDevolucaoEquipamentoAction()
+        {
+            $request = $this->getRequest();
+           
+            if (!$request->isPost()) {
+                return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+            }
+
+            $dados = json_decode($request->getContent(), true);
+
+            if (empty($dados['id'])) {
+                return new JsonModel(['success' => false, 'message' => 'ID não informado']);
+            }
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->marcarDevolucaoEquipamento($dados);
+                return new JsonModel(['success' => true, 'message' => 'Devolução do equipamento realizada com sucesso']);
+            } catch (\Exception $e) {
+                return new JsonModel(['success' => false, 'message' => 'Erro ao realizar Devolução: ' . $e->getMessage()]);
+            }
+        }
     #endRegion
 
 
@@ -389,6 +433,7 @@ class PlanejamentoControleProducaoController extends BaseController
                     ,R034FUN.TIPCOL 
                     ,R034FUN.NUMCAD AS MATRICULA
                     ,R034FUN.NOMFUN AS NOME_COLABORADOR
+                    ,R034FUN.NUMCAD || ' - ' || R034FUN.NOMFUN AS NUMCAD_NOME_COLABORADOR
                     ,LPAD(TO_CHAR(R034FUN.NUMCPF), 11, '0') AS  CPF
                     ,R034FUN.DATADM
                     ,TRUNC(MONTHS_BETWEEN(SYSDATE, R034FUN.DATNAS ) / 12) AS IDADE 
@@ -411,6 +456,7 @@ class PlanejamentoControleProducaoController extends BaseController
                 $result[$key]['MATRICULA'] = intval($row['MATRICULA']);
                 $result[$key]['NOME'] = utf8_encode($row['NOME']);
                 $result[$key]['DSC_CARGO'] = utf8_encode($row['DSC_CARGO']);
+                $result[$key]['NUMCAD_NOME_COLABORADOR'] = utf8_encode($row['NUMCAD_NOME_COLABORADOR']);
                 $result[$key]['NOME_COLABORADOR'] = utf8_encode($row['NOME_COLABORADOR']);
             }
 

@@ -346,7 +346,8 @@ class PlanejamentoControleProducaoRepository
             // 2. Soma todos os empréstimos ativos para esse equipamento
             $sqlEmprestimos = "SELECT COALESCE(SUM(quantidade_emprestimo), 0) AS total_emprestado
                             FROM pcp_controle_emprestimo
-                            WHERE equipamento_id = :id";
+                            WHERE equipamento_id = :id
+                            AND status <> 'Devolvido'";
             $resultEmprestimos = $this->adapter->createStatement($sqlEmprestimos)->execute([':id' => $equipamentoId])->current();
             $totalEmprestado = $resultEmprestimos ? (int)$resultEmprestimos['total_emprestado'] : 0;
 
@@ -369,12 +370,12 @@ class PlanejamentoControleProducaoRepository
         {
             $sql = "SELECT 
                         cm.*,
-                        pf.numcad as matricula,
-                        pd.nome as dsc_departamento,
+                        CASE 
+                            WHEN cm.data_programada_devolucao < CURRENT_DATE and cm.status not in ('Devolvido') THEN 'Atrasado'
+                            ELSE cm.status
+                        END AS status,
                         pe.quantidade_disponivel
                     FROM pcp_controle_emprestimo cm
-                    LEFT JOIN pcp_funcionario pf on pf.id = cm.funcionario_id
-                    LEFT JOIN pcp_departamento pd on pd.id = pf.departamento_id
                     LEFT JOIN pcp_equipamentos pe on pe.id = cm.equipamento_id";
             $result = $this->adapter->createStatement($sql)->execute();
 
@@ -402,6 +403,7 @@ class PlanejamentoControleProducaoRepository
                 $sqlEmprestado = "SELECT COALESCE(SUM(quantidade_emprestimo),0) AS emprestado
                                 FROM pcp_controle_emprestimo
                                 WHERE equipamento_id = :equipamento_id
+                                and status not in ('Devolvido')
                                 " . (!empty($idAtual) ? "AND id <> :id" : "");
                 $params = [':equipamento_id' => $equipamentoId];
                 if (!empty($idAtual)) {
@@ -414,38 +416,53 @@ class PlanejamentoControleProducaoRepository
                 $quantidadeDisponivel = $quantidadeTotal - $quantidadeEmprestada;
 
                 if ($data['quantidade_emprestimo'] > $quantidadeDisponivel) {
-                    throw new \InvalidArgumentException('Quantidade a ser emprestada não pode ser superior a quantidade disponível!');
+                    throw new \InvalidArgumentException('Quantidade a ser emprestada não pode ser superior à quantidade disponível!');
                 }
             }
 
             $params = [
-                ':data_emprestimo' => $data['data_emprestimo'] ?? null,
-                ':funcionario_id' => $data['funcionario_id'] ?? null,
-                ':equipamento_id' => $data['equipamento_id'] ?? null,
+                ':data_emprestimo'       => $data['data_emprestimo'] ?? null,
+                ':numcad'                => $data['numcad'] ?? null,
+                ':nome'                  => $data['nome'] ?? null,
+                ':cpf'                   => $data['cpf'] ?? null,
+                ':cargo_funcao'          => $data['cargo_funcao'] ?? null,
+                ':contato'               => $data['contato'] ?? null,
+                ':departamento_id'       => $data['departamento_id'] ?? null,
+                ':equipamento_id'        => $data['equipamento_id'] ?? null,
                 ':quantidade_emprestimo' => $data['quantidade_emprestimo'] ?? 0,
-                ':data_devolucao' => $data['data_devolucao'] ?? null,
-                ':observacoes' => $data['observacoes'] ?? null,
+                ':data_programada_devolucao'        => $data['data_programada_devolucao'] ?? null,
+                ':observacoes'           => $data['observacoes'] ?? null,
+                ':status'           => $data['status'] ?? 'Retirado',
             ];
 
             if (!empty($data['id'])) {
                 $sql = "UPDATE pcp_controle_emprestimo SET 
                             data_emprestimo = :data_emprestimo,
-                            funcionario_id = :funcionario_id,
+                            numcad = :numcad,
+                            nome = :nome,
+                            cpf = :cpf,
+                            cargo_funcao = :cargo_funcao,
+                            contato = :contato,
+                            departamento_id = :departamento_id,
                             equipamento_id = :equipamento_id,
                             quantidade_emprestimo = :quantidade_emprestimo,
-                            data_devolucao = :data_devolucao,
-                            observacoes = :observacoes
+                            data_programada_devolucao = :data_programada_devolucao,
+                            observacoes = :observacoes,
+                            status = :status
                         WHERE id = :id";
                 $params[':id'] = $data['id'];
             } else {
                 $sql = "INSERT INTO pcp_controle_emprestimo (
-                    data_emprestimo, funcionario_id, equipamento_id, 
-                    quantidade_emprestimo, data_devolucao, observacoes
-                ) VALUES (
-                    :data_emprestimo, :funcionario_id, :equipamento_id, 
-                    :quantidade_emprestimo, :data_devolucao, :observacoes
-                )";
+                            data_emprestimo, numcad, nome, cpf, cargo_funcao, contato, 
+                            departamento_id, equipamento_id, quantidade_emprestimo, 
+                            data_programada_devolucao, observacoes, status
+                        ) VALUES (
+                            :data_emprestimo, :numcad, :nome, :cpf, :cargo_funcao, :contato, 
+                            :departamento_id, :equipamento_id, :quantidade_emprestimo, 
+                            :data_programada_devolucao, :observacoes, :status
+                        )";
             }
+
             $this->adapter->createStatement($sql)->execute($params);
 
             // Sempre recalcula a quantidade disponível após salvar
@@ -453,10 +470,78 @@ class PlanejamentoControleProducaoRepository
                 $this->recalcularQuantidadeEquipamento($data['equipamento_id']);
             }
         }
+
         public function excluirControleEmprestimo($id)
         {
+            // 1. Descobrir qual equipamento estava vinculado ao empréstimo
+            $sqlSelect = "SELECT equipamento_id 
+                        FROM pcp_controle_emprestimo 
+                        WHERE id = :id";
+            $row = $this->adapter->createStatement($sqlSelect)->execute([':id' => $id])->current();
+            $equipamentoId = $row['equipamento_id'] ?? null;
+
+            // 2. Excluir o registro
             $sql = "DELETE FROM pcp_controle_emprestimo WHERE id = :id";
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
+
+            // 3. Recalcular disponível do equipamento
+            if (!empty($equipamentoId)) {
+                $this->recalcularQuantidadeEquipamento($equipamentoId);
+            }
         }
+
+        public function getInfoTermoEmprestimo($id)
+        {
+            $sql = "SELECT
+                        cm.*, 
+                        LPAD(cm.id::text, 5, '0') AS nr_termo,
+                        TO_CHAR(cm.data_emprestimo, 'DD/MM/YYYY') AS data_emprestimo,
+                        TO_CHAR(cm.data_programada_devolucao, 'DD/MM/YYYY') AS data_programada_devolucao,
+                        TO_CHAR(cm.data_devolucao, 'DD/MM/YYYY') AS data_devolucao,
+                        e.codigo || '-' || e.nome AS nome_equipamento,
+                        at.nome AS departamento_nome,
+                        cm.observacoes
+                    FROM pcp_controle_emprestimo cm
+                    LEFT JOIN pcp_equipamentos e ON e.id = cm.equipamento_id
+                    LEFT JOIN pcp_departamento at ON at.id = cm.departamento_id
+                    WHERE cm.id = :id
+                  ";
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute([':id' => $id]);
+            return $result->current();
+        }
+        public function marcarDevolucaoEquipamento(array $data)
+        {
+            $this->adapter->getDriver()->getConnection()->beginTransaction();
+
+            try {
+                // 
+                $sqlValida = "SELECT cm.* FROM pcp_controle_emprestimo cm WHERE cm.id = :id";
+                $resultValida = $this->adapter->query($sqlValida, [':id' => $data['id']])->current();
+                if (!$resultValida) {
+                    throw new \InvalidArgumentException('Empréstimo não encontrada.');
+                }
+
+                // Não tem apontamentos: data_final = NOW(), tempo_execucao = NULL
+                $sqlUpdate = "UPDATE pcp_controle_emprestimo SET status = 'Devolvido', data_devolucao = NOW() WHERE id = :id";
+                $paramsUpdate = [
+                    ':id' => $data['id'],
+                ];
+
+                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
+
+                // Sempre recalcula a quantidade disponível após salvar
+                if (!empty($data['equipamento_id'])) {
+                    $this->recalcularQuantidadeEquipamento($data['equipamento_id']);
+                }
+
+                $this->adapter->getDriver()->getConnection()->commit();
+
+            } catch (\Exception $e) {
+                $this->adapter->getDriver()->getConnection()->rollback();
+                throw $e;
+            }
+        }
+
     #endRegion
 }
