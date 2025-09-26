@@ -132,100 +132,100 @@ class PlanejamentoControleProducaoController extends BaseController
         }
     #endRegion
 
-    #region Cadastro Funcionários
-        public function cadastroFuncionarioAction()
-        {
-            $session = new Container('auth');
-            if (!isset($session->user)) {
-                return $this->redirect()->toRoute('login');
-            }
-            return new ViewModel();
-        }
-        public function listarFuncionariosAction()
-        {
-            try {
-                $funcionarios = $this->PlanejamentoControleProducaoRepository->listarFuncionarios();
+    // #region Cadastro Funcionários
+    //     public function cadastroFuncionarioAction()
+    //     {
+    //         $session = new Container('auth');
+    //         if (!isset($session->user)) {
+    //             return $this->redirect()->toRoute('login');
+    //         }
+    //         return new ViewModel();
+    //     }
+    //     public function listarFuncionariosAction()
+    //     {
+    //         try {
+    //             $funcionarios = $this->PlanejamentoControleProducaoRepository->listarFuncionarios();
 
-                return new JsonModel([
-                    'success' => true,
-                    'data' => $funcionarios,
-                ]);
-            } catch (\Exception $e) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
-                ]);
-            }
-        }
-        public function salvarFuncionarioAction()
-        {
-            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Método não permitido.',
-                ]);
-            }
+    //             return new JsonModel([
+    //                 'success' => true,
+    //                 'data' => $funcionarios,
+    //             ]);
+    //         } catch (\Exception $e) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
+    //             ]);
+    //         }
+    //     }
+    //     public function salvarFuncionarioAction()
+    //     {
+    //         if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Método não permitido.',
+    //             ]);
+    //         }
 
-            $data = json_decode($this->getRequest()->getContent(), true);
+    //         $data = json_decode($this->getRequest()->getContent(), true);
 
-            try {
-                $this->PlanejamentoControleProducaoRepository->salvarFuncionario($data);
-                $message = $this->getRequest()->isPut() ? 
-                    'Funcionário atualizado com sucesso!' : 
-                    'Funcionário adicionado com sucesso!';
+    //         try {
+    //             $this->PlanejamentoControleProducaoRepository->salvarFuncionario($data);
+    //             $message = $this->getRequest()->isPut() ? 
+    //                 'Funcionário atualizado com sucesso!' : 
+    //                 'Funcionário adicionado com sucesso!';
 
-                return new JsonModel([
-                    'success' => true,
-                    'message' => $message,
-                ]);
-            } catch (\Exception $e) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Erro ao salvar funcionário: ' . $e->getMessage(),
-                ]);
-            }
-        }
-        public function excluirFuncionarioAction()
-        {
-            if (!$this->getRequest()->isDelete()) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Método não permitido.',
-                ]);
-            }
+    //             return new JsonModel([
+    //                 'success' => true,
+    //                 'message' => $message,
+    //             ]);
+    //         } catch (\Exception $e) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Erro ao salvar funcionário: ' . $e->getMessage(),
+    //             ]);
+    //         }
+    //     }
+    //     public function excluirFuncionarioAction()
+    //     {
+    //         if (!$this->getRequest()->isDelete()) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Método não permitido.',
+    //             ]);
+    //         }
 
-            $data = json_decode($this->getRequest()->getContent(), true);
+    //         $data = json_decode($this->getRequest()->getContent(), true);
 
-            try {
-                $this->PlanejamentoControleProducaoRepository->excluirFuncionario($data['id']);
-                return new JsonModel([
-                    'success' => true,
-                    'message' => 'Funcionário excluído com sucesso!',
-                ]);
-            } catch (\Exception $e) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Erro ao excluir funcionário: ' . $e->getMessage(),
-                ]);
-            }
-        }
-        public function getLookupFuncionariosAction()
-        {
-            try {
-                $funcionarios = $this->PlanejamentoControleProducaoRepository->getLookupFuncionarios();
+    //         try {
+    //             $this->PlanejamentoControleProducaoRepository->excluirFuncionario($data['id']);
+    //             return new JsonModel([
+    //                 'success' => true,
+    //                 'message' => 'Funcionário excluído com sucesso!',
+    //             ]);
+    //         } catch (\Exception $e) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Erro ao excluir funcionário: ' . $e->getMessage(),
+    //             ]);
+    //         }
+    //     }
+    //     public function getLookupFuncionariosAction()
+    //     {
+    //         try {
+    //             $funcionarios = $this->PlanejamentoControleProducaoRepository->getLookupFuncionarios();
 
-                return new JsonModel([
-                    'success' => true,
-                    'data' => $funcionarios,
-                ]);
-            } catch (\Exception $e) {
-                return new JsonModel([
-                    'success' => false,
-                    'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
-                ]);
-            }
-        }
-    #endRegion
+    //             return new JsonModel([
+    //                 'success' => true,
+    //                 'data' => $funcionarios,
+    //             ]);
+    //         } catch (\Exception $e) {
+    //             return new JsonModel([
+    //                 'success' => false,
+    //                 'message' => 'Erro ao listar funcionários: ' . $e->getMessage(),
+    //             ]);
+    //         }
+    //     }
+    // #endRegion
 
     #region Cadastro Equipamentos
         public function cadastroEquipamentoAction()

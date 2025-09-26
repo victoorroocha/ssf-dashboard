@@ -226,7 +226,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
 
@@ -390,7 +393,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Coordenador 
@@ -553,7 +559,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Encarregado
@@ -716,7 +725,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Analista
@@ -879,7 +891,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Assistente 
@@ -1042,7 +1057,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Auxiliar 
@@ -1204,7 +1222,10 @@ class AccessControl
            'getUsuariosSeniorLookup', 
            'listarCentrosCusto', 
            'getCentroCustoLookup', 
-           'getProdutosEstoqueLookup'
+           'getProdutosEstoqueLookup',
+           'marcarDevolucaoEquipamento',
+           'getInfoTermoEmprestimo',
+           'getUsuarioSessao'
         ]);
 
         // Convidado

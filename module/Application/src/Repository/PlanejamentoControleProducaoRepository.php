@@ -90,107 +90,107 @@ class PlanejamentoControleProducaoRepository
         }
     #endRegion
 
-    #region Cadastro Funcionários
-        public function listarFuncionarios()
-        {
-            $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, departamento_id, flg_ativo 
-                    FROM pcp_funcionario 
-                    ORDER BY id';
-            $result = $this->adapter->createStatement($sql)->execute();
+    // #region Cadastro Funcionários
+    //     public function listarFuncionarios()
+    //     {
+    //         $sql = 'SELECT id, numcad, nome, cpf, cargo_funcao, contato, departamento_id, flg_ativo 
+    //                 FROM pcp_funcionario 
+    //                 ORDER BY id';
+    //         $result = $this->adapter->createStatement($sql)->execute();
 
-            $data = [];
-            foreach ($result as $row) {
-                $data[] = $row;
-            }
-            return $data;
-        }
-        public function salvarFuncionario(array $data)
-        {
-            if (empty($data['nome']) || empty($data['cpf']) || empty($data['cargo_funcao']) || empty($data['departamento_id'])) {
-                throw new \Exception('Nome, CPF, cargo/função e departamento são obrigatórios.');
-            }
+    //         $data = [];
+    //         foreach ($result as $row) {
+    //             $data[] = $row;
+    //         }
+    //         return $data;
+    //     }
+    //     public function salvarFuncionario(array $data)
+    //     {
+    //         if (empty($data['nome']) || empty($data['cpf']) || empty($data['cargo_funcao']) || empty($data['departamento_id'])) {
+    //             throw new \Exception('Nome, CPF, cargo/função e departamento são obrigatórios.');
+    //         }
 
-            $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : true;
+    //         $flgAtivo = isset($data['flg_ativo']) ? (bool)$data['flg_ativo'] : true;
 
-            // 🔎 Verifica se CPF já existe
-            $sqlCheck = 'SELECT id FROM pcp_funcionario WHERE cpf = :cpf';
-            $paramsCheck = [':cpf' => $data['cpf']];
-            $result = $this->adapter->createStatement($sqlCheck)->execute($paramsCheck)->current();
+    //         // 🔎 Verifica se CPF já existe
+    //         $sqlCheck = 'SELECT id FROM pcp_funcionario WHERE cpf = :cpf';
+    //         $paramsCheck = [':cpf' => $data['cpf']];
+    //         $result = $this->adapter->createStatement($sqlCheck)->execute($paramsCheck)->current();
 
-            if ($result) {
-                if (empty($data['id']) || $result['id'] != $data['id']) {
-                    throw new \Exception('Já existe um funcionário cadastrado com este CPF.');
-                }
-            }
+    //         if ($result) {
+    //             if (empty($data['id']) || $result['id'] != $data['id']) {
+    //                 throw new \Exception('Já existe um funcionário cadastrado com este CPF.');
+    //             }
+    //         }
 
-            if (!empty($data['id'])) {
-                $sql = 'UPDATE pcp_funcionario SET 
-                            nome = :nome, 
-                            numcad = :numcad, 
-                            cpf = :cpf, 
-                            cargo_funcao = :cargo_funcao, 
-                            contato = :contato, 
-                            departamento_id = :departamento_id,
-                            flg_ativo = :flg_ativo
-                        WHERE id = :id';
-                $params = [
-                    ':nome' => $data['nome'],
-                    ':numcad' => $data['numcad'],
-                    ':cpf' => $data['cpf'],
-                    ':cargo_funcao' => $data['cargo_funcao'],
-                    ':contato' => $data['contato'] ?? null,
-                    ':departamento_id' => $data['departamento_id'],
-                    ':flg_ativo' => $flgAtivo,
-                    ':id' => $data['id']
-                ];
-            } else {
-                $sql = 'INSERT INTO pcp_funcionario (nome, numcad, cpf, cargo_funcao, contato, departamento_id, flg_ativo) 
-                        VALUES (:nome, :numcad, :cpf, :cargo_funcao, :contato, :departamento_id, :flg_ativo)';
-                $params = [
-                    ':nome' => $data['nome'],
-                    ':numcad' => $data['numcad'],
-                    ':cpf' => $data['cpf'],
-                    ':cargo_funcao' => $data['cargo_funcao'],
-                    ':contato' => $data['contato'] ?? null,
-                    ':departamento_id' => $data['departamento_id'],
-                    ':flg_ativo' => $flgAtivo
-                ];
-            }
+    //         if (!empty($data['id'])) {
+    //             $sql = 'UPDATE pcp_funcionario SET 
+    //                         nome = :nome, 
+    //                         numcad = :numcad, 
+    //                         cpf = :cpf, 
+    //                         cargo_funcao = :cargo_funcao, 
+    //                         contato = :contato, 
+    //                         departamento_id = :departamento_id,
+    //                         flg_ativo = :flg_ativo
+    //                     WHERE id = :id';
+    //             $params = [
+    //                 ':nome' => $data['nome'],
+    //                 ':numcad' => $data['numcad'],
+    //                 ':cpf' => $data['cpf'],
+    //                 ':cargo_funcao' => $data['cargo_funcao'],
+    //                 ':contato' => $data['contato'] ?? null,
+    //                 ':departamento_id' => $data['departamento_id'],
+    //                 ':flg_ativo' => $flgAtivo,
+    //                 ':id' => $data['id']
+    //             ];
+    //         } else {
+    //             $sql = 'INSERT INTO pcp_funcionario (nome, numcad, cpf, cargo_funcao, contato, departamento_id, flg_ativo) 
+    //                     VALUES (:nome, :numcad, :cpf, :cargo_funcao, :contato, :departamento_id, :flg_ativo)';
+    //             $params = [
+    //                 ':nome' => $data['nome'],
+    //                 ':numcad' => $data['numcad'],
+    //                 ':cpf' => $data['cpf'],
+    //                 ':cargo_funcao' => $data['cargo_funcao'],
+    //                 ':contato' => $data['contato'] ?? null,
+    //                 ':departamento_id' => $data['departamento_id'],
+    //                 ':flg_ativo' => $flgAtivo
+    //             ];
+    //         }
 
-            $this->adapter->createStatement($sql)->execute($params);
-        }
-        public function excluirFuncionario($id)
-        {
-            if (empty($id)) {
-                throw new \Exception('ID do funcionário não fornecido.');
-            }
+    //         $this->adapter->createStatement($sql)->execute($params);
+    //     }
+    //     public function excluirFuncionario($id)
+    //     {
+    //         if (empty($id)) {
+    //             throw new \Exception('ID do funcionário não fornecido.');
+    //         }
 
-            $sql = 'UPDATE pcp_funcionario SET flg_ativo = false WHERE id = :id';
-            $this->adapter->createStatement($sql)->execute([':id' => $id]);
-        }
-        public function getLookupFuncionarios()
-        {
-            $sql = 'SELECT 
-                        f.id, 
-                        f.nome, 
-                        f.cpf, 
-                        f.cargo_funcao, 
-                        f.contato, 
-                        f.departamento_id,
-                        d.nome as nome_departamento
-                    FROM pcp_funcionario f
-                    LEFT JOIN pcp_departamento d ON d.id = f.departamento_id
-                    WHERE f.flg_ativo = true 
-                    ORDER BY d.nome, f.nome';
-            $result = $this->adapter->createStatement($sql)->execute();
+    //         $sql = 'UPDATE pcp_funcionario SET flg_ativo = false WHERE id = :id';
+    //         $this->adapter->createStatement($sql)->execute([':id' => $id]);
+    //     }
+    //     public function getLookupFuncionarios()
+    //     {
+    //         $sql = 'SELECT 
+    //                     f.id, 
+    //                     f.nome, 
+    //                     f.cpf, 
+    //                     f.cargo_funcao, 
+    //                     f.contato, 
+    //                     f.departamento_id,
+    //                     d.nome as nome_departamento
+    //                 FROM pcp_funcionario f
+    //                 LEFT JOIN pcp_departamento d ON d.id = f.departamento_id
+    //                 WHERE f.flg_ativo = true 
+    //                 ORDER BY d.nome, f.nome';
+    //         $result = $this->adapter->createStatement($sql)->execute();
 
-            $data = [];
-            foreach ($result as $row) {
-                $data[] = $row;
-            }
-            return $data;
-        }
-    #endRegion
+    //         $data = [];
+    //         foreach ($result as $row) {
+    //             $data[] = $row;
+    //         }
+    //         return $data;
+    //     }
+    // #endRegion
 
     #region Cadastro Equipamentos 
         public function listarEquipamentos()
