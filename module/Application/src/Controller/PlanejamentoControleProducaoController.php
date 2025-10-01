@@ -323,6 +323,30 @@ class PlanejamentoControleProducaoController extends BaseController
                 ]);
             }
         }
+        public function carregarImagensEquipamentoAction()
+        {
+            $equipamentoId = $this->params()->fromQuery('id');
+            
+            if (empty($equipamentoId)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'ID do equipamento não informado.',
+                ]);
+            }
+
+            try {
+                $imagens = $this->PlanejamentoControleProducaoRepository->carregarImagensEquipamento($equipamentoId);
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $imagens,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao carregar imagens: ' . $e->getMessage(),
+                ]);
+            }
+        }
     #endRegion    
 
     #region Controle de Emprestimo

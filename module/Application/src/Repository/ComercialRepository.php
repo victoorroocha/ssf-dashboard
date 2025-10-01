@@ -15,45 +15,40 @@ class ComercialRepository
                 SELECT 
                     D.*
                     ,CASE
-                        -- 🌟 1. Raiz Forte (top ativos: TSI alto, volume alto, diversidade alta)
+                                                -- 🌟 1. Raiz Forte
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI >= 15
-                            AND QTD_TOTAL >= 200
                             AND MEDIA_BAGS_P_SAFRA >= 80
-                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 3
                         THEN 1
 
-                        -- 🌿 2. Sementes de Ouro (ativos: TSI médio, volume médio, boa frequência)
+                        -- 🌿 2. Sementes de Ouro
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI >= 10
                             AND PERC_TSI < 15
-                            AND QTD_TOTAL >= 100
                             AND MEDIA_BAGS_P_SAFRA >= 50
-                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 2
                         THEN 2
 
-                        -- 🌱 3. Pé de Safra (ativos: TSI baixo, volume menor, iniciando consistência)
+                        -- 🌱 3. Pé de Safra
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI < 10
-                            AND QTD_TOTAL >= 50
                             AND MEDIA_BAGS_P_SAFRA >= 20
                         THEN 3
 
-                        -- 🌾 4. Terra Promissora (ativos, crescimento elevado)
+                        -- 🌾 4. Terra Promissora
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_CRESCIMENTO_QUEDA > 20
+                            AND PERC_CRESCIMENTO_QUEDA >= 20
                         THEN 4
 
-                        -- ⚠️ 5. Raiz Enfraquecida (ativos, mas em queda forte)
+                        -- ⚠️ 5. Raiz Enfraquecida
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_CRESCIMENTO_QUEDA <= -30
+                            AND PERC_CRESCIMENTO_QUEDA < 0
                         THEN 5
 
-                        -- 🌿 6. Broto de Esperança (clientes novos)
+                        -- 🌿 6. Broto de Esperança
                         WHEN PRIMEIRO_PEDIDO_DIAS <= 180
                         THEN 6
 
-                        -- 😴 7. Solo Adormecido (inativos há mais de 380 dias)
+                        -- 😴 7. Solo Adormecido
                         WHEN ULTIMO_PEDIDO_DIAS > 380
                         THEN 7
 
@@ -63,35 +58,30 @@ class ComercialRepository
                         -- 🌟 1. Raiz Forte
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI >= 15
-                            AND QTD_TOTAL >= 200
                             AND MEDIA_BAGS_P_SAFRA >= 80
-                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 3
                         THEN 'Raiz Forte'
 
                         -- 🌿 2. Sementes de Ouro
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI >= 10
                             AND PERC_TSI < 15
-                            AND QTD_TOTAL >= 100
                             AND MEDIA_BAGS_P_SAFRA >= 50
-                            AND MEDIA_CULTIVARES_POR_PEDIDO >= 2
                         THEN 'Sementes de Ouro'
 
                         -- 🌱 3. Pé de Safra
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
                             AND PERC_TSI < 10
-                            AND QTD_TOTAL >= 50
                             AND MEDIA_BAGS_P_SAFRA >= 20
                         THEN 'Pé de Safra'
 
                         -- 🌾 4. Terra Promissora
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_CRESCIMENTO_QUEDA >= 10
+                            AND PERC_CRESCIMENTO_QUEDA >= 20
                         THEN 'Terra Promissora'
 
                         -- ⚠️ 5. Raiz Enfraquecida
                         WHEN ULTIMO_PEDIDO_DIAS <= 380
-                            AND PERC_CRESCIMENTO_QUEDA < 10
+                            AND PERC_CRESCIMENTO_QUEDA < 0
                         THEN 'Raiz Enfraquecida'
 
                         -- 🌿 6. Broto de Esperança

@@ -206,7 +206,8 @@ class PlanejamentoControleProducaoRepository
                         e.custo_total,
                         e.codigo || ' - ' || e.nome AS dsc_equipamento,
                         e.observacoes,
-                        e.status
+                        e.status,
+                        (SELECT COUNT(*) FROM pcp_equipamentos_imagens WHERE equipamento_id = e.id) as quantidade_imagens
                     FROM pcp_equipamentos e
                     ORDER BY e.codigo";
                     
@@ -223,64 +224,226 @@ class PlanejamentoControleProducaoRepository
         public function salvarEquipamento(array $data)
         {
             #region Validações
-                if (empty($data['nome'])) {
-                    throw new \Exception('Nome do equipamento é obrigatório.');
-                }
-                if (empty($data['codigo'])) {
-                    throw new \Exception('Código do equipamento é obrigatório.');
-                }
+            if (empty($data['nome'])) {
+                throw new \Exception('Nome do equipamento é obrigatório.');
+            }
+            if (empty($data['codigo'])) {
+                throw new \Exception('Código do equipamento é obrigatório.');
+            }
 
-                // Verifica se já existe equipamento com o mesmo código (exceto o atual, se for update)
-                $sqlCheck = "SELECT COUNT(*) AS total FROM pcp_equipamentos WHERE codigo = :codigo";
-                $paramsCheck = [':codigo' => $data['codigo']];
-                if (!empty($data['id'])) {
-                    $sqlCheck .= " AND id <> :id";
-                    $paramsCheck[':id'] = $data['id'];
-                }
-                $result = $this->adapter->query($sqlCheck, $paramsCheck)->current();
-                if ($result && $result['total'] > 0) {
-                    throw new \Exception('Já existe um equipamento cadastrado com esse código.');
-                }
+            // Verifica se já existe equipamento com o mesmo código (exceto o atual, se for update)
+            $sqlCheck = "SELECT COUNT(*) AS total FROM pcp_equipamentos WHERE codigo = :codigo";
+            $paramsCheck = [':codigo' => $data['codigo']];
+            if (!empty($data['id'])) {
+                $sqlCheck .= " AND id <> :id";
+                $paramsCheck[':id'] = $data['id'];
+            }
+            $result = $this->adapter->query($sqlCheck, $paramsCheck)->current();
+            if ($result && $result['total'] > 0) {
+                throw new \Exception('Já existe um equipamento cadastrado com esse código.');
+            }
             #endregion
 
-            if (!empty($data['id'])) {
-                $sql = 'UPDATE pcp_equipamentos 
-                        SET codigo = :codigo, 
-                            nome = :nome, 
-                            quantidade = :quantidade,
-                            valor = :valor,
-                            observacoes = :observacoes,
-                            status = :status
-                        WHERE id = :id';
-                $params = [
-                    ':codigo' => $data['codigo'],
-                    ':nome' => $data['nome'],
-                    ':quantidade' => $data['quantidade'] ?? null,
-                    ':valor' => $data['valor'] ?? null,
-                    ':observacoes' => $data['observacoes'] ?? null,
-                    ':status' => $data['status'] ?? null,
-                    ':id' => $data['id']
-                ];
-            } else {
-                $sql = 'INSERT INTO pcp_equipamentos (codigo, nome, quantidade, quantidade_disponivel, valor, observacoes, status) 
-                        VALUES (:codigo, :nome, :quantidade, :quantidade_disponivel, :valor, :observacoes, :status)';
-                $params = [
-                    ':codigo' => $data['codigo'],
-                    ':nome' => $data['nome'],
-                    ':quantidade' => $data['quantidade'] ?? null,
-                    ':quantidade_disponivel' => $data['quantidade'] ?? null, //na inserção mesma quantidade total.
-                    ':valor' => $data['valor'] ?? null,
-                    ':observacoes' => $data['observacoes'] ?? null,
-                    ':status' => $data['status'] ?? null
-                ];
+            // Inicia transação
+            $connection = $this->adapter->getDriver()->getConnection();
+            $connection->beginTransaction();
+
+            try {
+                if (!empty($data['id'])) {
+                    // UPDATE
+                    $sql = 'UPDATE pcp_equipamentos 
+                            SET codigo = :codigo, 
+                                nome = :nome, 
+                                quantidade = :quantidade,
+                                valor = :valor,
+                                observacoes = :observacoes,
+                                status = :status
+                            WHERE id = :id';
+                    $params = [
+                        ':codigo' => $data['codigo'],
+                        ':nome' => $data['nome'],
+                        ':quantidade' => $data['quantidade'] ?? null,
+                        ':valor' => $data['valor'] ?? null,
+                        ':observacoes' => $data['observacoes'] ?? null,
+                        ':status' => $data['status'] ?? null,
+                        ':id' => $data['id']
+                    ];
+                    
+                    $this->adapter->createStatement($sql)->execute($params);
+                    $equipamentoId = $data['id'];
+                    
+                    // Processa imagens para UPDATE
+                    if (!empty($data['imagens']) && is_array($data['imagens'])) {
+                        $this->processarImagensEquipamento($equipamentoId, $data['imagens']);
+                    }
+                    
+                } else {
+                    // INSERT
+                    $sql = 'INSERT INTO pcp_equipamentos (codigo, nome, quantidade, quantidade_disponivel, valor, observacoes, status) 
+                            VALUES (:codigo, :nome, :quantidade, :quantidade_disponivel, :valor, :observacoes, :status) 
+                            RETURNING id';
+                    $params = [
+                        ':codigo' => $data['codigo'],
+                        ':nome' => $data['nome'],
+                        ':quantidade' => $data['quantidade'] ?? null,
+                        ':quantidade_disponivel' => $data['quantidade'] ?? null,
+                        ':valor' => $data['valor'] ?? null,
+                        ':observacoes' => $data['observacoes'] ?? null,
+                        ':status' => $data['status'] ?? null
+                    ];
+                    
+                    $result = $this->adapter->createStatement($sql)->execute($params)->current();
+                    $equipamentoId = $result['id'];
+                    
+                    // Processa imagens para INSERT
+                    if (!empty($data['imagens']) && is_array($data['imagens'])) {
+                        $this->processarImagensEquipamento($equipamentoId, $data['imagens']);
+                    }
+                }
+
+                $connection->commit();
+                return $equipamentoId;
+
+            } catch (\Exception $e) {
+                $connection->rollback();
+                throw $e;
             }
+        }
+        private function processarImagensEquipamento($equipamentoId, $imagens)
+        {
+            // // VERIFICAÇÃO ADICIONAL - DEBUG
+            // $this->verificarConfiguracaoDiretorio();
+
+            $pastaDestino = '/var/www/html/ssf-dashboard/data/planejamento-controle-producao/equipamento';
+            
+            // Verifica se a pasta existe, se não, cria com permissões adequadas
+            if (!is_dir($pastaDestino)) {
+                if (!mkdir($pastaDestino, 0755, true)) {
+                    throw new \Exception('Não foi possível criar o diretório: ' . $pastaDestino);
+                }
+            }
+
+            // Verifica permissões de escrita
+            if (!is_writable($pastaDestino)) {
+                throw new \Exception('Diretório sem permissão de escrita: ' . $pastaDestino);
+            }
+
+            // Remove imagens antigas se for uma atualização
+            $this->removerImagensAntigas($equipamentoId);
+
+            foreach ($imagens as $imagem) {
+                // Verifica se todos os campos necessários estão presentes
+                if (empty($imagem['binario']) || empty($imagem['nome_arquivo'])) {
+                    continue;
+                }
+
+                // Gera um nome único para o arquivo
+                $extensao = pathinfo($imagem['nome_arquivo'], PATHINFO_EXTENSION);
+                $nomeUnico = uniqid() . '_' . $equipamentoId . '.' . $extensao;
+                $caminhoCompleto = $pastaDestino . '/' . $nomeUnico;
+
+                // CORREÇÃO: Melhor tratamento do base64
+                $dadosBinarios = base64_decode($imagem['binario']);
+                if ($dadosBinarios === false) {
+                    throw new \Exception('Dados binários da imagem inválidos: ' . $imagem['nome_arquivo']);
+                }
+
+                // Tenta salvar o arquivo
+                $bytesEscritos = file_put_contents($caminhoCompleto, $dadosBinarios);
+                if ($bytesEscritos === false) {
+                    throw new \Exception('Erro ao salvar a imagem: ' . $imagem['nome_arquivo']);
+                }
+
+                // Verifica se o arquivo foi realmente criado
+                if (!file_exists($caminhoCompleto) || filesize($caminhoCompleto) === 0) {
+                    throw new \Exception('Arquivo de imagem não foi criado corretamente: ' . $imagem['nome_arquivo']);
+                }
+
+                // Salva no banco de dados
+                $this->salvarImagemBanco($equipamentoId, [
+                    'nome_arquivo' => $nomeUnico,
+                    'caminho' => $caminhoCompleto,
+                    'tipo_mime' => $imagem['tipo_mime'] ?? 'application/octet-stream',
+                    'tamanho' => $imagem['tamanho'] ?? filesize($caminhoCompleto)
+                ]);
+            }
+        }
+        private function verificarConfiguracaoDiretorio()
+        {
+            $pastaDestino = '/var/www/html/ssf-dashboard/data/planejamento-controle-producao/equipamento';
+            
+            echo "Diagnóstico do diretório:\n";
+            echo "Caminho: " . $pastaDestino . "\n";
+            echo "Existe: " . (is_dir($pastaDestino) ? 'SIM' : 'NÃO') . "\n";
+            echo "É gravável: " . (is_writable($pastaDestino) ? 'SIM' : 'NÃO') . "\n";
+            echo "Permissões: " . substr(sprintf('%o', fileperms($pastaDestino)), -4) . "\n";
+            
+            // Teste de escrita
+            $arquivoTeste = $pastaDestino . '/teste.txt';
+            if (file_put_contents($arquivoTeste, 'teste') !== false) {
+                echo "Teste de escrita: OK\n";
+                unlink($arquivoTeste);
+            } else {
+                echo "Teste de escrita: FALHOU\n";
+            }
+            
+            // Verificar espaço em disco
+            echo "Espaço livre: " . round(disk_free_space($pastaDestino) / 1024 / 1024, 2) . " MB\n";
+        }
+        private function removerImagensAntigas($equipamentoId)
+        {
+            // Busca imagens existentes no banco
+            $sqlSelect = "SELECT caminho FROM pcp_equipamentos_imagens WHERE equipamento_id = :equipamento_id";
+            $result = $this->adapter->createStatement($sqlSelect)
+                ->execute([':equipamento_id' => $equipamentoId]);
+
+            // Remove arquivos físicos
+            foreach ($result as $row) {
+                if (file_exists($row['caminho'])) {
+                    unlink($row['caminho']);
+                }
+            }
+
+            // Remove registros do banco
+            $sqlDelete = "DELETE FROM pcp_equipamentos_imagens WHERE equipamento_id = :equipamento_id";
+            $this->adapter->createStatement($sqlDelete)
+                ->execute([':equipamento_id' => $equipamentoId]);
+        }
+        private function salvarImagemBanco($equipamentoId, $dadosImagem)
+        {
+            $sql = "INSERT INTO pcp_equipamentos_imagens 
+                    (equipamento_id, nome_arquivo, caminho, tipo_mime, tamanho) 
+                    VALUES (:equipamento_id, :nome_arquivo, :caminho, :tipo_mime, :tamanho)";
+
+            $params = [
+                ':equipamento_id' => $equipamentoId,
+                ':nome_arquivo' => $dadosImagem['nome_arquivo'],
+                ':caminho' => $dadosImagem['caminho'],
+                ':tipo_mime' => $dadosImagem['tipo_mime'],
+                ':tamanho' => $dadosImagem['tamanho']
+            ];
 
             $this->adapter->createStatement($sql)->execute($params);
         }
         public function excluirEquipamento($id)
         {
-            $sql = 'DELETE FROM pcp_equipamentos WHERE id = :id';
-            $this->adapter->createStatement($sql)->execute([':id' => $id]);
+            // Inicia transação para excluir equipamento e imagens
+            $connection = $this->adapter->getDriver()->getConnection();
+            $connection->beginTransaction();
+
+            try {
+                // Primeiro remove as imagens
+                $this->removerImagensAntigas($id);
+                
+                // Depois exclui o equipamento
+                $sql = 'DELETE FROM pcp_equipamentos WHERE id = :id';
+                $this->adapter->createStatement($sql)->execute([':id' => $id]);
+                
+                $connection->commit();
+            } catch (\Exception $e) {
+                $connection->rollback();
+                throw $e;
+            }
         }
         public function getLookupEquipamentos($search = null, $key = null, $offset = 0, $limit = 30)
         {
@@ -307,7 +470,8 @@ class PlanejamentoControleProducaoRepository
                         e.custo_total,
                         e.codigo || ' - ' || e.nome AS dsc_equipamento,
                         e.observacoes,
-                        e.status
+                        e.status,
+                        (SELECT COUNT(*) FROM pcp_equipamentos_imagens WHERE equipamento_id = e.id) as quantidade_imagens
                     FROM pcp_equipamentos e
                     WHERE 1=1
                     {$ands}
@@ -362,6 +526,54 @@ class PlanejamentoControleProducaoRepository
                 ':disponivel' => $quantidadeDisponivel,
                 ':id' => $equipamentoId
             ]);
+        }
+        public function carregarImagensEquipamento($equipamentoId)
+        {
+            $sql = "SELECT 
+                        nome_arquivo,
+                        caminho,
+                        tipo_mime,
+                        tamanho
+                    FROM pcp_equipamentos_imagens 
+                    WHERE equipamento_id = :equipamento_id
+                    ORDER BY nome_arquivo";
+            
+            $result = $this->adapter->createStatement($sql)
+                ->execute([':equipamento_id' => $equipamentoId]);
+
+            $imagens = [];
+            foreach ($result as $row) {
+                // Lê o arquivo físico e converte para base64
+                if (file_exists($row['caminho'])) {
+                    $binario = base64_encode(file_get_contents($row['caminho']));
+                    
+                    $imagens[] = [
+                        'nome_arquivo' => $row['nome_arquivo'],
+                        'caminho' => $row['caminho'],
+                        'tipo_mime' => $row['tipo_mime'] ?? $this->getMimeTypeFromExtension($row['nome_arquivo']),
+                        'tamanho' => $row['tamanho'],
+                        'binario' => $binario
+                    ];
+                }
+            }
+
+            return $imagens;
+        }
+        // Método auxiliar para determinar o tipo MIME baseado na extensão
+        private function getMimeTypeFromExtension($filename)
+        {
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            
+            $mimeTypes = [
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'bmp' => 'image/bmp',
+                'webp' => 'image/webp'
+            ];
+            
+            return $mimeTypes[$extension] ?? 'image/jpeg';
         }
     #endRegion
 

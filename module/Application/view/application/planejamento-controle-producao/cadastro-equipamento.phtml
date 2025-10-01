@@ -1,3 +1,140 @@
+<style>
+    .image-viewer-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+    }
+
+    .image-viewer-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+    }
+
+    .image-viewer-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .image-viewer-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .image-viewer-header h3 {
+        margin: 0;
+        color: #333;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .close-btn:hover {
+        color: #333;
+    }
+
+    .image-viewer-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .image-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .image-item {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .image-item img {
+        max-width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+    }
+
+    .image-actions {
+        margin-top: 10px;
+    }
+
+    .image-viewer-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .image-counter {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .download-all-btn, .download-single-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .download-all-btn:hover, .download-single-btn:hover {
+        background: #218838;
+    }
+
+    .image-indicator-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .view-images-btn, .download-images-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 3px;
+    }
+
+    .view-images-btn:hover {
+        background: #e9ecef;
+    }
+
+    .download-images-btn:hover {
+        background: #d4edda;
+    }
+</style>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
@@ -24,369 +161,652 @@
 <!-- /.container-fluid -->
 
 <script>
-    $(document).ready(function() {
-        let isNovoRegistro = false;
-        let equipamentosGrid = $('#gridEquipamentos').dxDataGrid({
-            dataSource: new DevExpress.data.CustomStore({
-                key: 'id',
-                load: function(loadOptions) {
-                    return $.ajax({
-                        url: '/planejamento-controle-producao/listar-equipamentos',
-                        method: 'GET',
-                        dataType: 'json'
-                    }).then(response => {
-                        if (response.success) {
-                            return {
-                                data: response.data,
-                                totalCount: response.totalCount || response.data.length
-                            };
-                        } else {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                            return { data: [], totalCount: 0 };
-                        }
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao carregar equipamentos!', 'error', 3000);
+$(document).ready(function() {
+    let isNovoRegistro = false;
+    let forceImageUpdate = false;
+
+    // Função para visualizar imagens em popup
+    function showImagesPopup(images) {
+        // Remove popup existente se houver
+        $('.image-viewer-popup').remove();
+        
+        const popup = $(`
+            <div class="image-viewer-popup">
+                <div class="image-viewer-overlay"></div>
+                <div class="image-viewer-content">
+                    <div class="image-viewer-header">
+                        <h3>Imagens do Equipamento</h3>
+                        <button class="close-btn">&times;</button>
+                    </div>
+                    <div class="image-viewer-body">
+                        <div class="image-container"></div>
+                    </div>
+                    <div class="image-viewer-footer">
+                        <button class="dx-button download-all-btn">
+                            <i class="fa fa-download"></i> Download de Todas as Imagens
+                        </button>
+                        <div class="image-counter"></div>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(popup);
+        
+        const imageContainer = popup.find('.image-container');
+        const imageCounter = popup.find('.image-counter');
+        const downloadBtn = popup.find('.download-all-btn');
+        
+        // Adiciona as imagens ao container
+        images.forEach((img, index) => {
+            const imgElement = $(`
+                <div class="image-item">
+                    <img src="data:${img.tipo_mime};base64,${img.binario}" 
+                         alt="${img.nome_arquivo}" 
+                         title="${img.nome_arquivo}">
+                    <div class="image-actions">
+                        <button class="dx-button download-single-btn" data-index="${index}">
+                            <i class="fa fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+            `);
+            imageContainer.append(imgElement);
+        });
+        
+        imageCounter.text(`${images.length} imagem(ns)`);
+        
+        // Evento para download individual
+        popup.on('click', '.download-single-btn', function() {
+            const index = $(this).data('index');
+            const img = images[index];
+            downloadImage(img.binario, img.nome_arquivo, img.tipo_mime);
+        });
+        
+        // Evento para download de todas as imagens
+        downloadBtn.on('click', function() {
+            downloadAllImages(images);
+        });
+        
+        // Eventos para fechar o popup
+        popup.find('.close-btn, .image-viewer-overlay').on('click', function() {
+            popup.remove();
+        });
+        
+        // Fechar com ESC
+        $(document).on('keyup.imageViewer', function(e) {
+            if (e.key === 'Escape') {
+                popup.remove();
+                $(document).off('keyup.imageViewer');
+            }
+        });
+    }
+
+    // Função para fazer download de uma imagem individual
+    function downloadImage(base64Data, filename, mimeType) {
+        const link = document.createElement('a');
+        link.href = `data:${mimeType};base64,${base64Data}`;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Função para fazer download de todas as imagens como ZIP
+    function downloadAllImages(images) {
+        if (!images || images.length === 0) return;
+        
+        DevExpress.ui.notify('Preparando download das imagens...', 'info', 2000);
+        
+        // Se tiver apenas uma imagem, faz download individual
+        if (images.length === 1) {
+            const img = images[0];
+            downloadImage(img.binario, img.nome_arquivo, img.tipo_mime);
+            return;
+        }
+        
+        // Para múltiplas imagens, usa JSZip
+        if (typeof JSZip === 'undefined') {
+            DevExpress.ui.notify('Biblioteca de compactação não carregada!', 'error', 3000);
+            
+            // Fallback: download individual de cada imagem
+            images.forEach((img, index) => {
+                setTimeout(() => {
+                    downloadImage(img.binario, img.nome_arquivo, img.tipo_mime);
+                }, index * 500);
+            });
+            return;
+        }
+        
+        try {
+            const zip = new JSZip();
+            const folder = zip.folder("equipamento_imagens");
+            
+            images.forEach((img, index) => {
+                const extension = getFileExtension(img.nome_arquivo);
+                const filename = `imagem_${index + 1}.${extension}`;
+                folder.file(filename, img.binario, { base64: true });
+            });
+            
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `equipamento_imagens_${new Date().getTime()}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                
+                DevExpress.ui.notify('Download das imagens concluído!', 'success', 2000);
+            });
+        } catch (error) {
+            console.error('Erro ao criar ZIP:', error);
+            DevExpress.ui.notify('Erro ao preparar download!', 'error', 3000);
+        }
+    }
+
+    // Função auxiliar para obter extensão do arquivo
+    function getFileExtension(filename) {
+        return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+    }
+
+    // Função para carregar imagens detalhadas do equipamento
+    function loadEquipmentImages(equipmentId) {
+        return $.ajax({
+            url: '/planejamento-controle-producao/carregar-imagens-equipamento',
+            method: 'GET',
+            data: { id: equipmentId },
+            dataType: 'json'
+        }).then(response => {
+            if (response.success && response.data) {
+                return response.data;
+            } else {
+                throw new Error(response.message || 'Erro ao carregar imagens');
+            }
+        }).catch(error => {
+            console.error('Erro ao carregar imagens:', error);
+            DevExpress.ui.notify('Erro ao carregar imagens do equipamento!', 'error', 3000);
+            return [];
+        });
+    }
+
+    let equipamentosGrid = $('#gridEquipamentos').dxDataGrid({
+        dataSource: new DevExpress.data.CustomStore({
+            key: 'id',
+            load: function(loadOptions) {
+                return $.ajax({
+                    url: '/planejamento-controle-producao/listar-equipamentos',
+                    method: 'GET',
+                    dataType: 'json'
+                }).then(response => {
+                    if (response.success) {
+                        return {
+                            data: response.data,
+                            totalCount: response.totalCount || response.data.length
+                        };
+                    } else {
+                        DevExpress.ui.notify(response.message, 'error', 3000);
                         return { data: [], totalCount: 0 };
-                    });
-                },
-                insert: function(values) {
-                    return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-equipamento',
-                        method: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(values),
-                        dataType: 'json'
-                    }).then(response => {
-                        if (!response.success) {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Equipamento salvo com sucesso!', 'success', 2000);
-                        }
-                        return response;
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao salvar equipamento!', 'error', 3000);
-                        return {};
-                    });
-                },
-                update: function(key, values) {
-                    return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-equipamento',
-                        method: 'PUT',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ id: key, ...values }),
-                        dataType: 'json'
-                    }).then(response => {
-                        if (!response.success) {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Equipamento atualizado com sucesso!', 'success', 2000);
-                        }
-                        return response;
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao atualizar equipamento!', 'error', 3000);
-                        return {};
-                    });
-                },
-                remove: function(key) {
-                    return $.ajax({
-                        url: '/planejamento-controle-producao/excluir-equipamento',
-                        method: 'DELETE',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ id: key }),
-                        dataType: 'json'
-                    }).then(response => {
-                        if (!response.success) {
-                            DevExpress.ui.notify(response.message, 'error', 3000);
-                        } else {
-                            DevExpress.ui.notify('Equipamento excluído com sucesso!', 'success', 2000);
-                        }
-                        return response;
-                    }).catch(() => {
-                        DevExpress.ui.notify('Erro ao excluir equipamento!', 'error', 3000);
-                        return {};
-                    });
-                }
-            }),
-            keyExpr: 'id',
-            columnAutoWidth: true,
-            width: '100%',
-            height: 600,
-            showBorders: true,
-            columnChooser: {
-                enabled: true,
-                mode: "dragAndDrop", // or "select"
-                position: { 
-                    my: "right", 
-                    at: "right", 
-                    of: ".dx-datagrid-column-chooser-button" 
-                }
-            },
-            groupPanel: {
-                visible: true,
-            },
-            toolbar: {
-                items: [
-                    {
-                        location: "after",
-                        widget: "dxButton",
-                        options: {
-                            icon: "fa fa-expand", // ícone para expandir
-                            text: "",
-                            onClick: function () {
-                                var grid = $("#gridEquipamentos").dxDataGrid("instance");
-                                grid.expandAll(); // Expande todos os grupos
-                            }
-                        }
-                    },
-                    {
-                        location: "after",
-                        widget: "dxButton",
-                        options: {
-                            icon: "fa fa-compress", // ícone para colapsar
-                            text: "",
-                            onClick: function () {
-                                var grid = $("#gridEquipamentos").dxDataGrid("instance");
-                                grid.collapseAll(); // Colapsa todos os grupos
-                            }
-                        }
-                    },
-                    {
-                        name: "refresh", // Define o nome do botão
-                        location: "after", // Coloca o botão após os outros itens na toolbar
-                        widget: "dxButton",
-                        options: {
-                            icon: "refresh", // Ícone de refresh
-                            onClick: function() {
-                                // Lógica para atualizar/recarregar os dados da grid
-                                $("#gridEquipamentos").dxDataGrid("instance").refresh(); // Atualiza a grid
-                            },
-                            text: "Atualizar" // Texto exibido no botão
-                        }
                     }
-                ]
+                }).catch(() => {
+                    DevExpress.ui.notify('Erro ao carregar equipamentos!', 'error', 3000);
+                    return { data: [], totalCount: 0 };
+                });
             },
-            pager: {
-                visible: true
-            },
-            paging: {
-                pageSize: 500
-            },
-            headerFilter: {
-                visible: true,
-            },
-            filterRow: {
-                visible: true,
-                applyFilter: 'auto',
-            },
-            export: {
-                enabled: true,
-                fileName: "Cadastro Equipamentos",
-                allowExportSelectedData: false,
-            },
-            searchPanel: {
-                visible: true,
-                width: 240,
-                placeholder: 'Procure...',
-            },
-            hoverStateEnabled: true,
-            editing: {
-                mode: 'popup',
-                allowUpdating: true,
-                allowAdding: true,
-                allowDeleting: false,
-                useIcons: true,
-                popup: {
-                    title: 'Cadastro de Equipamento',
-                    showTitle: true,
-                    width: 600,
-                    height: 'auto',
-                    position: { my: 'center', at: 'center', of: window }
-                },
-                form: {
-                    colCount: 2,
-                    labelLocation: 'top',
-                    items: [
-                        { dataField: 'nome', editorType: 'dxTextBox', label: { text: 'Nome do Equipamento' }, validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
-                        { dataField: 'codigo', editorType: 'dxTextBox', label: { text: 'Código (TAG/Identificação)' }, validationRules: [{ type: 'required', message: 'TAG obrigatória' }] },
-                        { 
-                            dataField: 'quantidade', editorType: 'dxNumberBox',
-                            editorOptions: {
-                                format: { type: 'fixedPoint', precision: 4 }
-                            },
-                            validationRules: [{ type: 'required' }]
-                        },
-                        { 
-                            dataField: 'valor',  editorType: 'dxNumberBox',
-                            editorOptions: {
-                                format: { type: 'currency', currency: 'BRL', precision: 4 }
-                            },
-                            colSpan: 1,
-                            validationRules: [{ type: 'required' }] 
-                        },
-                        { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } },
-                        {
-                            dataField: 'status',
-                            editorType: 'dxSwitch',
-                            label: { text: 'Ativo?' },
-                            editorOptions: {
-                                switchedOnText: 'Ativo',
-                                switchedOffText: 'Inativo'
-                            },
-                            colSpan: 2,
-                        }
-                    ]
-                },
-                texts: {
-                    confirmDeleteMessage: 'Deseja excluir este equipamento?'
+            insert: function(values) {
+                // Inclui imagens convertidas no payload
+                const uploader = $(".dx-fileuploader").dxFileUploader("instance");
+                if (uploader && uploader.option("uploadedImages")) {
+                    values.imagens = uploader.option("uploadedImages");
                 }
+
+                return $.ajax({
+                    url: '/planejamento-controle-producao/salvar-equipamento',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(values),
+                    dataType: 'json'
+                }).then(response => {
+                    if (!response.success) {
+                        DevExpress.ui.notify(response.message, 'error', 3000);
+                    } else {
+                        DevExpress.ui.notify('Equipamento salvo com sucesso!', 'success', 2000);
+                    }
+                    return response;
+                }).catch(() => {
+                    DevExpress.ui.notify('Erro ao salvar equipamento!', 'error', 3000);
+                    return {};
+                });
             },
-            columns: [
-                { dataField: 'codigo', caption: 'Código (TAG/Identificação)', width: 120, alignment: 'center', },
-                { dataField: 'nome', caption: 'Nome do Equipamento' },
-                {
-                    dataField: 'quantidade',
-                    caption: 'Qtd. Total',
-                    allowEditing: true,
-                    alignment: 'right',
-                    width: 150,
-                    dataType: 'number',
-                    format: { type: 'fixedPoint', precision: 4 },
-                    validationRules: [{ type: 'required' }]
-                },
-                {
-                    dataField: 'quantidade_disponivel',
-                    caption: 'Qtd. Disponível',
-                    allowEditing: false,
-                    alignment: 'right',
-                    width: 150,
-                    dataType: 'number',
-                    format: { type: 'fixedPoint', precision: 4 },
-                    validationRules: [{ type: 'required' }]
-                },
-                {
-                    dataField: 'valor',
-                    caption: 'Valor Unitário',
-                    allowEditing: true,
-                    alignment: 'right',
-                    width: 120,
-                    dataType: 'number',
-                    format: { type: 'currency', currency: 'BRL', precision: 4 },
-                    validationRules: [{ type: 'required' }]
-                },
-                { 
-                    dataField: 'custo_total', caption: 'Custo Total', alignment: 'right',
-                    width: 120,
-                    dataType: 'number',
-                    allowEditing: false,
-                    format: { type: 'currency', currency: 'BRL', precision: 4 }
-                },
-                { dataField: 'observacoes', caption: 'Observações' },
-                {
-                    dataField: 'status',
-                    caption: 'Status',
-                    dataType: 'boolean',
-                    alignment: 'center',
-                    width: 120
-                },
-            ],
-            onInitNewRow: function(e) {
-                isNovoRegistro = true;
-                e.data.status = true;
+            update: function(key, values) {
+                // Inclui imagens convertidas no payload
+                const uploader = $(".dx-fileuploader").dxFileUploader("instance");
+                if (uploader && uploader.option("uploadedImages")) {
+                    values.imagens = uploader.option("uploadedImages");
+                }
+
+                return $.ajax({
+                    url: '/planejamento-controle-producao/salvar-equipamento',
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: key, ...values }),
+                    dataType: 'json'
+                }).then(response => {
+                    if (!response.success) {
+                        DevExpress.ui.notify(response.message, 'error', 3000);
+                    } else {
+                        DevExpress.ui.notify('Equipamento atualizado com sucesso!', 'success', 2000);
+                    }
+                    return response;
+                }).catch(() => {
+                    DevExpress.ui.notify('Erro ao atualizar equipamento!', 'error', 3000);
+                    return {};
+                });
             },
-            onEditingStart: function(e) {
-                isNovoRegistro = false;
-            },
-            onRowUpdating: function(e) {
-                e.newData = { ...e.oldData, ...e.newData };
-            },
-            onToolbarPreparing: function (e) {
-                // Aqui você pode personalizar ainda mais a barra de ferramentas
-                var toolbarItems = e.toolbarOptions.items;
-                // Adicionar os botões de expandir/colapsar
-                toolbarItems.push({
+            remove: function(key) {
+                return $.ajax({
+                    url: '/planejamento-controle-producao/excluir-equipamento',
+                    method: 'DELETE',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: key }),
+                    dataType: 'json'
+                }).then(response => {
+                    if (!response.success) {
+                        DevExpress.ui.notify(response.message, 'error', 3000);
+                    } else {
+                        DevExpress.ui.notify('Equipamento excluído com sucesso!', 'success', 2000);
+                    }
+                    return response;
+                }).catch(() => {
+                    DevExpress.ui.notify('Erro ao excluir equipamento!', 'error', 3000);
+                    return {};
+                });
+            }
+        }),
+        keyExpr: 'id',
+        columnAutoWidth: true,
+        width: '100%',
+        height: 600,
+        showBorders: true,
+        columnChooser: {
+            enabled: true,
+            mode: "dragAndDrop",
+            position: { 
+                my: "right", 
+                at: "right", 
+                of: ".dx-datagrid-column-chooser-button" 
+            }
+        },
+        groupPanel: {
+            visible: true,
+        },
+        toolbar: {
+            items: [
+                {
                     location: "after",
                     widget: "dxButton",
                     options: {
                         icon: "fa fa-expand",
                         text: "",
                         onClick: function () {
-                            var grid = e.component;
-                            grid.expandAll(); // Expande todos os grupos
+                            var grid = $("#gridEquipamentos").dxDataGrid("instance");
+                            grid.expandAll();
                         }
                     }
-                });
-
-                toolbarItems.push({
+                },
+                {
                     location: "after",
                     widget: "dxButton",
                     options: {
                         icon: "fa fa-compress",
                         text: "",
                         onClick: function () {
-                            var grid = e.component;
-                            grid.collapseAll(); // Colapsa todos os grupos
+                            var grid = $("#gridEquipamentos").dxDataGrid("instance");
+                            grid.collapseAll();
                         }
                     }
-                });
-
-                e.toolbarOptions.items.push({
-                    name: "refresh", // Adiciona o botão refresh na toolbar
-                    location: "after", // Coloca depois dos outros itens
+                },
+                {
+                    name: "refresh",
+                    location: "after",
                     widget: "dxButton",
                     options: {
-                        icon: "refresh", // Ícone do botão (ícone de atualização)
+                        icon: "refresh",
                         onClick: function() {
-                            // Recarrega os dados da grid
-                            e.component.refresh(); // Atualiza a grid
+                            $("#gridEquipamentos").dxDataGrid("instance").refresh();
                         },
-                        text: "Atualizar" 
-                    }
-                });
-            },     
-            onRowPrepared: function(e) {
-                if (e.rowType === "data") { // Apenas linhas de dados
-                    if (e.data.quantidade_disponivel === 0) {
-                        e.rowElement.css({
-                            "background-color": "#f8d7da", // Vermelho claro
-                            "color": "#721c24" // Opcional: texto vermelho escuro
-                        });
+                        text: "Atualizar"
                     }
                 }
-            },       
-        });
+            ]
+        },
+        pager: {
+            visible: true
+        },
+        paging: {
+            pageSize: 500
+        },
+        headerFilter: {
+            visible: true,
+        },
+        filterRow: {
+            visible: true,
+            applyFilter: 'auto',
+        },
+        export: {
+            enabled: true,
+            fileName: "Cadastro Equipamentos",
+            allowExportSelectedData: false,
+        },
+        searchPanel: {
+            visible: true,
+            width: 240,
+            placeholder: 'Procure...',
+        },
+        hoverStateEnabled: true,
+        editing: {
+            mode: 'popup',
+            allowUpdating: true,
+            allowAdding: true,
+            allowDeleting: false,
+            useIcons: true,
+            popup: {
+                title: 'Cadastro de Equipamento',
+                showTitle: true,
+                width: 600,
+                height: 'auto',
+                position: { my: 'center', at: 'center', of: window }
+            },
+            form: {
+                colCount: 2,
+                labelLocation: 'top',
+                items: [
+                    { dataField: 'nome', editorType: 'dxTextBox', label: { text: 'Nome do Equipamento' }, validationRules: [{ type: 'required', message: 'Campo obrigatório' }] },
+                    { dataField: 'codigo', editorType: 'dxTextBox', label: { text: 'Código (TAG/Identificação)' }, validationRules: [{ type: 'required', message: 'TAG obrigatória' }] },
+                    { 
+                        dataField: 'quantidade', editorType: 'dxNumberBox',
+                        editorOptions: {
+                            format: { type: 'fixedPoint', precision: 4 }
+                        },
+                        validationRules: [{ type: 'required' }]
+                    },
+                    { 
+                        dataField: 'valor',  editorType: 'dxNumberBox',
+                        editorOptions: {
+                            format: { type: 'currency', currency: 'BRL', precision: 4 }
+                        },
+                        colSpan: 1,
+                        validationRules: [{ type: 'required' }] 
+                    },
+                    { dataField: 'observacoes', colSpan: 2, editorType: 'dxTextArea', label: { text: 'Observações' }, editorOptions: { height: 100, width: '100%' } },
+                    { 
+                        dataField: 'imagens',
+                        colSpan: 2,
+                        editorType: 'dxFileUploader',
+                        label: { text: 'Imagens do Equipamento (Máx. 3)' },
+                        editorOptions: {
+                            multiple: true,
+                            accept: 'image/*',
+                            uploadMode: 'useForm',
+                            selectButtonText: 'Selecionar Imagens',
+                            uploadButtonText: 'Upload',
+                            maxFileSize: 10485760,
+                            allowedFileExtensions: ['.jpg', '.jpeg', '.png'],
+                            onValueChanged: function(e) {
+                                if (e.value && e.value.length > 3) {
+                                    DevExpress.ui.notify('Máximo de 3 imagens permitidas!', 'error', 3000);
+                                    e.component.option('value', e.value.slice(0, 3));
+                                    return;
+                                }
 
-        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
-            return {
-                dataSource: new DevExpress.data.CustomStore({
-                    loadMode: "raw",
-                    load: function() {
-                        return $.ajax({
-                            url: url,
-                            method: "GET",
-                            dataType: "json"
-                        }).then(response => {
-                            if (response.success) {
-                                return response.data;
-                            } else {
-                                DevExpress.ui.notify(response.message, "error", 3000);
-                                return [];
+                                // Marca que houve alteração nas imagens
+                                forceImageUpdate = true;
+
+                                const files = e.value || [];
+                                const promises = files.map(file => new Promise((resolve, reject) => {
+                                    const reader = new FileReader();
+                                    reader.onload = function(evt) {
+                                        resolve({
+                                            nome_arquivo: file.name,
+                                            tipo_mime: file.type,
+                                            tamanho: file.size,
+                                            binario: evt.target.result.split(',')[1],
+                                            caminho: '/var/www/html/ssf-dashboard/data/planejamento-controle-producao/equipamento' + file.name
+                                        });
+                                    };
+                                    reader.onerror = reject;
+                                    reader.readAsDataURL(file);
+                                }));
+
+                                Promise.all(promises).then(result => {
+                                    e.component.option('uploadedImages', result);
+                                    
+                                    // 🔥 FORÇA a detecção de alteração APENAS para UPDATE (não para INSERT)
+                                    const grid = $("#gridEquipamentos").dxDataGrid("instance");
+                                    const editRowKey = grid.option('editing.editRowKey');
+                                    
+                                    // Só força a alteração se NÃO for um novo registro (UPDATE)
+                                    if (editRowKey !== undefined && forceImageUpdate && !isNovoRegistro) {
+                                        // Adiciona uma alteração fictícia para forçar o update
+                                        grid.option('editing.changes', [
+                                            ...(grid.option('editing.changes') || []),
+                                            {
+                                                type: 'update',
+                                                key: editRowKey,
+                                                data: { _forceImageUpdate: true }
+                                            }
+                                        ]);
+                                    }
+                                });
                             }
-                        }).catch(error => {
-                            DevExpress.ui.notify("Erro ao buscar dados!", "error", 3000);
-                            return [];
-                        });
+                        }
+                    },
+                    {
+                        dataField: 'status',
+                        editorType: 'dxSwitch',
+                        label: { text: 'Ativo?' },
+                        editorOptions: {
+                            switchedOnText: 'Ativo',
+                            switchedOffText: 'Inativo'
+                        },
+                        colSpan: 2,
+                    },
+                ]
+            },
+            texts: {
+                confirmDeleteMessage: 'Deseja excluir este equipamento?'
+            }
+        },
+        columns: [
+            { dataField: 'codigo', caption: 'Código (TAG/Identificação)', width: 120, alignment: 'center', },
+            { dataField: 'nome', caption: 'Nome do Equipamento' },
+            {
+                dataField: 'quantidade',
+                caption: 'Qtd. Total',
+                allowEditing: true,
+                alignment: 'right',
+                width: 150,
+                dataType: 'number',
+                format: { type: 'fixedPoint', precision: 4 },
+                validationRules: [{ type: 'required' }]
+            },
+            {
+                dataField: 'quantidade_disponivel',
+                caption: 'Qtd. Disponível',
+                allowEditing: false,
+                alignment: 'right',
+                width: 150,
+                dataType: 'number',
+                format: { type: 'fixedPoint', precision: 4 },
+                validationRules: [{ type: 'required' }]
+            },
+            {
+                dataField: 'valor',
+                caption: 'Valor Unitário',
+                allowEditing: true,
+                alignment: 'right',
+                width: 120,
+                dataType: 'number',
+                format: { type: 'currency', currency: 'BRL', precision: 4 },
+                validationRules: [{ type: 'required' }]
+            },
+            { 
+                dataField: 'custo_total', caption: 'Custo Total', alignment: 'right',
+                width: 120,
+                dataType: 'number',
+                allowEditing: false,
+                format: { type: 'currency', currency: 'BRL', precision: 4 }
+            },
+            { dataField: 'observacoes', caption: 'Observações' },
+            {
+                caption: 'Imagens',
+                width: 100,
+                alignment: 'center',
+                allowEditing: false,
+                cellTemplate: function(container, options) {
+                    const hasImages = options.data.quantidade_imagens > 0;
+                    const equipmentId = options.data.id;
+
+                    const div = $('<div>').addClass('image-indicator-container');
+
+                    if (hasImages) {
+                        const viewBtn = $('<button>')
+                            .addClass('dx-button view-images-btn')
+                            .html('<i class="fa fa-image" style="color: #007bff; font-size: 16px;"></i>')
+                            .attr('title', 'Visualizar ' + options.data.quantidade_imagens + ' imagem(ns)')
+                            .on('click', function(e) {
+                                e.stopPropagation();
+                                DevExpress.ui.notify('Carregando imagens...', 'info', 1000);
+                                
+                                loadEquipmentImages(equipmentId).then(images => {
+                                    if (images.length > 0) {
+                                        showImagesPopup(images);
+                                    } else {
+                                        DevExpress.ui.notify('Nenhuma imagem encontrada!', 'warning', 3000);
+                                    }
+                                });
+                            });
+                        
+                        const downloadBtn = $('<button>')
+                            .addClass('dx-button download-images-btn')
+                            .html('<i class="fa fa-download" style="color: #28a745; font-size: 14px; margin-left: 5px;"></i>')
+                            .attr('title', 'Download de todas as imagens')
+                            .on('click', function(e) {
+                                e.stopPropagation();
+                                DevExpress.ui.notify('Preparando download...', 'info', 1000);
+                                
+                                loadEquipmentImages(equipmentId).then(images => {
+                                    if (images.length > 0) {
+                                        downloadAllImages(images);
+                                    } else {
+                                        DevExpress.ui.notify('Nenhuma imagem para download!', 'warning', 3000);
+                                    }
+                                });
+                            });
+                        
+                        div.append(viewBtn).append(downloadBtn);
+                    } else {
+                        div.html('<i class="fa fa-image" style="color: #ccc; font-size: 16px;"></i>')
+                          .attr('title', 'Sem imagens');
                     }
-                }),
-                displayExpr: displayExpr,
-                valueExpr: valueExpr,
-                placeholder: placeholder,
-                searchEnabled: true,
-                showClearButton: true,
-                onInitialized: function(e) {
-                    const val = e.component.option("value");
-                    e.component.option("value", val);
+
+                    div.appendTo(container);
                 }
-            };
-        }
+            },
+            {
+                dataField: 'status',
+                caption: 'Status',
+                dataType: 'boolean',
+                alignment: 'center',
+                width: 120
+            },
+        ],
+        onInitNewRow: function(e) {
+            isNovoRegistro = true;
+            e.data.status = true;
+            forceImageUpdate = false;
+        },
+        onEditingStart: function(e) {
+            isNovoRegistro = false;
+            forceImageUpdate = false;
+        },
+        onRowUpdating: function(e) {
+            e.newData = { ...e.oldData, ...e.newData };
+
+            const uploader = $(".dx-fileuploader").dxFileUploader("instance");
+            if (uploader) {
+                const uploadedImages = uploader.option("uploadedImages");
+                const hasNewImages = uploadedImages && uploadedImages.length > 0;
+                
+                if (hasNewImages || forceImageUpdate) {
+                    e.newData.imagens = uploadedImages || [];
+                    e.newData._imagesUpdated = new Date().getTime();
+                }
+            }
+            
+            // Remove o campo fictício usado para forçar o update (se existir)
+            delete e.newData._forceImageUpdate;
+        },
+        onSaved: function(e) {
+            // Reseta a flag após o salvamento
+            forceImageUpdate = false;
+        },
+        onEditCanceled: function(e) {
+            // Reseta a flag se o usuário cancelar
+            forceImageUpdate = false;
+        },
+        onToolbarPreparing: function (e) {
+            var toolbarItems = e.toolbarOptions.items;
+            
+            toolbarItems.push({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "fa fa-expand",
+                    text: "",
+                    onClick: function () {
+                        var grid = e.component;
+                        grid.expandAll();
+                    }
+                }
+            });
+
+            toolbarItems.push({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "fa fa-compress",
+                    text: "",
+                    onClick: function () {
+                        var grid = e.component;
+                        grid.collapseAll();
+                    }
+                }
+            });
+
+            e.toolbarOptions.items.push({
+                name: "refresh",
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "refresh",
+                    onClick: function() {
+                        e.component.refresh();
+                    },
+                    text: "Atualizar" 
+                }
+            });
+        },     
+        onRowPrepared: function(e) {
+            if (e.rowType === "data") {
+                if (e.data.quantidade_disponivel === 0) {
+                    e.rowElement.css({
+                        "background-color": "#f8d7da",
+                        "color": "#721c24"
+                    });
+                }
+            }
+        },       
     });
+});
 </script>

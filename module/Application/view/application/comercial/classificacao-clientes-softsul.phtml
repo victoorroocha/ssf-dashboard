@@ -322,6 +322,7 @@
                 { dataField: 'NOME_CLIENTE', caption: 'Nome', allowEditing: false, width: 400 },
                 { dataField: 'NOME_GRUPO_CLIENTE', caption: 'Grupo Cliente', allowEditing: false},
                 { dataField: 'CGCCPF_CLIENTE', caption: 'CGC/CPF', allowEditing: false, width: 150, alignment: 'center' },
+                { dataField: 'CLIENTE_REGIAO', caption: 'Região Cliente', allowEditing: false, alignment: 'center'},
                 { 
                     dataField: 'DATA_PRIMEIRO_PEDIDO', 
                     caption: 'Dt. Primeiro Pedido', 
@@ -334,7 +335,7 @@
                         displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
                     },
                 },
-                { dataField: 'PRIMEIRO_PEDIDO_DIAS', caption: 'Primeiro Pedido (dias)', allowEditing: false, width: 130, alignment: 'center', visible: false },
+                { dataField: 'PRIMEIRO_PEDIDO_DIAS', caption: 'Primeiro Pedido (dias)', allowEditing: false, width: 130, alignment: 'center' },
                 { 
                     dataField: 'DATA_ULTIMO_PEDIDO', 
                     caption: 'Dt. Último Pedido', 
@@ -348,14 +349,15 @@
                         displayFormat: 'dd/MM/yyyy'  // Define o formato de exibição da data no editor
                     },
                 },
-                { dataField: 'ULTIMO_PEDIDO_DIAS', caption: 'Último Pedido (dias)', allowEditing: false, width: 130, alignment: 'center', visible: false },
+                { dataField: 'ULTIMO_PEDIDO_DIAS', caption: 'Último Pedido (dias)', allowEditing: false, width: 130, alignment: 'center' },
                 { dataField: 'QTD_PEDIDOS', caption: 'Qtd. Pedidos', allowEditing: false, width: 170, alignment: 'center' },
-                { dataField: 'QTD_PEDIDO_ANO_ATUAL', caption: 'Qtd. Pedidos Ano Atual', allowEditing: false, width: 170, alignment: 'center', visible: false },
-                { dataField: 'QTD_PEDIDO_ANO_ANTERIOR', caption: 'Qtd. Pedidos Ano Anterior', allowEditing: false, width: 170, alignment: 'center', visible: false },
+                { dataField: 'QTD_PEDIDO_ANO_ATUAL', caption: 'Qtd. Pedidos Ano Atual', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'QTD_PEDIDO_ANO_ANTERIOR', caption: 'Qtd. Pedidos Ano Anterior', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_B50', caption: 'Qtd. Bags 5 Mi', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_B10', caption: 'Qtd. Bags 1000 Kgs', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_SK200', caption: 'Qtd. Sc 200 mil', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_TOTAL', caption: 'Qtd. Total', allowEditing: false, width: 170, alignment: 'center' },
+                { dataField: 'MEDIA_BAGS_P_SAFRA', caption: 'Média de Bags Por safra', allowEditing: false, width: 170, alignment: 'center' },
                 { dataField: 'QTD_SAFRAS_PARTICIPADAS', caption: 'Qtd. Safras Participou', allowEditing: false, width: 'auto', alignment: 'center' },
                 { dataField: 'MEDIA_PEDIDOS_P_SAFRA', caption: 'Média Pedidos Por Safra', allowEditing: false, width: 'auto', alignment: 'center', dataType: 'number', format: { precision: 2 }, },
                 { dataField: 'MEDIA_CULTIVARES_POR_PEDIDO', caption: 'Média Cultivares Por Pedido', allowEditing: false, width: 'auto', alignment: 'center', dataType: 'number', format: { precision: 2 }, },
@@ -411,7 +413,6 @@
                     allowEditing: false, 
                     alignment: 'right', 
                     width: 'auto', 
-                    visible: false,
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
                 },
@@ -421,7 +422,6 @@
                     allowEditing: false, 
                     alignment: 'right', 
                     width: 'auto', 
-                    visible: false,
                     dataType: 'number', 
                     format: { type: 'currency', currency: 'BRL', precision: 2 },
                 },
@@ -509,7 +509,6 @@
                     }
                 },
                 { dataField: 'CATEGORIA_CLIENTE', caption: 'Categoria', allowEditing: false, alignment: 'center', width: 150 },
-                { dataField: 'CLIENTE_REGIAO', caption: 'Região Cliente', allowEditing: false, alignment: 'center'},
             ],
             summary: {
                 totalItems: [
