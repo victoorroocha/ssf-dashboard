@@ -538,6 +538,7 @@ class PlanejamentoControleProducaoRepository
                         (SELECT COUNT(*) FROM pcp_equipamentos_imagens WHERE equipamento_id = e.id) as quantidade_imagens
                     FROM pcp_equipamentos e
                     WHERE 1=1
+                    AND e.status = true
                     {$ands}
                     ORDER BY e.codigo
                     LIMIT $limit OFFSET $offset";
