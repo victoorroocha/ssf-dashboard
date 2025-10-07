@@ -347,6 +347,39 @@ class PlanejamentoControleProducaoController extends BaseController
                 ]);
             }
         }
+        public function removerImagemEquipamentoAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+            $idImagem = $data['id_imagem'] ?? null;
+
+            if (empty($idImagem)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'ID da imagem não informado.',
+                ]);
+            }
+
+            try {
+                $this->PlanejamentoControleProducaoRepository->removerImagemEquipamento($idImagem);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Imagem removida com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao remover imagem: ' . $e->getMessage(),
+                ]);
+            }
+        }
+
     #endRegion    
 
     #region Controle de Emprestimo

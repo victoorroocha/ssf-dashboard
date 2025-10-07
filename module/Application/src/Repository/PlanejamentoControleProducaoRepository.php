@@ -342,19 +342,32 @@ class PlanejamentoControleProducaoRepository
                 $nomeUnico = uniqid() . '_' . $equipamentoId . '.' . $extensao;
                 $caminhoCompleto = $pastaDestino . '/' . $nomeUnico;
 
-                // CORREÇÃO: Melhor tratamento do base64
+                // Decodifica o base64
                 $dadosBinarios = base64_decode($imagem['binario']);
                 if ($dadosBinarios === false) {
                     throw new \Exception('Dados binários da imagem inválidos: ' . $imagem['nome_arquivo']);
                 }
 
-                // Tenta salvar o arquivo
-                $bytesEscritos = file_put_contents($caminhoCompleto, $dadosBinarios);
-                if ($bytesEscritos === false) {
-                    throw new \Exception('Erro ao salvar a imagem: ' . $imagem['nome_arquivo']);
+                // Verifica o tamanho
+                if ($imagem['tamanho'] > 5 * 1024 * 1024) { // 5 MB
+                    throw new \Exception('Imagem muito grande. Tamanho máximo permitido: 5 MB.');
                 }
 
-                // Verifica se o arquivo foi realmente criado
+                // Caminho temporário
+                $tmpFile = sys_get_temp_dir() . '/' . uniqid('equip_') . '.' . $extensao;
+
+                // Salva temporariamente
+                file_put_contents($tmpFile, $dadosBinarios);
+
+                // Otimiza a imagem *antes* de salvar no destino final
+                $this->otimizarImagem($tmpFile);
+
+                // Move a otimizada para o caminho definitivo
+                if (!rename($tmpFile, $caminhoCompleto)) {
+                    throw new \Exception('Falha ao mover imagem otimizada: ' . $imagem['nome_arquivo']);
+                }
+
+                // Confere se o arquivo existe e tem conteúdo
                 if (!file_exists($caminhoCompleto) || filesize($caminhoCompleto) === 0) {
                     throw new \Exception('Arquivo de imagem não foi criado corretamente: ' . $imagem['nome_arquivo']);
                 }
@@ -367,6 +380,57 @@ class PlanejamentoControleProducaoRepository
                     'tamanho' => $imagem['tamanho'] ?? filesize($caminhoCompleto)
                 ]);
             }
+        }
+        private function otimizarImagem($caminho)
+        {
+            $info = getimagesize($caminho);
+            if ($info === false) {
+                return; // Não é uma imagem válida
+            }
+
+            list($larguraOriginal, $alturaOriginal) = $info;
+            $tipo = $info['mime'];
+
+            // Define tamanho máximo
+            $larguraMax = 800;
+            $alturaMax = 800;
+
+            // Calcula nova proporção
+            $ratio = min($larguraMax / $larguraOriginal, $alturaMax / $alturaOriginal, 1);
+            $novaLargura = intval($larguraOriginal * $ratio);
+            $novaAltura = intval($alturaOriginal * $ratio);
+
+            // Cria imagem a partir do tipo
+            switch ($tipo) {
+                case 'image/jpeg':
+                    $src = imagecreatefromjpeg($caminho);
+                    break;
+                case 'image/png':
+                    $src = imagecreatefrompng($caminho);
+                    break;
+                case 'image/webp':
+                    $src = imagecreatefromwebp($caminho);
+                    break;
+                default:
+                    return; // Tipo não suportado
+            }
+
+            // Cria imagem redimensionada
+            $dst = imagecreatetruecolor($novaLargura, $novaAltura);
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $novaLargura, $novaAltura, $larguraOriginal, $alturaOriginal);
+
+            // Sobrescreve o arquivo original com compressão
+            if ($tipo === 'image/jpeg') {
+                imagejpeg($dst, $caminho, 80); // Qualidade 80%
+            } elseif ($tipo === 'image/png') {
+                imagepng($dst, $caminho, 6); // Compressão 0–9 (6 é um bom meio termo)
+            } elseif ($tipo === 'image/webp') {
+                imagewebp($dst, $caminho, 80);
+            }
+
+            // Libera memória
+            imagedestroy($src);
+            imagedestroy($dst);
         }
         private function verificarConfiguracaoDiretorio()
         {
@@ -530,6 +594,7 @@ class PlanejamentoControleProducaoRepository
         public function carregarImagensEquipamento($equipamentoId)
         {
             $sql = "SELECT 
+                        id,
                         nome_arquivo,
                         caminho,
                         tipo_mime,
@@ -548,6 +613,7 @@ class PlanejamentoControleProducaoRepository
                     $binario = base64_encode(file_get_contents($row['caminho']));
                     
                     $imagens[] = [
+                        'id' => $row['id'], 
                         'nome_arquivo' => $row['nome_arquivo'],
                         'caminho' => $row['caminho'],
                         'tipo_mime' => $row['tipo_mime'] ?? $this->getMimeTypeFromExtension($row['nome_arquivo']),
@@ -575,6 +641,30 @@ class PlanejamentoControleProducaoRepository
             
             return $mimeTypes[$extension] ?? 'image/jpeg';
         }
+        public function removerImagemEquipamento($idImagem)
+        {
+            // Busca imagem no banco para apagar o arquivo físico
+            $sqlSelect = "SELECT caminho FROM pcp_equipamentos_imagens WHERE id = :id";
+            $imagem = $this->adapter->createStatement($sqlSelect)->execute([':id' => $idImagem])->current();
+
+            if (!$imagem) {
+                throw new \Exception('Imagem não encontrada.');
+            }
+
+            $caminho = $imagem['caminho'];
+
+            // Remove o arquivo físico, se existir
+            if (file_exists($caminho)) {
+                if (!unlink($caminho)) {
+                    throw new \Exception('Não foi possível remover o arquivo físico da imagem.');
+                }
+            }
+
+            // Remove o registro do banco
+            $sqlDelete = "DELETE FROM pcp_equipamentos_imagens WHERE id = :id";
+            $this->adapter->createStatement($sqlDelete)->execute([':id' => $idImagem]);
+        }
+
     #endRegion
 
     #region Controle de Empréstimo

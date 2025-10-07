@@ -111,6 +111,19 @@
     .download-all-btn:hover, .download-single-btn:hover {
         background: #218838;
     }
+    .remove-single-btn {
+        background: #b65858ff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .remove-single-btn:hover {
+        background: #631818ff;
+    }
 
     .image-indicator-container {
         display: flex;
@@ -202,17 +215,21 @@ $(document).ready(function() {
             const imgElement = $(`
                 <div class="image-item">
                     <img src="data:${img.tipo_mime};base64,${img.binario}" 
-                         alt="${img.nome_arquivo}" 
-                         title="${img.nome_arquivo}">
+                        alt="${img.nome_arquivo}" 
+                        title="${img.nome_arquivo}">
                     <div class="image-actions">
                         <button class="dx-button download-single-btn" data-index="${index}">
-                            <i class="fa fa-download"></i> Download
+                            <i class="fa fa-download"></i>
+                        </button>
+                        <button class="dx-button remove-single-btn" data-index="${index}">
+                            <i class="fa fa-trash"></i>
                         </button>
                     </div>
                 </div>
             `);
             imageContainer.append(imgElement);
         });
+
         
         imageCounter.text(`${images.length} imagem(ns)`);
         
@@ -223,6 +240,68 @@ $(document).ready(function() {
             downloadImage(img.binario, img.nome_arquivo, img.tipo_mime);
         });
         
+        // Evento para remoção individual
+        popup.on('click', '.remove-single-btn', function() {
+            const index = $(this).data('index');
+            const img = images[index];
+
+            // Fecha qualquer dialog existente primeiro
+            $('.dx-overlay-wrapper').remove();
+            
+            // Pequeno delay para garantir que o DOM está limpo
+            setTimeout(() => {
+                // Confirmação usando DevExpress
+                DevExpress.ui.dialog.confirm(
+                    `Deseja realmente remover a imagem <b>"${img.nome_arquivo}"</b>?`,
+                    "Confirmar Remoção"
+                ).done(function(confirmed) {
+                    if (confirmed) {
+                        $.ajax({
+                            url: '/planejamento-controle-producao/remover-imagem-equipamento',
+                            method: 'DELETE',
+                            contentType: 'application/json',
+                            data: JSON.stringify({ id_imagem: img.id }),
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                DevExpress.ui.notify('Imagem removida com sucesso!', 'success', 2000);
+
+                                // Remove visualmente do popup
+                                $('.image-item').eq(index).remove();
+
+                                // Atualiza contador
+                                const remaining = $('.image-item').length;
+                                imageCounter.text(`${remaining} imagem(ns)`);
+
+                                // Atualiza lista local
+                                images.splice(index, 1);
+
+                                // Se acabou tudo, fecha o popup e recarrega a grid
+                                if (remaining === 0) {
+                                    popup.remove();
+                                    $("#gridEquipamentos").dxDataGrid("instance").refresh();
+                                } else {
+                                    // Recarrega a grid para atualizar o contador de imagens
+                                    $("#gridEquipamentos").dxDataGrid("instance").refresh();
+                                }
+
+                            } else {
+                                DevExpress.ui.notify(response.message || 'Erro ao remover imagem!', 'error', 3000);
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao remover imagem!', 'error', 3000);
+                        });
+                    }
+                });
+                
+                // Força o z-index do dialog para ficar acima do popup
+                setTimeout(() => {
+                    $('.dx-overlay-wrapper').css('z-index', '99999');
+                }, 20);
+            }, 10);
+        });
+
+        
         // Evento para download de todas as imagens
         downloadBtn.on('click', function() {
             downloadAllImages(images);
@@ -231,13 +310,17 @@ $(document).ready(function() {
         // Eventos para fechar o popup
         popup.find('.close-btn, .image-viewer-overlay').on('click', function() {
             popup.remove();
+            // Recarrega a grid ao fechar o popup
+            $("#gridEquipamentos").dxDataGrid("instance").refresh();
         });
-        
+
         // Fechar com ESC
         $(document).on('keyup.imageViewer', function(e) {
             if (e.key === 'Escape') {
                 popup.remove();
                 $(document).off('keyup.imageViewer');
+                // Recarrega a grid ao fechar o popup
+                $("#gridEquipamentos").dxDataGrid("instance").refresh();
             }
         });
     }
@@ -685,26 +768,27 @@ $(document).ready(function() {
                                         DevExpress.ui.notify('Nenhuma imagem encontrada!', 'warning', 3000);
                                     }
                                 });
-                            });
+                        });
                         
-                        const downloadBtn = $('<button>')
-                            .addClass('dx-button download-images-btn')
-                            .html('<i class="fa fa-download" style="color: #28a745; font-size: 14px; margin-left: 5px;"></i>')
-                            .attr('title', 'Download de todas as imagens')
-                            .on('click', function(e) {
-                                e.stopPropagation();
-                                DevExpress.ui.notify('Preparando download...', 'info', 1000);
+                        // const downloadBtn = $('<button>')
+                        //     .addClass('dx-button download-images-btn')
+                        //     .html('<i class="fa fa-download" style="color: #28a745; font-size: 14px; margin-left: 5px;"></i>')
+                        //     .attr('title', 'Download de todas as imagens')
+                        //     .on('click', function(e) {
+                        //         e.stopPropagation();
+                        //         DevExpress.ui.notify('Preparando download...', 'info', 1000);
                                 
-                                loadEquipmentImages(equipmentId).then(images => {
-                                    if (images.length > 0) {
-                                        downloadAllImages(images);
-                                    } else {
-                                        DevExpress.ui.notify('Nenhuma imagem para download!', 'warning', 3000);
-                                    }
-                                });
-                            });
+                        //         loadEquipmentImages(equipmentId).then(images => {
+                        //             if (images.length > 0) {
+                        //                 downloadAllImages(images);
+                        //             } else {
+                        //                 DevExpress.ui.notify('Nenhuma imagem para download!', 'warning', 3000);
+                        //             }
+                        //         });
+                        // });
                         
-                        div.append(viewBtn).append(downloadBtn);
+                        div.append(viewBtn);
+                        // div.append(downloadBtn);
                     } else {
                         div.html('<i class="fa fa-image" style="color: #ccc; font-size: 16px;"></i>')
                           .attr('title', 'Sem imagens');
