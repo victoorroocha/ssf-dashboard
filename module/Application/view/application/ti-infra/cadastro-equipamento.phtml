@@ -972,10 +972,7 @@ $(document).ready(function() {
                                 });
                             }
                         }
-                    },                    
-
-
-                    
+                    },   
                     { 
                         dataField: 'status', 
                         editorType: 'dxSwitch', 
@@ -1094,44 +1091,6 @@ $(document).ready(function() {
             },
             { dataField: 'link_fabricante', caption: 'Link Fabricante', visible: false },
             { dataField: 'observacoes', caption: 'Observações', visible: false },
-            // {
-            //     caption: 'Imagens',
-            //     width: 100,
-            //     alignment: 'center',
-            //     allowEditing: false,
-            //     cellTemplate: function(container, options) {
-            //         const hasImages = options.data.quantidade_imagens > 0;
-            //         const equipmentId = options.data.id;
-
-            //         const div = $('<div>').addClass('image-indicator-container');
-
-            //         if (hasImages) {
-            //             const viewBtn = $('<button>')
-            //                 .addClass('dx-button view-images-btn')
-            //                 .html('<i class="fa fa-image" style="color: #007bff; font-size: 16px;"></i>')
-            //                 .attr('title', 'Visualizar ' + options.data.quantidade_imagens + ' imagem(ns)')
-            //                 .on('click', function(e) {
-            //                     e.stopPropagation();
-            //                     DevExpress.ui.notify('Carregando imagens...', 'info', 1000);
-                                
-            //                     loadEquipmentImages(equipmentId).then(images => {
-            //                         if (images.length > 0) {
-            //                             showImagesPopup(images);
-            //                         } else {
-            //                             DevExpress.ui.notify('Nenhuma imagem encontrada!', 'warning', 3000);
-            //                         }
-            //                     });
-            //                 });
-                        
-            //             div.append(viewBtn);
-            //         } else {
-            //             div.html('<i class="fa fa-image" style="color: #ccc; font-size: 16px;"></i>')
-            //               .attr('title', 'Sem imagens');
-            //         }
-
-            //         div.appendTo(container);
-            //     }
-            // },
             { dataField: 'status', caption: 'Status', dataType: 'boolean', alignment: 'center', width: 120, visible: false },
         ],
         onEditorPreparing: function(e) {
@@ -1236,8 +1195,8 @@ $(document).ready(function() {
             });
         },    
         onRowPrepared: function(e) {
-            if (e.rowType === "data" && e.data.quantidade_disponivel === 0) {
-                e.rowElement.css({ "background-color": "#f8d7da", "color": "#721c24" });
+            if (e.rowType === "data" && e.data.status === 'Inativo') {
+                e.rowElement.css({ "background-color": "#721c24", "color": "white" });
             }
         }
     });
