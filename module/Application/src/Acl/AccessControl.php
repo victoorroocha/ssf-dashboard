@@ -54,6 +54,7 @@ class AccessControl
             'ComercialController',
             'PlanejamentoControleManutencaoController',
             'PlanejamentoControleProducaoController',
+            'TiInfraController'
         ];
 
         foreach ($controllers as $controller) {
@@ -204,6 +205,36 @@ class AccessControl
             'getProdutosEstoqueLookup'
         ]);
         $this->acl->allow('Diretor', 'PlanejamentoControleProducaoController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Diretor', 'TiInfraController', [
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
@@ -403,6 +434,36 @@ class AccessControl
             'getInfoTermoEmprestimo',
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Gerente', 'TiInfraController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'IndexController', ['index', 'filtrarDados']);
@@ -542,6 +603,36 @@ class AccessControl
             'getProdutosEstoqueLookup'
         ]);
         $this->acl->allow('Coordenador', 'PlanejamentoControleProducaoController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Coordenador', 'TiInfraController', [
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
@@ -739,6 +830,36 @@ class AccessControl
             'getInfoTermoEmprestimo',
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Encarregado', 'TiInfraController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
 
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index', 'filtrarDados']);
@@ -878,6 +999,36 @@ class AccessControl
             'getProdutosEstoqueLookup'
         ]);
         $this->acl->allow('Analista', 'PlanejamentoControleProducaoController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Analista', 'TiInfraController', [
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
@@ -1075,6 +1226,36 @@ class AccessControl
             'getInfoTermoEmprestimo',
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Assistente', 'TiInfraController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'IndexController', ['index', 'filtrarDados']);
@@ -1213,6 +1394,36 @@ class AccessControl
             'getProdutosEstoqueLookup'
         ]);
         $this->acl->allow('Auxiliar', 'PlanejamentoControleProducaoController', [
+            'cadastroDepartamento',
+            'listarDepartamentos',
+            'salvarDepartamento',
+            'excluirDepartamento',
+            'getLookupDepartamentos',
+            'cadastroFuncionario',
+            'listarFuncionarios',
+            'salvarFuncionario',
+            'excluirFuncionario',
+            'getLookupFuncionarios',
+            'cadastroEquipamento',
+            'listarEquipamentos',
+            'salvarEquipamento',
+            'excluirEquipamento',
+            'getLookupEquipamentos',
+            'carregarImagensEquipamento',
+            'removerImagemEquipamento',
+            'controleEmprestimo',
+            'listarControlesEmprestimo',
+            'salvarControleEmprestimo',
+            'excluirControleEmprestimo',
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getCentroCustoLookup',
+            'getProdutosEstoqueLookup',
+            'marcarDevolucaoEquipamento',
+            'getInfoTermoEmprestimo',
+            'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Auxiliar', 'TiInfraController', [
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',

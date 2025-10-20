@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Produção</h1>
+        <h1 class="h3 mb-0 text-gray-800">Tecnologia da Informação – Infraestrutura</h1>
     </div>
 
     <!-- Content Row -->
@@ -29,7 +29,7 @@
                 key: 'id',
                 load: function() {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/listar-departamentos',
+                        url: '/ti-infra/listar-departamentos',
                         method: 'GET',
                         dataType: 'json'
                     }).then(response => {
@@ -53,7 +53,7 @@
                 },
                 insert: function(values) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-departamento',
+                        url: '/ti-infra/salvar-departamento',
                         method: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(values),
@@ -76,7 +76,7 @@
                 },
                 update: function(key, values) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-departamento',
+                        url: '/ti-infra/salvar-departamento',
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key, ...values }),
@@ -99,7 +99,7 @@
                 },
                 remove: function(key) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/excluir-departamento',
+                        url: '/ti-infra/excluir-departamento',
                         method: 'DELETE',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key }),

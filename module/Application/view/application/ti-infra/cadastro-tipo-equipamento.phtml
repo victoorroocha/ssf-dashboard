@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Produção</h1>
+        <h1 class="h3 mb-0 text-gray-800">Tecnologia da Informação – Infraestrutura</h1>
     </div>
 
     <!-- Content Row -->
@@ -11,9 +11,9 @@
             <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Cadastro Departamentos</p>
+                    <p>Cadastro Tipos Equipamento</p>
 
-                    <div id="gridDepartamentos"></div>
+                    <div id="gridTipoEquipamento"></div>
 
                 </div>
             </div>
@@ -24,12 +24,12 @@
 
 <script>
     $(document).ready(function() {
-        let departamentosGrid = $('#gridDepartamentos').dxDataGrid({
+        let tipoEquipamentoGrid = $('#gridTipoEquipamento').dxDataGrid({
             dataSource: new DevExpress.data.CustomStore({
                 key: 'id',
                 load: function() {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/listar-departamentos',
+                        url: '/ti-infra/listar-tipo-equipamento',
                         method: 'GET',
                         dataType: 'json'
                     }).then(response => {
@@ -46,14 +46,14 @@
                         if (error.responseJSON && error.responseJSON.message) {
                             DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify('Erro ao carregar departamento!', 'error', 3000);
+                            DevExpress.ui.notify('Erro ao carregar Tipo de Equipamento!', 'error', 3000);
                         }
                         return { data: [], totalCount: 0 };
                     });
                 },
                 insert: function(values) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-departamento',
+                        url: '/ti-infra/salvar-tipo-equipamento',
                         method: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(values),
@@ -62,21 +62,21 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Departamento salva com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify(response.message || 'Tipo de Equipamento salvo com sucesso!', 'success', 2000);
                         }
                         return response;
                     }).catch(error => {
                         if (error.responseJSON && error.responseJSON.message) {
                             DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify('Erro ao salvar Departamento!', 'error', 3000);
+                            DevExpress.ui.notify('Erro ao salvar Tipo Equipamento!', 'error', 3000);
                         }
                         return {};
                     });
                 },
                 update: function(key, values) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/salvar-departamento',
+                        url: '/ti-infra/salvar-tipo-equipamento',
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key, ...values }),
@@ -85,21 +85,21 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Departamento atualizada com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify(response.message || 'Tipo Equipamento atualizado com sucesso!', 'success', 2000);
                         }
                         return response;
                     }).catch(error => {
                         if (error.responseJSON && error.responseJSON.message) {
                             DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify('Erro ao atualizar Departamento!', 'error', 3000);
+                            DevExpress.ui.notify('Erro ao atualizar Tipo Equipamento!', 'error', 3000);
                         }
                         return {};
                     });
                 },
                 remove: function(key) {
                     return $.ajax({
-                        url: '/planejamento-controle-producao/excluir-departamento',
+                        url: '/ti-infra/excluir-tipo-equipamento',
                         method: 'DELETE',
                         contentType: 'application/json',
                         data: JSON.stringify({ id: key }),
@@ -108,14 +108,14 @@
                         if (!response.success) {
                             DevExpress.ui.notify(response.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify(response.message || 'Departamento excluída com sucesso!', 'success', 2000);
+                            DevExpress.ui.notify(response.message || 'Tipo Equipamento excluída com sucesso!', 'success', 2000);
                         }
                         return response;
                     }).catch(error => {
                         if (error.responseJSON && error.responseJSON.message) {
                             DevExpress.ui.notify(error.responseJSON.message, 'error', 3000);
                         } else {
-                            DevExpress.ui.notify('Erro ao excluir Departamento!', 'error', 3000);
+                            DevExpress.ui.notify('Erro ao excluir Tipo Equipamento!', 'error', 3000);
                         }
                         return {};
                     });
@@ -155,7 +155,7 @@
             },
             export: {
                 enabled: true,
-                fileName: 'departamento',
+                fileName: 'tiposEquipamento',
                 allowExportSelectedData: false
             },
             toolbar: {
@@ -169,7 +169,7 @@
                             icon: 'refresh',
                             hint: 'Atualizar',
                             onClick: function () {
-                                $('#gridDepartamentos').dxDataGrid('instance').refresh();
+                                $('#gridTipoEquipamento').dxDataGrid('instance').refresh();
                             }
                         }
                     },
@@ -180,7 +180,7 @@
                             icon: 'plus',
                             hint: 'Adicionar Área',
                             onClick: function () {
-                                $('#gridDepartamentos').dxDataGrid('instance').addRow();
+                                $('#gridTipoEquipamento').dxDataGrid('instance').addRow();
                             }
                         }
                     }
@@ -193,7 +193,7 @@
                 allowDeleting: false,
                 useIcons: true,
                 popup: {
-                    title: 'Departamento',
+                    title: 'Tipo Equipamento',
                     showTitle: true,
                     width: 450,
                     height: 'auto',
@@ -210,7 +210,7 @@
                         {
                             dataField: 'nome',
                             editorType: 'dxTextBox',
-                            label: { text: 'Departamento' },
+                            label: { text: 'Tipo Equipamento' },
                             editorOptions: {
                                 width: '100%'
                             },
@@ -239,14 +239,14 @@
                     ]
                 },
                 texts: {
-                    confirmDeleteMessage: 'Tem certeza que deseja excluir este departamento? Esta ação não pode ser desfeita.'
+                    confirmDeleteMessage: 'Tem certeza que deseja excluir esta Tipo de Equipamento? Esta ação não pode ser desfeita.'
                 }
             },
             columns: [
                 {
                     dataField: 'nome',
-                    caption: 'Departamento',
-                    validationRules: [{ type: 'required', message: 'Departamento é obrigatório' }]
+                    caption: 'Tipo Equipamento',
+                    validationRules: [{ type: 'required', message: 'Tipo Equipamento é obrigatório' }]
                 },
                 {
                     dataField: 'descricao',

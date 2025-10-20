@@ -14,6 +14,7 @@ use Application\Repository\ComercialRepository;  // Importar repositório
 use Application\Repository\VendasRepository;  // Importar repositório
 use Application\Repository\PlanejamentoControleManutencaoRepository;  // Importar repositório
 use Application\Repository\PlanejamentoControleProducaoRepository;  // Importar repositório
+use Application\Repository\TiInfraRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
 
 return [
@@ -218,6 +219,21 @@ return [
                     ],
                 ],
             ],
+            // TI Infra
+            'ti-infra' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/ti-infra[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\TiInfraController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -243,6 +259,7 @@ return [
             Controller\VendasController::class => Factory\GenericControllerFactory::class,
             Controller\PlanejamentoControleManutencaoController::class => Factory\GenericControllerFactory::class,
             Controller\PlanejamentoControleProducaoController::class => Factory\GenericControllerFactory::class,
+            Controller\TiInfraController::class => Factory\GenericControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -308,6 +325,10 @@ return [
             'Application\Repository\PlanejamentoControleProducaoRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\PlanejamentoControleProducaoRepository($adapter);
+            },
+            'Application\Repository\TiInfraRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\TiInfraRepository($adapter);
             },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 

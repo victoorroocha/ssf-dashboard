@@ -1,0 +1,1091 @@
+<style>
+    #print-area {
+        background: white;
+        width: 100%;
+        max-width: 100%; /* Alterado para ocupar toda a largura disponível */
+        margin: 0 auto; /* Centralizado */
+        padding: 15px; /* Reduzido para economizar espaço */
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 0.9em; /* Tamanho de fonte base reduzido */
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 8px; /* Reduzido */
+        margin-bottom: 15px; /* Reduzido */
+        flex-wrap: wrap;
+    }
+
+    .header h1 {
+        font-size: 1.25em; /* Usando em para escalabilidade */
+        margin: 0;
+        color: #0f172a;
+        font-weight: 600; /* Mais semântico que bold */
+    }
+
+    .header .numero-os {
+        font-size: 18px;
+        color: #ef4444;
+        font-weight: 500;
+    }
+
+    .section {
+        margin-bottom: 15px; /* Reduzido */
+    }
+
+    .section-title {
+        font-weight: 600;
+        background: #0f172a;
+        color: white;
+        padding: 5px 8px; /* Reduzido */
+        font-size: 0.95em; /* Reduzido */
+        border-radius: 3px; /* Adicionado para suavizar */
+        margin-bottom: 8px; /* Adicionado espaçamento */
+    }
+
+    .field-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px; /* Reduzido para economizar espaço */
+    }
+
+    .field {
+        flex: 1 1 calc(50% - 8px); /* Ajustado para o novo gap */
+        padding: 6px; /* Reduzido */
+        border: 1px solid #e2e8f0; /* Cor mais suave */
+        border-radius: 4px;
+        box-sizing: border-box;
+        background-color: #f8fafc; /* Fundo sutil para melhor legibilidade */
+    }
+    .field.third {
+        flex: 1 1 calc(33.333% - 8px); /* para 3 colunas com gap de 8px */
+    }
+
+    .field.full {
+        flex: 1 1 100%;
+    }
+
+    .label {
+        font-weight: 500; /* Mais suave que bold */
+        display: block;
+        margin-bottom: 2px; /* Reduzido */
+        font-size: 0.85em;
+        color: #475569; /* Cor mais suave */
+    }
+
+    .value {
+        font-size: 0.9em;
+        min-height: 1.2em; /* Baseado em em para escalabilidade */
+        word-break: break-word;
+        color: #1e293b; /* Cor mais escura para melhor contraste */
+        padding: 2px 0; /* Pequeno espaçamento interno */
+        white-space: pre-wrap; /* mantém quebras de linha do texto */
+        word-wrap: break-word; /* reforço para não estourar o layout */
+    }
+
+    .signature {
+        margin-top: 30px; /* Reduzido */
+        border-top: 1px dashed #cbd5e1; /* Cor mais suave */
+        text-align: center;
+        padding-top: 8px;
+        font-size: 0.9em;
+        color: #64748b; /* Cor mais suave */
+    }
+
+    /* #ordemServicoContent {
+        max-height: 90vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    } */
+
+    /* Adicionando responsividade para telas menores */
+    @media (max-width: 600px) {
+        .field {
+            flex: 1 1 100%; /* Em telas pequenas, campos ocupam linha inteira */
+        }
+        
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .header .numero-os {
+            align-self: flex-end;
+        }
+    }
+
+
+    @media print {
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        #print-area {
+            page-break-inside: avoid;
+        }
+
+        /* Evita quebra dentro das seções */
+        .section, .signature {
+            page-break-inside: avoid;
+            page-break-before: auto;
+            page-break-after: auto;
+        }
+
+        /* Força a assinatura a ir para a próxima página se não couber */
+        .signature {
+            page-break-before: always;
+        }
+    }
+
+
+    /* teste template equipamentos selectBox */
+    .equipamento-template {
+        padding: 8px;
+        line-height: 1.4;
+    }
+
+    .equipamento-header {
+        font-size: 14px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 3px;
+    }
+
+    .equipamento-details {
+        font-size: 12px;
+        color: #020202ff;
+    }
+
+    .equipamento-details div {
+        margin-bottom: 2px;
+    }
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Planejamento e Controle da Produção</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Empréstimo</p>
+
+                    <div id="gridControleEmprestimo"></div>
+                    <div id="popupTermoEmprestimo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        var produtosLookup = []; 
+        var funcionariosLookup = []; 
+
+        getLookupFuncionarios();
+
+        let controleEmprestimoGrid = $('#gridControleEmprestimo').dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: 'id',
+                load: function () {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/listar-controles-emprestimo',
+                        method: 'GET',
+                        dataType: 'json'
+                    }).then(response => {
+                        if (response.success) {
+                            return {
+                                data: response.data,
+                                totalCount: response.totalCount || response.data.length
+                            };
+                        } else {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                            return { data: [], totalCount: 0 };
+                        }
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao carregar controles!', 'error', 5000);
+                        return { data: [], totalCount: 0 };
+                    });
+                },
+                insert: function (values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-controle-emprestimo',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(values),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle salvo com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao salvar controle!', 'error', 5000);
+                        return {};
+                    });
+                },
+                update: function (key, values) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/salvar-controle-emprestimo',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key, ...values }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle atualizado com sucesso!', 'success', 5000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao atualizar controle!', 'error', 5000);
+                        return {};
+                    });
+                },
+                remove: function (key) {
+                    return $.ajax({
+                        url: '/planejamento-controle-producao/excluir-controle-emprestimo',
+                        method: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: key }),
+                        dataType: 'json'
+                    }).then(response => {
+                        if (!response.success) {
+                            DevExpress.ui.notify(response.message, 'error', 5000);
+                        } else {
+                            DevExpress.ui.notify(response.message || 'Controle excluído com sucesso!', 'success', 2000);
+                        }
+                        return response;
+                    }).catch(() => {
+                        DevExpress.ui.notify('Erro ao excluir controle!', 'error', 3000);
+                        return {};
+                    });
+                }
+            }),
+            keyExpr: 'id',
+            columnAutoWidth: true,
+            width: '100%',
+            height: 'auto',
+            showBorders: true,
+            columnChooser: {
+                enabled: true,
+                mode: "dragAndDrop", // or "select"
+                position: { 
+                    my: "right", 
+                    at: "right", 
+                    of: ".dx-datagrid-column-chooser-button" 
+                }
+            },
+            groupPanel: {
+                visible: true,
+            },
+            toolbar: {
+                items: [
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-expand", // ícone para expandir
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#gridControleEmprestimo").dxDataGrid("instance");
+                                grid.expandAll(); // Expande todos os grupos
+                            }
+                        }
+                    },
+                    {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            icon: "fa fa-compress", // ícone para colapsar
+                            text: "",
+                            onClick: function () {
+                                var grid = $("#gridControleEmprestimo").dxDataGrid("instance");
+                                grid.collapseAll(); // Colapsa todos os grupos
+                            }
+                        }
+                    },
+                    {
+                        name: "refresh", // Define o nome do botão
+                        location: "after", // Coloca o botão após os outros itens na toolbar
+                        widget: "dxButton",
+                        options: {
+                            icon: "refresh", // Ícone de refresh
+                            onClick: function() {
+                                // Lógica para atualizar/recarregar os dados da grid
+                                $("#gridControleEmprestimo").dxDataGrid("instance").refresh(); // Atualiza a grid
+                            },
+                            text: "Atualizar" // Texto exibido no botão
+                        }
+                    }
+                ]
+            },
+            paging: {
+                pageSize: 500,
+            },
+            pager: {
+                visible: true,
+                allowedPageSizes: [5, 10, 100, 200, 500],
+                showPageSizeSelector: true,
+                showInfo: true,
+                showNavigationButtons: true,
+            },
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            export: {
+                enabled: true,
+                fileName: "Controle Empréstimos",
+                allowExportSelectedData: false,
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            hoverStateEnabled: true,
+            editing: {
+                mode: 'popup',
+                allowUpdating: true,
+                allowAdding: true,
+                allowDeleting: true,
+                useIcons: true,
+                popup: {
+                    title: "Empréstimo",
+                    showTitle: true,
+                    width: '800px',
+                    resizeEnabled: true,
+                    autoResizeEnabled: true,
+                    height: 'auto', 
+                    // maxHeight: '95vh'
+                },
+                form: {
+                    colCount: 2,
+                    labelLocation: 'top',
+                    items: [
+                        { 
+                            dataField: 'data_emprestimo', 
+                            label: { text: 'Data Empréstimo' }, 
+                            editorType: 'dxDateBox', 
+                            editorOptions: { 
+                                type: 'date', 
+                                value: new Date() // define a data atual como padrão
+                            }, 
+                            colSpan: 2 
+                        },
+                        {
+                            dataField: 'numcad',
+                            label: { text: 'Matrícula / Funcionário Empréstimo' },
+                            editorType: 'dxSelectBox',
+                        },
+                        {
+                            dataField: 'departamento_id',
+                            editorType: 'dxSelectBox',
+                            label: { text: 'Departamento' },
+                            editorOptions: getSelectBoxOptions(
+                                '/planejamento-controle-producao/get-lookup-departamentos',
+                                'nome', 'id',
+                                'Selecione Departamento'
+                            ),
+                            validationRules: [{ type: 'required', message: 'Departamento é obrigatória' }]
+                        },
+                        { 
+                            dataField: 'equipamento_id', 
+                            label: { text: 'Equipamento' }, 
+                            editorType: 'dxSelectBox', 
+                            colSpan: 2, 
+                            editorOptions: {
+                                dataSource: new DevExpress.data.DataSource({
+                                    store: new DevExpress.data.CustomStore({
+                                        key: 'id',
+                                        load: function(loadOptions) {
+                                            const searchValue = (loadOptions.searchValue || '').toUpperCase();
+                                            const skip = loadOptions.skip || 0;
+                                            const take = loadOptions.take || 30;
+                                            
+                                            return $.ajax({
+                                                url: '/planejamento-controle-producao/get-lookup-equipamentos',
+                                                dataType: 'json',
+                                                data: { 
+                                                    search: searchValue,
+                                                    offset: skip,
+                                                    limit: take
+                                                }
+                                            }).then(result => {
+                                                const data = result.data || result;
+                                                return {
+                                                    data: data,
+                                                    totalCount: result.totalCount || 1000
+                                                };
+                                            }).catch(() => {
+                                                return { data: [], totalCount: 0 };
+                                            });
+                                        },
+                                        byKey: function(key) {
+                                            return $.ajax({
+                                                url: '/planejamento-controle-producao/get-lookup-equipamentos',
+                                                dataType: 'json',
+                                                data: { key: key }
+                                            }).then(result => {
+                                                const item = result.data || result;
+                                               
+                                                return item;
+                                            });
+                                        }
+                                    }),
+                                    paginate: true,
+                                    pageSize: 30
+                                }),
+                                valueExpr: 'id',
+                                searchEnabled: true,
+                                searchExpr: ['codigo', 'nome'],
+                                searchTimeout: 500,
+                                minSearchLength: 0,
+                                // ✅ Recarregar ao abrir
+                                onOpened: function(e) {
+                                    e.component.getDataSource().reload();
+                                },
+                                itemTemplate: function(data) {
+                                    const indisponivel = data.quantidade_disponivel === 0 ? " (Indisponível)" : "";
+                                    return `
+                                        <div class="equipamento-template">
+                                            <div class="equipamento-header">
+                                                <strong>${data.codigo || 'Sem código'}</strong> - ${data.nome || 'Sem nome'} <span style="color:darkred; font-weight:bold;">${indisponivel}</span>
+                                            </div>
+                                            <div class="equipamento-details">
+                                                <div><small><strong>Qtd. Total:</strong> ${data.quantidade}</small></div>
+                                                <div><small><strong>Qtd. Disponível:</strong> ${data.quantidade_disponivel}</small></div>
+                                                <div><small><strong>Observação:</strong> ${data.observacoes || 'Nenhuma'}</small></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                },
+                                displayExpr: function(item) {
+                                    return item ? `${item.codigo} - ${item.nome}` : '';
+                                },
+                                placeholder: 'Digite para buscar...',
+                                showClearButton: true,
+                                showDataBeforeSearch: true
+                            } 
+                        },
+                        {
+                            dataField: 'quantidade_emprestimo',
+                            editorType: 'dxNumberBox',
+                            editorOptions: { format: { type: 'fixedPoint', precision: 4 } },
+                            validationRules: [
+                                { type: 'required' },
+                            ]
+                        },
+                        { 
+                            dataField: 'data_programada_devolucao', 
+                            label: { text: 'Data Programada Devolução' }, 
+                            editorType: 'dxDateBox', 
+                            editorOptions: { 
+                                type: 'date', 
+                                min: new Date()
+                            }, 
+                            colSpan: 2 
+                        },
+                        { dataField: 'observacoes', label: { text: 'Observações Adicionais' }, editorType: 'dxTextArea', colSpan: 2, editorOptions: { height: 60 } },
+                    ]
+                }
+            },
+            columns: [
+                { 
+                    dataField: 'id', 
+                    caption: 'ID', 
+                    alignment: 'center', 
+                    width: 110,
+                    calculateDisplayValue: function(rowData) {
+                        return String(rowData.id).padStart(5, '0');
+                    }
+                },
+                { dataField: 'data_emprestimo', caption: 'Dt. Emprestimo', dataType: 'date', alignment: 'center', width: 150 },
+                {
+                    dataField: 'numcad',
+                    caption: 'Nome Funcionário',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: 'MATRICULA',
+                            loadMode: 'processed',
+                            cacheRawData: true, 
+                            load: function (loadOptions) {
+                                return new Promise((resolve) => {
+                                    const searchValue = (loadOptions.searchValue || '').toUpperCase();
+
+                                    let resultado = [];
+
+                                    if (!searchValue) {
+                                        resultado = funcionariosLookup.slice(0, 50);
+                                    } else {
+                                        resultado = funcionariosLookup.filter(item =>
+                                            item.NUMCAD_NOME_COLABORADOR.toUpperCase().includes(searchValue)
+                                        );
+                                    }
+
+                                    resolve({
+                                        data: resultado,
+                                        totalCount: resultado.length
+                                    });
+                                });
+                            },
+                            byKey: function (key) {
+                                return new Promise((resolve, reject) => {
+                                    const encontrado = funcionariosLookup.find(item => item.MATRICULA == key);
+                                    if (encontrado) {
+                                        resolve(encontrado);
+                                    } else {
+                                        reject(`Funcionário com Matricula ${key} não encontrado`);
+                                    }
+                                });
+                            }
+                        }),
+                        displayExpr: 'NUMCAD_NOME_COLABORADOR',
+                        valueExpr: 'MATRICULA',
+                        searchEnabled: true,
+                        minSearchLength: 3,
+                        searchExpr: 'NUMCAD_NOME_COLABORADOR'
+                    },
+                    setCellValue: function (newData, value) {
+                        const tecnico = funcionariosLookup.find(p => p.MATRICULA == value);
+                        if (tecnico) {
+                            newData.numcad = tecnico.MATRICULA;
+                            newData.nome = tecnico.NOME_COLABORADOR;
+                            newData.numcad_nome = tecnico.NUMCAD_NOME_COLABORADOR;
+                            newData.cpf = tecnico.CPF;
+                            newData.cargo_funcao = tecnico.DSC_CARGO;
+                            newData.contato = tecnico.NUMTEL ?? tecnico.NUMCEL ?? null;
+                        }
+                    },
+                    visible: false,
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'departamento_id',
+                    caption: 'Departamento',
+                    lookup: {
+                        dataSource: new DevExpress.data.CustomStore({
+                            loadMode: 'raw',
+                            load: function () {
+                                return $.ajax({
+                                    url: '/planejamento-controle-producao/listar-departamentos',
+                                    method: 'GET',
+                                    dataType: 'json'
+                                }).then(response => {
+                                    if (response.success) {
+                                        return response.data;
+                                    } else {
+                                        DevExpress.ui.notify(response.message, 'error', 3000);
+                                        return [];
+                                    }
+                                }).catch(() => {
+                                    DevExpress.ui.notify('Erro ao buscar departamentos!', 'error', 3000);
+                                    return [];
+                                });
+                            }
+                        }),
+                        valueExpr: 'id',
+                        displayExpr: 'nome'
+                    }
+                },
+                { dataField: 'nome', caption: 'Nome Funcionário', visible: true, alignment: 'left' },
+                { dataField: 'cargo_funcao', caption: 'Cargo Função', visible: true },
+                { 
+                    dataField: 'equipamento_id', 
+                    caption: 'Equipamento', 
+                    lookup: { 
+                        dataSource: new DevExpress.data.CustomStore({ load: () => $.getJSON('/planejamento-controle-producao/listar-equipamentos') }), 
+                        displayExpr: 'dsc_equipamento', 
+                        valueExpr: 'id' 
+                    },
+                    setCellValue: function(newData, value, currentRowData) {
+                        newData.equipamento_id = value;
+
+                        // Pega o item selecionado no lookup (que já tem centro_custo_id)
+                        const selectedItem = this.lookup.items.find(item => item.id === value);
+                    },
+                    validationRules: [{ type: 'required' }]
+                },
+                {
+                    dataField: 'quantidade_emprestimo',
+                    caption: 'Qtd. Empréstimo',
+                    allowEditing: true,
+                    alignment: 'right',
+                    width: 150,
+                    dataType: 'number',
+                    format: { type: 'fixedPoint', precision: 4 },
+                    validationRules: [{ type: 'required' }]
+                },
+                { dataField: 'data_programada_devolucao', caption: 'Dt. Prog. Devolução', dataType: 'date', alignment: 'center', width: 150 },
+                { dataField: 'observacoes', caption: 'Observações Adicionais', visible: false },
+                {
+                    dataField: 'status',
+                    caption: 'Status',
+                    sortIndex: 0,
+                    alignment: 'center',
+                    sortOrder: 'asc',
+                    calculateSortValue: function(rowData) {
+                        // Forçar a ordem: Pendente < Finalizada
+                        const order = { 'retirado': 0, 'atrasado': 1 , 'devolvido': 2};
+                        return order[(rowData.status || '').toLowerCase()] ?? 99;
+                    }
+                },
+                {
+                    type: 'buttons',
+                    width: 120,
+                    alignment: 'center',
+                    buttons: [
+                        {
+                            name: 'edit',
+                            visible: function (e) {
+                                  return e.row.data.status !== 'Devolvido';
+                            },
+                        },
+                        {
+                            name: 'delete',
+                            visible: function (e) {
+                                  return e.row.data.status !== 'Devolvido';
+                            },
+                        },
+                        {
+                            hint: "Gerar Termo Empréstimo",
+                            icon: "doc",
+                            onClick: function(e) {
+                                const data = e.row.data;
+                                openGerarTermoEmprestimoPopup(data);
+                            }
+                        },
+                         {
+                            hint: 'Marcar devolução equipamento',
+                            icon: 'check',
+                            visible: function (e) {
+                                  return e.row.data.status !== 'Devolvido';
+                            },
+                            onClick: function (e) {
+                                marcarDevolucaoEquipamento(e.row.data);
+                            }
+                        },
+                    ]
+                },
+            ],
+            onInitNewRow: function(e) {
+                e.data.data_emprestimo = new Date();
+                
+                setTimeout(() => {
+                    const form = $(".dx-popup-content .dx-form").dxForm("instance");
+                    if (form) {
+                        form.updateData('data_emprestimo', new Date());
+                    }
+                }, 100);
+            },
+            onRowUpdating: function (e) {
+                e.newData = { ...e.oldData, ...e.newData };
+
+                console.log('e.newData', e.newData );
+            },
+            onToolbarPreparing: function (e) {
+                // Aqui você pode personalizar ainda mais a barra de ferramentas
+                var toolbarItems = e.toolbarOptions.items;
+
+                // Adicionar os botões de expandir/colapsar
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll(); // Expande todos os grupos
+                        }
+                    }
+                });
+
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll(); // Colapsa todos os grupos
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    name: "refresh", // Adiciona o botão refresh na toolbar
+                    location: "after", // Coloca depois dos outros itens
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh", // Ícone do botão (ícone de atualização)
+                        onClick: function() {
+                            // Recarrega os dados da grid
+                            e.component.refresh(); // Atualiza a grid
+                        },
+                        text: "Atualizar" 
+                    }
+                });
+            },   
+            onRowPrepared: function (e) {
+                if (e.rowType === 'data') {
+                    const status = (e.data.status || '').toLowerCase();
+
+                    if (status === 'devolvido') {
+                        e.rowElement.css({ backgroundColor: '#DFF6DD', color: '#000' }); // Verde
+                        return;
+                    }
+
+                    if (status === 'retirado') {
+                        // retirado
+                        e.rowElement.css({ backgroundColor: '#D6EAF8', color: '#000' }); // Azul (ajuste a cor se preferir)
+                    } 
+                    if (status === 'atrasado') {
+                        // Atrasado
+                        e.rowElement.css({ backgroundColor: '#c94d4dff', color: '#000' }); // Vermelho
+                    }
+                }
+            },          
+        });
+
+
+        const normalizarDatas = (data) => {
+            if (!data) return null;
+            return DevExpress.localization.formatDate(new Date(data), 'yyyy-MM-dd HH:mm:ss');
+        };
+
+        function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
+            return {
+                dataSource: new DevExpress.data.CustomStore({
+                    loadMode: 'raw',
+                    load: function () {
+                        return $.ajax({
+                            url: url,
+                            method: 'GET',
+                            dataType: 'json'
+                        }).then(response => {
+                            if (response.success) {
+                                return response.data;
+                            } else {
+                                DevExpress.ui.notify(response.message, 'error', 3000);
+                                return [];
+                            }
+                        }).catch(() => {
+                            DevExpress.ui.notify('Erro ao buscar dados!', 'error', 3000);
+                            return [];
+                        });
+                    }
+                }),
+                displayExpr: displayExpr,
+                valueExpr: valueExpr,
+                placeholder: placeholder,
+                searchEnabled: true,
+                showClearButton: true
+            };
+        }
+        function getLookupFuncionarios() {
+            $.getJSON('/planejamento-controle-producao/get-usuarios-senior-lookup')
+            .done(function (response) {
+                if (response.success && response.data.length > 0) {
+                    funcionariosLookup = response.data;
+
+                    console.log('aq', funcionariosLookup);
+                } else {
+                    DevExpress.ui.notify('Nenhum Funcionário encontrado.', 'warning', 3000);
+                }
+            })
+            .fail(function () {
+                DevExpress.ui.notify('Erro ao carregar funcionários.', 'error', 3000);
+            });
+        }
+        // Função Impressão Direta / Geração de PDF da Ordem de Serviço
+        function openGerarTermoEmprestimoPopup(data) {
+            let popupTermoEmprestimo = $('#popupTermoEmprestimo').dxPopup({
+                width: 900,
+                height: 'auto',
+                showTitle: false,
+                dragEnabled: true,
+                closeOnOutsideClick: true,
+                position: {
+                    of: window,
+                    at: 'center',
+                    my: 'center',
+                },
+                toolbarItems: [
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        toolbar: 'top',
+                        options: {
+                            icon: 'print',
+                            hint: 'Imprimir / Gerar PDF',
+                            type: 'default',
+                            onClick: async function () {
+                                const loading = document.getElementById('globalLoading');
+                                const spinnerGen = document.getElementById('spinnerGeneric');
+                                const spinnerPDF = document.getElementById('spinnerPDF');
+                                const loadingText = document.getElementById('loadingText');
+
+                                try {
+                                    if (loading) loading.style.display = 'flex';
+                                    if (spinnerGen) spinnerGen.style.display = 'none';
+                                    if (spinnerPDF) spinnerPDF.style.display = 'block';
+                                    if (loadingText) loadingText.textContent = 'Gerando PDF…';
+
+                                    const printArea = document.getElementById('print-area');
+
+                                    // Criar canvas em alta resolução
+                                    const canvas = await html2canvas(printArea, {
+                                        scale: 2, // escala alta para não borrar
+                                        useCORS: true,
+                                        logging: false,
+                                        allowTaint: true,
+                                        backgroundColor: 'white',
+                                    });
+
+                                    const imgData = canvas.toDataURL('image/png', 1.0);
+
+                                    const { jsPDF } = window.jspdf;
+                                    const pdf = new jsPDF('p', 'mm', 'a4');
+                                    const pageWidth = pdf.internal.pageSize.getWidth();
+                                    const pageHeight = pdf.internal.pageSize.getHeight();
+                                    const margemMm = 15;
+
+                                    // calcular tamanho proporcional da imagem
+                                    const imgProps = pdf.getImageProperties(imgData);
+                                    let pdfWidth = pageWidth - 2 * margemMm;
+                                    let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                                    // se passar da altura da página
+                                    if (pdfHeight > pageHeight - 2 * margemMm) {
+                                        pdfHeight = pageHeight - 2 * margemMm;
+                                        pdfWidth = (imgProps.width * pdfHeight) / imgProps.height;
+                                    }
+
+                                    pdf.addImage(imgData, 'PNG', margemMm, margemMm, pdfWidth, pdfHeight, undefined, 'FAST');
+                                    pdf.save(`termo-emprestimo-${data.id}.pdf`);
+
+                                } catch (err) {
+                                    console.error('Erro ao gerar PDF:', err);
+                                    DevExpress.ui.notify('Erro ao gerar PDF. Verifique o console para detalhes.', 'error', 4000);
+                                } finally {
+                                    if (spinnerPDF) spinnerPDF.style.display = 'none';
+                                    if (spinnerGen) spinnerGen.style.display = 'block';
+                                    if (loadingText) loadingText.textContent = 'Carregando Informações...';
+                                    if (loading) loading.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+                ],
+                contentTemplate: function (contentElement) {
+                    const scrollableContent = $("<div>").dxScrollView({
+                        height: 'calc(90vh - 100px)',
+                        showScrollbar: "onHover",
+                        direction: "vertical",
+                        scrollByContent: true
+                    });
+
+                    const termoContent = $(`
+                        <div id="termoContent" style="padding: 15px; width: 100%; font-family: Arial, sans-serif; font-size: 12px; color: #333;">
+                            <section id="print-area" style="width: 100%; border: 1px solid #ccc; padding: 25px; border-radius: 6px; background: #fff;">
+                                
+                                <!-- Cabeçalho -->
+                                <div style="text-align: center; margin-bottom: 15px;">
+                                    <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">Termo de Empréstimo de Equipamento</h2>
+                                    <div class="numero-termo" style="font-weight: bold; margin-top: 5px;"></div>
+                                </div>
+
+                                <!-- Dados do Funcionário -->
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                    <tr>
+                                        <td style="padding: 4px; border: 1px solid #ddd; font-weight: bold; width: 30%;">Matrícula</td>
+                                        <td class="termo-numcad" style="padding: 4px; border: 1px solid #ddd;"></td>
+                                        <td style="padding: 4px; border: 1px solid #ddd; font-weight: bold; width: 20%;">CPF</td>
+                                        <td class="termo-cpf" style="padding: 4px; border: 1px solid #ddd;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px; border: 1px solid #ddd; font-weight: bold;">Nome</td>
+                                        <td class="termo-nome" style="padding: 4px; border: 1px solid #ddd;" colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px; border: 1px solid #ddd; font-weight: bold;">Cargo / Função</td>
+                                        <td class="termo-cargo" style="padding: 4px; border: 1px solid #ddd;" colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px; border: 1px solid #ddd; font-weight: bold;">Contato</td>
+                                        <td class="termo-contato" style="padding: 4px; border: 1px solid #ddd;" colspan="3"></td>
+                                    </tr>
+                                </table>
+
+                                <!-- Dados do Equipamento e Empréstimo -->
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                    <!-- Equipamento ocupa linha inteira -->
+                                    <tr>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; width: 20%;">Equipamento</td>
+                                        <td class="termo-equipamento" style="padding: 6px; border: 1px solid #ddd;" colspan="5"></td>
+                                    </tr>
+                                    <!-- Departamento e Quantidade Emprestada -->
+                                    <tr>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; width: 30%;">Departamento</td>
+                                        <td class="termo-departamento" style="padding: 6px; border: 1px solid #ddd;" colspan="3"></td>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; width: 20%;">Qtd. Emprestada</td>
+                                        <td class="termo-quantidade" style="padding: 6px; border: 1px solid #ddd; text-align: center;"></td>
+                                    </tr>
+                                    <!-- Datas de Empréstimo e Devolução -->
+                                    <tr>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">Data Empréstimo</td>
+                                        <td class="termo-data-emprestimo" style="padding: 6px; border: 1px solid #ddd; text-align: center;"></td>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">Data Prog. Devolução</td>
+                                        <td class="termo-data-prog-devolucao" style="padding: 6px; border: 1px solid #ddd; text-align: center;"></td>
+                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">Data Devolução</td>
+                                        <td class="termo-data-devolucao" style="padding: 6px; border: 1px solid #ddd; text-align: center;"></td>
+                                    </tr>
+                                </table>
+
+
+                                <!-- Observações -->
+                                <div class="section" id="section-observacoes" style="margin-top: 15px; display: none;">
+                                    <div style="font-weight: bold; margin-bottom: 5px;">Observações:</div>
+                                    <div class="termo-observacoes" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
+                                </div>
+
+                                <!-- Espaço -->
+                                <div style="margin: 30px 0;"></div>
+
+                                <!-- Assinaturas -->
+                                <table style="width: 100%; text-align: center; margin-top: 30px; border-collapse: collapse;">
+                                    <!-- Linha com Retirada e Devolução -->
+                                    <tr>
+                                        <td style="width: 50%; padding: 20px;">
+                                            _________________________________________<br>
+                                            <strong>Assinatura de Retirada</strong>
+                                        </td>
+                                        <td style="width: 50%; padding: 20px;">
+                                            _________________________________________<br>
+                                            <strong>Assinatura de Devolução</strong>
+                                        </td>
+                                    </tr>
+                                    <!-- Linha com Responsável pela Entrega -->
+                                    <tr>
+                                        <td colspan="2" style="padding: 20px;">
+                                            _________________________________________<br>
+                                            <strong>Responsável pela Entrega</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+
+
+                            </section>
+                        </div>
+                    `);
+
+                    scrollableContent.find('.dx-scrollview-content').append(termoContent);
+                    contentElement.append(scrollableContent);
+                },
+                onShown: function () {
+                    $.ajax({
+                        url: "/planejamento-controle-producao/get-info-termo-emprestimo",
+                        method: 'GET',
+                        data: { id: data.id },
+                        success: function (response) {
+                            try {
+                                const dados = response.data;
+                                if (!dados) throw new Error("Dados não encontrados");
+
+                                // Cabeçalho
+                                $('.numero-termo').text(dados.nr_termo ? `Nº ${dados.nr_termo}` : 'Nº 000');
+
+                                // Dados do funcionário
+                                $('.termo-numcad').text(dados.numcad || '');
+                                $('.termo-nome').text(dados.nome || '');
+                                $('.termo-cpf').text(dados.cpf || '');
+                                $('.termo-cargo').text(dados.cargo_funcao || '');
+                                $('.termo-contato').text(dados.contato || '');
+
+                                // Dados do equipamento e empréstimo
+                                $('.termo-equipamento').text(dados.nome_equipamento || '');
+                                $('.termo-quantidade').text(dados.quantidade_emprestimo != null ? dados.quantidade_emprestimo.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) : '');
+                                $('.termo-departamento').text(dados.departamento_nome || '');
+                                $('.termo-data-emprestimo').text(dados.data_emprestimo || '');
+                                $('.termo-data-prog-devolucao').text(dados.data_programada_devolucao || '');
+                                $('.termo-data-devolucao').text(dados.data_devolucao || '-');
+
+                                // Observações
+                                if (dados.observacoes && dados.observacoes.trim() !== '') {
+                                    $('.termo-observacoes').text(dados.observacoes);
+                                    $('#section-observacoes').show();
+                                } else {
+                                    $('#section-observacoes').hide();
+                                }
+
+                            } catch (err) {
+                                DevExpress.ui.notify('Erro ao preencher Termo: ' + err.message, 'error', 4000);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            DevExpress.ui.notify('Erro na requisição do Termo: ' + error, 'error', 4000);
+                        }
+                    });
+                }
+            }).dxPopup('instance');
+
+            popupTermoEmprestimo.show();
+        }
+
+        function marcarDevolucaoEquipamento(data) {
+            DevExpress.ui.dialog.confirm(
+                "Tem certeza que deseja marcar esse equipamento como devolvido?\nApós devolvido, não será possível editar os dados.",
+                "Confirmação"
+            ).then(function (result) {
+                if (!result) return; // Usuário clicou "Não"
+
+                const envio = {
+                    id: data.id,
+                    equipamento_id: data.equipamento_id
+                };
+
+                $.ajax({
+                    url: '/planejamento-controle-producao/marcar-devolucao-equipamento',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(envio),
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (response.success) {
+                        DevExpress.ui.notify('Devolução do equipamento realizada com sucesso!', 'success', 3000);
+                        $('#gridControleEmprestimo').dxDataGrid('instance').refresh();
+                    } else {
+                        DevExpress.ui.notify(response.message || 'Erro ao marcar devolução do equipamento', 'error', 3000);
+                    }
+                }).fail(function () {
+                    DevExpress.ui.notify('Erro na requisição ao marcar devolução do equipamento ', 'error', 3000);
+                });
+            });
+        }
+
+
+    });
+</script>
