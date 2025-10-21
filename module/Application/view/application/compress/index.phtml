@@ -1,0 +1,237 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">RochaPress</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Compressor de PDF's</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Selecione um arquivo PDF e escolha o nível de compressão:</p>
+
+                    <!-- Nível de compressão -->
+                    <div class="mb-3">
+                        <label for="compressionLevel" class="form-label">Nível de Compressão</label>
+                        <select id="compressionLevel" class="form-select">
+                            <option value="low">Baixo (Qualidade Alta) - ~80% do original</option>
+                            <option value="medium" selected>Médio (Balanço Qualidade/Tamanho) - ~60% do original</option>
+                            <option value="high">Alto (Qualidade Reduzida) - ~40% do original</option>
+                            <option value="extreme">Extremo (Máxima Compressão) - ~20% do original</option>
+                            <option value="super">Super Compressão (Para web) - ~10% do original</option>
+                        </select>
+                    </div>
+
+                    <!-- Uploader -->
+                    <div class="mb-3">
+                        <div id="uploader" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer transition-colors duration-200">
+                            <div id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-gray-400 mb-2"></i>
+                                <p class="text-gray-500 mb-1">Clique ou arraste um arquivo PDF aqui</p>
+                                <small class="text-gray-400">Tamanho máximo: 50MB</small>
+                            </div>
+                            <div id="fileInfo" style="display: none;">
+                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                <p class="file-name font-medium text-success mb-1" id="fileName"></p>
+                                <small class="file-size text-gray-500" id="fileSize"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultado -->
+                    <div id="result" class="mt-4"></div>
+
+                    <!-- Botão de enviar -->
+                    <button id="btnUpload" class="btn btn-primary btn-lg w-100 mt-3">
+                        <i class="fas fa-compress me-2"></i>Comprimir PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #uploader {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    #uploader.dragover {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+        color: #2196f3;
+    }
+    #uploader.has-file {
+        background-color: #f0f9ff;
+        border-color: #0ea5e9;
+    }
+    #result {
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploader = document.getElementById('uploader');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const btnUpload = document.getElementById('btnUpload');
+    const resultDiv = document.getElementById('result');
+    
+    let selectedFile = null;
+
+    // Função para formatar tamanho do arquivo
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Função para atualizar interface do arquivo
+    function updateFileUI(file) {
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        uploadPlaceholder.style.display = 'none';
+        fileInfo.style.display = 'block';
+        uploader.classList.add('has-file');
+    }
+
+    // Eventos de upload
+    uploader.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.onchange = e => {
+            if (e.target.files[0]) {
+                updateFileUI(e.target.files[0]);
+            }
+        };
+        input.click();
+    });
+
+    uploader.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploader.classList.add('dragover');
+    });
+
+    uploader.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploader.classList.remove('dragover');
+    });
+
+    uploader.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploader.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === 'application/pdf') {
+            updateFileUI(file);
+        } else {
+            alert('Por favor, selecione apenas arquivos PDF.');
+        }
+    });
+
+    // Evento de compressão
+    btnUpload.addEventListener('click', async () => {
+        if (!selectedFile) {
+            alert('Selecione um arquivo PDF primeiro.');
+            return;
+        }
+
+        console.log('Arquivo selecionado:', selectedFile.name, 'Tamanho:', selectedFile.size, 'Tipo:', selectedFile.type);
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('level', document.getElementById('compressionLevel').value);
+
+        // Mostrar loading
+        btnUpload.disabled = true;
+        btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Comprimindo...';
+        resultDiv.innerHTML = `
+            <div class="text-center text-primary">
+                <div class="spinner-border mb-2" role="status"></div>
+                <p>Comprimindo PDF... Isso pode levar alguns segundos.</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/compress/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const originalKB = (data.stats.original_size / 1024).toFixed(2);
+                const compressedKB = (data.stats.compressed_size / 1024).toFixed(2);
+                const reduction = ((1 - data.stats.compressed_size/data.stats.original_size) * 100).toFixed(1);
+                
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle me-2"></i>Arquivo comprimido com sucesso!</h5>
+                        <div class="row mt-3 text-center">
+                            <div class="col-4">
+                                <strong>Original</strong><br>
+                                <span class="text-primary">${originalKB} KB</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Comprimido</strong><br>
+                                <span class="text-success">${compressedKB} KB</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Redução</strong><br>
+                                <span class="text-danger">${reduction}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="${data.downloadUrl}" class="btn btn-success btn-lg" download>
+                            <i class="fas fa-download me-2"></i>Baixar PDF Comprimido
+                        </a>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Erro na compressão</h5>
+                        <p class="mb-0">${data.error}</p>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Erro de conexão</h5>
+                    <p class="mb-0">Não foi possível conectar ao servidor.</p>
+                </div>
+            `;
+        } finally {
+            btnUpload.disabled = false;
+            btnUpload.innerHTML = '<i class="fas fa-compress me-2"></i>Comprimir PDF';
+        }
+    });
+});
+</script>

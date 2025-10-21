@@ -561,7 +561,7 @@ class TiInfraController extends BaseController
             ]);
         }
     }
-    public function getCentroCustoLookupAction()
+    public function getLookupCentrosCustoAction()
     {
         if (!$this->oracleService) {
             return new JsonModel([
@@ -572,8 +572,6 @@ class TiInfraController extends BaseController
 
         $search = strtoupper(trim($this->params()->fromQuery('search', '')));
         $key = $this->params()->fromQuery('key', '');
-        $offset = (int) $this->params()->fromQuery('offset', 0);
-        $limit = (int) $this->params()->fromQuery('limit', 30);
 
         try {
             $where = "WHERE CODEMP = 5";
@@ -584,14 +582,12 @@ class TiInfraController extends BaseController
                 $where .= " AND CODCCU = $key";
             }
 
-            $sql = "SELECT * FROM (
-                        SELECT
-                            CODCCU as ID,
-                            CODCCU || ' - ' || DESCCU AS DSC,
-                            ROW_NUMBER() OVER (ORDER BY CODCCU) AS RN
-                        FROM E044CCU
-                        $where
-                    ) WHERE RN BETWEEN " . ($offset + 1) . " AND " . ($offset + $limit);
+            $sql = "SELECT
+                        CODCCU as ID,
+                        CODCCU || ' - ' || DESCCU AS DSC
+                    FROM E044CCU
+                    $where
+                    ORDER BY CODCCU";
 
             $result = $this->oracleService->executeQuery($sql);
             foreach ($result as $key => $row) {
@@ -599,15 +595,10 @@ class TiInfraController extends BaseController
                 $result[$key]['DSC'] = utf8_encode($row['DSC']);
             }
 
-            // Contagem total para paginação
-            $countSql = "SELECT COUNT(*) AS TOTAL FROM E044CCU $where";
-            $countResult = $this->oracleService->executeQuery($countSql);
-            $totalCount = $countResult[0]['TOTAL'] ?? 0;
-
             return new JsonModel([
                 'success' => true,
                 'data' => $result,
-                'totalCount' => $totalCount
+                'totalCount' => count($result)
             ]);
         } catch (\Exception $e) {
             return new JsonModel([

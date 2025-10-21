@@ -523,73 +523,44 @@ class TiInfraRepository
             $sql = "SELECT 
                         cm.*,
                         CASE 
-                            WHEN cm.data_programada_devolucao < CURRENT_DATE and cm.status not in ('Devolvido') THEN 'Atrasado'
-                            ELSE cm.status
+                            WHEN cm.data_devolucao IS NULL AND cm.data_entrega < CURRENT_DATE - INTERVAL '30 days' THEN 'atrasado'
+                            WHEN cm.data_devolucao IS NOT NULL THEN 'devolvido'
+                            ELSE 'retirado'
                         END AS status,
-                        pe.quantidade_disponivel
-                    FROM pcp_controle_emprestimo cm
-                    LEFT JOIN pcp_equipamentos pe on pe.id = cm.equipamento_id";
+                        e.quantidade_disponivel,
+                        e.nome as equipamento_nome,
+                        d.nome as departamento_nome
+                    FROM tif_controle_emprestimo cm
+                    LEFT JOIN pcp_equipamentos e on e.id = cm.equipamento_id
+                    LEFT JOIN tif_departamento d on d.id = cm.departamento_id";
             $result = $this->adapter->createStatement($sql)->execute();
 
             $data = [];
             foreach ($result as $row) {
-                $row['quantidade_emprestimo'] = floatval($row['quantidade_emprestimo']);
-                $row['quantidade_disponivel'] = floatval($row['quantidade_disponivel']);
                 $data[] = $row;
             }
             return $data;
         }
         public function salvarControleEmprestimo(array $data)
         {
-            // Validações
-            if (isset($data['quantidade_emprestimo']) && $data['quantidade_emprestimo'] > 0) {
-                $equipamentoId = $data['equipamento_id'];
-                $idAtual = $data['id'] ?? null;
-
-                // Buscar quantidade total do equipamento
-                $sqlTotal = "SELECT quantidade FROM pcp_equipamentos WHERE id = :id";
-                $equipamento = $this->adapter->createStatement($sqlTotal)->execute([':id' => $equipamentoId])->current();
-                $quantidadeTotal = (float)($equipamento['quantidade'] ?? 0);
-
-                // Somar todas as quantidades já emprestadas, exceto o registro atual se for edição
-                $sqlEmprestado = "SELECT COALESCE(SUM(quantidade_emprestimo),0) AS emprestado
-                                FROM pcp_controle_emprestimo
-                                WHERE equipamento_id = :equipamento_id
-                                and status not in ('Devolvido')
-                                " . (!empty($idAtual) ? "AND id <> :id" : "");
-                $params = [':equipamento_id' => $equipamentoId];
-                if (!empty($idAtual)) {
-                    $params[':id'] = $idAtual;
-                }
-                $emprestado = $this->adapter->createStatement($sqlEmprestado)->execute($params)->current();
-                $quantidadeEmprestada = (float)$emprestado['emprestado'];
-
-                // Calcula quantidade disponível
-                $quantidadeDisponivel = $quantidadeTotal - $quantidadeEmprestada;
-
-                if ($data['quantidade_emprestimo'] > $quantidadeDisponivel) {
-                    throw new \InvalidArgumentException('Quantidade a ser emprestada não pode ser superior à quantidade disponível!');
-                }
-            }
-
             $params = [
-                ':data_emprestimo'       => $data['data_emprestimo'] ?? null,
-                ':numcad'                => $data['numcad'] ?? null,
-                ':nome'                  => $data['nome'] ?? null,
-                ':cpf'                   => $data['cpf'] ?? null,
-                ':cargo_funcao'          => $data['cargo_funcao'] ?? null,
-                ':contato'               => $data['contato'] ?? null,
-                ':departamento_id'       => $data['departamento_id'] ?? null,
-                ':equipamento_id'        => $data['equipamento_id'] ?? null,
-                ':quantidade_emprestimo' => $data['quantidade_emprestimo'] ?? 0,
-                ':data_programada_devolucao'        => $data['data_programada_devolucao'] ?? null,
-                ':observacoes'           => $data['observacoes'] ?? null,
-                ':status'           => $data['status'] ?? 'Retirado',
+                ':data_entrega'       => $data['data_entrega'] ?? null,
+                ':numcad'             => $data['numcad'] ?? null,
+                ':nome'               => $data['nome'] ?? null,
+                ':cpf'                => $data['cpf'] ?? null,
+                ':cargo_funcao'       => $data['cargo_funcao'] ?? null,
+                ':contato'            => $data['contato'] ?? null,
+                ':departamento_id'    => $data['departamento_id'] ?? null,
+                ':equipamento_id'     => $data['equipamento_id'] ?? null,
+                ':centro_custo'       => $data['centro_custo'] ?? null,
+                ':data_devolucao'     => $data['data_devolucao'] ?? null,
+                ':observacoes'        => $data['observacoes'] ?? null,
+                ':status'             => $data['status'] ?? 'retirado',
             ];
 
             if (!empty($data['id'])) {
-                $sql = "UPDATE pcp_controle_emprestimo SET 
-                            data_emprestimo = :data_emprestimo,
+                $sql = "UPDATE tif_controle_emprestimo SET 
+                            data_entrega = :data_entrega,
                             numcad = :numcad,
                             nome = :nome,
                             cpf = :cpf,
@@ -597,67 +568,45 @@ class TiInfraRepository
                             contato = :contato,
                             departamento_id = :departamento_id,
                             equipamento_id = :equipamento_id,
-                            quantidade_emprestimo = :quantidade_emprestimo,
-                            data_programada_devolucao = :data_programada_devolucao,
+                            centro_custo = :centro_custo,
+                            data_devolucao = :data_devolucao,
                             observacoes = :observacoes,
                             status = :status
                         WHERE id = :id";
                 $params[':id'] = $data['id'];
             } else {
-                $sql = "INSERT INTO pcp_controle_emprestimo (
-                            data_emprestimo, numcad, nome, cpf, cargo_funcao, contato, 
-                            departamento_id, equipamento_id, quantidade_emprestimo, 
-                            data_programada_devolucao, observacoes, status
+                $sql = "INSERT INTO tif_controle_emprestimo (
+                            data_entrega, numcad, nome, cpf, cargo_funcao, contato, 
+                            departamento_id, equipamento_id, centro_custo, 
+                            data_devolucao, observacoes, status
                         ) VALUES (
-                            :data_emprestimo, :numcad, :nome, :cpf, :cargo_funcao, :contato, 
-                            :departamento_id, :equipamento_id, :quantidade_emprestimo, 
-                            :data_programada_devolucao, :observacoes, :status
+                            :data_entrega, :numcad, :nome, :cpf, :cargo_funcao, :contato, 
+                            :departamento_id, :equipamento_id, :centro_custo, 
+                            :data_devolucao, :observacoes, :status
                         )";
             }
 
             $this->adapter->createStatement($sql)->execute($params);
-
-            // Sempre recalcula a quantidade disponível após salvar
-            if (!empty($data['equipamento_id'])) {
-                $this->recalcularQuantidadeEquipamento($data['equipamento_id']);
-            }
         }
-
         public function excluirControleEmprestimo($id)
         {
-            // 1. Descobrir qual equipamento estava vinculado ao empréstimo
-            $sqlSelect = "SELECT equipamento_id 
-                        FROM pcp_controle_emprestimo 
-                        WHERE id = :id";
-            $row = $this->adapter->createStatement($sqlSelect)->execute([':id' => $id])->current();
-            $equipamentoId = $row['equipamento_id'] ?? null;
-
-            // 2. Excluir o registro
-            $sql = "DELETE FROM pcp_controle_emprestimo WHERE id = :id";
+            $sql = "DELETE FROM tif_controle_emprestimo WHERE id = :id";
             $this->adapter->createStatement($sql)->execute([':id' => $id]);
-
-            // 3. Recalcular disponível do equipamento
-            if (!empty($equipamentoId)) {
-                $this->recalcularQuantidadeEquipamento($equipamentoId);
-            }
         }
-
         public function getInfoTermoEmprestimo($id)
         {
             $sql = "SELECT
                         cm.*, 
                         LPAD(cm.id::text, 5, '0') AS nr_termo,
-                        TO_CHAR(cm.data_emprestimo, 'DD/MM/YYYY') AS data_emprestimo,
-                        TO_CHAR(cm.data_programada_devolucao, 'DD/MM/YYYY') AS data_programada_devolucao,
+                        TO_CHAR(cm.data_entrega, 'DD/MM/YYYY') AS data_entrega,
                         TO_CHAR(cm.data_devolucao, 'DD/MM/YYYY') AS data_devolucao,
                         e.codigo || '-' || e.nome AS nome_equipamento,
-                        at.nome AS departamento_nome,
+                        d.nome AS departamento_nome,
                         cm.observacoes
-                    FROM pcp_controle_emprestimo cm
+                    FROM tif_controle_emprestimo cm
                     LEFT JOIN pcp_equipamentos e ON e.id = cm.equipamento_id
-                    LEFT JOIN tif_departamento at ON at.id = cm.departamento_id
-                    WHERE cm.id = :id
-                  ";
+                    LEFT JOIN tif_departamento d ON d.id = cm.departamento_id
+                    WHERE cm.id = :id";
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute([':id' => $id]);
             return $result->current();
@@ -667,25 +616,18 @@ class TiInfraRepository
             $this->adapter->getDriver()->getConnection()->beginTransaction();
 
             try {
-                // 
-                $sqlValida = "SELECT cm.* FROM pcp_controle_emprestimo cm WHERE cm.id = :id";
+                $sqlValida = "SELECT cm.* FROM tif_controle_emprestimo cm WHERE cm.id = :id";
                 $resultValida = $this->adapter->query($sqlValida, [':id' => $data['id']])->current();
                 if (!$resultValida) {
-                    throw new \InvalidArgumentException('Empréstimo não encontrada.');
+                    throw new \InvalidArgumentException('Empréstimo não encontrado.');
                 }
 
-                // Não tem apontamentos: data_final = NOW(), tempo_execucao = NULL
-                $sqlUpdate = "UPDATE pcp_controle_emprestimo SET status = 'Devolvido', data_devolucao = NOW() WHERE id = :id";
-                $paramsUpdate = [
-                    ':id' => $data['id'],
-                ];
-
-                $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
-
-                // Sempre recalcula a quantidade disponível após salvar
-                if (!empty($data['equipamento_id'])) {
-                    $this->recalcularQuantidadeEquipamento($data['equipamento_id']);
-                }
+                $sqlUpdate = "UPDATE tif_controle_emprestimo SET 
+                                status = 'devolvido', 
+                                data_devolucao = NOW() 
+                            WHERE id = :id";
+                
+                $this->adapter->createStatement($sqlUpdate)->execute([':id' => $data['id']]);
 
                 $this->adapter->getDriver()->getConnection()->commit();
 
@@ -694,7 +636,6 @@ class TiInfraRepository
                 throw $e;
             }
         }
-
     #endRegion
 
 }

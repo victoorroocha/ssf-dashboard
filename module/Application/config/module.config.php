@@ -16,6 +16,7 @@ use Application\Repository\PlanejamentoControleManutencaoRepository;  // Importa
 use Application\Repository\PlanejamentoControleProducaoRepository;  // Importar repositório
 use Application\Repository\TiInfraRepository;  // Importar repositório
 use Application\Repository\DepartamentoRepository;  // Importar repositório
+use Application\Repository\CompressRepository;  // Importar repositório
 
 return [
     'router' => [
@@ -95,6 +96,20 @@ return [
                     ],
                     'defaults' => [
                         'controller' => Controller\MenuController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
+            'compress' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/compress[/:action][/:id]',
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        'id'     => '[0-9]+',
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\CompressController::class,
                         'action'     => 'index',
                     ],
                 ],
@@ -238,7 +253,6 @@ return [
     ],
     'controllers' => [
         'factories' => [
-            // Controller\IndexController::class => InvokableFactory::class,
             Controller\MenuController::class => function($container) {
                 return new Controller\MenuController(
                     $container->get('Laminas\Db\Adapter\Adapter'), // Adaptador do banco de dados
@@ -246,6 +260,7 @@ return [
                     $container->get('Application\Acl\AccessControl')->getAcl() // ACL
                 );
             },
+            Controller\CompressController::class => Factory\GenericControllerFactory::class,
             Controller\IndexController::class => Factory\GenericControllerFactory::class,
             Controller\DbController::class => Factory\GenericControllerFactory::class,  
             Controller\LoginController::class => Factory\LoginControllerFactory::class,
@@ -279,17 +294,17 @@ return [
             },
             'Application\Service\AuthService' => function($container) {
                 $dbAdapter = $container->get(\Laminas\Db\Adapter\Adapter::class);
-                //$oracleService = $container->get(\Application\Service\OracleService::class);
 
-		$oracleService = null;
-		try {
-			$oracleService = $container->get(\Application\Service\OracleService::class);
-		} catch (\Throwable $e) {
-			error_log('Erro ao iniciar OracleService: ' . $e->getMessage());
-		}
+                $oracleService = null;
+                try {
+                    $oracleService = $container->get(\Application\Service\OracleService::class);
+                } catch (\Throwable $e) {
+                    error_log('Erro ao iniciar OracleService: ' . $e->getMessage());
+                }
 
                 return new \Application\Service\AuthService($dbAdapter, $oracleService);
             },
+            Application\Service\CompressService::class => Laminas\ServiceManager\Factory\InvokableFactory::class,
             'Application\Repository\UsuarioRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\UsuarioRepository($adapter);
@@ -309,6 +324,10 @@ return [
             'Application\Repository\DepartamentoRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\DepartamentoRepository($adapter);
+            },
+            'Application\Repository\CompressRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\CompressRepository($adapter);
             },
             'Application\Repository\ControladoriaRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado

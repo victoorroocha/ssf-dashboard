@@ -54,7 +54,8 @@ class AccessControl
             'ComercialController',
             'PlanejamentoControleManutencaoController',
             'PlanejamentoControleProducaoController',
-            'TiInfraController'
+            'TiInfraController',
+            'CompressController'
         ];
 
         foreach ($controllers as $controller) {
