@@ -21,9 +21,16 @@ abstract class BaseController extends AbstractActionController
     public function onDispatch(\Laminas\Mvc\MvcEvent $e)
     {
         $action = $e->getRouteMatch()->getParam('action');
+        $controller = $e->getRouteMatch()->getParam('controller');
+        $controllerName = substr($controller, strrpos($controller, '\\') + 1);
 
         // Libera essa action específica
         if ($action === 'gerar-os-preventiva') {
+            return parent::onDispatch($e);
+        }
+
+        // Libera o CompressController inteiro para todos
+        if ($controllerName === 'CompressController') {
             return parent::onDispatch($e);
         }
 

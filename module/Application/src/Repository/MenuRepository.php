@@ -64,6 +64,27 @@ class MenuRepository
             ));
         }
 
+        // Inclui o menu GERAL (ID 85) para **todos os usuários**, sem permissão
+        // Busca o menu de Geral e seus submenus (filhos e netos)
+            $select = $this->tableGateway->getSql()->select();
+            $select->where->nest()
+                ->equalTo('id', 85) // O próprio menu "Geral"
+                ->or
+                ->equalTo('parent_id', 85) // Seus filhos diretos
+                ->or
+                ->in('parent_id', 
+                    $this->tableGateway->getSql()->select()
+                        ->columns(['id'])
+                        ->where(['parent_id' => 85]) // IDs dos filhos diretos para buscar netos
+                );
+            $adminMenus = $this->tableGateway->selectWith($select)->toArray();
+            
+            // Junta os menus do usuário com os menus de gestão (evitando duplicatas)
+            $allowedMenuIds = array_unique(array_merge(
+                $allowedMenuIds,
+                array_column($adminMenus, 'id')
+            ));
+
         if (empty($allowedMenuIds)) {
             return [];
         }
