@@ -615,6 +615,7 @@ $(document).ready(function () {
                             type: 'date'
                         }
                     },
+                    { dataField: 'link_termo_assinado', editorType: 'dxTextBox', label: { text: 'Link do Termo Assinado' }, colSpan: 2 },
                     { 
                         dataField: 'observacoes', 
                         label: { text: 'Observações' }, 
@@ -642,7 +643,7 @@ $(document).ready(function () {
         columns: [
                         {
                 type: 'buttons',
-                width: 150,
+                width: 'auto',
                 alignment: 'center',
                 buttons: [
                     {
@@ -689,6 +690,24 @@ $(document).ready(function () {
                             marcarDevolucaoEquipamento(e.row.data);
                         }
                     },
+                    {
+                        name: "link_termo_assinado",
+                        icon: "fa fa-link",
+                        text: "", // Sem texto, só ícone
+                        hint: "Link Termo Assinado",
+                        visible: function(e) {
+                            return e.row.data.link_termo_assinado && e.row.data.link_termo_assinado.trim() !== '';
+                        },
+                        onClick: function(e) {
+                            const link = e.row.data.link_termo_assinado;
+                            if (link) {
+                                const formattedLink = link.startsWith('http://') || link.startsWith('https://') 
+                                    ? link 
+                                    : 'https://' + link;
+                                window.open(formattedLink, '_blank');
+                            }
+                        }
+                    }
                 ]
             },
             { 
