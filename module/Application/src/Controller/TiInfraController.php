@@ -226,6 +226,101 @@ class TiInfraController extends BaseController
             }
         }
     #endRegion
+    
+    #region Cadastro Acessorios
+        public function cadastroAcessorioAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarAcessoriosAction()
+        {
+            try {
+                $acessorios = $this->TiInfraRepository->listarAcessorios();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $acessorios,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar os Acessórios: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function salvarAcessorioAction()
+        {
+            if (!$this->getRequest()->isPost() && !$this->getRequest()->isPut()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->TiInfraRepository->salvarAcessorio($data);
+                $message = $this->getRequest()->isPut() ? 
+                    'Acessório atualizado com sucesso!' : 
+                    'Acessório adicionado com sucesso!';
+
+                return new JsonModel([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar Acessório: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function excluirAcessorioAction()
+        {
+            if (!$this->getRequest()->isDelete()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->TiInfraRepository->excluirAcessorio($data['id']);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Acessório excluído com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir Acessório: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function getLookupAcessoriosAction()
+        {
+            try {
+                $acessorios = $this->TiInfraRepository->getLookupAcessorios();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $acessorios,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar Acessórios: ' . $e->getMessage(),
+                ]);
+            }
+        }
+    #endRegion
 
     #region Cadastro Equipamentos
         public function cadastroEquipamentoAction()

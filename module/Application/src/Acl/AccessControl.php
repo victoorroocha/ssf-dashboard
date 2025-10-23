@@ -236,16 +236,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Diretor', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -253,16 +265,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -436,16 +456,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Gerente', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -453,16 +485,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -634,16 +674,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Coordenador', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -651,16 +703,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -832,16 +892,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Encarregado', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -849,16 +921,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -1030,16 +1110,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Analista', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -1047,16 +1139,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -1228,16 +1328,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Assistente', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -1245,16 +1357,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 
@@ -1425,16 +1545,28 @@ class AccessControl
             'getUsuarioSessao'
         ]);
         $this->acl->allow('Auxiliar', 'TiInfraController', [
+            // ===== CADASTRO DEPARTAMENTOS =====
             'cadastroDepartamento',
             'listarDepartamentos',
             'salvarDepartamento',
             'excluirDepartamento',
             'getLookupDepartamentos',
-            'cadastroFuncionario',
-            'listarFuncionarios',
-            'salvarFuncionario',
-            'excluirFuncionario',
-            'getLookupFuncionarios',
+
+            // ===== TIPO EQUIPAMENTO =====
+            'cadastroTipoEquipamento',
+            'listarTipoEquipamento',
+            'salvarTipoEquipamento',
+            'excluirTipoEquipamento',
+            'getLookupTipoEquipamento',
+
+            // ===== ACESSÓRIOS =====
+            'cadastroAcessorio',
+            'listarAcessorios',
+            'salvarAcessorio',
+            'excluirAcessorio',
+            'getLookupAcessorios',
+
+            // ===== EQUIPAMENTOS =====
             'cadastroEquipamento',
             'listarEquipamentos',
             'salvarEquipamento',
@@ -1442,16 +1574,24 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+
+            // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
             'listarControlesEmprestimo',
             'salvarControleEmprestimo',
             'excluirControleEmprestimo',
-            'getUsuariosSeniorLookup',
-            'listarCentrosCusto',
-            'getCentroCustoLookup',
-            'getProdutosEstoqueLookup',
             'marcarDevolucaoEquipamento',
             'getInfoTermoEmprestimo',
+
+            // ===== LOOKUPS ORACLE =====
+            'getUsuariosSeniorLookup',
+            'listarCentrosCusto',
+            'getLookupCentrosCusto',
+            'getProdutosEstoqueLookup', // ainda não existe no controller, mas já estava listado
+            'getLookupEmpresa',
+            'getLookupFilial',
+
+            // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
 

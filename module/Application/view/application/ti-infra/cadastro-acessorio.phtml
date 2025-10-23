@@ -1,0 +1,106 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Cadastro de Acessórios</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div id="gridAcessorios"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let acessoriosGrid = $('#gridAcessorios').dxDataGrid({
+        dataSource: new DevExpress.data.CustomStore({
+            key: 'id',
+            load: function() {
+                return $.ajax({
+                    url: '/ti-infra/listar-acessorios',
+                    method: 'GET',
+                    dataType: 'json'
+                }).then(response => {
+                    if (response.success) {
+                        return { data: response.data, totalCount: response.totalCount || response.data.length };
+                    } else {
+                        DevExpress.ui.notify(response.message, 'error', 3000);
+                        return { data: [], totalCount: 0 };
+                    }
+                });
+            },
+            insert: function(values) {
+                return $.ajax({
+                    url: '/ti-infra/salvar-acessorio',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(values),
+                    dataType: 'json'
+                });
+            },
+            update: function(key, values) {
+                return $.ajax({
+                    url: '/ti-infra/salvar-acessorio',
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: key, ...values }),
+                    dataType: 'json'
+                });
+            },
+            remove: function(key) {
+                return $.ajax({
+                    url: '/ti-infra/excluir-acessorio',
+                    method: 'DELETE',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: key }),
+                    dataType: 'json'
+                });
+            }
+        }),
+        keyExpr: 'id',
+        width: '100%',
+        columnAutoWidth: true,
+        showBorders: true,
+        hoverStateEnabled: true,
+        paging: { pageSize: 20 },
+        pager: {
+            showPageSizeSelector: true,
+            allowedPageSizes: [10, 20, 50],
+            showInfo: true
+        },
+        filterRow: { visible: true, applyFilter: 'auto' },
+        headerFilter: { visible: true },
+        searchPanel: { visible: true, width: 240, placeholder: 'Pesquisar...' },
+        editing: {
+            mode: 'popup',
+            allowUpdating: true,
+            allowAdding: true,
+            allowDeleting: false,
+            useIcons: true,
+            popup: { title: 'Acessório', width: 400, height: 'auto', position: { my: 'center', at: 'center', of: window } },
+            form: {
+                colCount: 1,
+                labelLocation: 'top',
+                items: [
+                    { dataField: 'nome', editorType: 'dxTextBox', label: { text: 'Nome do Acessório' },
+                      validationRules: [{ type: 'required', message: 'Nome é obrigatório' }] },
+                    { dataField: 'flg_ativo', editorType: 'dxSwitch', label: { text: 'Ativo?' },
+                      editorOptions: { switchedOnText: 'Sim', switchedOffText: 'Não' } }
+                ]
+            },
+            texts: { confirmDeleteMessage: 'Deseja excluir este acessório?' }
+        },
+        columns: [
+            { dataField: 'nome', caption: 'Nome do Acessório', validationRules: [{ type: 'required', message: 'Nome é obrigatório' }] },
+            { dataField: 'flg_ativo', caption: 'Ativo?', dataType: 'boolean', alignment: 'center', width: 120 }
+        ],
+        onInitNewRow: function(e) { e.data.flg_ativo = true; },
+        onRowUpdating: function(e) { e.newData = { ...e.oldData, ...e.newData }; }
+    });
+});
+</script>
