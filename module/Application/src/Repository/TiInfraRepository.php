@@ -780,6 +780,64 @@ class TiInfraRepository
         }
         public function salvarControleEmprestimo(array $data)
         {
+            // ✅ Validação: verificar se o equipamento já está emprestado
+            if (!empty($data['equipamento_id'])) {
+                $sqlCheck = "
+                    SELECT COUNT(*) AS total 
+                    FROM tif_controle_emprestimo 
+                    WHERE equipamento_id = :equipamento_id
+                    AND data_devolucao IS NULL
+                    " . (!empty($data['id']) ? "AND id <> :id" : "") . "
+                ";
+
+                $paramsCheck = [':equipamento_id' => $data['equipamento_id']];
+                if (!empty($data['id'])) {
+                    $paramsCheck[':id'] = $data['id'];
+                }
+
+                $resultCheck = $this->adapter->createStatement($sqlCheck)->execute($paramsCheck)->current();
+
+                if ($resultCheck['total'] > 0) {
+                    throw new \Exception('Este equipamento já está emprestado para outro colaborador e ainda não foi devolvido.');
+                }
+            }
+
+            // ✅ Validação 2: verificar se o colaborador já possui um empréstimo ativo do mesmo tipo de equipamento
+            if (!empty($data['numcad']) && !empty($data['equipamento_id'])) {
+                $sqlTipo = "
+                    SELECT e.tipo_equipamento_id
+                    FROM tif_equipamentos e
+                    WHERE e.id = :equipamento_id
+                ";
+                $tipoEquipamento = $this->adapter->createStatement($sqlTipo)->execute([':equipamento_id' => $data['equipamento_id']])->current();
+
+                if (!empty($tipoEquipamento['tipo_equipamento_id'])) {
+                    $sqlCheckTipo = "
+                        SELECT COUNT(*) AS total
+                        FROM tif_controle_emprestimo cm
+                        INNER JOIN tif_equipamentos e ON e.id = cm.equipamento_id
+                        WHERE cm.numcad = :numcad
+                        AND e.tipo_equipamento_id = :tipo_id
+                        AND cm.data_devolucao IS NULL
+                        " . (!empty($data['id']) ? "AND cm.id <> :id" : "") . "
+                    ";
+
+                    $paramsTipo = [
+                        ':numcad' => $data['numcad'],
+                        ':tipo_id' => $tipoEquipamento['tipo_equipamento_id'],
+                    ];
+                    if (!empty($data['id'])) {
+                        $paramsTipo[':id'] = $data['id'];
+                    }
+
+                    $resultTipo = $this->adapter->createStatement($sqlCheckTipo)->execute($paramsTipo)->current();
+
+                    if ($resultTipo['total'] > 0) {
+                        throw new \Exception('O colaborador já possui um empréstimo ativo deste tipo de equipamento.');
+                    }
+                }
+            }
+
             $params = [
                 ':data_entrega'       => $data['data_entrega'] ?? null,
                 ':numcad'             => $data['numcad'] ?? null,

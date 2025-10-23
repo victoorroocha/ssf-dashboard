@@ -246,7 +246,7 @@ $(document).ready(function () {
                     if (!response.success) {
                         DevExpress.ui.notify(response.message, 'error', 5000);
                     } else {
-                        DevExpress.ui.notify(response.message || 'Controle salvo com sucesso!', 'success', 2000);
+                        DevExpress.ui.notify(response.message || 'Controle salvo com sucesso!', 'success', 5000);
                     }
                     return response;
                 }).catch(() => {
@@ -284,11 +284,11 @@ $(document).ready(function () {
                     if (!response.success) {
                         DevExpress.ui.notify(response.message, 'error', 5000);
                     } else {
-                        DevExpress.ui.notify(response.message || 'Controle excluído com sucesso!', 'success', 2000);
+                        DevExpress.ui.notify(response.message || 'Controle excluído com sucesso!', 'success', 5000);
                     }
                     return response;
                 }).catch(() => {
-                    DevExpress.ui.notify('Erro ao excluir controle!', 'error', 3000);
+                    DevExpress.ui.notify('Erro ao excluir controle!', 'error', 5000);
                     return {};
                 });
             }
