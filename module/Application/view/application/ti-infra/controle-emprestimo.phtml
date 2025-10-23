@@ -640,6 +640,57 @@ $(document).ready(function () {
             }
         },
         columns: [
+                        {
+                type: 'buttons',
+                width: 150,
+                alignment: 'center',
+                buttons: [
+                    {
+                        name: 'edit',
+                        visible: function (e) {
+                            return e.row.data.status !== 'devolvido';
+                        },
+                    },
+                    {
+                        name: 'delete',
+                        visible: function (e) {
+                            return e.row.data.status !== 'devolvido';
+                        },
+                    },
+                    {
+                        hint: "Gerar Termo Empréstimo",
+                        icon: "doc",
+                        visible: function(e) {
+                            return e.row.data.status !== 'devolvido';
+                        },
+                        onClick: function(e) {
+                            gerarTermoEmprestimo(e.row.data);
+                        }
+                    },
+                    {
+                        hint: "Gerar Termo de Devolução",
+                        icon: "doc",
+                        visible: function (e) {
+                            // Só aparece se o status for devolvido
+                            return e.row.data.status === 'devolvido';
+                        },
+                        onClick: function (e) {
+                            const data = e.row.data;
+                            gerarTermoDevolucao(data);
+                        }
+                    },
+                    {
+                        hint: 'Marcar devolução',
+                        icon: 'check',
+                        visible: function (e) {
+                            return e.row.data.status === 'emprestado';
+                        },
+                        onClick: function (e) {
+                            marcarDevolucaoEquipamento(e.row.data);
+                        }
+                    },
+                ]
+            },
             { 
                 dataField: 'id', 
                 caption: 'ID', 
@@ -746,9 +797,18 @@ $(document).ready(function () {
             },
             { dataField: 'matricula', caption: 'Matrícula', visible: true, alignment: 'center', width: 100 },
             { dataField: 'nome', caption: 'Nome Funcionário', visible: true, alignment: 'left' },
-            { dataField: 'cpf', caption: 'CPF', visible: false, width: 120, alignment: 'center' },
-            { dataField: 'cargo_funcao', caption: 'Cargo/Função', visible: false },
-            { dataField: 'contato', caption: 'Contato', visible: false },
+            { 
+                dataField: 'cpf', 
+                caption: 'CPF', 
+                visible: true, 
+                width: 120, 
+                alignment: 'center' ,
+                customizeText: function(e) {
+                    return e.value ? formatarCPF(e.value) : '';
+                }
+            },
+            { dataField: 'cargo_funcao', caption: 'Cargo/Função', width: 120, visible: true },
+            { dataField: 'contato', caption: 'Contato', width: 120, visible: true },
             { 
                 dataField: 'equipamento_id', 
                 caption: 'Equipamento', 
@@ -861,57 +921,6 @@ $(document).ready(function () {
                     }).text(config.text);
                 }
             },
-            {
-                type: 'buttons',
-                width: 150,
-                alignment: 'center',
-                buttons: [
-                    {
-                        name: 'edit',
-                        visible: function (e) {
-                            return e.row.data.status !== 'devolvido';
-                        },
-                    },
-                    {
-                        name: 'delete',
-                        visible: function (e) {
-                            return e.row.data.status !== 'devolvido';
-                        },
-                    },
-                    {
-                        hint: "Gerar Termo Empréstimo",
-                        icon: "doc",
-                        visible: function(e) {
-                            return e.row.data.status !== 'devolvido';
-                        },
-                        onClick: function(e) {
-                            gerarTermoEmprestimo(e.row.data);
-                        }
-                    },
-                    {
-                        hint: "Gerar Termo de Devolução",
-                        icon: "doc",
-                        visible: function (e) {
-                            // Só aparece se o status for devolvido
-                            return e.row.data.status === 'devolvido';
-                        },
-                        onClick: function (e) {
-                            const data = e.row.data;
-                            gerarTermoDevolucao(data);
-                        }
-                    },
-                    {
-                        hint: 'Marcar devolução',
-                        icon: 'check',
-                        visible: function (e) {
-                            return e.row.data.status === 'emprestado';
-                        },
-                        onClick: function (e) {
-                            marcarDevolucaoEquipamento(e.row.data);
-                        }
-                    },
-                ]
-            }
         ],
         onInitNewRow: function(e) {
             e.data.data_entrega = new Date();

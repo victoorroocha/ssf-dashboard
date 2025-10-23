@@ -8,4 +8,4 @@ data/cache/*
 phpunit.xml
 node_modules/
 /module/Application/src/LogCronJob/cron_gerar_os.log
-/data/planejamento-controle-producao/equipamento/
+/data
