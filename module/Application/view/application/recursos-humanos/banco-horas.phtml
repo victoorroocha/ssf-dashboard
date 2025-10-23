@@ -371,7 +371,7 @@
                                 formatter: formatHourBalance
                             },
                             caption: 'Saldo Horas',
-                            width: 200
+                            width: 230
                         },
                         {
                             dataField: 'SALDO_POSITIVO',
@@ -381,7 +381,7 @@
                                 formatter: formatHourBalance
                             },
                             caption: 'Saldo Horas (+)',
-                            width: 200
+                            width: 230
                         },
                         {
                             dataField: 'SALDO_NEGATIVO',
@@ -391,7 +391,7 @@
                                 formatter: formatHourBalance
                             },
                             caption: 'Saldo Horas (-)',
-                            width: 200
+                            width: 230
                         },
                         {
                             dataField: 'MEDIA_HORAS_DIA',
@@ -480,27 +480,6 @@
                                 }, 
                             },
                             {
-                                column: 'SALDO_SUMMARY',
-                                showInColumn: "SALDO",
-                                summaryType: 'sum',
-                                displayFormat: '{0}',
-                                showInGroupFooter: true,
-                                customizeText: function(cellInfo) {
-                                    if (!cellInfo.value && cellInfo.value !== 0) {
-                                        return '00:00:00'; 
-                                    }
-                                    const saldo = cellInfo.value;
-                                    const absSaldo = Math.abs(saldo);
-                                    const hours = Math.floor(absSaldo / 60);
-                                    const minutes = absSaldo % 60;
-                                    
-                                    const formattedHours = hours.toString().padStart(2, '0');
-                                    const formattedMinutes = minutes.toString().padStart(2, '0');
-                                    
-                                    return (saldo < 0) ?  'Saldo Total: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total: ' + `${formattedHours}:${formattedMinutes}:00`;
-                                }, 
-                            },
-                            {
                                 column: 'TOTAL_SALDO_POSITIVO_SUMMARY',
                                 showInColumn: "SALDO",
                                 summaryType: 'sum',
@@ -518,7 +497,7 @@
                                     const formattedHours = hours.toString().padStart(2, '0');
                                     const formattedMinutes = minutes.toString().padStart(2, '0');
                                     
-                                    return (saldo < 0) ?  'Saldo Total (+): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total (+): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                    return (saldo < 0) ?  'Saldo Total no Mês (+): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total no Mês (+): ' + `${formattedHours}:${formattedMinutes}:00`;
                                 }, 
                             },
                             {
@@ -539,7 +518,28 @@
                                     const formattedHours = hours.toString().padStart(2, '0');
                                     const formattedMinutes = minutes.toString().padStart(2, '0');
                                     
-                                    return (saldo < 0) ?  'Saldo Total (-): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total (-): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                    return (saldo < 0) ?  'Saldo Total no Mês (-): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total no Mês (-): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    if (!cellInfo.value && cellInfo.value !== 0) {
+                                        return '00:00:00'; 
+                                    }
+                                    const saldo = cellInfo.value;
+                                    const absSaldo = Math.abs(saldo);
+                                    const hours = Math.floor(absSaldo / 60);
+                                    const minutes = absSaldo % 60;
+                                    
+                                    const formattedHours = hours.toString().padStart(2, '0');
+                                    const formattedMinutes = minutes.toString().padStart(2, '0');
+                                    
+                                    return (saldo < 0) ?  'Saldo Total no Mês: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total no Mês: ' + `${formattedHours}:${formattedMinutes}:00`;
                                 }, 
                             },
                         ],
@@ -575,27 +575,6 @@
                                 }, 
                             },
                             {
-                                column: 'SALDO_SUMMARY',
-                                showInColumn: "SALDO",
-                                summaryType: 'sum',
-                                displayFormat: '{0}',
-                                showInGroupFooter: true,
-                                customizeText: function(cellInfo) {
-                                    if (!cellInfo.value && cellInfo.value !== 0) {
-                                        return '00:00:00'; 
-                                    }
-                                    const saldo = cellInfo.value;
-                                    const absSaldo = Math.abs(saldo);
-                                    const hours = Math.floor(absSaldo / 60);
-                                    const minutes = absSaldo % 60;
-                                    
-                                    const formattedHours = hours.toString().padStart(2, '0');
-                                    const formattedMinutes = minutes.toString().padStart(2, '0');
-                                    
-                                    return (saldo < 0) ? 'Saldo Total: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total: ' + `${formattedHours}:${formattedMinutes}:00`;
-                                }, 
-                            },
-                            {
                                 column: 'TOTAL_SALDO_POSITIVO_SUMMARY',
                                 showInColumn: "SALDO",
                                 summaryType: 'sum',
@@ -613,7 +592,7 @@
                                     const formattedHours = hours.toString().padStart(2, '0');
                                     const formattedMinutes = minutes.toString().padStart(2, '0');
                                     
-                                    return (saldo < 0) ?  'Saldo Total (+): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total (+): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                    return (saldo < 0) ?  'Saldo Total no Mês (+): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total no Mês (+): ' + `${formattedHours}:${formattedMinutes}:00`;
                                 }, 
                             },
                             {
@@ -634,7 +613,28 @@
                                     const formattedHours = hours.toString().padStart(2, '0');
                                     const formattedMinutes = minutes.toString().padStart(2, '0');
                                     
-                                    return (saldo < 0) ?  'Saldo Total (-): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total (-): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                    return (saldo < 0) ?  'Saldo Total no Mês (-): ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total no Mês (-): ' + `${formattedHours}:${formattedMinutes}:00`;
+                                }, 
+                            },
+                            {
+                                column: 'SALDO_SUMMARY',
+                                showInColumn: "SALDO",
+                                summaryType: 'sum',
+                                displayFormat: '{0}',
+                                showInGroupFooter: true,
+                                customizeText: function(cellInfo) {
+                                    if (!cellInfo.value && cellInfo.value !== 0) {
+                                        return '00:00:00'; 
+                                    }
+                                    const saldo = cellInfo.value;
+                                    const absSaldo = Math.abs(saldo);
+                                    const hours = Math.floor(absSaldo / 60);
+                                    const minutes = absSaldo % 60;
+                                    
+                                    const formattedHours = hours.toString().padStart(2, '0');
+                                    const formattedMinutes = minutes.toString().padStart(2, '0');
+                                    
+                                    return (saldo < 0) ? 'Saldo Total Mês: ' + `-${formattedHours}:${formattedMinutes}:00` : 'Saldo Total Mês: ' + `${formattedHours}:${formattedMinutes}:00`;
                                 }, 
                             },
                         ],
