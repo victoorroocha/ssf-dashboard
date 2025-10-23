@@ -752,6 +752,7 @@ $(document).ready(function () {
             { 
                 dataField: 'equipamento_id', 
                 caption: 'Equipamento', 
+                width: 300,
                 lookup: { 
                     dataSource: new DevExpress.data.CustomStore({ 
                         load: () => $.getJSON('/ti-infra/listar-equipamentos') 
@@ -1072,7 +1073,7 @@ $(document).ready(function () {
                 imagensHTML = imagens.map((img, index) => `
                     <div class="layout-ssf termo-page hidden-print"
                         style="page-break-after: always; position: relative; width: 210mm; height: 297mm;
-                            padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
+                            padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #000;">
                         
                         <div style="text-align: center; margin-top: 10mm;">
                             <h2 style="margin-bottom: 10mm; font-size: 14px; font-weight: bold;">
@@ -1095,23 +1096,24 @@ $(document).ready(function () {
                                     style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
 
-                            <div style="margin-top: 5mm; font-size: 10px; color: #555;">
+                            <div style="margin-top: 5mm; font-size: 10px; color: #000;">
                                 ${img.nome_arquivo || 'Imagem sem nome'}
                             </div>
                         </div>
                     </div>
                 `).join('');
-            } else {
-                imagensHTML = `
-                    <div class="layout-ssf termo-page hidden-print"
-                        style="page-break-after: always; position: relative; width: 210mm; height: 297mm;
-                            padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
-                        <div style="text-align: center; margin-top: 100mm; font-size: 12px; color: #777;">
-                            Nenhuma imagem vinculada a este equipamento.
-                        </div>
-                    </div>
-                `;
-            }
+            } 
+            // else {
+            //     imagensHTML = `
+            //         <div class="layout-ssf termo-page hidden-print"
+            //             style="page-break-after: always; position: relative; width: 210mm; height: 297mm;
+            //                 padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #000;">
+            //             <div style="text-align: center; margin-top: 100mm; font-size: 12px; color: #000;">
+            //                 Nenhuma imagem vinculada a este equipamento.
+            //             </div>
+            //         </div>
+            //     `;
+            // }
 
 
              // Define texto dinâmico de acordo com a flag flg_equipamento_novo
@@ -1125,7 +1127,7 @@ $(document).ready(function () {
             // Monta o layout principal (sem popup) 
             const layout = $(`
                 <div class="layout-ssf termo-page hidden-print" 
-                    style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
+                    style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #000;">
                     
                     <div style="text-align: center; margin-bottom: 8mm;">
                         <h2 style="margin: 0; font-size: 15px; font-weight: bold; margin-top: 25mm;">TERMO DE RECEBIMENTO E RESPONSABILIDADE POR GUARDA E USO DE EQUIPAMENTOS</h2>
@@ -1135,7 +1137,7 @@ $(document).ready(function () {
                     ${tabelasEquipamento}
               
                     <!-- OBSERVAÇÕES -->
-                    <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #000;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #000; color: #000;">
                         <tr>
                             <td colspan="2" style="border: 1px solid #000; padding: 4px; font-weight: bold; background-color: #cfe5b9; text-align: center;">OBSERVAÇÕES:</td>
                         </tr>
@@ -1148,7 +1150,7 @@ $(document).ready(function () {
 
 
                     <!-- DECLARAÇÃO PRINCIPAL -->
-                    <div style="margin-bottom: 6mm; margin-top: 10mm;">
+                    <div style="margin-bottom: 6mm; margin-top: 10mm; color: #000;">
                         <p style="text-align: justify; line-height: 1.4;">
                             Eu, <strong>${dados.nome || '________________________'}</strong>, CPF nº <strong>${cpfFormatado || '________________'}</strong>, 
                             declaro que recebi em regime de <strong>empréstimo</strong> o(s) bem(ns) descrito(s) neste termo, 
@@ -1161,7 +1163,7 @@ $(document).ready(function () {
                     </div>
 
                     <!-- CLÁUSULAS -->
-                    <div style="margin-bottom: 6mm;">
+                    <div style="margin-bottom: 6mm; color: #000;">
                         <p style="font-weight: bold; margin-bottom: 2mm;">1. Responsabilidade e Uso</p>
                         <p style="text-align: justify; line-height: 1.4; margin-bottom: 4mm;">
                             Reconheço que o equipamento é patrimônio da Empresa, devendo ser utilizado exclusivamente para 
@@ -1198,7 +1200,7 @@ $(document).ready(function () {
                     </div>    
                 </div>
 
-                <div class="layout-ssf termo-page hidden-print" style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
+                <div class="layout-ssf termo-page hidden-print" style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #000;">
                     <!-- CLÁUSULAS -->
                     <div style="margin-bottom: 6mm; margin-top: 25mm;">
                         <p style="font-weight: bold; margin: 4mm 0 2mm 0;">4. Obrigações Específicas para Equipamentos de Informática</p>
@@ -1219,7 +1221,7 @@ $(document).ready(function () {
                     </div>    
 
                     <!-- CLÁUSULAS -->
-                    <div style="margin-bottom: 6mm;">
+                    <div style="margin-bottom: 6mm; color: #000;">
                         <p style="font-weight: bold; margin: 4mm 0 2mm 0;">5. Assinaturas</p>
                         <p style="text-align: justify; line-height: 1.4; margin-bottom: 0mm;">
                             O presente termo será assinado pelo responsável pelo uso, pelo responsável patrimonial e, nos casos de equipamentos de informática, também pelo responsável de TI, com a finalidade de controle e autorização de saída.
@@ -1230,12 +1232,12 @@ $(document).ready(function () {
                     </div>    
 
                     <!-- ASSINATURAS -->
-                    <div style="margin-top: 12mm;">
+                    <div style="margin-top: 12mm; color: #000;">
                         <p style="text-align: center; margin-bottom: 8mm;">
                             Local e data: Rio Verde - GO, ____ de ___________________ de ________
                         </p>
 
-                        <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center; color: #000;">
                             <tr>
                                 <td style="width: 33%; padding: 10mm 2mm 2mm 2mm;">
                                     ___________________________<br>
@@ -1326,27 +1328,27 @@ $(document).ready(function () {
 
             // Monta o layout principal (sem popup) 
             const layout = $(`
-                <div class="layout-ssf termo-page hidden-print" style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
+                <div class="layout-ssf termo-page hidden-print" style="page-break-after: always; position: relative; width: 210mm; height: 297mm; padding: 15mm; font-family: Arial, sans-serif; font-size: 11px; color: #000;">
                     
                     <hr style="margin-top: 25mm; margin-bottom: 4mm; border: 0; border-top: 1px solid #000;">
-                    <div style="text-align: center; font-weight: bold; margin-bottom: 6mm;">DEVOLUÇÃO</div>
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 6mm; color: #000;">DEVOLUÇÃO</div>
 
-                    <p style="text-align: justify; margin-bottom: 5mm;">
+                    <p style="text-align: justify; margin-bottom: 5mm; color: #000;">
                         Atestamos que o equipamento foi devolvido em _____/_____/________, nas seguintes condições:
                     </p>
 
-                   <div style="margin-left: 5mm;">
+                   <div style="margin-left: 5mm; color: #000;">
                         <p><input type="checkbox"> Em perfeito estado;</p>
                         <p><input type="checkbox"> Apresentando defeito;</p>
                         <p><input type="checkbox"> Faltando peças ou acessórios. Citar: ________________________________________________________________________</p>
                     </div>
 
-                    <div style="margin-top: 20mm; display: flex; justify-content: space-between;">
-                        <div style="text-align: center;">
+                    <div style="margin-top: 20mm; display: flex; justify-content: space-between; color: #000;">
+                        <div style="text-align: center; color: #000;">
                             ______________________________________________________<br>
                             <strong>Colaborador</strong>
                         </div>
-                        <div style="text-align: center;">
+                        <div style="text-align: center; color: #000;">
                             ______________________________________________________<br>
                             <strong>Departamento de TI</strong>
                         </div>
@@ -1455,9 +1457,9 @@ $(document).ready(function () {
         if (!linhas) return "";
 
         return `
-            <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000;">
+            <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000; color: #000;">
                 <tr>
-                    <td colspan="2" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center;">
+                    <td colspan="2" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center; color: #000;">
                         ${titulo}
                     </td>
                 </tr>
@@ -1481,11 +1483,11 @@ $(document).ready(function () {
 
             if (tipos.length === 0) {
                 return `
-                    <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000;">
+                    <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000; color: #000;">
                         <tr>
-                            <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center;">TIPO DE EQUIPAMENTO</td>
+                            <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center; color: #000;">TIPO DE EQUIPAMENTO</td>
                         </tr>
-                        <tr><td style="padding:4px;">Nenhum tipo de equipamento encontrado.</td></tr>
+                        <tr><td style="padding:4px; color: #000;">Nenhum tipo de equipamento encontrado.</td></tr>
                     </table>
                 `;
             }
@@ -1496,15 +1498,15 @@ $(document).ready(function () {
                 const linha = grupo.map(t => {
                     const isSelected = tipoAtualId && t.id === tipoAtualId;
                     const checkbox = isSelected ? '☑' : '☐';
-                    return `<td style="border:1px solid #000; padding:4px; width:20%;">${checkbox} ${t.nome || t}</td>`;
+                    return `<td style="border:1px solid #000; padding:4px; width:20%; color: #000;">${checkbox} ${t.nome || t}</td>`;
                 }).join('');
                 linhas.push(`<tr>${linha}</tr>`);
             }
 
             return `
-                <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000;">
+                <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000; color: #000;">
                     <tr>
-                        <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center;">TIPO DE EQUIPAMENTO</td>
+                        <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center; color: #000;">TIPO DE EQUIPAMENTO</td>
                     </tr>
                     ${linhas.join('')}
                 </table>
@@ -1512,8 +1514,8 @@ $(document).ready(function () {
         } catch (error) {
             console.error("Erro ao montar tabela de tipo de equipamento:", error);
             return `
-                <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000;">
-                    <tr><td style="padding:4px; color:red;">Erro ao carregar os tipos de equipamento.</td></tr>
+                <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000; color: #000;">
+                    <tr><td style="padding:4px; color:red; color: #000;">Erro ao carregar os tipos de equipamento.</td></tr>
                 </table>
             `;
         }
@@ -1534,11 +1536,11 @@ $(document).ready(function () {
 
             if (acessorios.length === 0) {
                 return `
-                    <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000;">
+                    <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000; color: #000;">
                         <tr>
-                            <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center;">ACESSÓRIOS</td>
+                            <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; text-align: center; color: #000;">ACESSÓRIOS</td>
                         </tr>
-                        <tr><td style="padding:4px;">Nenhum acessório encontrado.</td></tr>
+                        <tr><td style="padding:4px; color: #000;">Nenhum acessório encontrado.</td></tr>
                     </table>
                 `;
             }
@@ -1549,15 +1551,15 @@ $(document).ready(function () {
                 const linha = grupo.map(a => {
                     const isSelected = acessoriosVinculados.includes(a.id);
                     const checkbox = isSelected ? '☑' : '☐';
-                    return `<td style="border:1px solid #000; padding:4px; width:20%;">${checkbox} ${a.nome || a}</td>`;
+                    return `<td style="border:1px solid #000; padding:4px; width:20%; color: #000;">${checkbox} ${a.nome || a}</td>`;
                 }).join('');
                 linhas.push(`<tr>${linha}</tr>`);
             }
 
             return `
-                <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000;">
+                <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:0mm; border:1px solid #000; color: #000;">
                     <tr>
-                        <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9;">ACESSÓRIOS</td>
+                        <td colspan="5" style="border:1px solid #000; padding:4px; font-weight:bold; background-color:#cfe5b9; color: #000;">ACESSÓRIOS</td>
                     </tr>
                     ${linhas.join('')}
                 </table>
@@ -1565,8 +1567,8 @@ $(document).ready(function () {
         } catch (error) {
             console.error("Erro ao montar tabela de acessórios:", error);
             return `
-                <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000;">
-                    <tr><td style="padding:4px; color:red;">Erro ao carregar os acessórios.</td></tr>
+                <table style="width:100%; border-collapse:collapse; font-size:10px; border:1px solid #000; color: #000;">
+                    <tr><td style="padding:4px; color:red; color: #000;">Erro ao carregar os acessórios.</td></tr>
                 </table>
             `;
         }
