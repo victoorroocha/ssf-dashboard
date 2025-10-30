@@ -25,7 +25,7 @@ class VendasController extends BaseController
         $this->VendasRepository = $VendasRepository;
     }
 
-    public function RtvPerfomanceAction()
+    public function rtvPerformanceAction()
     {
         $session = new Container('auth');
 

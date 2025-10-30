@@ -462,7 +462,7 @@ class RecursosHumanosController extends BaseController
     }
     #endregion
 
-    #region Controle Banco de Horas
+    #region Controle TurnOver
         public function dashboardTurnoverAction()
         {
             $session = new Container('auth');
@@ -501,48 +501,95 @@ class RecursosHumanosController extends BaseController
                     $infoCardsTurnover = $this->oracleService->executeQuery($infoCardsTurnoverSQL);
                 }
 
+                // $turnoverPorMes = [];
+
+                // // Datas como objetos
+                // $start = new \DateTime($dataInicio);
+                // $end = new \DateTime($dataFim);
+                // // Para garantir que o fim seja o último dia do mês
+                // $end->modify('last day of this month');
+
+                // if ($start->format('Y-m') === $end->format('Y-m')) {
+                //     // Caso apenas um mês selecionado, já formata no padrão ISO para Oracle
+                //     $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover(
+                //         $start->format('Y-m-d'), 
+                //         $end->format('Y-m-d')
+                //     );
+                //     $dados = $this->oracleService->executeQuery($sql);
+                //     $turnoverPorMes[] = [
+                //         'mes' => $start->format('Y-m-01'),
+                //         'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                //     ];
+                // } else {
+                //     // Percorre mês a mês
+                //     $interval = new \DateInterval('P1M');
+                //     // Clona o $end para não modificar o original no DatePeriod
+                //     $periodEnd = (clone $end)->modify('+1 day'); 
+
+                //     $period = new \DatePeriod($start, $interval, $periodEnd);
+
+                //     foreach ($period as $mes) {
+                //         // Primeiro dia do mês
+                //         $inicioMes = (clone $mes)->modify('first day of this month')->format('Y-m-d');
+                //         // Último dia do mês
+                //         $fimMes = (clone $mes)->modify('last day of this month')->format('Y-m-d');
+
+                //         $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover($inicioMes, $fimMes);
+                //         $dados = $this->oracleService->executeQuery($sql);
+
+                //         $turnoverPorMes[] = [
+                //             'mes' => $mes->format('Y-m-01'),
+                //             'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                //         ];
+                //     }
+                // }
+
                 $turnoverPorMes = [];
 
                 // Datas como objetos
                 $start = new \DateTime($dataInicio);
                 $end = new \DateTime($dataFim);
-                // Para garantir que o fim seja o último dia do mês
+                // Garante que o fim seja o último dia do mês
                 $end->modify('last day of this month');
 
                 if ($start->format('Y-m') === $end->format('Y-m')) {
-                    // Caso apenas um mês selecionado, já formata no padrão ISO para Oracle
+                    // Apenas um mês selecionado
                     $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover(
-                        $start->format('Y-m-d'), 
+                        $start->format('Y-m-d'),
                         $end->format('Y-m-d')
                     );
                     $dados = $this->oracleService->executeQuery($sql);
+
                     $turnoverPorMes[] = [
-                        'mes' => $start->format('Y-m-01'),
-                        'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                        'mes'           => $start->format('Y-m-01'),
+                        'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null,
+                        'ativos'        => isset($dados[0]['ATIVOS']) ? (int) $dados[0]['ATIVOS'] : 0,
+                        'admitidos'     => isset($dados[0]['ADMITIDOS']) ? (int) $dados[0]['ADMITIDOS'] : 0,
+                        'demitidos'     => isset($dados[0]['DEMITIDOS']) ? (int) $dados[0]['DEMITIDOS'] : 0,
                     ];
                 } else {
                     // Percorre mês a mês
                     $interval = new \DateInterval('P1M');
-                    // Clona o $end para não modificar o original no DatePeriod
-                    $periodEnd = (clone $end)->modify('+1 day'); 
-
+                    $periodEnd = (clone $end)->modify('+1 day');
                     $period = new \DatePeriod($start, $interval, $periodEnd);
 
                     foreach ($period as $mes) {
-                        // Primeiro dia do mês
                         $inicioMes = (clone $mes)->modify('first day of this month')->format('Y-m-d');
-                        // Último dia do mês
                         $fimMes = (clone $mes)->modify('last day of this month')->format('Y-m-d');
 
                         $sql = $this->RecursosHumanosRepository->getCardsDashboardTurnover($inicioMes, $fimMes);
                         $dados = $this->oracleService->executeQuery($sql);
 
                         $turnoverPorMes[] = [
-                            'mes' => $mes->format('Y-m-01'),
-                            'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null
+                            'mes'           => $mes->format('Y-m-01'),
+                            'perc_turnover' => isset($dados[0]['PERC_TURNOVER']) ? (float) $dados[0]['PERC_TURNOVER'] : null,
+                            'ativos'        => isset($dados[0]['ATIVOS']) ? (int) $dados[0]['ATIVOS'] : 0,
+                            'admitidos'     => isset($dados[0]['ADMITIDOS']) ? (int) $dados[0]['ADMITIDOS'] : 0,
+                            'demitidos'     => isset($dados[0]['DEMITIDOS']) ? (int) $dados[0]['DEMITIDOS'] : 0,
                         ];
                     }
                 }
+
 
                 // Retorna os dados em JSON
                 return new JsonModel([

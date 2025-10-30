@@ -128,7 +128,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Diretor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Diretor', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -348,7 +348,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Gerente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Gerente', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -566,7 +566,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Coordenador', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Coordenador', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -784,7 +784,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Encarregado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Encarregado', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -1002,7 +1002,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Analista', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Analista', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -1220,7 +1220,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Assistente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Assistente', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas
@@ -1437,7 +1437,7 @@ class AccessControl
             'getLookupGrupoContas',
             'getLookupPacoteContas'
         ]);
-        $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras']);
+        $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Auxiliar', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
         $this->acl->allow('Auxiliar', 'PlanejamentoControleManutencaoController', [
             // Cadastro Areas Técnicas

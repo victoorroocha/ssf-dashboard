@@ -349,9 +349,12 @@ return [
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
                 return new \Application\Repository\TiInfraRepository($adapter);
             },
+            'Application\Repository\VendasRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter');
+                return new \Application\Repository\VendasRepository($adapter);
+            },
             RecursosHumanosRepository::class => InvokableFactory::class, 
             ComercialRepository::class => InvokableFactory::class, 
-            VendasRepository::class => InvokableFactory::class,  
         ],
     ],
     'view_manager' => [

@@ -1,4 +1,3 @@
-
 <style>
     /* Período de Apuração */
     .period-title {
@@ -47,89 +46,90 @@
         display: none !important;
     }
 
-.container-turnover {
-    display: flex;
-    margin-top: 20px;
-    gap: 20px;
-    align-items: stretch;
-    height: auto; /* ou remova completamente se estiver fixo */
-}
+    .container-turnover {
+        display: flex;
+        margin-top: 20px;
+        gap: 20px;
+        align-items: stretch;
+        height: auto;
+    }
 
-.turnover-cards {
-    flex: 0 0 15%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: 100%;
-}
+    .turnover-cards {
+        flex: 0 0 15%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100%;
+    }
 
-.turnover-cards .card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #fff;
-    padding: 15px 20px;
-    border-radius: 6px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-    text-align: center;
-}
+    .turnover-cards .card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #fff;
+        padding: 15px 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        text-align: center;
+        position: relative;
+    }
 
-.card-header-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 4px;
-    width: 100%;
-    border-radius: 6px 6px 0 0;
-}
-    
-.card-admitidos .card-header-line {
-    background-color: #2e7d32; /* verde escuro */
-}
+    .card-header-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+        border-radius: 6px 6px 0 0;
+    }
 
-.card-desligados .card-header-line {
-    background-color: #c62828; /* vermelho escuro */
-}
+    .card-admitidos .card-header-line {
+        background-color: #2e7d32;
+    }
 
-.card-ativos .card-header-line {
-    background-color: #616161; /* cinza escuro */
-}
+    .card-desligados .card-header-line {
+        background-color: #c62828;
+    }
 
-.card-tempo .card-header-line {
-    background-color: #424242; /* cinza mais escuro */
-}
+    .card-ativos .card-header-line {
+        background-color: #616161;
+    }
 
-.card-turnover .card-header-line {
-    background-color: #1976d2; /* azul ou outra cor distinta */
-}
+    .card-tempo .card-header-line {
+        background-color: #424242;
+    }
 
-.card-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-}
+    .card-turnover .card-header-line {
+        background-color: #1976d2;
+    }
 
-.card-title {
-    font-size: 14px;
-    color: #444;
-    margin-bottom: 6px;
-    font-weight: 600;
-}
+    .card-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+    }
 
-.card-value {
-    font-size: 40px;
-    font-weight: 700;
-    color: #444;
-    line-height: 1;
-}
+    .card-title {
+        font-size: 14px;
+        color: #444;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
 
-.card-icon {
-    font-size: 30px;
-    color: #222;
-}
+    .card-value {
+        font-size: 40px;
+        font-weight: 700;
+        color: #444;
+        line-height: 1;
+    }
+
+    .card-icon {
+        font-size: 30px;
+        color: #222;
+    }
 
     .turnover-cards .card hr {
         margin: 4px 0;
@@ -137,7 +137,7 @@
         border-top: 1px solid #ccc;
     }
 
-    /* Gráficos em 2 colunas por 2 linhas com gráfico central */
+    /* Grade de gráficos (2x2) */
     .turnover-charts-wrap {
         flex: 1;
         display: grid;
@@ -145,139 +145,108 @@
         grid-template-rows: repeat(2, 1fr);
         gap: 10px;
         height: 100%;
-        position: relative; /* Necessário para posicionamento absoluto do central */
         padding: 10px;
     }
+
     .turnover-charts-wrap .chart-half {
         background-color: #e0e0e0;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        height: 340px; /* Altura fixa para visualização */
-        /* display: flex; */
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-    }
-    /* Gráfico circular central */
-    .chart-central {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 260px;
-        height: 260px;
-        background-color: #ffffff;
-        border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 2;
+        height: 340px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        color: #555;
-    } 
+        color: #444;
+    }
 </style>
-
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Content Row -->
     <div class="row">
         <div class="col-lg-12 mb-4">
-            <!-- Approach -->
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <p>Dashboard Turnover</p>
 
-                    <!-- <div id="form-container"></div> -->
-
-                    <!-- Container centralizado para o Range Selector -->
                     <div class="d-flex justify-content-center mb-4">
                         <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
                             <div id="range-selector"></div>
                         </div>
                     </div>
 
-                    <!-- Botão minimalista só com ícone -->
                     <button id="btnExportPDF" class="export-pdf">
                         <i class="fas fa-file-pdf" aria-hidden="true"></i>
                     </button>
 
                     <section id="print-area">
-                        <!-- Cabeçalho -->
                         <div class="cabecalho-content hidden-print">
-                            <!-- Logo (aplica filtro CSS para branco) -->
                             <div class="cabecalho-logo-div"></div>
-                            <!-- Texto principal -->
                             <h3>Quem planta, planta qualidade!</h3>
                         </div>
 
                         <div class="period-title"><h2><b>Turnover</b></h2></div>
-                        <!-- Período de Apuração -->
                         <div class="period-title">
                             <i class="fas fa-calendar-week"></i> Período: <span id="periodo-apuracao"></span>
                         </div>        
-                        
+
                         <div class="container-turnover">
                             <!-- Coluna da esquerda: cards -->
                             <div class="turnover-cards">
                                 <div class="card card-admitidos">
-                                <div class="card-header-line"></div>
-                                <div class="card-text">
-                                    <div class="card-title">Admitidos</div>
-                                    <div class="card-value" id="valor-admitidos">0</div>
-                                    <i class="fas fa-user-tie card-icon"></i>
-                                </div>
+                                    <div class="card-header-line"></div>
+                                    <div class="card-text">
+                                        <div class="card-title">Admitidos</div>
+                                        <div class="card-value" id="valor-admitidos">0</div>
+                                        <i class="fas fa-user-tie card-icon"></i>
+                                    </div>
                                 </div>
 
                                 <div class="card card-desligados">
-                                <div class="card-header-line"></div>
-                                <div class="card-text">
-                                    <div class="card-title">Desligados</div>
-                                    <div class="card-value" id="valor-demissoes">0</div>
-                                    <i class="fas fa-user-minus card-icon"></i>
-                                </div>
+                                    <div class="card-header-line"></div>
+                                    <div class="card-text">
+                                        <div class="card-title">Desligados</div>
+                                        <div class="card-value" id="valor-demissoes">0</div>
+                                        <i class="fas fa-user-minus card-icon"></i>
+                                    </div>
                                 </div>
 
                                 <div class="card card-ativos">
-                                <div class="card-header-line"></div>
-                                <div class="card-text">
-                                    <div class="card-title">Ativos</div>
-                                    <div class="card-value" id="valor-ativos">0</div>
-                                    <i class="fas fa-users card-icon"></i>
-                                </div>
+                                    <div class="card-header-line"></div>
+                                    <div class="card-text">
+                                        <div class="card-title">Ativos</div>
+                                        <div class="card-value" id="valor-ativos">0</div>
+                                        <i class="fas fa-users card-icon"></i>
+                                    </div>
                                 </div>
 
                                 <div class="card card-tempo">
-                                <div class="card-header-line"></div>
-                                <div class="card-text">
-                                    <div class="card-title">Tempo Médio de Empresa (em meses)</div>
-                                    <div class="card-value" id="valor-tempo-medio">0</div>
-                                    <i class="fas fa-user-clock card-icon"></i>
-                                </div>
+                                    <div class="card-header-line"></div>
+                                    <div class="card-text">
+                                        <div class="card-title">Tempo Médio de Empresa (em meses)</div>
+                                        <div class="card-value" id="valor-tempo-medio">0</div>
+                                        <i class="fas fa-user-clock card-icon"></i>
+                                    </div>
                                 </div>
 
                                 <div class="card card-turnover">
-                                <div class="card-header-line"></div>
-                                <div class="card-text">
-                                    <div class="card-title">% Turnover</div>
-                                    <div class="card-value" id="valor-turnover">0</div>
-                                    <i class="fas fa-user-clock card-icon"></i>
-                                </div>
+                                    <div class="card-header-line"></div>
+                                    <div class="card-text">
+                                        <div class="card-title">% Turnover</div>
+                                        <div class="card-value" id="valor-turnover">0</div>
+                                        <i class="fas fa-user-clock card-icon"></i>
+                                    </div>
                                 </div>
                             </div>
-
 
                             <!-- Coluna da direita: gráficos -->
                             <div class="turnover-charts-wrap">
-                                <div class="chart-half" id="grafico1"></div>
-                                <div class="chart-half" id="grafico2"></div>
-                                <div class="chart-half" id="grafico3"></div>
-                                <div class="chart-half" id="grafico4"></div>
-                                <div class="chart-central">Gráfico Central</div>
+                                <div class="chart-half" id="grafico1">Gráfico 1</div>
+                                <div class="chart-half" id="grafico2">Gráfico 2</div>
+                                <div class="chart-half" id="grafico3">Gráfico 3</div>
+                                <div class="chart-half" id="grafico4">Gráfico 4</div>
                             </div>
-
-
                         </div>
                     <section>
 
@@ -287,6 +256,7 @@
         </div>
     </div>
 </div>
+
 
 
 
@@ -365,7 +335,7 @@
                     'FAST'
                 );
 
-                pdf.save('dashboard-monitoramento-pedidos.pdf');
+                pdf.save('dashboard-turnover.pdf');
             } catch (err) {
                 console.error('Erro ao gerar PDF:', err);
                 alert('Erro ao gerar PDF. Verifique o console para detalhes.');
@@ -515,53 +485,13 @@
                     if (response.success && response.data && response.data.turnoverPorMes) {
                         const turnoverPorMes = response.data.turnoverPorMes;
 
-                        var graficoTurnover = $("#grafico1").dxChart({
-                            dataSource: turnoverPorMes,
-                            rotated: false,
-                            commonSeriesSettings: {
-                                argumentField: "mes",
-                                type: "line",
-                                label: {
-                                    visible: true,
-                                    backgroundColor: "transparent",
-                                    font: {
-                                        color: "#1976d2",
-                                        weight: 600
-                                    },
-                                    customizeText: function(e) {
-                                        return (e.value).toFixed(1) + "%";
-                                    }
-                                }
-                            },
-                            series: [{
-                                valueField: "perc_turnover",
-                                name: "Turnover",
-                                color: "#1976d2"
-                            }],
-                            argumentAxis: {
-                                visible: true,
-                                label: { visible: false },
-                                tick: { visible: false },
-                                line: { visible: false },
-                                grid: { visible: false }
-                            },
-                            valueAxis: {
-                                visible: true,
-                                label: { visible: false },
-                                tick: { visible: false },
-                                line: { visible: false },
-                                grid: { visible: false },
-                                max: 1,
-                                min: 0
-                            },
-                            legend: { visible: false },
-                            tooltip: { enabled: false },
-                            title: "",
-                            size: { height: "100%", width: '100%' }
-                        }).dxChart("instance");
-
-
+                        // ==== Criação dos gráficos ====
+                        criarGrafico("#grafico1", turnoverPorMes, "perc_turnover", "Turnover", "#1976d2", "%");
+                        criarGrafico("#grafico2", turnoverPorMes, "ativos", "Ativos", "#616161");
+                        criarGrafico("#grafico3", turnoverPorMes, "admitidos", "Admitidos", "#2e7d32");
+                        criarGrafico("#grafico4", turnoverPorMes, "demitidos", "Demitidos", "#c62828");
                     }
+
                 },
                 error: function(error) {
                     DevExpress.ui.notify("Erro na requisição", "error", 3000);
@@ -571,6 +501,57 @@
                     $('#globalLoading').hide();
                 }
             });
+        });
+    }
+    // Função auxiliar para criar gráfico com o mesmo padrão
+    function criarGrafico(id, dataSource, valueField, name, color, sufixo = '') {
+        $(id).dxChart({
+            dataSource: dataSource,
+            rotated: false,
+            commonSeriesSettings: {
+                argumentField: "mes",
+                type: "line",
+                label: {
+                    visible: true,
+                    backgroundColor: "transparent",
+                    font: {
+                        color: color,
+                        weight: 600
+                    },
+                    customizeText: function (e) {
+                        return sufixo === '%' 
+                            ? (e.value).toFixed(1) + sufixo 
+                            : e.value;
+                    }
+                }
+            },
+            series: [{
+                valueField: valueField,
+                name: name,
+                color: color
+            }],
+            argumentAxis: {
+                visible: true,
+                label: { visible: false },
+                tick: { visible: false },
+                line: { visible: false },
+                grid: { visible: false }
+            },
+            valueAxis: {
+                visible: true,
+                label: { visible: false },
+                tick: { visible: false },
+                line: { visible: false },
+                grid: { visible: false }
+            },
+            legend: { visible: false },
+            tooltip: {
+                enabled: true,
+                customizeTooltip: function (arg) {
+                    return { text: arg.valueText + (sufixo || '') + ' ' + name };
+                }
+            },
+            size: { height: "100%", width: "100%" }
         });
     }
 

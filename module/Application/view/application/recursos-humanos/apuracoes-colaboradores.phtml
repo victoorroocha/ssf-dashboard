@@ -373,6 +373,21 @@
                         enabled: true,
                         fileName: "Apurações Colaboradores",
                         allowExportSelectedData: false,
+                        customizeExcelCell: function(options) {
+
+                            // Verifica se é um cabeçalho (header)
+                            if (options.gridCell.rowType === "header") {
+                                // Mantém o texto original do cabeçalho
+                                return;
+                            }
+                            // Formata as colunas de hora para o Excel
+                            if (options.gridCell.column.dataField === 'QTD_HORAS_ADICIONAL_NOTURNO' || options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_50' || options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_100') {
+                                options.value = formatHourBalance(options.gridCell.value);
+                                
+                                // Configura o formato de hora no Excel (para que seja reconhecido como tempo)
+                                options.numFmt = '[h]:mm:ss';
+                            }
+                        }
                     },
                     searchPanel: {
                         visible: true,
