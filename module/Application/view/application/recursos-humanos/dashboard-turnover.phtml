@@ -234,7 +234,7 @@
                                 <div class="card card-tempo">
                                     <div class="card-header-line"></div>
                                     <div class="card-text">
-                                        <div class="card-title">Tempo Médio de Empresa (em meses)</div>
+                                        <div class="card-title" style="font-size: 10px !important;">Tempo Médio de Empresa (em meses)</div>
                                         <div class="card-value" id="valor-tempo-medio">0</div>
                                         <i class="fas fa-user-clock card-icon"></i>
                                     </div>
@@ -564,7 +564,8 @@
             tooltip: {
                 enabled: true,
                 customizeTooltip: function (arg) {
-                    return { text: arg.valueText + (sufixo || '') + ' ' + name };
+                    const valor = parseFloat(arg.value.toFixed(2)).toString().replace('.', ',');
+                    return { text: `${valor}${sufixo || ''} ${name}` };
                 }
             },
             size: { height: "100%", width: "100%" }
