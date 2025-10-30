@@ -168,7 +168,7 @@
         <div class="col-lg-12 mb-4">
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Dashboard Turnover</p>
+                    <p>Dashboard Turnoverr</p>
 
                     <div class="d-flex justify-content-center mb-4">
                         <div id="range-selector-container" style="width: 100%; max-width: 1200px;">
@@ -503,7 +503,7 @@
             });
         });
     }
-    // Função auxiliar para criar gráfico com o mesmo padrão
+
     function criarGrafico(id, dataSource, valueField, name, color, sufixo = '') {
         $(id).dxChart({
             dataSource: dataSource,
@@ -519,8 +519,8 @@
                         weight: 600
                     },
                     customizeText: function (e) {
-                        return sufixo === '%' 
-                            ? (e.value).toFixed(1) + sufixo 
+                        return sufixo === '%'
+                            ? (e.value).toFixed(1) + sufixo
                             : e.value;
                     }
                 }
@@ -532,8 +532,23 @@
             }],
             argumentAxis: {
                 visible: true,
-                label: { visible: false },
-                tick: { visible: false },
+                argumentType: "datetime",
+                label: {
+                    visible: true,
+                    rotationAngle: -45, // rotaciona os meses
+                    overlappingBehavior: "rotate",
+                    font: {
+                        color: "#555",
+                        size: 11,
+                        weight: 500
+                    },
+                    customizeText: function (e) {
+                        const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                        const data = new Date(e.value);
+                        return meses[data.getMonth()]; // mostra apenas o mês abreviado
+                    }
+                },
+                tick: { visible: true },
                 line: { visible: false },
                 grid: { visible: false }
             },
@@ -554,6 +569,9 @@
             size: { height: "100%", width: "100%" }
         });
     }
+
+
+
 
 
     // function obterDadosPedidos(tipo) {
