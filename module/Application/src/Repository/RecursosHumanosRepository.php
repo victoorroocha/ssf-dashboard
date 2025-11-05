@@ -135,15 +135,30 @@ class RecursosHumanosRepository
                         ,R066APU.CODESC AS COD_ESCALA_APURACAO
                         ,ESCALA_TROCA.NOMESC AS ESCALA_TROCA
                         ,(ESCALA_TROCA.HORSEM/5) AS JORNADA_DIA
+                        ,COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0) AS JORNADA_REALIZADA_MINUTOS
                         ,CASE WHEN R034FUN.CODESC <> R066APU.CODESC THEN 1 ELSE 0 END FLG_TROCA_ESCALA
                         ,R066APU.DATAPU
                         ,TO_CHAR(R066APU.DATAPU, 'YYYY-MM-DD') AS DATAPU_CONVERT
+                        ,TO_CHAR(R066APU.DATAPU, 'DAY') AS DIA_SEMANA
                         ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 'Não Houve Marcações' ELSE MARCACAO.MARCACOES END MARCACOES
                         ,CASE WHEN MARCACAO.MARCACOES IS NULL THEN 0 ELSE 1 END FLG_MARCACAO
                         ,NVL(SITUACAO.FALTA,0) AS FALTA
                         ,NVL(SITUACAO.INTRAJORNADA,0) AS INTRAJORNADA
                         ,NVL(SITUACAO.INTERJORNADA,0) AS INTERJORNADA
-                        ,NVL(SITUACAO.HORAS_EXTRAS_2HRS,0) AS HORAS_EXTRAS_2HRS
+                        --,NVL(SITUACAO.HORAS_EXTRAS_2HRS,0) AS HORAS_EXTRAS_2HRS
+                        ,CASE 
+                            -- ESCALAS 2,37,1,18
+                            WHEN R066APU.CODESC IN (2,37,1,18) AND HORDAT NOT IN (9999, 9998) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 600 THEN 1 -- SEMANA - Segunda a Sexta
+                            WHEN R066APU.CODESC IN (2,37,1,18) AND HORDAT IN (9998) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 120 THEN 1 -- SABADO
+                            WHEN R066APU.CODESC IN (2,37,1,18) AND HORDAT IN (9999) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 600 THEN 1 -- DOMINGO
+                            -- ESCALAS 19, 28
+                            WHEN R066APU.CODESC IN (19, 28) AND HORDAT NOT IN (9999) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 560 THEN 1 -- SEMANA - Segunda a Sabado
+                            WHEN R066APU.CODESC IN (19, 28) AND HORDAT IN (9999) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 600 THEN 1 -- DOMINGO
+                            -- ESCALAS 13, 29
+                            WHEN R066APU.CODESC IN (13, 29) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 480 THEN 1 -- SEMANA
+                            -- ESCALAS 15, 12
+                            WHEN R066APU.CODESC IN (15, 12) AND (COALESCE(MARCACAO.JORNADA_REALIZADA_MINUTOS,0)) > 360 THEN 1 -- SEMANA
+                        ELSE 0 END HORAS_EXTRAS_2HRS
                         ,NVL(SITUACAO.ADICIONAL_NOTURNO,0) AS ADICIONAL_NOTURNO
                         ,NVL(JUSTIFICATIVAS.TREINAMENTO,0) AS TREINAMENTO
                         ,NVL(JUSTIFICATIVAS.SERVICO_EXTERNO,0) AS SERVICO_EXTERNO
@@ -171,17 +186,62 @@ class RecursosHumanosRepository
                     LEFT JOIN VETORH.R004HOR ON R004HOR.CODHOR = R066APU.HORDAT 
                     LEFT JOIN VETORH.R006ESC ESCALA_TROCA ON ESCALA_TROCA.CODESC = R066APU.CODESC 
                     LEFT JOIN VETORH.R010SIT SITUACAO_COLABORADOR ON SITUACAO_COLABORADOR.CODSIT = R034FUN.SITAFA
+                    --LEFT JOIN (
+                    --    SELECT 
+                    --        NUMEMP,
+                    --        TIPCOL,
+                    --        NUMCAD, 
+                    --        NUMCRA,
+                    --        DATAPU,
+                    --        '[' || LISTAGG(TO_CHAR(HORACC), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES_MIN,
+                    --        '[' || LISTAGG(TO_CHAR(DATACC + (HORACC / 1440), 'HH24:MI'), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES
+                    --    FROM VETORH.R070ACC
+                    --    GROUP BY NUMEMP, TIPCOL, NUMCAD, NUMCRA, DATAPU
+                    --) MARCACAO ON MARCACAO.NUMEMP = R066APU.NUMEMP AND MARCACAO.TIPCOL = R066APU.TIPCOL AND MARCACAO.NUMCAD = R066APU.NUMCAD AND MARCACAO.DATAPU = R066APU.DATAPU
                     LEFT JOIN (
+                        WITH MARCACOES AS (
+                            SELECT
+                                NUMEMP,
+                                TIPCOL,
+                                NUMCAD,
+                                NUMCRA,
+                                DATAPU,
+                                DATACC,
+                                HORACC,
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY NUMEMP, TIPCOL, NUMCAD, NUMCRA, DATAPU
+                                    ORDER BY DATACC, HORACC
+                                ) AS ORDEM
+                            FROM VETORH.R070ACC
+                            WHERE NUMCAD = 904
+                        )
                         SELECT 
-                            NUMEMP,
-                            TIPCOL,
-                            NUMCAD, 
-                            NUMCRA,
-                            DATAPU,
+                            M.NUMEMP,
+                            M.TIPCOL,
+                            M.NUMCAD,
+                            M.NUMCRA,
+                            M.DATAPU,
                             '[' || LISTAGG(TO_CHAR(HORACC), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES_MIN,
-                            '[' || LISTAGG(TO_CHAR(DATACC + (HORACC / 1440), 'HH24:MI'), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES
-                        FROM VETORH.R070ACC
-                        GROUP BY NUMEMP, TIPCOL, NUMCAD, NUMCRA, DATAPU
+                            '[' || LISTAGG(TO_CHAR(DATACC + (HORACC / 1440), 'HH24:MI'), '] [') WITHIN GROUP (ORDER BY DATACC, HORACC) || ']' AS MARCACOES,
+                            CASE 
+                                WHEN MOD(COUNT(*), 2) <> 0 THEN 0
+                                ELSE 
+                                    SUM(
+                                        CASE WHEN MOD(ORDEM, 2) = 0 THEN HORACC - (
+                                            SELECT HORACC 
+                                            FROM MARCACOES X 
+                                            WHERE X.NUMEMP = M.NUMEMP
+                                            AND X.TIPCOL = M.TIPCOL
+                                            AND X.NUMCAD = M.NUMCAD
+                                            AND X.NUMCRA = M.NUMCRA
+                                            AND X.DATAPU = M.DATAPU
+                                            AND X.ORDEM = M.ORDEM - 1
+                                        ) ELSE 0 END
+                                    )
+                            END AS JORNADA_REALIZADA_MINUTOS
+                        FROM MARCACOES M
+                        GROUP BY M.NUMEMP, M.TIPCOL, M.NUMCAD, M.NUMCRA, M.DATAPU
+                        ORDER BY M.DATAPU
                     ) MARCACAO ON MARCACAO.NUMEMP = R066APU.NUMEMP AND MARCACAO.TIPCOL = R066APU.TIPCOL AND MARCACAO.NUMCAD = R066APU.NUMCAD AND MARCACAO.DATAPU = R066APU.DATAPU
                     LEFT JOIN (
                         SELECT

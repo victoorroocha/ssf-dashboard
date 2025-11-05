@@ -381,7 +381,11 @@
                                 return;
                             }
                             // Formata as colunas de hora para o Excel
-                            if (options.gridCell.column.dataField === 'QTD_HORAS_ADICIONAL_NOTURNO' || options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_50' || options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_100') {
+                            if (options.gridCell.column.dataField === 'QTD_HORAS_ADICIONAL_NOTURNO' || 
+                                options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_50' || 
+                                options.gridCell.column.dataField === 'QTD_HORAS_EXTRAS_100' ||
+                                options.gridCell.column.dataField === 'JORNADA_REALIZADA_MINUTOS'
+                            ) {
                                 options.value = formatHourBalance(options.gridCell.value);
                                 
                                 // Configura o formato de hora no Excel (para que seja reconhecido como tempo)
@@ -416,8 +420,19 @@
                             },
                             sortIndex: 2, sortOrder: 'asc'
                         },
+                        { dataField: 'DIA_SEMANA', caption: 'Dia Semana', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'ESCALA_TROCA', caption: 'Escala Apuração', allowEditing: false, alignment: 'center', width: 'auto' },
                         { dataField: 'MARCACOES', caption: 'Horário Trabalhado', allowEditing: false, alignment: 'center', width: 'auto' },
+                         {
+                            dataField: 'JORNADA_REALIZADA_MINUTOS',
+                            dataType: 'number',
+                            format: {
+                                type: 'custom',
+                                formatter: formatHourBalance
+                            },
+                            alignment: 'center',
+                            caption: 'Horas Trabalhadas',
+                        },
                         { dataField: 'NOME_SUPERVISOR', caption: 'Supervisor Imediato', allowEditing: false, alignment: 'left', width: 'auto' },
                         {
                             dataField: 'QTD_HORAS_ADICIONAL_NOTURNO',
@@ -479,6 +494,13 @@
                                     return cellInfo.value + " ocorrências";
                                 }
                             },
+                            // {
+                            //     column: "JORNADA_REALIZADA_MINUTOS",
+                            //     summaryType: "sum",
+                            //     customizeText: function(cellInfo) {
+                            //         return formatHourBalance(cellInfo.value);
+                            //     }
+                            // },
                             {
                                 column: "QTD_HORAS_EXTRAS_50",
                                 summaryType: "sum",
@@ -510,6 +532,15 @@
                                     return cellInfo.value + " ocorrências";
                                 }
                             },
+                            // {
+                            //     column: "JORNADA_REALIZADA_MINUTOS",
+                            //     summaryType: "sum",
+                            //     showInGroupFooter: false,
+                            //     alignByColumn: true,
+                            //     customizeText: function(cellInfo) {
+                            //         return formatHourBalance(cellInfo.value);
+                            //     }
+                            // },
                             {
                                 column: "QTD_HORAS_EXTRAS_50",
                                 summaryType: "sum",
