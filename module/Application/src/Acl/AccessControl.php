@@ -50,6 +50,7 @@ class AccessControl
             'DepartamentoController',
             'CreditoECobrancaController',
             'ControladoriaController',
+            'ContabilidadeController',
             'RecursosHumanosController',
             'ComercialController',
             'PlanejamentoControleManutencaoController',

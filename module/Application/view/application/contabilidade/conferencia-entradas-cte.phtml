@@ -1,0 +1,352 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Contabilidade</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Conferência de Entradas (CT-e)</p>
+
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label><b>Data Início</b></label>
+                            <div id="dataInicio"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Data Fim</b></label>
+                            <div id="dataFim"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Empresa</b></label>
+                            <div id="empresa"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Filial</b></label>
+                            <div id="filial"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label><b>Chave NFe</b></label>
+                            <div id="chavenfe"></div>
+                        </div>
+                    </div>
+
+                    <div id="grid"></div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        // Estado dos filtros
+        let filtros = {
+            dataInicio: new Date(),
+            dataFim: new Date(),
+            empresa: 5,
+            filial: null,
+            chavenfe: null,
+        };
+
+        // Inicializa campos DevExtreme
+        $("#dataInicio").dxDateBox({
+            type: "date",
+            displayFormat: "dd/MM/yyyy",
+            value: filtros.dataInicio,
+            onValueChanged: function (e) {
+                filtros.dataInicio = e.value;
+                carregarDados();
+            }
+        });
+        $("#dataFim").dxDateBox({
+            type: "date",
+            displayFormat: "dd/MM/yyyy",
+            value: filtros.dataFim,
+            onValueChanged: function (e) {
+                filtros.dataFim = e.value;
+                carregarDados();
+            }
+        });
+        $("#empresa").dxTextBox({
+            placeholder: "Informe a empresa...",
+            value: filtros.empresa,
+            inputAttr: { style: "text-align: center;" }, // 🔹 centraliza o texto
+            onValueChanged: function (e) {
+                filtros.empresa = e.value;
+                carregarDados();
+            }
+        });
+        $("#filial").dxTextBox({
+            placeholder: "Informe a filial...",
+            value: filtros.filial,
+            inputAttr: { style: "text-align: center;" }, // 🔹 centraliza o texto
+            onValueChanged: function (e) {
+                filtros.filial = e.value;
+                carregarDados();
+            }
+        });
+        $("#chavenfe").dxTextBox({
+            placeholder: "Informe a chave da nota...",
+            value: filtros.chavenfe,
+            onValueChanged: function (e) {
+                filtros.chavenfe = e.value;
+                carregarDados();
+            }
+        });
+
+        const grid = $("#grid").dxDataGrid({
+            dataSource: [],
+            keyExpr: "CHAVENFE",
+            width: '100%',
+            columnAutoWidth: true,
+            showColumnLines: false,
+            showRowLines: true,
+            rowAlternationEnabled: true,
+            showBorders: true,
+            hoverStateEnabled: true,
+            wordWrapEnabled: false,
+            // Ordenação
+            sorting: {
+                mode: 'multiple' // 'single', 'multiple', 'none'
+            },
+            // Paginação
+            paging: {
+                pageSize: 50,
+                pageIndex: 0
+            },
+            pager: {
+                visible: true,
+                showPageSizeSelector: true,
+                allowedPageSizes: [50, 100, 200, 500],
+                showInfo: true,
+                showNavigationButtons: true,
+                showPageSizeSelector: true
+            },
+            // Filtros
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto', // 'auto', 'onClick'
+                showOperationChooser: true
+            },
+            headerFilter: {
+                visible: true,
+                allowSearch: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procurar...',
+                highlightSearchText: true,
+                searchVisibleColumnsOnly: false
+            },
+            filterPanel: {
+                visible: true
+            },
+            filterSyncEnabled: true,
+            // Column Chooser
+            columnChooser: {
+                enabled: true,
+                mode: 'select', // 'select', 'dragAndDrop'
+                allowSearch: true,
+                width: 300,
+                height: 400
+            },
+            grouping: {
+                autoExpandAll: false,
+                allowCollapsing: true,
+                contextMenuEnabled: true,
+                expandMode: 'rowClick'
+            },
+            groupPanel: {
+                visible: true,
+                emptyPanelText: 'Arraste uma coluna aqui para agrupar por essa coluna',
+                allowColumnDragging: true,
+            },
+            export: {
+                enabled: true,
+                fileName: "Conferência de Entradas (CT-e)",
+                allowExportSelectedData: false,
+                exportAll: true,
+                formats: ['xlsx', 'pdf']
+            },
+            // Scrolling
+            scrolling: {
+                mode: 'virtual', // 'standard', 'virtual'
+                rowRenderingMode: 'virtual',
+                showScrollbar: 'onHover', // 'onHover', 'onScroll', 'always', 'never'
+                useNative: false
+            },
+            toolbar: {
+                items: [
+                    'groupPanel',  // ✅ Agora funcionará
+                    'searchPanel',
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'refresh',
+                            hint: 'Atualizar',
+                            onClick: function () {
+                                $('#grid').dxDataGrid('instance').refresh();
+                            }
+                        }
+                    },
+                    {
+                        widget: 'dxButton',
+                        location: 'after',
+                        options: {
+                            icon: 'clearformat',
+                            hint: 'Limpar Filtros',
+                            onClick: function () {
+                                const dataGrid = $('#grid').dxDataGrid('instance');
+                                dataGrid.clearFilter();
+                                dataGrid.clearSorting();
+                                dataGrid.clearGrouping();
+                            }
+                        }
+                    },
+                    'exportButton',
+                    'columnChooserButton'
+                ]
+            },
+            columns: [
+                { dataField: "SITUACAO", caption: "Situação CTe", alignment: 'center' },
+                { dataField: "EMPRESA", caption: "Empresa", alignment: 'center' },
+                { dataField: "FILIAL", caption: "Filial", alignment: 'center' },
+                { dataField: "CHAVENFE", caption: "Chave NF-e", width: 'auto', alignment: 'center' },
+                { dataField: "NUMNF", caption: "NF", alignment: 'center' },
+                { dataField: "NUMERO_CTE", caption: "Num. CT-e", alignment: 'center' },
+                { dataField: "DTENTRADA", caption: "Entrada", dataType: "date", format: "dd/MM/yyyy", alignment: 'center' },
+                { dataField: "DTEMISSAO", caption: "Emissão", dataType: "date", format: "dd/MM/yyyy", alignment: 'center' },
+                { dataField: "TRANS_SERV", caption: "Trans. Serviço", alignment: 'center' },
+                { dataField: "UF_EMISSOR", caption: "UF Emissor", alignment: 'center' },
+                { dataField: "UF_TOMADOR", caption: "UF Tomador", alignment: 'center' },
+                { dataField: "SERIE_CTE", caption: "Série CTE", alignment: 'center' },
+                { dataField: "CODSNF", caption: "Série NF", alignment: 'center' },
+                { dataField: "FORNEC", caption: "Fornecedor", width: 'auto' },
+                { dataField: "CODSER", caption: "Cód. Serviço", alignment: 'center' },
+                { dataField: "DESCSERV", caption: "Descrição Serviço", width: 250 },
+                { dataField: "BEMPRI", caption: "BEMPRI", alignment: 'center' },
+                { dataField: "NCM", caption: "NCM", alignment: 'center'},
+                { dataField: "CTARED", caption: "Conta Reduzida", alignment: 'center' },
+                { dataField: "CODCCU_RAT", caption: "Centro Custo Rateio", alignment: 'center' },
+                { dataField: "CODCCU_PRO", caption: "Centro Custo Produto", alignment: 'center' },
+                { dataField: "VLRBRU", caption: "Valor Bruto", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRDSC", caption: "Desconto", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRLIQ", caption: "Valor Líquido", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRLIQ_DIF", caption: "Dif. Líquido", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRBASE_ICM", caption: "Base ICMS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "PERICM", caption: "% ICMS", alignment: "right", width: "auto", dataType: "number", format: { type: "fixedPoint", precision: 2 } },
+                { dataField: "VLRICM", caption: "Valor ICMS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRBASE_ICMCREDEFET", caption: "Base ICMS Cred. Efetivo", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRIMP_ICMCREDEFET", caption: "ICMS Cred. Efetivo", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRISEN_ICM", caption: "Isenção ICMS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLROUTR_ICM", caption: "Outros ICMS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRFRETE", caption: "Frete", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+
+                { dataField: "CODSTR", caption: "Situação Tributária", alignment: "center" },
+                { dataField: "CSTPIS", caption: "CST PIS", alignment: "center" },
+
+                { dataField: "PERPIS_REC", caption: "% PIS Rec.", alignment: "right", width: "auto", dataType: "number", format: { type: "fixedPoint", precision: 2 } },
+                { dataField: "VLRBASE_PIS", caption: "Base PIS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRIMP_PISREC", caption: "Valor PIS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+
+                { dataField: "CSTCOF", caption: "CST COFINS", alignment: "center" },
+                { dataField: "PERCOF_REC", caption: "% COFINS Rec.", alignment: "right", width: "auto", dataType: "number", format: { type: "fixedPoint", precision: 2 } },
+                { dataField: "VLRIMP_COFREC", caption: "Valor COFINS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRRET_COF", caption: "COFINS Retido", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+
+                { dataField: "PERISS", caption: "% ISS", alignment: "right", width: "auto", dataType: "number", format: { type: "fixedPoint", precision: 2 } },
+                { dataField: "VLRBASE_ISS", caption: "Base ISS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "VLRIMP_ISS", caption: "Valor ISS", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "PERINS", caption: "% INSS", alignment: "right", width: "auto", dataType: "number", format: { type: "fixedPoint", precision: 2 } },
+
+                { dataField: "DATGER", caption: "Data Geração", alignment: "center", dataType: "date", format: "dd/MM/yyyy" },
+                { dataField: "USUGER", caption: "Usuário Geração", alignment: "center" },
+                { dataField: "SITNFENTRADA_DESCR", caption: "Situação NF Entrada", alignment: "center" },
+                { dataField: "VENC01", caption: "Vencimento", alignment: "center", dataType: "date", format: "dd/MM/yyyy" },
+
+                { dataField: "TOTAL_CP", caption: "Total Contas Pagar", alignment: "right", width: "auto", dataType: "number", format: { type: "currency", currency: "BRL", precision: 2 } },
+                { dataField: "CTE_TPORI", caption: "Tipo Origem CTE", alignment: "center" },
+                { dataField: "CTE_CLIFOR", caption: "Cliente/Fornecedor CTE", alignment: "center" },
+                { dataField: "CTE_NFORI", caption: "NF Origem CTE", alignment: "center" },
+                { dataField: "CTE_SERNF", caption: "Série NF Origem CTE", alignment: "center" },
+                { dataField: "CTE_TNSNFORI", caption: "Transação NF Origem CTE", alignment: "center" },
+                { dataField: "CTE_CFOPCAB_ORI", caption: " CTE_CFOPCAB_ORI ", alignment: "center" },
+
+                { dataField: "CHAVE_CTE", caption: "Chave CTE", alignment: 'center' },
+                { dataField: "TOMADOR", caption: "Tomador", alignment: 'center' },
+                { dataField: "CNPJ_TOMADOR", caption: "CNPJ Tomador", alignment: 'center' },
+                { dataField: "REMETENTE", caption: "Remetente", alignment: 'center' },
+                { dataField: "EMISSOR_CTE", caption: "Emissor CTE", alignment: 'center' },
+                { dataField: "EMPRESA_TOMADOR", caption: "Empresa Tomador", alignment: 'center' },
+                { dataField: "FILIAL_TOMADOR", caption: "Filial Tomador", alignment: 'center' },
+
+                { dataField: "VALIDACAO_UF_CFOP", caption: "Lançamento CFOP", alignment: 'center' },
+                { dataField: "LANCAMENTO_FILIAL", caption: "Lançamento Filial", alignment: 'center'},
+            ],
+            onCellPrepared: function(e) {
+                if(e.rowType === "header") {
+                    e.cellElement.css({
+                        "background-color": "#70AD47", // verde escuro
+                        "color": "white",
+                        "font-weight": "bold",
+                        "text-align": "center"
+                    });
+                }
+            },
+            onRowPrepared: function(e) {
+                if (e.rowType === "data") {
+                    const cfop = e.data.VALIDACAO_UF_CFOP;
+                    const filial = e.data.LANCAMENTO_FILIAL;
+
+                    if (cfop === "Divergente" || filial === "Divergente") {
+                        e.rowElement.css("background-color", "#f8d7da"); // vermelho claro
+                        e.rowElement.css("color", "#721c24"); // opcional: texto escuro
+                    }
+                }
+            }
+        }).dxDataGrid("instance");
+
+        // Função para carregar dados via AJAX
+        function carregarDados() {
+            const params = {
+                dataInicio: filtros.dataInicio ? filtros.dataInicio.toISOString().split("T")[0] :null,
+                dataFim: filtros.dataFim ? filtros.dataFim.toISOString().split("T")[0] :null,
+                empresa: filtros.empresa || null,
+                filial: filtros.filial || null,
+                chavenfe: filtros.chavenfe || null
+            };
+
+            $.ajax({
+                url: '/contabilidade/list-conferencia-entradas-cte',
+                method: 'GET',
+                data: params,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        grid.option("dataSource", response.data);
+                    } else {
+                        DevExpress.ui.notify(response.message || 'Erro ao carregar dados.', 'error', 3000);
+                    }
+                },
+                error: function () {
+                    DevExpress.ui.notify('Erro na requisição dos dados.', 'error', 3000);
+                }
+            });
+        }
+
+        // Chamada inicial
+        carregarDados();
+
+    });
+</script>

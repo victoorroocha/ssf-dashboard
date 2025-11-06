@@ -9,6 +9,7 @@ use Laminas\Router\Http\Segment;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Application\Repository\CreditoECobrancaRepository;  // Importar repositório
 use Application\Repository\ControladoriaRepository;  // Importar repositório
+use Application\Repository\ContabilidadeRepository;  // Importar repositório
 use Application\Repository\RecursosHumanosRepository;  // Importar repositório
 use Application\Repository\ComercialRepository;  // Importar repositório
 use Application\Repository\VendasRepository;  // Importar repositório
@@ -159,6 +160,21 @@ return [
                     ],
                 ],
             ],
+            // Contabilidade
+            'contabilidade' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/contabilidade[/:action][/:id]',  
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',  
+                        'id'     => '[0-9]+',  
+                    ],
+                    'defaults' => [
+                        'controller' => Controller\ContabilidadeController::class,
+                        'action'     => 'index', 
+                    ],
+                ],
+            ],
             // Recursos Humanos
             'recursos-humanos' => [
                 'type'    => Segment::class,
@@ -269,6 +285,7 @@ return [
             Controller\DepartamentoController::class => Factory\GenericControllerFactory::class,
             Controller\CreditoECobrancaController::class => Factory\GenericControllerFactory::class,
             Controller\ControladoriaController::class => Factory\GenericControllerFactory::class,
+            Controller\ContabilidadeController::class => Factory\GenericControllerFactory::class,
             Controller\RecursosHumanosController::class => Factory\GenericControllerFactory::class,
             Controller\ComercialController::class => Factory\GenericControllerFactory::class,
             Controller\VendasController::class => Factory\GenericControllerFactory::class,
@@ -332,6 +349,10 @@ return [
             'Application\Repository\ControladoriaRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado
                 return new \Application\Repository\ControladoriaRepository($adapter);
+            },
+            'Application\Repository\ContabilidadeRepository' => function ($container) {
+                $adapter = $container->get('Laminas\Db\Adapter\Adapter'); // Certifique-se de que o adapter está sendo injetado
+                return new \Application\Repository\ContabilidadeRepository($adapter);
             },
             'Application\Repository\CreditoECobrancaRepository' => function ($container) {
                 $adapter = $container->get('Laminas\Db\Adapter\Adapter');
