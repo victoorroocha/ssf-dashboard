@@ -181,9 +181,9 @@
                 searchVisibleColumnsOnly: false
             },
             filterPanel: {
-                visible: true
+                visible: false
             },
-            filterSyncEnabled: true,
+            filterSyncEnabled: false,
             // Column Chooser
             columnChooser: {
                 enabled: true,
@@ -210,42 +210,10 @@
                 exportAll: true,
                 formats: ['xlsx', 'pdf']
             },
-            // Scrolling
-            scrolling: {
-                mode: 'virtual', // 'standard', 'virtual'
-                rowRenderingMode: 'virtual',
-                showScrollbar: 'onHover', // 'onHover', 'onScroll', 'always', 'never'
-                useNative: false
-            },
             toolbar: {
                 items: [
                     'groupPanel',  // ✅ Agora funcionará
                     'searchPanel',
-                    {
-                        widget: 'dxButton',
-                        location: 'after',
-                        options: {
-                            icon: 'refresh',
-                            hint: 'Atualizar',
-                            onClick: function () {
-                                $('#grid').dxDataGrid('instance').refresh();
-                            }
-                        }
-                    },
-                    {
-                        widget: 'dxButton',
-                        location: 'after',
-                        options: {
-                            icon: 'clearformat',
-                            hint: 'Limpar Filtros',
-                            onClick: function () {
-                                const dataGrid = $('#grid').dxDataGrid('instance');
-                                dataGrid.clearFilter();
-                                dataGrid.clearSorting();
-                                dataGrid.clearGrouping();
-                            }
-                        }
-                    },
                     'exportButton',
                     'columnChooserButton'
                 ]
@@ -346,7 +314,51 @@
                         e.rowElement.css("color", "#721c24"); // opcional: texto escuro
                     }
                 }
-            }
+            },
+              onToolbarPreparing: function (e) {
+                // Aqui você pode personalizar ainda mais a barra de ferramentas
+                var toolbarItems = e.toolbarOptions.items;
+                // Adicionar os botões de expandir/colapsar
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.expandAll(); // Expande todos os grupos
+                        }
+                    }
+                });
+
+                toolbarItems.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        text: "",
+                        onClick: function () {
+                            var grid = e.component;
+                            grid.collapseAll(); // Colapsa todos os grupos
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    name: "refresh", // Adiciona o botão refresh na toolbar
+                    location: "after", // Coloca depois dos outros itens
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh", // Ícone do botão (ícone de atualização)
+                        onClick: function() {
+                           carregarDados();
+                           console.log('aq');
+                        },
+                        text: "Atualizar" 
+                    }
+                });
+            },
         }).dxDataGrid("instance");
 
         // Função para carregar dados via AJAX

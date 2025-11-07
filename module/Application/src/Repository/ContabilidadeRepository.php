@@ -230,7 +230,18 @@ class ContabilidadeRepository
                             WHEN NFC.CODEMP = SDE.EMPRESA_TOMADOR AND NFC.CODFIL = SDE.FILIAL_TOMADOR THEN 'Certo'
                             ELSE 'Divergente'
                         END
-                ORDER BY NFC.CODEMP, NFC.CodFil, NFC.DATENT, NFC.NUMNFC
+                ORDER BY CASE 
+                        WHEN SDE.UF_EMISSOR = SDE.UF_TOMADOR AND SUBSTR(ISC.TNSSER, 1, 1) = '1' THEN 'Certo'
+                        WHEN SDE.UF_EMISSOR = SDE.UF_TOMADOR AND SUBSTR(ISC.TNSSER, 1, 1) = '2' THEN 'Divergente'
+                        WHEN SDE.UF_EMISSOR <> SDE.UF_TOMADOR AND SUBSTR(ISC.TNSSER, 1, 1) = '2' THEN 'Certo'
+                        WHEN SDE.UF_EMISSOR <> SDE.UF_TOMADOR AND SUBSTR(ISC.TNSSER, 1, 1) = '1' THEN 'Divergente'
+                        ELSE NULL
+                    END DESC,
+                    CASE 
+                        WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 5 AND NFC.CODFIL = 6 THEN 'Certo'
+                        WHEN NFC.CODEMP = SDE.EMPRESA_TOMADOR AND NFC.CODFIL = SDE.FILIAL_TOMADOR THEN 'Certo'
+                        ELSE 'Divergente'
+                    END DESC
         ";
     }
 
