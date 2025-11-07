@@ -287,6 +287,10 @@ class AccessControl
             // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Diretor', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
+        ]);
 
 
 
@@ -507,6 +511,10 @@ class AccessControl
             // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Gerente', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
+        ]);
 
         // Coordenador 
         $this->acl->allow('Coordenador', 'IndexController', ['index', 'filtrarDados']);
@@ -724,6 +732,10 @@ class AccessControl
 
             // ===== SESSÃO =====
             'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Coordenador', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
         ]);
 
         // Encarregado
@@ -943,6 +955,10 @@ class AccessControl
             // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Encarregado', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
+        ]);
 
         // Analista
         $this->acl->allow('Analista', 'IndexController', ['index', 'filtrarDados']);
@@ -1160,6 +1176,10 @@ class AccessControl
 
             // ===== SESSÃO =====
             'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Analista', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
         ]);
 
         // Assistente 
@@ -1379,6 +1399,10 @@ class AccessControl
             // ===== SESSÃO =====
             'getUsuarioSessao'
         ]);
+        $this->acl->allow('Assistente', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
+        ]);
 
         // Auxiliar 
         $this->acl->allow('Auxiliar', 'IndexController', ['index', 'filtrarDados']);
@@ -1595,6 +1619,10 @@ class AccessControl
 
             // ===== SESSÃO =====
             'getUsuarioSessao'
+        ]);
+        $this->acl->allow('Auxiliar', 'ContabilidadeController', [
+           'conferenciaEntradasCte',
+           'listConferenciaEntradasCte'
         ]);
 
         // Convidado
