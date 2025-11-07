@@ -57,6 +57,27 @@
             chavenfe: null,
         };
 
+        // Função de validação do período
+        function validarPeriodo() {
+            if (!filtros.dataInicio || !filtros.dataFim) return true;
+
+            const diffDias = Math.abs(
+                (filtros.dataFim - filtros.dataInicio) / (1000 * 60 * 60 * 24)
+            );
+
+            if (diffDias > 30) {
+                DevExpress.ui.notify(
+                    "O período não pode ser superior a 30 dias.",
+                    "warning",
+                    5000
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+
         // Inicializa campos DevExtreme
         $("#dataInicio").dxDateBox({
             type: "date",
@@ -64,17 +85,28 @@
             value: filtros.dataInicio,
             onValueChanged: function (e) {
                 filtros.dataInicio = e.value;
+                if (!validarPeriodo()) {
+                    // Reverter para data anterior válida
+                    e.component.option("value", filtros.dataFim);
+                    return;
+                }
                 carregarDados();
-            }
+            },
         });
+
         $("#dataFim").dxDateBox({
             type: "date",
             displayFormat: "dd/MM/yyyy",
             value: filtros.dataFim,
             onValueChanged: function (e) {
                 filtros.dataFim = e.value;
+                if (!validarPeriodo()) {
+                    // Reverter para data anterior válida
+                    e.component.option("value", filtros.dataInicio);
+                    return;
+                }
                 carregarDados();
-            }
+            },
         });
         $("#empresa").dxTextBox({
             placeholder: "Informe a empresa...",
@@ -110,9 +142,9 @@
             columnAutoWidth: true,
             showColumnLines: false,
             showRowLines: true,
-            rowAlternationEnabled: true,
+            rowAlternationEnabled: false,
             showBorders: true,
-            hoverStateEnabled: true,
+            hoverStateEnabled: false,
             wordWrapEnabled: false,
             // Ordenação
             sorting: {
