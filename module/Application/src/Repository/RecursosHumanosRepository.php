@@ -213,7 +213,6 @@ class RecursosHumanosRepository
                                     ORDER BY DATACC, HORACC
                                 ) AS ORDEM
                             FROM VETORH.R070ACC
-                            WHERE NUMCAD = 904
                         )
                         SELECT 
                             M.NUMEMP,
