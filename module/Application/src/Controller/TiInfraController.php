@@ -474,6 +474,30 @@ class TiInfraController extends BaseController
                 ]);
             }
         }
+        public function clonarEquipamentoAction()
+        {
+            if (!$this->getRequest()->isPost()) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Método não permitido.',
+                ]);
+            }
+
+            $data = json_decode($this->getRequest()->getContent(), true);
+
+            try {
+                $this->TiInfraRepository->clonarEquipamento($data);
+                return new JsonModel([
+                    'success' => true,
+                    'message' => 'Equipamento clonado com sucesso!',
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao clonar equipamento: ' . $e->getMessage(),
+                ]);
+            }
+        }
     #endRegion    
 
     #region Controle de Emprestimo

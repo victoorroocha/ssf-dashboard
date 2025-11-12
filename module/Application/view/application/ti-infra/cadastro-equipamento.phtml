@@ -162,6 +162,33 @@
         border-top: 1px solid #ddd;
     }
 
+  
+  
+    /* Destacar linha selecionada */
+    .dx-datagrid-rowsview .dx-row.dx-selection {
+        background-color: #e6f3ff !important;
+        border-left: 3px solid #007bff;
+    }
+
+    /* Estilo para o botão de clone quando habilitado */
+    .clone-enabled {
+        background-color: #28a745 !important;
+        color: white !important;
+    }
+
+    .clone-enabled:hover {
+        background-color: #218838 !important;
+    }
+
+    .clone-enabled .dx-icon {
+        color: white !important;
+    }
+
+    /* Estilo para botão desabilitado */
+    .dx-button.dx-state-disabled {
+        opacity: 0.6;
+    }
+
 
 </style>
 
@@ -195,6 +222,7 @@
 $(document).ready(function() {
     let isNovoRegistro = false;
     let forceImageUpdate = false;
+    let cloneButtonInstance = null;
 
     // Cache global de filiais
     let filiaisCache = [];
@@ -607,6 +635,11 @@ $(document).ready(function() {
         export: { enabled: true, fileName: "Cadastro Equipamentos", allowExportSelectedData: false },
         searchPanel: { visible: true, width: 240, placeholder: 'Procure...' },
         hoverStateEnabled: true,
+        selection: {
+            mode: 'single', 
+            showCheckBoxesMode: 'none', // Remove os checkboxes
+            allowSelectAll: false
+        },
         editing: {
             mode: 'popup',
             allowUpdating: true,
@@ -1265,6 +1298,22 @@ $(document).ready(function() {
             { dataField: 'flg_equipamento_novo', caption: 'Equipamento Novo', dataType: 'boolean', alignment: 'center', width: 120, visible: false },
             { dataField: 'status', caption: 'Status', dataType: 'boolean', alignment: 'center', width: 120, visible: false },
         ],
+        onRowClick: function(e) {
+            if (e.rowType === 'data') {
+                e.component.selectRows([e.key], false);
+            }
+        },
+        onSelectionChanged: function(e) {
+            const selectedRows = e.selectedRowsData;
+            const hasSingleSelection = selectedRows.length === 1;
+            
+            // Atualiza a chave da linha selecionada
+            selectedRowKey = hasSingleSelection ? e.currentSelectedRowKeys[0] : null;
+            
+            if (cloneButtonInstance) {
+                cloneButtonInstance.option('disabled', !hasSingleSelection);
+            }
+        },
         onEditorPreparing: function(e) {
             if (e.dataField === 'numfilial' && e.parentType === 'dataRow') {
                 const empresaId = e.row?.data?.numemp;
@@ -1325,7 +1374,31 @@ $(document).ready(function() {
         },
         onToolbarPreparing: function (e) {
             var toolbarItems = e.toolbarOptions.items;
-            
+
+            toolbarItems.push({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "fa fa-copy",
+                    text: "Clonar Equipamento",
+                    hint: "Clonar equipamento selecionado",
+                    disabled: true,
+                    onInitialized: function(e) {
+                        // Guarda a instância do botão
+                        cloneButtonInstance = e.component;
+                    },
+                    onClick: function () {
+                        const grid = e.component;
+                        const selectedRows = grid.getSelectedRowsData();
+                        if (selectedRows.length === 1) {
+                            cloneEquipment(selectedRows[0]);
+                        } else {
+                            DevExpress.ui.notify('Selecione apenas UM equipamento para clonar!', 'warning', 4000);
+                        }
+                    }
+                }
+            });
+
             toolbarItems.push({
                 location: "after",
                 widget: "dxButton",
@@ -1371,6 +1444,171 @@ $(document).ready(function() {
             }
         }
     });
+
+
+    function cloneEquipment(originalData) {
+        let serieValue = '';
+        
+        // Cria popup diretamente com dxPopup
+        const $popupContainer = $('<div>').appendTo('body');
+        
+        $popupContainer.dxPopup({
+            title: 'Clonar Equipamento',
+            width: 500,
+            height: 'auto',
+            showTitle: true,
+            dragEnabled: false,
+            closeOnOutsideClick: true,
+            contentTemplate: function() {
+                const $content = $('<div>').css({
+                    'padding': '20px'
+                });
+                
+                // Informações do equipamento
+                $content.append(
+                    $('<div>').css({
+                        'margin-bottom': '15px',
+                        'font-size': '14px'
+                    }).html(`<strong>Clonando:</strong> ${originalData.id} - ${originalData.nome}`)
+                );
+                
+                // Campo série
+                const $fieldContainer = $('<div class="dx-field">').css({
+                    'margin-bottom': '20px'
+                });
+                
+                const $fieldLabel = $('<div class="dx-field-label">').css({
+                    'font-weight': 'bold',
+                    'margin-bottom': '8px'
+                }).text('Série *');
+                
+                const $fieldValue = $('<div class="dx-field-value">');
+                const $textboxContainer = $('<div>').appendTo($fieldValue);
+                
+                $fieldContainer.append($fieldLabel, $fieldValue);
+                $content.append($fieldContainer);
+                
+                // Instruções
+                $content.append(
+                    $('<div>').css({
+                        'font-size': '12px',
+                        'color': '#666',
+                        'margin-top': '10px'
+                    }).text('Todas as outras informações serão copiadas do equipamento original.')
+                );
+                
+                // Inicializa o TextBox após o container estar no DOM
+                setTimeout(() => {
+                    $textboxContainer.dxTextBox({
+                        placeholder: "Digite o número de série...",
+                        width: "100%",
+                        onValueChanged: function(e) {
+                            serieValue = e.value;
+                        },
+                        onInitialized: function(e) {
+                            setTimeout(() => e.component.focus(), 50);
+                        }
+                    });
+                }, 50);
+                
+                return $content;
+            },
+            toolbarItems: [{
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Clonar',
+                    type: 'default',
+                    onClick: function() {
+                        if (serieValue && serieValue.trim() !== "") {
+                            processarClonagem(originalData, serieValue.trim());
+                            $popupContainer.dxPopup('instance').hide();
+                        } else {
+                            DevExpress.ui.notify('Informe a série!', 'error', 2000);
+                        }
+                    }
+                }
+            }, {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Cancelar',
+                    onClick: function() {
+                        $popupContainer.dxPopup('instance').hide();
+                    }
+                }
+            }],
+            onHidden: function() {
+                $popupContainer.remove();
+            },
+            onShown: function() {
+                // Foca no campo após o popup abrir
+                setTimeout(() => {
+                    const textbox = $popupContainer.find('.dx-textbox').dxTextBox('instance');
+                    if (textbox) {
+                        textbox.focus();
+                    }
+                }, 100);
+            }
+        }).dxPopup('instance').show();
+    }
+    function processarClonagem(originalData, novaSerie) {
+        // Prepara os dados para clonagem
+        const equipamentoClone = {
+            equipamento_original_id: originalData.id, // ID do equipamento original
+            nome: originalData.nome,
+            tipo_equipamento_id: originalData.tipo_equipamento_id,
+            hostname: null, // Limpa hostname
+            num_solicitacao: originalData.num_solicitacao,
+            num_ordem_compra: originalData.num_ordem_compra,
+            num_nota_fiscal: originalData.num_nota_fiscal,
+            numemp: originalData.numemp,
+            numfilial: originalData.numfilial,
+            serie: novaSerie, // Nova série obrigatória
+            patrimonio: originalData.patrimonio, // Limpa patrimônio (geralmente único)
+            partnumber: originalData.partnumber,
+            data_fabricacao: null,
+            link_fabricante: null,
+            observacoes: originalData.observacoes,
+            status: true, // Sempre ativo ao clonar
+            flg_equipamento_novo: true,
+
+            // Características
+            processador: originalData.processador,
+            memoria: originalData.memoria,
+            armazenamento: originalData.armazenamento,
+            sistema_operacional: originalData.sistema_operacional,
+            outros_softwares: originalData.outros_softwares,
+
+            // Acessórios
+            acessorios: originalData.acessorios || [],
+            observacoes_acessorios: originalData.observacoes_acessorios
+        };
+
+        // Envia para o backend
+        $.ajax({
+            url: '/ti-infra/clonar-equipamento', // Novo endpoint
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(equipamentoClone),
+            dataType: 'json'
+        }).then(response => {
+            if (response.success) {
+                DevExpress.ui.notify('Equipamento clonado com sucesso!', 'success', 3000);
+                // Atualiza a grid
+                $("#gridEquipamentos").dxDataGrid("instance").refresh();
+                // Limpa seleção
+                $("#gridEquipamentos").dxDataGrid("instance").clearSelection();
+            } else {
+                DevExpress.ui.notify(response.message, 'error', 4000);
+            }
+        }).catch((error) => {
+            console.error('Erro ao clonar equipamento:', error);
+            DevExpress.ui.notify('Erro ao clonar equipamento!', 'error', 4000);
+        });
+    }
     
     function getSelectBoxOptions(url, displayExpr, valueExpr, placeholder) {
         return {

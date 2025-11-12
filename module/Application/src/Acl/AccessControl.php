@@ -267,6 +267,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -491,6 +492,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -713,6 +715,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -935,6 +938,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -1157,6 +1161,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -1379,6 +1384,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',
@@ -1600,6 +1606,7 @@ class AccessControl
             'getLookupEquipamentos',
             'carregarImagensEquipamento',
             'removerImagemEquipamento',
+            'clonarEquipamento',
 
             // ===== CONTROLE DE EMPRÉSTIMO =====
             'controleEmprestimo',

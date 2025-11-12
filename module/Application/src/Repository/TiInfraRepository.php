@@ -722,6 +722,142 @@ class TiInfraRepository
 
             return ['data' => $data, 'totalCount' => $totalCount];
         }
+
+        public function clonarEquipamento(array $data)
+        {
+            #region Validações
+            if (empty($data['serie'])) {
+                throw new \Exception('Número de série é obrigatório para clonagem.');
+            }
+
+            // Verifica duplicidade da série
+            $sqlCheckSerie = "SELECT COUNT(*) AS total FROM tif_equipamentos WHERE serie = :serie";
+            $result = $this->adapter->query($sqlCheckSerie, [':serie' => $data['serie']])->current();
+            if ($result && $result['total'] > 0) {
+                throw new \Exception('Já existe um equipamento cadastrado com esse número de série.');
+            }
+            #endregion
+
+            $connection = $this->adapter->getDriver()->getConnection();
+            $connection->beginTransaction();
+
+            try {
+                // 1. Insere o novo equipamento (clone)
+                $sqlInsert = 'INSERT INTO tif_equipamentos
+                            (nome, tipo_equipamento_id, hostname, num_solicitacao, num_ordem_compra, num_nota_fiscal,
+                            numemp, numfilial, serie, patrimonio, partnumber, data_fabricacao, link_fabricante,
+                            observacoes, flg_equipamento_novo, status)
+                            VALUES
+                            (:nome, :tipo_equipamento_id, :hostname, :num_solicitacao, :num_ordem_compra, :num_nota_fiscal,
+                            :numemp, :numfilial, :serie, :patrimonio, :partnumber, :data_fabricacao, :link_fabricante,
+                            :observacoes, :flg_equipamento_novo, :status)
+                            RETURNING id';
+
+                $params = [
+                    ':nome' => $data['nome'],
+                    ':tipo_equipamento_id' => $data['tipo_equipamento_id'],
+                    ':hostname' => $data['hostname'] ?? null,
+                    ':num_solicitacao' => $data['num_solicitacao'] ?? null,
+                    ':num_ordem_compra' => $data['num_ordem_compra'] ?? null,
+                    ':num_nota_fiscal' => $data['num_nota_fiscal'] ?? null,
+                    ':numemp' => $data['numemp'] ?? null,
+                    ':numfilial' => $data['numfilial'] ?? null,
+                    ':serie' => $data['serie'],
+                    ':patrimonio' => $data['patrimonio'] ?? null,
+                    ':partnumber' => $data['partnumber'] ?? null,
+                    ':data_fabricacao' => $data['data_fabricacao'] ?? null,
+                    ':link_fabricante' => $data['link_fabricante'] ?? null,
+                    ':observacoes' => $data['observacoes'] ?? null,
+                    ':flg_equipamento_novo' => $data['flg_equipamento_novo'] ?? true,
+                    ':status' => $data['status'] ?? null
+                ];
+
+                $result = $this->adapter->createStatement($sqlInsert)->execute($params)->current();
+                $novoEquipamentoId = $result['id'];
+
+                // 2. Clona as características (se existirem)
+                $this->clonarCaracteristicas($data['equipamento_original_id'], $novoEquipamentoId, $data);
+
+                // 3. Clona os acessórios (se existirem)
+                $this->clonarAcessorios($data['equipamento_original_id'], $novoEquipamentoId, $data);
+
+                $connection->commit();
+                return $novoEquipamentoId;
+
+            } catch (\Exception $e) {
+                $connection->rollback();
+                throw $e;
+            }
+        }
+        private function clonarCaracteristicas($equipamentoOriginalId, $novoEquipamentoId, array $data)
+        {
+            // Se já vierem características dos dados, usa elas (do formulário)
+            if (isset($data['processador']) || isset($data['memoria']) || 
+                isset($data['armazenamento']) || isset($data['sistema_operacional']) || 
+                isset($data['outros_softwares'])) {
+                
+                $this->processarCaracteristicas($novoEquipamentoId, $data);
+                return;
+            }
+
+            // Caso contrário, busca as características do equipamento original
+            $sqlSelect = "SELECT processador, memoria, armazenamento, sistema_operacional, outros_softwares 
+                        FROM tif_caracteristicas 
+                        WHERE equipamento_id = :equipamento_id";
+            
+            $result = $this->adapter->createStatement($sqlSelect)->execute([':equipamento_id' => $equipamentoOriginalId])->current();
+            
+            if ($result) {
+                $caracteristicasData = [
+                    'processador' => $result['processador'],
+                    'memoria' => $result['memoria'],
+                    'armazenamento' => $result['armazenamento'],
+                    'sistema_operacional' => $result['sistema_operacional'],
+                    'outros_softwares' => $result['outros_softwares']
+                ];
+                
+                $this->processarCaracteristicas($novoEquipamentoId, $caracteristicasData);
+            }
+        }
+        private function clonarAcessorios($equipamentoOriginalId, $novoEquipamentoId, array $data)
+        {
+            // Se já vierem acessórios dos dados, usa eles (do formulário)
+            if (isset($data['acessorios']) && is_array($data['acessorios'])) {
+                $sqlDelete = "DELETE FROM tif_equipamento_acessorios WHERE equipamento_id = :equipamento_id";
+                $this->adapter->createStatement($sqlDelete)->execute([':equipamento_id' => $novoEquipamentoId]);
+
+                $sqlInsert = "INSERT INTO tif_equipamento_acessorios (equipamento_id, acessorio_id, observacao) 
+                            VALUES (:equipamento_id, :acessorio_id, :observacao)";
+                
+                foreach ($data['acessorios'] as $acessorioId) {
+                    $this->adapter->createStatement($sqlInsert)->execute([
+                        ':equipamento_id' => $novoEquipamentoId,
+                        ':acessorio_id' => $acessorioId,
+                        ':observacao' => $data['observacoes_acessorios'] ?? null
+                    ]);
+                }
+                return;
+            }
+
+            // Caso contrário, clona os acessórios do equipamento original
+            $sqlSelect = "SELECT acessorio_id, observacao 
+                        FROM tif_equipamento_acessorios 
+                        WHERE equipamento_id = :equipamento_id";
+            
+            $result = $this->adapter->createStatement($sqlSelect)->execute([':equipamento_id' => $equipamentoOriginalId]);
+            
+            $sqlInsert = "INSERT INTO tif_equipamento_acessorios (equipamento_id, acessorio_id, observacao) 
+                        VALUES (:equipamento_id, :acessorio_id, :observacao)";
+            
+            foreach ($result as $row) {
+                $this->adapter->createStatement($sqlInsert)->execute([
+                    ':equipamento_id' => $novoEquipamentoId,
+                    ':acessorio_id' => $row['acessorio_id'],
+                    ':observacao' => $row['observacao']
+                ]);
+            }
+        }
+
     #endRegion
 
     #region Controle de Empréstimo
