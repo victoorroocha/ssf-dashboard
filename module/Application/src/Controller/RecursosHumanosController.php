@@ -80,7 +80,7 @@ class RecursosHumanosController extends BaseController
                     // Processa os dados do Oracle
                     foreach ($chunkResult  as $key => $row) {
                         // Convertendo apenas as colunas de texto para UTF-8
-                        $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR', 'ESCALA_CADASTRO', 'ESCALA_TROCA', 'TIPO_COMPENSACAO', 'DSC_SITUACAO_COLABORADOR'];
+                        $textColumns = ['NOMEMP', 'NOMFUN', 'TITCAR', 'NOMLOC', 'NOME_SUPERVISOR', 'ESCALA_CADASTRO', 'ESCALA_TROCA', 'TIPO_COMPENSACAO', 'DSC_SITUACAO_COLABORADOR', 'DIA_SEMANA'];
                         foreach ($textColumns as $col) {
                             if (isset($row[$col])) {
                                 $row[$col] = utf8_encode($row[$col]);
