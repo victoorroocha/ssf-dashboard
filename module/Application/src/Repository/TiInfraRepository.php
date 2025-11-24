@@ -697,7 +697,7 @@ class TiInfraRepository
             $ands = "";
             if (!empty($search)) {
                 $searchTerm = str_replace(['%', '_'], ['\%', '\_'], $search);
-                $ands .= " AND (e.nome ILIKE '%{$searchTerm}%' OR e.serie ILIKE '%{$searchTerm}%' OR cast(e.num_ordem_compra as varchar) ILIKE '%{$searchTerm}%' OR e.hostname ILIKE '%{$searchTerm}%')";
+                $ands .= " AND (cast(e.id as varchar) ILIKE '%{$searchTerm}%' or e.nome ILIKE '%{$searchTerm}%' OR e.serie ILIKE '%{$searchTerm}%' OR cast(e.num_ordem_compra as varchar) ILIKE '%{$searchTerm}%' OR e.hostname ILIKE '%{$searchTerm}%')";
             }
 
             if (!empty($key)) $ands .= " AND e.id = $key";
