@@ -541,7 +541,7 @@ class PlanejamentoControleProducaoController extends BaseController
             $sql = "SELECT
                          CODCCU as ID
                         ,CODCCU || ' - ' || DESCCU AS DSC
-                    FROM E044CCU
+                    FROM sapiens.E044CCU
                     WHERE CODEMP = 5
                     ORDER BY CODCCU";
 
@@ -590,7 +590,7 @@ class PlanejamentoControleProducaoController extends BaseController
                             CODCCU as ID,
                             CODCCU || ' - ' || DESCCU AS DSC,
                             ROW_NUMBER() OVER (ORDER BY CODCCU) AS RN
-                        FROM E044CCU
+                        FROM sapiens.E044CCU
                         $where
                     ) WHERE RN BETWEEN " . ($offset + 1) . " AND " . ($offset + $limit);
 
@@ -601,7 +601,7 @@ class PlanejamentoControleProducaoController extends BaseController
             }
 
             // Contagem total para paginação
-            $countSql = "SELECT COUNT(*) AS TOTAL FROM E044CCU $where";
+            $countSql = "SELECT COUNT(*) AS TOTAL FROM sapiens.E044CCU $where";
             $countResult = $this->oracleService->executeQuery($countSql);
             $totalCount = $countResult[0]['TOTAL'] ?? 0;
 
@@ -639,13 +639,13 @@ class PlanejamentoControleProducaoController extends BaseController
                     E210EST.CODDEP,
                     REGEXP_REPLACE(TRIM(upper(DEP.DESDEP)), '\\s+', ' ') AS DESDEP,
                     E210EST.QTDEST,
-                    nvl((SELECT AVG(PRMEST) FROM E210MVP WHERE CODPRO = E210EST.CODPRO AND CODDEP = E210EST.CODDEP ),0) AS PRMEST,
+                    nvl((SELECT AVG(PRMEST) FROM sapiens.E210MVP WHERE CODPRO = E210EST.CODPRO AND CODDEP = E210EST.CODDEP ),0) AS PRMEST,
                     E210EST.CODPRO || ' - ' || REGEXP_REPLACE(TRIM(upper(PRO.DESPRO)), '\\s+', ' ') || ' - ' || REGEXP_REPLACE(TRIM(upper(DEP.DESDEP)), '\\s+', ' ') AS PRODUTO_DISPLAY,
                     CASE WHEN PRO.CLAPRO = 1 THEN 'Estoque' WHEN PRO.CLAPRO = 2 THEN 'Passagem Direta' END AS CLAPRO,
                     E210EST.CODEND
-                FROM E210EST  
-                LEFT JOIN E075PRO PRO ON PRO.CODEMP = E210EST.CODEMP AND PRO.CODPRO = E210EST.CODPRO
-                LEFT JOIN E205DEP DEP ON DEP.CODEMP = E210EST.CODEMP AND DEP.CODDEP = E210EST.CODDEP
+                FROM sapiens.E210EST  
+                LEFT JOIN sapiens.E075PRO PRO ON PRO.CODEMP = E210EST.CODEMP AND PRO.CODPRO = E210EST.CODPRO
+                LEFT JOIN sapiens.E205DEP DEP ON DEP.CODEMP = E210EST.CODEMP AND DEP.CODDEP = E210EST.CODDEP
                 WHERE E210EST.CODEMP = 5
                 AND E210EST.CODDEP = 1
                 AND PRO.SITPRO = 'A'

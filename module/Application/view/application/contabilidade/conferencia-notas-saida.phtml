@@ -1,0 +1,504 @@
+<style>
+    /* Aba de produtos - verde */
+    /* .aba-produto {
+        background-color: #4CAF50 !important;
+        color: white !important;
+        border-radius: 6px;
+        margin-right: 5px;
+        width: 100%;
+        font-size: 18px;
+    } */
+
+    /* Aba de serviços - azul */
+    /* .aba-servico {
+        background-color: #2196F3 !important;
+        color: white !important;
+        border-radius: 6px;
+        margin-right: 5px;
+        width: 100%;
+        font-size: 18px;
+    } */
+
+    /* Ajuste quando a aba está selecionada */
+    .dx-tab.dx-tab-selected {
+        filter: brightness(0.90);
+        font-weight: bold;
+    }
+</style>
+
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Contabilidade</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <!-- Approach -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <p>Conferência Notas Saídas</p>
+
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label><b>Data Início</b></label>
+                            <div id="dataInicio"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Data Fim</b></label>
+                            <div id="dataFim"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Empresa</b></label>
+                            <div id="empresa"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label><b>Filial</b></label>
+                            <div id="filial"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label><b>Chave NFe</b></label>
+                            <div id="chavenfe"></div>
+                        </div>
+                    </div>
+
+                    
+                        <!-- ABAS -->
+                        <div id="tabs"></div>
+
+                        <!-- ÁREA DAS DUAS GRIDS -->
+                        <div id="tabContent" style="margin-top: 20px;">
+                            <div id="gridProdutos"></div>
+                            <div id="gridServicos" style="display:none;"></div>
+                        </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<script>
+    $(document).ready(function() {
+        // Estado dos filtros
+        let filtros = {
+            dataInicio: new Date(),
+            dataFim: new Date(),
+            empresa: 5,
+            filial: null,
+            chavenfe: null,
+        };
+
+        // Função de validação do período
+        function validarPeriodo() {
+            if (!filtros.dataInicio || !filtros.dataFim) return true;
+
+            const diffDias = Math.abs(
+                (filtros.dataFim - filtros.dataInicio) / (1000 * 60 * 60 * 24)
+            );
+
+            if (diffDias > 60) {
+                DevExpress.ui.notify(
+                    "O período não pode ser superior a 60 dias.",
+                    "warning",
+                    5000
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+
+        // Inicializa campos DevExtreme
+        $("#dataInicio").dxDateBox({
+            type: "date",
+            displayFormat: "dd/MM/yyyy",
+            value: filtros.dataInicio,
+            onValueChanged: function (e) {
+                filtros.dataInicio = e.value;
+                if (!validarPeriodo()) {
+                    // Reverter para data anterior válida
+                    e.component.option("value", filtros.dataFim);
+                    return;
+                }
+                carregarDados();
+            },
+        });
+        $("#dataFim").dxDateBox({
+            type: "date",
+            displayFormat: "dd/MM/yyyy",
+            value: filtros.dataFim,
+            onValueChanged: function (e) {
+                filtros.dataFim = e.value;
+                if (!validarPeriodo()) {
+                    // Reverter para data anterior válida
+                    e.component.option("value", filtros.dataInicio);
+                    return;
+                }
+                carregarDados();
+            },
+        });
+        $("#empresa").dxTextBox({
+            placeholder: "Informe a empresa...",
+            value: filtros.empresa,
+            inputAttr: { style: "text-align: center;" }, // 🔹 centraliza o texto
+            onValueChanged: function (e) {
+                filtros.empresa = e.value;
+                carregarDados();
+            }
+        });
+        $("#filial").dxTextBox({
+            placeholder: "Informe a filial...",
+            value: filtros.filial,
+            inputAttr: { style: "text-align: center;" }, // 🔹 centraliza o texto
+            onValueChanged: function (e) {
+                filtros.filial = e.value;
+                carregarDados();
+            }
+        });
+        $("#chavenfe").dxTextBox({
+            placeholder: "Informe a chave da nota...",
+            value: filtros.chavenfe,
+            onValueChanged: function (e) {
+                filtros.chavenfe = e.value;
+                carregarDados();
+            }
+        });
+
+        let abaAtual = "produtos";
+
+        $("#tabs").dxTabs({
+            dataSource: [
+                { id: "produtos", text: "Notas de Produto", classe: "aba-produto" },
+                { id: "servicos", text: "Notas de Serviço", classe: "aba-servico" },
+            ],
+            selectedIndex: 0,
+            itemTemplate: function (itemData, itemIndex, itemElement) {
+                // adiciona a classe personalizada na aba
+                itemElement.addClass(itemData.classe);
+                return $("<span>").text(itemData.text);
+            },
+            onItemClick(e) {
+                abaAtual = e.itemData.id;
+
+                // Oculta/mostra as DIVs
+                if (abaAtual === "produtos") {
+                    $("#gridProdutos").show();
+                    $("#gridServicos").hide();
+                } else {
+                    $("#gridProdutos").hide();
+                    $("#gridServicos").show();
+                }
+
+                carregarDados();
+            }
+        });
+
+        const gridProdutos = $("#gridProdutos").dxDataGrid({
+            dataSource: [],
+            keyExpr: "CHAVENFE",
+            width: '100%',
+            columnAutoWidth: true,
+            showColumnLines: false,
+            showRowLines: true,
+            rowAlternationEnabled: false,
+            showBorders: true,
+            hoverStateEnabled: false,
+            wordWrapEnabled: false,
+            // Ordenação
+            sorting: {
+                mode: 'multiple' // 'single', 'multiple', 'none'
+            },
+            // Paginação
+            paging: {
+                pageSize: 20,
+                pageIndex: 0
+            },
+            pager: {
+                visible: true,
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 100, 200, 500],
+                showInfo: true,
+                showNavigationButtons: true,
+                showPageSizeSelector: true
+            },
+            // Filtros
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto', // 'auto', 'onClick'
+                showOperationChooser: true
+            },
+            headerFilter: {
+                visible: true,
+                allowSearch: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procurar...',
+                highlightSearchText: true,
+                searchVisibleColumnsOnly: false
+            },
+            filterPanel: {
+                visible: false
+            },
+            filterSyncEnabled: false,
+            // Column Chooser
+            columnChooser: {
+                enabled: true,
+                mode: 'select', // 'select', 'dragAndDrop'
+                allowSearch: true,
+                width: 300,
+                height: 400
+            },
+            grouping: {
+                autoExpandAll: false,
+                allowCollapsing: true,
+                contextMenuEnabled: true,
+                expandMode: 'rowClick'
+            },
+            groupPanel: {
+                visible: true,
+                emptyPanelText: 'Arraste uma coluna aqui para agrupar por essa coluna',
+                allowColumnDragging: true,
+            },
+            export: {
+                enabled: true,
+                fileName: "Conferência de Saídas - Produtos",
+                allowExportSelectedData: false,
+                exportAll: true,
+                formats: ['xlsx', 'pdf']
+            },
+            toolbar: {
+                items: [
+                    'groupPanel',  // ✅ Agora funcionará
+                    'searchPanel',
+                    'exportButton',
+                    'columnChooserButton'
+                ]
+            },
+            columns: [
+                { dataField: "EMPRESA", caption: "Empresa", alignment: "center" },
+                { dataField: "FILIAL", caption: "Filial", alignment: "center" },
+                { dataField: "CHAVENFE", caption: "Chave NFe", alignment: "center" },
+                { dataField: "NUMNF", caption: "Número NF", alignment: "center" },
+                { dataField: "CODSNF", caption: "Tipo NF", alignment: "center" },
+                { dataField: "DTEMISSAO", caption: "Data Emissão", alignment: "center" },
+                { dataField: "TRANS_PROD", caption: "Transação Prod.", alignment: "center" },
+                { dataField: "CLIENTE", caption: "Cliente", alignment: "left" },
+                { dataField: "CODPRO", caption: "Código Produto", alignment: "center" },
+                { dataField: "DESCPROD", caption: "Descrição Produto", alignment: "left" },
+                { dataField: "NCM", caption: "NCM", alignment: "center" },
+                { dataField: "CODRED_Z", caption: "CODRED_Z", alignment: "center" },
+                { dataField: "CTARED", caption: "Cta Red.", alignment: "center" },
+                { dataField: "CODCCU", caption: "C. Custo", alignment: "center" },
+                { dataField: "CBENEF", caption: "CBENEF", alignment: "center" },
+                { dataField: "SEQIPV", caption: "Seq. IPV", alignment: "center" },
+                { dataField: "QTDFAT", caption: "Qtd. Fat", alignment: "right" },
+                { dataField: "VLRBRU", caption: "Vlr. Bruto", alignment: "right", format: "currency" },
+                { dataField: "VLRDSC", caption: "Desconto", alignment: "right", format: "currency" },
+                { dataField: "VLRLIQ", caption: "Valor Líquido", alignment: "right", format: "currency" },
+                { dataField: "VLRLIQ_DIF", caption: "Dif. Líquido", alignment: "right", format: "currency" },
+                { dataField: "VLRBASE_ICM", caption: "Base ICMS", alignment: "right", format: "currency" },
+                { dataField: "PERICM", caption: "Perc ICMS", alignment: "center" },
+                { dataField: "VLRICM", caption: "Vlr. ICMS", alignment: "right", format: "currency" },
+                { dataField: "VLRISEN_ICM", caption: "ICMS Isento", alignment: "right", format: "currency" },
+                { dataField: "VLROUTR_ICM", caption: "Outros ICMS", alignment: "right", format: "currency" },
+                { dataField: "VLRDESON_ICM", caption: "ICMS Desonerado", alignment: "right" },
+                { dataField: "PERFUN", caption: "Perc Funrural", alignment: "center" },
+                { dataField: "VLRBASE_FUNR", caption: "Base Funrural", alignment: "right" },
+                { dataField: "VLRFUNRURAL", caption: "Vlr. Funrural", alignment: "right" },
+                { dataField: "FUNDEINFRA", caption: "Fund. Infra", alignment: "right" },
+                { dataField: "PERFINFPARAM", caption: "Perc Finf Param", alignment: "center" },
+                { dataField: "VLRFACS", caption: "Vlr. FACS", alignment: "right" },
+                { dataField: "VLRFETHAB", caption: "Vlr. Fethab", alignment: "right" },
+                { dataField: "SIT_TRIB", caption: "Sit. Tributária", alignment: "center" },
+                { dataField: "CSTPIS", caption: "CST PIS", alignment: "center" },
+                { dataField: "PERPIS_FAT", caption: "Perc PIS", alignment: "center" },
+                { dataField: "VLRBASE_PIS", caption: "Base PIS", alignment: "right" },
+                { dataField: "VLRIMP_PISFAT", caption: "Vlr. PIS", alignment: "right" },
+                { dataField: "CSTCOF", caption: "CST COFINS", alignment: "center" },
+                { dataField: "PERCOF_FAT", caption: "Perc COFINS", alignment: "center" },
+                { dataField: "VLRIMP_COFFAT", caption: "Vlr. COFINS", alignment: "right" },
+                { dataField: "VLRRET_COF", caption: "Ret. COFINS", alignment: "right" },
+                { dataField: "PERISS", caption: "Perc ISS", alignment: "center" },
+                { dataField: "VLRBASE_ISS", caption: "Base ISS", alignment: "right" },
+                { dataField: "VLRIMP_ISS", caption: "Vlr. ISS", alignment: "right" },
+                { dataField: "PERIRRF", caption: "Perc IRRF", alignment: "center" },
+                { dataField: "VLRBASE_IRF", caption: "Base IRRF", alignment: "right" },
+                { dataField: "VLRIMP_IRF", caption: "Vlr. IRRF", alignment: "right" },
+                { dataField: "PERFAT_COF", caption: "Perc Fat COF", alignment: "center" },
+                { dataField: "VLRBASE_COFRET", caption: "Base COF Ret", alignment: "right" },
+                { dataField: "VLRIMP_COFRET", caption: "COF Ret", alignment: "right" },
+                { dataField: "PERFAT_PIS", caption: "Perc Fat PIS", alignment: "center" },
+                { dataField: "VLRBASE_PISRET", caption: "Base PIS Ret", alignment: "right" },
+                { dataField: "VLRIMP_PISRET", caption: "PIS Ret", alignment: "right" },
+                { dataField: "PERFAT_CSLL", caption: "Perc Fat CSLL", alignment: "center" },
+                { dataField: "VLRBASE_CSLLRET", caption: "Base CSLL Ret", alignment: "right" },
+                { dataField: "VLRIMP_CSLLRET", caption: "CSLL Ret", alignment: "right" },
+                { dataField: "CSTIPI", caption: "CST IPI", alignment: "center" },
+                { dataField: "VLRBASE_IPI", caption: "Base IPI", alignment: "right" },
+                { dataField: "VLRIMP_IPI", caption: "Vlr. IPI", alignment: "right" },
+                { dataField: "OBS_PROD", caption: "Obs Produto", alignment: "left" },
+                { dataField: "CLAPRO", caption: "Classe Prod.", alignment: "center" },
+                { dataField: "CLAPRO_DESC", caption: "Classe Descrição", alignment: "left" },
+                { dataField: "SITNFSAIDA", caption: "Sit. NF Saída", alignment: "center" },
+                { dataField: "SITNFSAIDA_DESCR", caption: "Situação NF", alignment: "left" },
+                { dataField: "VENC01_CR", caption: "Vencimento", alignment: "center" },
+                { dataField: "TOTAL_CR", caption: "Total CR", alignment: "right", format: "currency" },
+                { dataField: "QNTPARC_CR", caption: "Qtde Parc.", alignment: "center" },
+                { dataField: "DATGER", caption: "Data Ger.", alignment: "center" },
+                { dataField: "USUGER", caption: "Usuário Ger.", alignment: "center" },
+                { dataField: "HORGER", caption: "Hora Ger.", alignment: "center" },
+                { dataField: "MENSAGEM_1", caption: "Mensagem 1", alignment: "left" },
+                { dataField: "OBS_MOTIVO", caption: "Obs Motivo", alignment: "left" },
+                { dataField: "MENS1", caption: "Mensagem 1", alignment: "left" },
+                { dataField: "MENS2", caption: "Mensagem 2", alignment: "left" },
+                { dataField: "MENS3", caption: "Mensagem 3", alignment: "left" },
+                { dataField: "MENS4", caption: "Mensagem 4", alignment: "left" },
+                { dataField: "MENS5", caption: "Mensagem 5", alignment: "left" },
+                { dataField: "MENS6", caption: "Mensagem 6", alignment: "left" },
+                { dataField: "MENS7", caption: "Mensagem 7", alignment: "left" },
+                { dataField: "MENS8", caption: "Mensagem 8", alignment: "left" },
+                { dataField: "MENS9", caption: "Mensagem 9", alignment: "left" }
+            ]
+        }).dxDataGrid("instance");
+
+        const gridServicos = $("#gridServicos").dxDataGrid({
+            dataSource: [],
+            keyExpr: "CHAVENFE",
+            width: '100%',
+            columnAutoWidth: true,
+            showColumnLines: false,
+            showRowLines: true,
+            rowAlternationEnabled: false,
+            showBorders: true,
+            hoverStateEnabled: false,
+            wordWrapEnabled: false,
+            // Ordenação
+            sorting: {
+                mode: 'multiple' // 'single', 'multiple', 'none'
+            },
+            // Paginação
+            paging: {
+                pageSize: 20,
+                pageIndex: 0
+            },
+            pager: {
+                visible: true,
+                showPageSizeSelector: true,
+                allowedPageSizes: [10, 100, 200, 500],
+                showInfo: true,
+                showNavigationButtons: true,
+                showPageSizeSelector: true
+            },
+            // Filtros
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto', // 'auto', 'onClick'
+                showOperationChooser: true
+            },
+            headerFilter: {
+                visible: true,
+                allowSearch: true
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procurar...',
+                highlightSearchText: true,
+                searchVisibleColumnsOnly: false
+            },
+            filterPanel: {
+                visible: false
+            },
+            filterSyncEnabled: false,
+            // Column Chooser
+            columnChooser: {
+                enabled: true,
+                mode: 'select', // 'select', 'dragAndDrop'
+                allowSearch: true,
+                width: 300,
+                height: 400
+            },
+            grouping: {
+                autoExpandAll: false,
+                allowCollapsing: true,
+                contextMenuEnabled: true,
+                expandMode: 'rowClick'
+            },
+            groupPanel: {
+                visible: true,
+                emptyPanelText: 'Arraste uma coluna aqui para agrupar por essa coluna',
+                allowColumnDragging: true,
+            },
+            export: {
+                enabled: true,
+                fileName: "Conferência de Saídas - Serviços",
+                allowExportSelectedData: false,
+                exportAll: true,
+                formats: ['xlsx', 'pdf']
+            },
+            toolbar: {
+                items: [
+                    'groupPanel',  // ✅ Agora funcionará
+                    'searchPanel',
+                    'exportButton',
+                    'columnChooserButton'
+                ]
+            },
+            columns: [
+                { dataField: "EMPRESA", caption: "Empresa", alignment: "center" },
+                { dataField: "FILIAL", caption: "Filial", alignment: "center" },
+                { dataField: "CHAVE_CTE", caption: "Chave CTE", alignment: "center" },
+                { dataField: "NUMERO_CTE", caption: "Num CTE", alignment: "center" }
+            ]
+        }).dxDataGrid("instance");
+
+
+        function carregarDados() {
+            const rota = abaAtual === "produtos"
+                ? "/contabilidade/list-conferencia-notas-saida-produto"
+                : "/contabilidade/list-conferencia-notas-saida-servico";
+
+            const params = {
+                dataInicio: filtros.dataInicio ? filtros.dataInicio.toISOString().split("T")[0] : null,
+                dataFim: filtros.dataFim ? filtros.dataFim.toISOString().split("T")[0] : null,
+                empresa: filtros.empresa || null,
+                filial: filtros.filial || null,
+                chavenfe: filtros.chavenfe || null
+            };
+
+            $.ajax({
+                url: rota,
+                method: "GET",
+                data: params,
+                dataType: "json",
+                success: function (response) {
+                    if (response.success) {
+                        if (abaAtual === "produtos") {
+                            gridProdutos.option("dataSource", response.data);
+                        } else {
+                            gridServicos.option("dataSource", response.data);
+                        }
+                    } else {
+                        DevExpress.ui.notify(response.message, "error", 3000);
+                    }
+                },
+                error() {
+                    DevExpress.ui.notify("Erro ao carregar dados.", "error", 3000);
+                }
+            });
+        }
+
+        // PRIMEIRO CARREGAMENTO
+        carregarDados();
+
+
+    });
+</script>

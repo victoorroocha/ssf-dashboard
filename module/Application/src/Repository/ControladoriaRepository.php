@@ -179,7 +179,7 @@ class ControladoriaRepository
         return "SELECT 
                     CODEMP as id, 
                     CODEMP || ' - ' || UPPER(NOMEMP) AS dsc 
-                FROM E070EMP
+                FROM sapiens.E070EMP
                 ORDER BY CODEMP"; 
     }
     public function getLookupFilialQuery($codempresa = null)
@@ -187,7 +187,7 @@ class ControladoriaRepository
         return "SELECT 
                     CODFIL as id,
                     CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || CIDFIL AS dsc 
-                FROM E070FIL
+                FROM sapiens.E070FIL
                 WHERE 1 = 1 
                 AND CODEMP = 5
                 ORDER BY CODEMP, CODFIL";
@@ -311,7 +311,7 @@ class ControladoriaRepository
                         DESCTA,
                         NATCTA,
                         ANASIN
-                    FROM E045PLA
+                    FROM sapiens.E045PLA
                     WHERE CODEMP = 5
                     {$ands}
                     ORDER BY CLACTA"; 

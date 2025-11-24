@@ -34,10 +34,10 @@ return [
     //     'connection_string' => 'ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com:1521/SSF',
     // ],
     'oracle' => [
-        'username'         => 'Sapiens',
-        'password'         => 'Sapiens',
+        'username'         => 'powerbi',
+        'password'         => 'SSF@PBI2025',
         'connection_string' => "(DESCRIPTION=
-                                (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
-                                (CONNECT_DATA=(SERVICE_NAME=SSF)))",
+                                (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-middleware.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
+                                (CONNECT_DATA=(SERVICE_NAME=SSFMID)))",
     ],
 ];
