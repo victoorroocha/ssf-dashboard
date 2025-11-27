@@ -198,22 +198,25 @@ class ControladoriaRepository
         public function listarPlanoContas()
         {
             $sql = '
-                SELECT 
-                    id, 
-                    parent_id, 
-                    clacta, 
-                    descta, 
-                    codigo, 
-                    ctared, 
-                    natcta, 
-                    anasin, 
-                    id_grupo_contas,
-                    id_pacote_contas 
-                FROM 
-                    ctr_plano_contas
+                 SELECT 
+                    cpc.id, 
+                    cpc.parent_id, 
+                    cpc.clacta, 
+                    cpc.descta, 
+                    cpc.codigo, 
+                    cpc.ctared, 
+                    cpc.natcta, 
+                    cpc.anasin, 
+                    cpc.id_grupo_contas,
+                    gc.nome as dsc_grupo_contas,
+                    cpc.id_pacote_contas,
+                    cpc2.nome as dsc_pacote_contas
+                FROM ctr_plano_contas cpc
+                left join grupo_contas gc on gc.id = cpc.id_grupo_contas
+                left join ctr_pacote_contas cpc2 on cpc2.id = cpc.id_pacote_contas
                 ORDER BY 
-                    (string_to_array(regexp_replace(codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
-                    (regexp_replace(codigo, \'[0-9]\', \'\', \'g\')) ASC;  -- Parte alfabética
+                    (string_to_array(regexp_replace(cpc.codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
+                    (regexp_replace(cpc.codigo, \'[0-9]\', \'\', \'g\')) ASC;  -- Parte alfabética
                 ';
 
             $statement = $this->adapter->createStatement($sql);

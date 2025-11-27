@@ -160,47 +160,91 @@
                     });
                 },
             },
-            toolbar: {
-                items: [
-                    'addRowButton',
-                    'searchPanel',
-                    {
-                        location: 'after',
-                        widget: 'dxButton',
-                        options: {
-                            icon: 'refresh',
-                            onClick: function () {
-                                $('#treeListContainer').dxTreeList('instance').refresh();
-                            },
-                            hint: 'Recarregar',
-                        }
-                    },
-                    {
-                        location: 'after',
-                        widget: 'dxButton',
-                        options: {
-                            icon: 'exportxlsx',
-                            onClick: function () {
-                                $('#treeListContainer').dxTreeList('instance').exportToExcel();
-                            },
-                            hint: 'Exportar para Excel',
-                        }
-                    },
-                    {
-                        location: 'after',
-                        widget: 'dxButton',
-                        options: {
-                            icon: 'exportpdf',
-                            onClick: function () {
-                                DevExpress.ui.notify('Exportação para PDF ainda não implementada.', 'info', 2000);
-                            },
-                            hint: 'Exportar para PDF',
-                        }
-                    },
-                ]
-            },
+            // toolbar: {
+            //     items: [
+            //         'addRowButton',
+            //         'searchPanel',
+            //         {
+            //             location: "after",
+            //             widget: "dxButton",
+            //             options: {
+            //                 icon: "fa fa-expand",
+            //                 text: "",
+            //                 onClick: function () {
+            //                     var grid = $("#treeListContainer").dxTreeList("instance");
+            //                     grid.expandAll();
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             location: "after",
+            //             widget: "dxButton",
+            //             options: {
+            //                 icon: "fa fa-compress",
+            //                 text: "",
+            //                 onClick: function () {
+            //                     var grid = $("#treeListContainer").dxTreeList("instance");
+            //                     grid.collapseAll();
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             location: 'after',
+            //             widget: 'dxButton',
+            //             options: {
+            //                 icon: 'refresh',
+            //                 onClick: function () {
+            //                     $('#treeListContainer').dxTreeList('instance').refresh();
+            //                 },
+            //                 hint: 'Recarregar',
+            //             }
+            //         },
+            //         {
+            //             location: 'after',
+            //             widget: 'dxButton',
+            //             options: {
+            //                 icon: 'exportxlsx',
+            //                 onClick: function () {
+            //                     $('#treeListContainer').dxTreeList('instance').exportToExcel();
+            //                 },
+            //                 hint: 'Exportar para Excel',
+            //             }
+            //         },
+            //         {
+            //             location: 'after',
+            //             widget: 'dxButton',
+            //             options: {
+            //                 icon: 'xlsxfile',
+            //                 hint: 'Exportar Excel',
+            //                 onClick: function () {
+            //                     var treeList = $("#treeListContainer").dxTreeList("instance");
+            //                     DevExpress.excelExporter.exportTreeList({
+            //                         component: treeList,
+            //                         worksheet: new ExcelJS.Workbook().addWorksheet('Plano de Contas')
+            //                     }).then(function(workbook) {
+            //                         return workbook.xlsx.writeBuffer();
+            //                     }).then(function(buffer) {
+            //                         saveAs(new Blob([buffer], {type: "application/octet-stream"}), "plano_de_contas.xlsx");
+            //                     });
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             location: 'after',
+            //             widget: 'dxButton',
+            //             options: {
+            //                 icon: 'exportpdf',
+            //                 onClick: function () {
+            //                     DevExpress.ui.notify('Exportação para PDF ainda não implementada.', 'info', 2000);
+            //                 },
+            //                 hint: 'Exportar para PDF',
+            //             }
+            //         },
+            //     ]
+            // },
             export: {
                 enabled: true,
+                fileName: "plano_de_contas",
                 allowExportSelectedData: true
             },
             columns: [
@@ -357,8 +401,151 @@
                         }
                     }
                 }
-            }
+            },
+            onToolbarPreparing: function (e) {
+                var toolbarItems = e.toolbarOptions.items;
+
+
+                e.toolbarOptions.items.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-expand",
+                        hint: "Expandir tudo",
+                        onClick() {
+                            const tree = $("#treeListContainer").dxTreeList("instance");
+
+                            function getAllKeys(node) {
+                                let keys = [];
+                                if (node.key !== undefined) keys.push(node.key);
+
+                                if (node.children) {
+                                    node.children.forEach(c => {
+                                        keys = keys.concat(getAllKeys(c)); // recursivo: pega todos os níveis
+                                    });
+                                }
+
+                                return keys;
+                            }
+
+                            const root = tree.getRootNode();
+                            const allKeys = getAllKeys(root);
+                            tree.option("expandedRowKeys", allKeys);
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "fa fa-compress",
+                        hint: "Recolher tudo",
+                        onClick() {
+                            $("#treeListContainer").dxTreeList("instance")
+                                .option("expandedRowKeys", []);
+                        }
+                    }
+                });
+
+                e.toolbarOptions.items.push({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "exportxlsx",
+                        hint: "Exportar Excel",
+                        onClick() {
+                            const treeList = $("#treeListContainer").dxTreeList("instance");
+                            const rootItems = treeList.getRootNode().children;
+
+                            // Funções de mapeamento (lookup -> texto)
+                            function mapTipo(anasin) {
+                                if (anasin === "S") return "Sintética";
+                                if (anasin === "A") return "Analítica";
+                                return "";
+                            }
+                            function mapNatureza(natcta) {
+                                if (natcta === "C") return "Crédito";
+                                if (natcta === "D") return "Débito";
+                                return "";
+                            }
+
+                            function expandNodes(nodes, result, level = 0) {
+                                nodes.forEach(n => {
+                                    result.push({
+                                        Nivel: level + 1,
+                                        Codigo: n.data.codigo ?? "",
+                                        Classificacao: n.data.clacta ?? "",
+                                        Conta: n.data.ctared ?? "",
+                                        Descricao: n.data.descta ?? "",
+                                        Natureza: mapNatureza(n.data.natcta),
+                                        Tipo: mapTipo(n.data.anasin),
+                                        Grupo: n.data.dsc_grupo_contas ?? "",
+                                        Pacote: n.data.dsc_pacote_contas ?? "",
+                                    });
+
+                                    if (n.children?.length) expandNodes(n.children, result, level + 1);
+                                });
+                            }
+
+                            let rows = [];
+                            expandNodes(rootItems, rows);
+
+                            // Criar planilha
+                            const workbook = new ExcelJS.Workbook();
+                            const sheet = workbook.addWorksheet("Plano de Contas");
+
+                            sheet.columns = [
+                                { header: "Código", key: "Codigo", width: 20 },
+                                { header: "Classificação", key: "Classificacao", width: 25 },
+                                { header: "Conta Reduzida", key: "Conta", width: 18 },
+                                { header: "Descrição", key: "Descricao", width: 60 },
+                                { header: "Natureza", key: "Natureza", width: 12 },
+                                { header: "Tipo da Conta", key: "Tipo", width: 14 },
+                                { header: "Grupo de Contas", key: "Grupo", width: 30 },
+                                { header: "Pacote de Contas", key: "Pacote", width: 30 },
+                            ];
+
+                            rows.forEach(r => {
+                                const row = sheet.addRow(r);
+
+                                // Bold para níveis de Sintética, igual no grid ⬇
+                                if (r.Tipo === "Sintética") { 
+                                    row.font = { bold: true };
+
+                                    // cores por nível igual ao grid (opcional)
+                                    if (r.Nivel === 1) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
+                                    else if (r.Nivel === 2) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+                                    else if (r.Nivel === 3) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                                    else row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEBEBEB' } };
+                                }
+                            });
+
+                            workbook.xlsx.writeBuffer().then(buffer =>
+                                saveAs(new Blob([buffer]), "plano_de_contas.xlsx")
+                            );
+                        }
+                    }
+                });
+
+
+                e.toolbarOptions.items.push({
+                    name: "refresh",
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        icon: "refresh",
+                        onClick: function() {
+                            e.component.refresh();
+                        },
+                        text: "Atualizar" 
+                    }
+                });
+            }, 
         });
 
     });
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
