@@ -212,7 +212,7 @@ class ControladoriaRepository
                     cpc.id_pacote_contas,
                     cpc2.nome as dsc_pacote_contas
                 FROM ctr_plano_contas cpc
-                left join grupo_contas gc on gc.id = cpc.id_grupo_contas
+                left join ctr_grupo_contas gc on gc.id = cpc.id_grupo_contas
                 left join ctr_pacote_contas cpc2 on cpc2.id = cpc.id_pacote_contas
                 ORDER BY 
                     (string_to_array(regexp_replace(cpc.codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
@@ -324,7 +324,7 @@ class ControladoriaRepository
     #region Cadastro Grupos Contas
         public function listarGrupoContas()
         {
-            $sql = 'SELECT id, nome, descricao, flg_ativo FROM grupo_contas ORDER BY nome'; 
+            $sql = 'SELECT id, nome, descricao, flg_ativo FROM ctr_grupo_contas ORDER BY nome'; 
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -345,7 +345,7 @@ class ControladoriaRepository
 
             if (!empty($data['id'])) {
                 // Atualizar
-                $sql = 'UPDATE grupo_contas SET 
+                $sql = 'UPDATE ctr_grupo_contas SET 
                             nome = :nome, 
                             descricao = :descricao,
                             flg_ativo = :flg_ativo
@@ -358,7 +358,7 @@ class ControladoriaRepository
                 ];
             } else {
                 // Inserir
-                $sql = 'INSERT INTO grupo_contas (nome, descricao, flg_ativo) 
+                $sql = 'INSERT INTO ctr_grupo_contas (nome, descricao, flg_ativo) 
                         VALUES (:nome, :descricao, :flg_ativo)';
                 $params = [
                     ':nome' => $data['nome'],
@@ -376,13 +376,13 @@ class ControladoriaRepository
                 throw new \Exception('ID do Grupo Contas não fornecido.');
             }
 
-            $sql = 'UPDATE grupo_contas SET flg_ativo = false WHERE id = :id';
+            $sql = 'UPDATE ctr_grupo_contas SET flg_ativo = false WHERE id = :id';
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([':id' => $id]);
         }
         public function getLookupGrupoContas()
         {
-            $sql = 'SELECT id, nome, descricao FROM grupo_contas WHERE flg_ativo = true ORDER BY nome'; 
+            $sql = 'SELECT id, nome, descricao FROM ctr_grupo_contas WHERE flg_ativo = true ORDER BY nome'; 
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 

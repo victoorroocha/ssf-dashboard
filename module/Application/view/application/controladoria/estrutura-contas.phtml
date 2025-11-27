@@ -431,7 +431,8 @@
                             const root = tree.getRootNode();
                             const allKeys = getAllKeys(root);
                             tree.option("expandedRowKeys", allKeys);
-                        }
+                        },
+                        text: "Expandir tudo" 
                     }
                 });
 
@@ -444,7 +445,8 @@
                         onClick() {
                             $("#treeListContainer").dxTreeList("instance")
                                 .option("expandedRowKeys", []);
-                        }
+                        },
+                        text: "Recolher tudo" 
                     }
                 });
 
@@ -524,7 +526,8 @@
                             workbook.xlsx.writeBuffer().then(buffer =>
                                 saveAs(new Blob([buffer]), "plano_de_contas.xlsx")
                             );
-                        }
+                        },
+                        text: "Exportar Excel" 
                     }
                 });
 
