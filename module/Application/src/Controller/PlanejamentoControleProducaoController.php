@@ -503,7 +503,7 @@ class PlanejamentoControleProducaoController extends BaseController
                 LEFT JOIN VETORH.R033PES ON R033PES.CADAUX = R034FUN.NUMCAD AND R033PES.EMPAUX = R034FUN.NUMEMP AND R033PES.NUMCPF = R034FUN.NUMCPF 
                 WHERE R034FUN.TIPCOL = 1
                 AND R034FUN.SITAFA <> 7
-                AND R034FUN.NUMEMP IN (5,12)
+                AND R034FUN.NUMEMP IN (1000)
                 ORDER BY R034FUN.NOMFUN";
 
         try {
@@ -542,7 +542,7 @@ class PlanejamentoControleProducaoController extends BaseController
                          CODCCU as ID
                         ,CODCCU || ' - ' || DESCCU AS DSC
                     FROM sapiens.E044CCU
-                    WHERE CODEMP = 5
+                    WHERE CODEMP = 1000
                     ORDER BY CODCCU";
 
             $result = $this->oracleService->executeQuery($sql);
@@ -577,7 +577,7 @@ class PlanejamentoControleProducaoController extends BaseController
         $limit = (int) $this->params()->fromQuery('limit', 30);
 
         try {
-            $where = "WHERE CODEMP = 5";
+            $where = "WHERE CODEMP = 1000";
             if (!empty($search)) {
                 $where .= " AND (CODCCU LIKE '%$search%' OR DESCCU LIKE '%$search%')";
             }
@@ -646,7 +646,7 @@ class PlanejamentoControleProducaoController extends BaseController
                 FROM sapiens.E210EST  
                 LEFT JOIN sapiens.E075PRO PRO ON PRO.CODEMP = E210EST.CODEMP AND PRO.CODPRO = E210EST.CODPRO
                 LEFT JOIN sapiens.E205DEP DEP ON DEP.CODEMP = E210EST.CODEMP AND DEP.CODDEP = E210EST.CODDEP
-                WHERE E210EST.CODEMP = 5
+                WHERE E210EST.CODEMP = 1000
                 AND E210EST.CODDEP = 1
                 AND PRO.SITPRO = 'A'
                 AND PRO.CLAPRO IN (1,2)

@@ -113,7 +113,7 @@ class ContabilidadeRepository
                     END AS VALIDACAO_UF_CFOP,
                     --Coluna 2: Lançamento Filial
                     CASE 
-                        WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 5 AND NFC.CODFIL = 6 THEN 'Certo'
+                        WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 1000 AND NFC.CODFIL = 6 THEN 'Certo'
                         WHEN NFC.CODEMP = SDE.EMPRESA_TOMADOR AND NFC.CODFIL = SDE.FILIAL_TOMADOR THEN 'Certo'
                         ELSE 'Divergente'
                     END AS LANCAMENTO_FILIAL
@@ -226,7 +226,7 @@ class ContabilidadeRepository
                             ELSE NULL
                         END,
                         CASE 
-                            WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 5 AND NFC.CODFIL = 6 THEN 'Certo'
+                            WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 1000 AND NFC.CODFIL = 6 THEN 'Certo'
                             WHEN NFC.CODEMP = SDE.EMPRESA_TOMADOR AND NFC.CODFIL = SDE.FILIAL_TOMADOR THEN 'Certo'
                             ELSE 'Divergente'
                         END
@@ -238,7 +238,7 @@ class ContabilidadeRepository
                         ELSE NULL
                     END DESC,
                     CASE 
-                        WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 5 AND NFC.CODFIL = 6 THEN 'Certo'
+                        WHEN SDE.CNPJ_TOMADOR = '9022330000667' AND NFC.CODEMP = 1000 AND NFC.CODFIL = 6 THEN 'Certo'
                         WHEN NFC.CODEMP = SDE.EMPRESA_TOMADOR AND NFC.CODFIL = SDE.FILIAL_TOMADOR THEN 'Certo'
                         ELSE 'Divergente'
                     END DESC

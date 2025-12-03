@@ -126,7 +126,7 @@ class ControladoriaRepository
                 INNER JOIN Sapiens.E070EMP EMP ON RT.CODEMP = EMP.CODEMP 
                 INNER JOIN Sapiens.E070FIL FI ON RT.CODEMP = FI.CODEMP AND RT.FILRAT = FI.CODFIL 
                 WHERE LC.SITLCT = '2' 
-                AND lc.CODEMP = 5
+                AND lc.CODEMP = 1000
                 AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
                 {$wheresContabilizados}
 
@@ -170,7 +170,7 @@ class ControladoriaRepository
                 WHERE 1 = 1
                 AND CASE WHEN CU.TIPCCU IN (1,2) AND PL.CLACTA LIKE '5020102%' THEN 1 WHEN CU.TIPCCU IN (3) AND PL.CLACTA LIKE '5020101%' THEN 2 ELSE NULL END IN (1,2)
                 AND (LC.NUMLOT = 0 OR LC.NUMLOT IS null)
-                AND RT.CODEMP = 5
+                AND RT.CODEMP = 1000
                 {$wheresNaoContabilizados}
         ";  
     }
@@ -189,7 +189,7 @@ class ControladoriaRepository
                     CODFIL || ' - ' || UPPER(SIGFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || CIDFIL AS dsc 
                 FROM sapiens.E070FIL
                 WHERE 1 = 1 
-                AND CODEMP = 5
+                AND CODEMP = 1000
                 ORDER BY CODEMP, CODFIL";
     }
 
@@ -315,7 +315,7 @@ class ControladoriaRepository
                         NATCTA,
                         ANASIN
                     FROM sapiens.E045PLA
-                    WHERE CODEMP = 5
+                    WHERE CODEMP = 1000
                     {$ands}
                     ORDER BY CLACTA"; 
         }

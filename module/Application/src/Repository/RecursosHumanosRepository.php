@@ -297,7 +297,7 @@ class RecursosHumanosRepository
                         FROM VETORH.R064CMP
                         INNER JOIN VETORH.R010SIT ON  R010SIT.CODSIT = R064CMP.CODSIT
                     ) COMPENSACAO ON COMPENSACAO.NUMEMP = R066APU.NUMEMP AND COMPENSACAO.TIPCOL = R066APU.TIPCOL AND COMPENSACAO.NUMCAD = R066APU.NUMCAD AND COMPENSACAO.DATINI >= R066APU.DATAPU AND COMPENSACAO.DATFIM <= R066APU.DATAPU
-                WHERE R066APU.NUMEMP = 5
+                WHERE R066APU.NUMEMP = 1000
                 {$wheresInternos}
                 ) dadosApuracao
                 WHERE 1 = 1
@@ -608,7 +608,7 @@ class RecursosHumanosRepository
                             FROM VETORH.R064CMP
                             INNER JOIN VETORH.R010SIT ON  R010SIT.CODSIT = R064CMP.CODSIT
                         ) COMPENSACAO ON COMPENSACAO.NUMEMP = R066APU.NUMEMP AND COMPENSACAO.TIPCOL = R066APU.TIPCOL AND COMPENSACAO.NUMCAD = R066APU.NUMCAD AND COMPENSACAO.DATINI >= R066APU.DATAPU AND COMPENSACAO.DATFIM <= R066APU.DATAPU 
-                        WHERE R066APU.NUMEMP = 5
+                        WHERE R066APU.NUMEMP = 1000
                         {$wheresInternos}
                     ) dadosApuracao
                     WHERE 1 = 1";  
@@ -666,7 +666,7 @@ class RecursosHumanosRepository
                             LEFT JOIN VETORH.R010SIT ON R010SIT.CODSIT = R011LAN.CODSIT
                             LEFT JOIN VETORH.R011BHR ON R011BHR.CODBHR = R011LAN.CODBHR 
                             WHERE (R011LAN.PERREF NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')) OR 	R011LAN.CMPLAN NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')))
-                            AND R011LAN.NUMEMP = 5
+                            AND R011LAN.NUMEMP = 1000
                             AND TO_NUMBER(TO_CHAR(R011LAN.DATLAN, 'YYYY')) >= 2023
                             AND R011LAN.ORILAN in ('A', 'D', 'B')
                             AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
@@ -850,7 +850,7 @@ class RecursosHumanosRepository
                             FROM VETORH.R064CMP
                             INNER JOIN VETORH.R010SIT ON  R010SIT.CODSIT = R064CMP.CODSIT
                         ) COMPENSACAO ON COMPENSACAO.NUMEMP = R066APU.NUMEMP AND COMPENSACAO.TIPCOL = R066APU.TIPCOL AND COMPENSACAO.NUMCAD = R066APU.NUMCAD AND COMPENSACAO.DATINI >= R066APU.DATAPU AND COMPENSACAO.DATFIM <= R066APU.DATAPU 
-                        WHERE R066APU.NUMEMP = 5
+                        WHERE R066APU.NUMEMP = 1000
                         {$wheresInternos}   
                     ) dadosApuracao
                     WHERE 1 = 1
@@ -1028,7 +1028,7 @@ class RecursosHumanosRepository
                             FROM VETORH.R064CMP
                             INNER JOIN VETORH.R010SIT ON  R010SIT.CODSIT = R064CMP.CODSIT
                         ) COMPENSACAO ON COMPENSACAO.NUMEMP = R066APU.NUMEMP AND COMPENSACAO.TIPCOL = R066APU.TIPCOL AND COMPENSACAO.NUMCAD = R066APU.NUMCAD AND COMPENSACAO.DATINI >= R066APU.DATAPU AND COMPENSACAO.DATFIM <= R066APU.DATAPU 
-                        WHERE R066APU.NUMEMP = 5
+                        WHERE R066APU.NUMEMP = 1000
                         {$wheresInternos}   
                     ) dadosApuracao
                     WHERE 1 = 1
@@ -1122,8 +1122,8 @@ class RecursosHumanosRepository
                         LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
                         LEFT JOIN VETORH.R030FIL ON R030FIL.CODFIL = R034FUN.CODFIL AND R030FIL.NUMEMP = R011LAN.NUMEMP
                         WHERE (R011LAN.PERREF NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')) OR R011LAN.CMPLAN NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')))
-                        AND R011LAN.NUMEMP = 5
-                        AND SUPERV.NUMEMP = 5
+                        AND R011LAN.NUMEMP = 1000
+                        AND SUPERV.NUMEMP = 1000
                         AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
                         AND R011LAN.ORILAN in ('A', 'D', 'B')
                         AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
@@ -1263,8 +1263,8 @@ class RecursosHumanosRepository
                         LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
                         LEFT JOIN VETORH.R030FIL ON R030FIL.CODFIL = R034FUN.CODFIL AND R030FIL.NUMEMP = R011LAN.NUMEMP
                         WHERE (R011LAN.PERREF NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')) OR R011LAN.CMPLAN NOT IN (TO_DATE('31/12/1900', 'DD/MM/YYYY')))
-                        AND R011LAN.NUMEMP = 5
-                        AND SUPERV.NUMEMP = 5
+                        AND R011LAN.NUMEMP = 1000
+                        AND SUPERV.NUMEMP = 1000
                         AND TO_NUMBER(TO_CHAR(DATLAN, 'YYYY')) >= 2023
                         AND R011LAN.ORILAN in ('A', 'D', 'B')
                         AND CASE WHEN R010SIT.TIPSIT = 7 AND R034FUN.DATAFA < R011LAN.DATLAN THEN 1 ELSE 0 END = 0
@@ -1305,7 +1305,7 @@ class RecursosHumanosRepository
                         FROM VETORH.R034FUN
                         -- LEFT JOIN VETORH.R034USU ON R034USU.NUMEMP = R034FUN.NUMEMP AND R034USU.NUMCAD = R034FUN.NUMCAD
                         -- LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
-                        WHERE R034FUN.NUMEMP = 5
+                        WHERE R034FUN.NUMEMP = 1000
                     ) COLABORADORES
                     ORDER BY COLABORADORES.NOMFUN ASC"; 
         }
@@ -1331,7 +1331,7 @@ class RecursosHumanosRepository
                     LEFT JOIN VETORH.R910USU ON R910USU.CODENT = R034USU.CODUSU   
                     WHERE R034CPL.USU_NUMCAD IS NOT NULL
                     AND R910USU.CONHAB = 1
-                    AND R034FUN.NUMEMP = 5
+                    AND R034FUN.NUMEMP = 1000
                     ) COLABORADORES
                     ORDER BY COLABORADORES.NOMFUN ASC"; 
         }
@@ -1365,7 +1365,7 @@ class RecursosHumanosRepository
                         CODFIL || ' - ' || UPPER(NOMFIL) || ' - ' || REGEXP_REPLACE(SUBSTR(NUMCGC, 1, 2) || '.' || SUBSTR(NUMCGC, 3, 3) || '.' || SUBSTR(NUMCGC, 6, 3) || '/' || SUBSTR(NUMCGC, 9, 4) || '-' || SUBSTR(NUMCGC, 13, 2), '[^0-9./-]', '') || ' - ' || UPPER(R074CID.NOMCID) AS DSC
                     FROM VETORH.R030FIL
                     INNER JOIN VETORH.R074CID ON R074CID.CODCID = R030FIL.CODCID 
-                    WHERE NUMEMP = 5
+                    WHERE NUMEMP = 1000
                     ORDER BY CODFIL"; 
         }
         public function getLookupLocalQuery()
@@ -1382,7 +1382,7 @@ class RecursosHumanosRepository
                     FROM VETORH.R034FUN
                     LEFT JOIN VETORH.R016ORN ON R016ORN.TABORG = R034FUN.TABORG AND R016ORN.NUMLOC = R034FUN.NUMLOC
                     WHERE R016ORN.TABORG = 3
-                    AND R034FUN.NUMEMP = 5
+                    AND R034FUN.NUMEMP = 1000
                     ORDER BY R016ORN.NOMLOC
                     ) A"; 
         }
@@ -1398,7 +1398,7 @@ class RecursosHumanosRepository
                         ,R034FUN.CODCAR || ' - ' || R024CAR.TITCAR AS dsc
                     FROM VETORH.R034FUN
                     LEFT JOIN VETORH.R024CAR ON R024CAR.CODCAR = R034FUN.CODCAR
-                    WHERE R034FUN.NUMEMP = 5
+                    WHERE R034FUN.NUMEMP = 1000
                     ORDER BY R024CAR.TITCAR
                     ) A"; 
         }
@@ -1433,7 +1433,7 @@ class RecursosHumanosRepository
                     FROM VETORH.R034FUN 
                     INNER JOIN VETORH.R010SIT ON R010SIT.CODSIT = R034FUN.SITAFA
                     WHERE R034FUN.TIPCOL = 1
-                    AND R034FUN.NUMEMP IN (5,12) 
+                    AND R034FUN.NUMEMP IN (1000,12) 
                     ) A";  
         }
     #endRegion
