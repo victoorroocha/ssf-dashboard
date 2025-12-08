@@ -203,22 +203,15 @@ class ControladoriaRepository
                     cpc.parent_id, 
                     cpc.clacta, 
                     cpc.descta, 
-                    cpc.codigo, 
                     cpc.ctared, 
                     cpc.natcta, 
                     cpc.anasin, 
-                    cpc.id_grupo_contas,
-                    gc.nome as dsc_grupo_contas,
                     cpc.id_pacote_contas,
                     cpc2.nome as dsc_pacote_contas
                 FROM ctr_plano_contas cpc
-                left join ctr_grupo_contas gc on gc.id = cpc.id_grupo_contas
                 left join ctr_pacote_contas cpc2 on cpc2.id = cpc.id_pacote_contas
-                ORDER BY 
-                    (string_to_array(regexp_replace(cpc.codigo, \'[^0-9]\', \'\', \'g\'), \'\')::int[])[1] ASC,  -- Parte numérica
-                    (regexp_replace(cpc.codigo, \'[0-9]\', \'\', \'g\')) ASC;  -- Parte alfabética
+                ORDER BY cpc.clacta
                 ';
-
             $statement = $this->adapter->createStatement($sql);
             $result = $statement->execute();
 
@@ -232,20 +225,18 @@ class ControladoriaRepository
         public function inserirPlanoConta(array $data)
         {
             $sql = 'INSERT INTO ctr_plano_contas 
-                    (parent_id, clacta, descta, codigo, ctared, natcta, anasin, id_grupo_contas, id_pacote_contas) 
+                    (parent_id, clacta, descta, ctared, natcta, anasin, id_pacote_contas) 
                     VALUES 
-                    (:parent_id, :clacta, :descta, :codigo, :ctared, :natcta, :anasin, :id_grupo_contas, :id_pacote_contas)';
+                    (:parent_id, :clacta, :descta, :ctared, :natcta, :anasin, :id_pacote_contas)';
             
             $statement = $this->adapter->createStatement($sql);
             $statement->execute([
                 ':parent_id' => $data['parent_id'] ?? null,
                 ':clacta' => $data['clacta'] ?? null,
                 ':descta' => $data['descta'] ?? null,
-                ':codigo' => $data['codigo'] ?? null,
                 ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
                 ':natcta' => $data['natcta'] ?? null,
                 ':anasin' => $data['anasin'] ?? null,
-                ':id_grupo_contas' => $data['id_grupo_contas'] ?? null,
                 ':id_pacote_contas' => $data['id_pacote_contas'] ?? null
             ]);
         }
@@ -256,11 +247,9 @@ class ControladoriaRepository
                         parent_id = :parent_id, 
                         clacta = :clacta, 
                         descta = :descta, 
-                        codigo = :codigo, 
                         ctared = :ctared, 
                         natcta = :natcta, 
                         anasin = :anasin, 
-                        id_grupo_contas = :id_grupo_contas,
                         id_pacote_contas = :id_pacote_contas
                     WHERE id = :id';
             
@@ -270,11 +259,9 @@ class ControladoriaRepository
                 ':parent_id' => $data['parent_id'] ?? null,
                 ':clacta' => $data['clacta'],
                 ':descta' => $data['descta'] ?? null,
-                ':codigo' => $data['codigo'] ?? null,
                 ':ctared' => !empty($data['ctared']) ? $data['ctared'] : null,
                 ':natcta' => $data['natcta'] ?? null,
                 ':anasin' => $data['anasin'] ?? null,
-                ':id_grupo_contas' => $data['id_grupo_contas'] ?? null,
                 ':id_pacote_contas' => $data['id_pacote_contas'] ?? null
             ]);
         }
@@ -468,5 +455,169 @@ class ControladoriaRepository
             return $data;
         }
     #endregion
+
+    #region Vinculos Conta X Centro de Custo
+        public function listarVinculoContaCcu($codccu, $referencia)
+        {
+            $sql = "
+                SELECT
+                    v.id,
+                    v.codccu,
+                    v.id_plano_contas,
+                    v.id_grupo_contas,    
+                    p.ctared AS conta_codigo,
+                    p.descta AS conta_descricao,
+                    g.nome AS gestor_nome,
+                    gc.nome AS grupo_nome
+                FROM ctr_vinculo_contas_ccu v
+                JOIN ctr_plano_contas p ON p.id = v.id_plano_contas
+                LEFT JOIN usuario g ON g.id = v.id_usuario_gestor
+                LEFT JOIN ctr_grupo_contas gc ON gc.id = v.id_grupo_contas
+                WHERE v.codccu = :codccu
+                AND v.referencia = :referencia
+                ORDER BY p.ctared
+            ";
+
+            $statement = $this->adapter->createStatement($sql, [
+                'codccu' => $codccu,
+                'referencia' => $referencia
+            ]);
+
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        public function listarPlanoContaAnaliticas()
+        {
+            $sql = "
+                 SELECT 
+                    cpc.id, 
+                    cpc.parent_id, 
+                    cpc.clacta, 
+                    cpc.descta, 
+                    cpc.ctared, 
+                    cpc.natcta, 
+                    cpc.anasin, 
+                    cpc.id_pacote_contas,
+                    cpc2.nome as dsc_pacote_contas
+                FROM ctr_plano_contas cpc
+                left join ctr_pacote_contas cpc2 on cpc2.id = cpc.id_pacote_contas
+                where anasin = 'A'
+                ORDER BY cpc.clacta
+                ";
+            $statement = $this->adapter->createStatement($sql);
+            $result = $statement->execute();
+
+            $planoContas = [];
+            foreach ($result as $row) {
+                $planoContas[] = $row;
+            }
+
+            return $planoContas;
+        }
+        public function salvarVinculoContaCcu($codccu, $idPlano, $idGestor, $referencia)
+        {
+            $sql = "
+                INSERT INTO ctr_vinculo_contas_ccu (codccu, id_plano_contas, id_usuario_gestor, id_grupo_contas, referencia)
+                VALUES (:codccu, :id_plano_contas, :id_usuario_gestor,:id_grupo_contas, :referencia)
+            ";
+
+
+            $statement = $this->adapter->createStatement($sql, [
+                'codccu' => $codccu,
+                'id_plano_contas' => $idPlano,
+                'id_usuario_gestor' => $idGestor,
+                'id_grupo_contas' => null,
+                'referencia' => $referencia
+            ]);
+
+            try {
+                $statement->execute();
+                return [
+                    'success' => true,
+                    'message' => 'Vínculo criado com sucesso.'
+                ];
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Erro ao criar vínculo: ' . $e->getMessage()
+                ];
+            }
+        }
+        public function atualizarGrupoVinculo($idVinculo, $idGrupo, $referencia)
+        {
+            $sql = "
+                UPDATE ctr_vinculo_contas_ccu
+                SET id_grupo_contas = :grupo
+                WHERE id = :id AND referencia = :referencia
+            ";
+
+            try {
+                $this->adapter->createStatement($sql, [
+                    'id'    => $idVinculo,
+                    'grupo' => $idGrupo,
+                    'referencia' => $referencia
+                ])->execute();
+
+                return ['success' => true];
+
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ];
+            }
+        }
+        public function atualizarGestorCcu($codccu, $idGestor)
+        {
+            $sql = "
+                UPDATE ctr_vinculo_contas_ccu
+                SET id_usuario_gestor = :gestor
+                WHERE codccu = :ccu
+            ";
+
+            try {
+                $this->adapter->createStatement($sql, [
+                    'gestor' => $idGestor,
+                    'ccu'    => $codccu
+                ])->execute();
+
+                return ['success' => true];
+
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ];
+            }
+        }
+        public function excluirVinculoContaCcu($id, $referencia)
+        {
+            $sql = "DELETE FROM ctr_vinculo_contas_ccu
+                    WHERE id = :id AND referencia = :referencia";
+            $statement = $this->adapter->createStatement($sql, ['id' => $id, 'referencia' => $referencia]);
+
+            try {
+                $statement->execute();
+
+                return [
+                    'success' => true,
+                    'message' => 'Vínculo removido com sucesso.'
+                ];
+
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Erro ao remover vínculo: ' . $e->getMessage()
+                ];
+            }
+        }
+
+    #endRegion
 
 }

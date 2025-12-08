@@ -22,22 +22,17 @@ return [
         'password' => 'admin',
     ],
     // 'oracle' => [
-    //     'username'         => 'Sapiens',
-    //     'password'         => 'Sapiens',
-    //     'connection_string' => '192.168.0.5:1521/SSF',
-    // ],
-
-    //conexão com a AWS
-    // 'oracle' => [
-    //     'username'         => 'Sapiens',
-    //     'password'         => 'Sapiens',
-    //     'connection_string' => 'ssf-producao.cutkg6642h4j.us-east-1.rds.amazonaws.com:1521/SSF',
+    //     'username'         => 'powerbi',
+    //     'password'         => 'SSF@PBI2025',
+    //     'connection_string' => "(DESCRIPTION=
+    //                             (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-middleware.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
+    //                             (CONNECT_DATA=(SERVICE_NAME=SSFMID)))",
     // ],
     'oracle' => [
-        'username'         => 'powerbi',
-        'password'         => 'SSF@PBI2025',
+        'username'         => 'SAPIENS',
+        'password'         => 'SAPIENS',
         'connection_string' => "(DESCRIPTION=
-                                (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-middleware.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
-                                (CONNECT_DATA=(SERVICE_NAME=SSFMID)))",
+                                (ADDRESS=(PROTOCOL=TCP)(HOST=ssf-prod.cutkg6642h4j.us-east-1.rds.amazonaws.com)(PORT=1521))
+                                (CONNECT_DATA=(SERVICE_NAME=SSFPROD)))",
     ],
 ];

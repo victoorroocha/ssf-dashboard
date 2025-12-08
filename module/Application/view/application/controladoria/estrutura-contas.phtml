@@ -248,7 +248,7 @@
                 allowExportSelectedData: true
             },
             columns: [
-                { dataField: 'codigo', caption: 'Código', alignment: 'left', width: 180 },
+                // { dataField: 'codigo', caption: 'Código', alignment: 'left', width: 180 },
                 { dataField: 'clacta', caption: 'Classificação', width: 200 },
                 { dataField: 'ctared', caption: 'Conta', alignment: 'center', width: 100 },
                 { dataField: 'descta', caption: 'Descrição' },
@@ -279,28 +279,6 @@
                         ],
                         valueExpr: 'value',
                         displayExpr: 'text'
-                    }
-                },
-                {
-                    dataField: 'id_grupo_contas',
-                    caption: 'Grupo de Contas',
-                    lookup: {
-                        allowClearing: true,
-                        dataSource: new DevExpress.data.CustomStore({
-                            key: 'id',
-                            loadMode: 'raw',
-                            load: function() {
-                                return $.ajax({
-                                    url: '/controladoria/get-lookup-grupo-contas',
-                                    method: 'GET',
-                                    dataType: 'json'
-                                }).then(response => {
-                                    return response.success ? response.data : [];
-                                });
-                            }
-                        }),
-                        valueExpr: 'id',
-                        displayExpr: 'nome'
                     }
                 },
                 {

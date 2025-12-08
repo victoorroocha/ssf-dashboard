@@ -1,0 +1,515 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Controladoria</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+
+                    <p><b>Vincular Conta x Centro de Custo</b></p>
+
+                    <!-- ROW: CCU + Referência + Gestor -->
+                    <div class="form-row" style="display:flex; gap:20px; width:100%;">
+
+                        <div style="flex:1;">
+                            <label><b>Centro de Custo:</b></label>
+                            <div id="selectCcu"></div>
+                        </div>
+
+                        <div style="flex:1;">
+                            <label><b>Referência (Mês/Ano):</b></label>
+                            <div id="selectReferencia"></div>
+                        </div>
+
+                        <div style="flex:1;">
+                            <label><b>Gestor:</b></label>
+                            <div id="selectGestor"></div>
+                        </div>
+                    </div>
+
+                    <!-- Botão -->
+                    <div class="mb-3 mt-3">
+                        <div id="btnGerenciarVinculos"></div>
+                    </div>
+
+                    <!-- Grid principal -->
+                    <div id="gridVinculos"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POPUP -->
+<div id="popupGerenciar"></div>
+
+<!-- TEMPLATE DO POPUP -->
+<div id="popupGerenciarContent" style="display:none;">
+    <div class="dual-container" style="display:flex; gap:16px; height: calc(90vh - 150px); width:100%;">
+
+        <!-- CONTAS DISPONÍVEIS -->
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div class="section-title">Contas Disponíveis</div>
+            <div id="gridDisponiveis" style="flex:1;"></div>
+        </div>
+
+        <!-- BOTÕES -->
+        <div style="display:flex; flex-direction:column; justify-content:center; gap:10px; width:140px;">
+            <div id="btnVincular"></div>
+            <div id="btnRemover"></div>
+        </div>
+
+        <!-- CONTAS VINCULADAS -->
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div class="section-title">Contas Vinculadas</div>
+            <div id="gridVinculadas" style="flex:1;"></div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        const API_CCU            = "/controladoria/listar-centros-custo";
+        const API_CONTAS         = "/controladoria/listar-plano-conta-analiticas";
+        const API_LISTAR_VINC    = "/controladoria/listar-vinculo-conta-ccu";
+        const API_SALVAR_VINC    = "/controladoria/salvar-vinculo-conta-ccu";
+        const API_EXCLUIR_VINC   = "/controladoria/excluir-vinculo-conta-ccu";
+        const API_GRUPOS         = "/controladoria/listar-grupos-contas";
+        const API_SALVAR_GRUPO   = "/controladoria/salvar-grupo-conta-ccu";
+        const API_GESTORES       = "/controladoria/listar-gestores";
+        const API_GESTOR_BY_CCU  = "/controladoria/buscar-gestor-por-ccu";
+        const API_ATUALIZAR_GEST = "/controladoria/atualizar-gestor-ccu";
+
+        let currentCCU        = null;
+        let currentGestor     = null;
+        let currentReferencia = moment().format("YYYY-MM"); // formato que vamos mandar para o backend
+
+        let allContas         = [];
+        let gridDisponiveis   = null;
+        let gridVinculadas    = null;
+        let gridVinculos      = null;
+        let gruposContas      = [];
+
+        let carregandoGestor  = false;
+
+
+        // ===============================
+        // CARREGA GRUPOS
+        // ===============================
+        function carregarGrupos() {
+            return $.getJSON(API_GRUPOS).done(r => {
+                gruposContas = Object.values(r.data || []);
+            });
+        }
+
+        // ===============================
+        // CARREGA TODAS AS CONTAS
+        // ===============================
+        function carregarTodasContas() {
+            return $.getJSON(API_CONTAS).done(r => allContas = r.data || []);
+        }
+
+        // ===============================
+        // SELECTBOX CCU (com SEARCH)
+        // ===============================
+        let selectCcu = $("#selectCcu").dxSelectBox({
+            dataSource: new DevExpress.data.CustomStore({
+                key: "ID",
+                loadMode: "raw",
+                load: () => $.getJSON(API_CCU).then(res => res.data)
+            }),
+            width: "100%",
+            displayExpr: "DSC",
+            valueExpr: "ID",
+            searchEnabled: true,
+            searchExpr: ["DSC", "ID"],
+            placeholder: "Selecione...",
+            onValueChanged: e => {
+                currentCCU = e.value || null;
+
+                // sempre que troca o CCU, tenta carregar o gestor de acordo com CCU + referência atual
+                carregarGestorPorCcu();
+
+                if (gridVinculos) {
+                    gridVinculos.refresh();
+                }
+            }
+        }).dxSelectBox("instance");
+
+        // ===============================
+        // REFERÊNCIA (dxDateBox)
+        // ===============================
+        let selectReferencia = $("#selectReferencia").dxDateBox({
+            type: "date",
+            displayFormat: "MM/yyyy",
+            dateSerializationFormat: "yyyy-MM-dd",
+            value: new Date(), // mês/ano atual
+            placeholder: "Mês/Ano Referência",
+            showClearButton: true,
+            calendarOptions: {
+                zoomLevel: "year",
+                maxZoomLevel: "year",
+                minZoomLevel: "month"
+            },
+            onValueChanged: function (e) {
+                if (e.value) {
+                    // converte Date -> "YYYY-MM"
+                    currentReferencia = moment(e.value).format("YYYY-MM");
+                } else {
+                    currentReferencia = null;
+                }
+
+                // quando trocar referência, recarrega gestor e grid
+                carregarGestorPorCcu();
+
+                if (gridVinculos) {
+                    gridVinculos.refresh();
+                }
+
+                // se popup estiver aberto e grids criadas, atualiza dados também
+                prepararDadosPopup();
+            }
+        }).dxDateBox("instance");
+
+        // ===============================
+        // SELECTBOX GESTOR (com SEARCH)
+        // ===============================
+        let selectGestor = $("#selectGestor").dxSelectBox({
+            dataSource: new DevExpress.data.CustomStore({
+                key: "id",
+                loadMode: "raw",
+                load: () => $.getJSON(API_GESTORES).then(res => res.data)
+            }),
+            width: "100%",
+            displayExpr: "nome",
+            valueExpr: "id",
+            searchEnabled: true,
+            searchExpr: ["nome"],
+            placeholder: "Selecione o Gestor...",
+            onValueChanged: e => {
+                // Se está carregando automático ou valor não mudou, não faz nada
+                if (carregandoGestor || e.previousValue === e.value) {
+                    return;
+                }
+
+                currentGestor = e.value || null;
+
+                if (currentCCU && currentGestor && currentReferencia) {
+                    $.ajax({
+                        url: API_ATUALIZAR_GEST,
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            codccu: currentCCU,
+                            id_usuario_gestor: currentGestor,
+                            referencia: currentReferencia
+                        })
+                    }).done(() => {
+                        if (gridVinculos) {
+                            gridVinculos.refresh();
+                        }
+                        prepararDadosPopup();
+                        DevExpress.ui.notify("Gestor atualizado em todas as contas da referência!", "success");
+                    });
+                }
+            }
+        }).dxSelectBox("instance");
+
+
+        // ===============================
+        // FUNÇÃO: CARREGAR GESTOR POR CCU + REFERÊNCIA
+        // ===============================
+        function carregarGestorPorCcu() {
+            if (!currentCCU || !currentReferencia) {
+                // se não tiver CCU ou referência válida, zera gestor
+                selectGestor.option("value", null);
+                currentGestor = null;
+                return;
+            }
+
+            carregandoGestor = true;
+
+            $.getJSON(API_GESTOR_BY_CCU + "?codccu=" + currentCCU + "&referencia=" + currentReferencia)
+                .done(res => {
+                    if (res.success && res.gestor) {
+                        selectGestor.option("value", res.gestor);
+                        currentGestor = res.gestor;
+                    } else {
+                        selectGestor.option("value", null);
+                        currentGestor = null;
+                    }
+                })
+                .always(() => {
+                    // libera a flag após terminar
+                    setTimeout(() => { carregandoGestor = false; }, 0);
+                });
+        }
+
+
+        // ===============================
+        // GRID PRINCIPAL
+        // ===============================
+        gridVinculos = $("#gridVinculos").dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: "id",
+                load: () => {
+                    if (!currentCCU || !currentReferencia) {
+                        return [];
+                    }
+                    const url = API_LISTAR_VINC +
+                        "?codccu=" + encodeURIComponent(currentCCU) +
+                        "&referencia=" + encodeURIComponent(currentReferencia);
+
+                    return $.getJSON(url).then(r => r.data || []);
+                },
+                remove: id => {
+                    if (!currentReferencia) {
+                        DevExpress.ui.notify("Referência inválida.", "warning");
+                        return;
+                    }
+
+                    return $.ajax({
+                        url: API_EXCLUIR_VINC + "/" + id,
+                        method: "POST",
+                        data: {
+                            referencia: currentReferencia,
+                            _method: "DELETE"   // <-- ESSENCIAL
+                        }
+                    });
+                }
+            }),
+            showBorders: true,
+            height: 430,
+            filterRow: { visible: true },
+            columnAutoWidth: true,
+            columns: [
+                { dataField: "conta_codigo", caption: "Conta", width: 100 },
+                { dataField: "conta_descricao", caption: "Descrição" },
+                { dataField: "grupo_nome", caption: "Grupo Contas", width: 180 },
+                { dataField: "gestor_nome", caption: "Gestor", width: 180 }
+            ]
+        }).dxDataGrid("instance");
+
+        // ===============================
+        // POPUP
+        // ===============================
+        let popupGerenciar = $("#popupGerenciar").dxPopup({
+            visible: false,
+            title: "Gerenciar Vínculos",
+            width: 1300,
+            height: "90%",
+            showCloseButton: true,
+            contentTemplate: container => {
+
+                container.append($("#popupGerenciarContent").html());
+
+                gridDisponiveis = $("#gridDisponiveis").dxDataGrid({
+                    dataSource: [],
+                    height: "100%",
+                    width: 500,
+                    filterRow: { visible: true },
+                    scrolling: { mode: "virtual" },
+                    selection: { mode: "multiple" },
+                    columns: [
+                        { dataField: "ctared", caption: "Código", width: 90 },
+                        { dataField: "descta", caption: "Descrição" }
+                    ]
+                }).dxDataGrid("instance");
+
+                gridVinculadas = $("#gridVinculadas").dxDataGrid({
+                    dataSource: [],
+                    height: "100%",
+                    width: 600,
+                    filterRow: { visible: true },
+                    scrolling: { mode: "virtual" },
+                    selection: { mode: "multiple" },
+                    editing: {
+                        mode: "cell",
+                        allowUpdating: true,
+                        startEditAction: "click"
+                    },
+                    columns: [
+                        { dataField: "conta_codigo", caption: "Código", width: 90 },
+                        { dataField: "conta_descricao", caption: "Descrição" },
+
+                        {
+                            dataField: "id_grupo_contas",
+                            caption: "Grupo Contas",
+                            width: 120,
+                            allowEditing: true,
+                            lookup: {
+                                dataSource: () => gruposContas,
+                                valueExpr: "id",
+                                displayExpr: "nome"
+                            }
+                        },
+
+                        { dataField: "gestor_nome", caption: "Gestor", width: 180 }
+                    ],
+                    onRowUpdated: function (e) {
+                        if (e.data.id_grupo_contas !== undefined) {
+
+                            $.ajax({
+                                url: API_SALVAR_GRUPO,
+                                method: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify({
+                                    id: e.key.id,
+                                    id_grupo: e.data.id_grupo_contas,
+                                    referencia: currentReferencia
+                                })
+                            }).done(() => {
+                                DevExpress.ui.notify("Grupo atualizado!", "success");
+                                if (gridVinculos) {
+                                    gridVinculos.refresh();
+                                }
+                            });
+                        }
+                    }
+                }).dxDataGrid("instance");
+
+
+                $("#btnVincular").dxButton({
+                    text: "Vincular >>",
+                    type: "success",
+                    onClick: vincularContas
+                });
+
+                $("#btnRemover").dxButton({
+                    text: "<< Remover",
+                    type: "danger",
+                    onClick: removerContas
+                });
+            },
+            onShown: prepararDadosPopup
+        }).dxPopup("instance");
+
+        // ===============================
+        // BOTÃO ABRIR POPUP
+        // ===============================
+        $("#btnGerenciarVinculos").dxButton({
+            icon: "preferences",
+            text: "Gerenciar Vínculos",
+            type: "default",
+            onClick: () => {
+                if (!currentCCU)
+                    return DevExpress.ui.notify("Selecione um Centro de Custos.", "warning");
+                if (!currentReferencia)
+                    return DevExpress.ui.notify("Selecione a Referência.", "warning");
+
+                popupGerenciar.show();
+            }
+        });
+
+        // ===============================
+        // CARREGAR LISTAS NO POPUP (por CCU + Referência)
+        // ===============================
+        function prepararDadosPopup() {
+
+            if (!currentCCU || !currentReferencia || !gridDisponiveis || !gridVinculadas) {
+                return;
+            }
+
+            const url = API_LISTAR_VINC +
+                "?codccu=" + encodeURIComponent(currentCCU) +
+                "&referencia=" + encodeURIComponent(currentReferencia);
+
+            $.getJSON(url).done(r => {
+
+                let vinculadas  = r.data || [];
+                let idsVinc     = vinculadas.map(x => x.id_plano_contas);
+                let disponiveis = allContas.filter(c => !idsVinc.includes(c.id));
+
+                gridDisponiveis.option("dataSource", disponiveis);
+                gridVinculadas.option("dataSource", vinculadas);
+            });
+        }
+
+
+        // ===============================
+        // VINCULAR
+        // ===============================
+        function vincularContas() {
+            if (!currentCCU) {
+                return DevExpress.ui.notify("Selecione um Centro de Custos.", "warning");
+            }
+            if (!currentReferencia) {
+                return DevExpress.ui.notify("Selecione a Referência.", "warning");
+            }
+            if (!currentGestor) {
+                return DevExpress.ui.notify("Selecione um Gestor.", "warning");
+            }
+
+            let selec = gridDisponiveis.getSelectedRowsData();
+
+            if (!selec.length)
+                return DevExpress.ui.notify("Selecione contas.", "warning");
+
+            Promise.all(
+                selec.map(c =>
+                    $.ajax({
+                        url: API_SALVAR_VINC,
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            codccu: currentCCU,
+                            id_plano_contas: c.id,
+                            id_usuario_gestor: currentGestor,
+                            referencia: currentReferencia
+                        })
+                    })
+                )
+            ).then(() => {
+                if (gridVinculos) {
+                    gridVinculos.refresh();
+                }
+                prepararDadosPopup();
+                DevExpress.ui.notify("Vínculo(s) criado(s)!", "success");
+            });
+        }
+
+        // ===============================
+        // REMOVER
+        // ===============================
+        function removerContas() {
+            if (!currentReferencia) {
+                return DevExpress.ui.notify("Selecione a Referência.", "warning");
+            }
+
+            let selec = gridVinculadas.getSelectedRowsData();
+
+            if (!selec.length)
+                return DevExpress.ui.notify("Selecione contas.", "warning");
+
+            Promise.all(
+                selec.map(v =>
+                    $.ajax({
+                        url: API_EXCLUIR_VINC + "/" + v.id + "?referencia=" + encodeURIComponent(currentReferencia),
+                        method: "DELETE"
+                    })
+                )
+            ).then(() => {
+                if (gridVinculos) {
+                    gridVinculos.refresh();
+                }
+                prepararDadosPopup();
+                DevExpress.ui.notify("Vínculo(s) removido(s)!", "success");
+            });
+        }
+
+        // ===============================
+        // CHAMADAS INICIAIS
+        // ===============================
+        carregarTodasContas();
+        carregarGrupos();
+        carregarGestorPorCcu(); // caso CCU já venha pré-selecionado em algum cenário
+
+    });
+</script>

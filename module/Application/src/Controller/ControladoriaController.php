@@ -524,6 +524,325 @@ class ControladoriaController extends BaseController
         }
     #endregion
 
+    #region Vincular Conta x Centro de Custo
+        public function vincularContaCentroCustoAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+            return new ViewModel();
+        }
+        public function listarGestoresAction()
+        {
+            try {
+                $sql = "
+                    SELECT 
+                        id, 
+                        nome 
+                    FROM usuario 
+                    WHERE ativo = true
+                    ORDER BY nome
+                ";
 
+                $statement = $this->pgAdapter->createStatement($sql);
+                $result = $statement->execute();
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = [
+                        'id'   => (int)$row['id'],
+                        'nome' => $row['nome']
+                    ];
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $data
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar gestores: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function listarCentrosCustoAction()
+        {
+            if (!$this->oracleService) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Serviço Oracle não disponível'
+                ]);
+            }
+
+            try {
+                $sql = "SELECT
+                            CODCCU as ID
+                            ,CODCCU || ' - ' || DESCCU AS DSC
+                        FROM sapiens.E044CCU
+                        WHERE CODEMP = 1000
+                        ORDER BY CODCCU";
+
+                $result = $this->oracleService->executeQuery($sql);
+                foreach ($result as $key => $row) {
+                    $result[$key]['ID'] = intval($row['ID']);
+                    $result[$key]['DSC'] = utf8_encode($row['DSC']);
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        public function listarGruposContasAction()
+        {
+            try {
+                $sql = "SELECT id, nome FROM ctr_grupo_contas WHERE flg_ativo = true ORDER BY nome";
+                $statement = $this->pgAdapter->createStatement($sql);
+                $result = $statement->execute();
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = [
+                        'id'   => (int)$row['id'],
+                        'nome' => $row['nome']
+                    ];
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $data
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar Grupos Contas: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function listarVinculoContaCcuAction()
+        {
+            try {
+                $codccu = $this->params()->fromQuery('codccu', null);
+                $referencia = $this->params()->fromQuery('referencia', null);
+
+                if (!$codccu) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Código do Centro de Custo não informado.'
+                    ]);
+                }
+
+                $vinculos = $this->ControladoriaRepository->listarVinculoContaCcu($codccu, $referencia);
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $vinculos
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar vínculos: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function listarPlanoContaAnaliticasAction()
+        {
+            try {
+                $planoContas = $this->ControladoriaRepository->listarPlanoContaAnaliticas();
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $planoContas,
+                ]);
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar contas: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        public function buscarGestorPorCcuAction()
+        {
+            try {
+                $codccu = $this->params()->fromQuery('codccu');
+
+                $sql = "
+                    SELECT DISTINCT id_usuario_gestor AS gestor
+                    FROM ctr_vinculo_contas_ccu
+                    WHERE codccu = :ccu AND id_usuario_gestor IS NOT NULL
+                    LIMIT 1
+                ";
+
+                $result = $this->pgAdapter->createStatement($sql, [
+                    'ccu' => $codccu
+                ])->execute()->current();
+
+                return new JsonModel([
+                    'success' => true,
+                    'gestor' => $result ? intval($result['gestor']) : null
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+        public function salvarVinculoContaCcuAction()
+        {
+            try {
+                // recebe JSON enviado via POST
+                $data = json_decode($this->getRequest()->getContent(), true);
+
+                if (!$data || !isset($data['codccu']) || !isset($data['id_plano_contas']) || !isset($data['id_usuario_gestor'])) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Parâmetros incompletos.'
+                    ]);
+                }
+
+                if (!isset($data['referencia'])) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Referência não informada.'
+                    ]);
+                }
+
+                $codccu = $data['codccu'];
+                $idPlano = $data['id_plano_contas'];
+
+                // Validações
+                if (empty($codccu)) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Código do Centro de Custo não informado.'
+                    ]);
+                }
+
+                if (empty($idPlano)) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'ID do plano de contas não informado.'
+                    ]);
+                }
+
+                // chama o repository
+                $resp = $this->ControladoriaRepository->salvarVinculoContaCcu(
+                    $data['codccu'],
+                    $data['id_plano_contas'],
+                    $data['id_usuario_gestor'],
+                    $data['referencia']
+                );
+
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar vínculo: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function salvarGrupoContaCcuAction()
+        {
+            try {
+                $data = json_decode($this->getRequest()->getContent(), true);
+
+                if (!$data || !isset($data['id']) || !isset($data['id_grupo'])) {
+                    return new JsonModel(['success' => false, 'message' => 'Parâmetros inválidos.']);
+                }
+
+                if (!isset($data['referencia'])) {
+                    return new JsonModel(['success' => false, 'message' => 'Referência não informada.']);
+                }
+
+                $resp = $this->ControladoriaRepository->atualizarGrupoVinculo(
+                    $data['id'],
+                    $data['id_grupo'],
+                    $data['referencia']
+                );
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function atualizarGestorCcuAction()
+        {
+            try {
+                $data = json_decode($this->getRequest()->getContent(), true);
+
+                if (!$data || !isset($data['codccu']) || !isset($data['id_usuario_gestor'])) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Parâmetros inválidos.'
+                    ]);
+                }
+
+                if (!isset($data['referencia'])) {
+                    return new JsonModel(['success' => false, 'message' => 'Referência não informada.']);
+                }
+
+                $resp = $this->ControladoriaRepository->atualizarGestorCcu(
+                    $data['codccu'],
+                    $data['id_usuario_gestor'],
+                    $data['referencia']
+                );
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar gestor: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function excluirVinculoContaCcuAction()
+        {
+            try {
+                $id = $this->params()->fromRoute('id');
+                $referencia = $this->params()->fromQuery('referencia') 
+                    ?? $this->params()->fromPost('referencia');
+
+                if (!$id) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'ID do vínculo não informado.'
+                    ]);
+                }
+
+                $resp = $this->ControladoriaRepository->excluirVinculoContaCcu($id, $referencia);
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao excluir vínculo: ' . $e->getMessage(),
+                ]);
+            }
+        }
+
+
+    #endRegion
 
 }
