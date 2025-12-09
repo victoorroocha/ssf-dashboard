@@ -285,15 +285,35 @@
                     });
                 }
             }),
+            export: {
+                enabled: true,
+                fileName: "Vinculos Conta X Centro Custo",
+                allowExportSelectedData: false,
+            },
             showBorders: true,
+            groupPanel: {
+                visible: true,
+            },
             height: 430,
-            filterRow: { visible: true },
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
             columnAutoWidth: true,
             columns: [
                 { dataField: "conta_codigo", caption: "Conta", width: 100 },
                 { dataField: "conta_descricao", caption: "Descrição" },
                 { dataField: "grupo_nome", caption: "Grupo Contas", width: 180 },
-                { dataField: "gestor_nome", caption: "Gestor", width: 180 }
+                { dataField: "gestor_nome", caption: "Gestor", width: 180 },
+                { dataField: "referencia", caption: "Referência", width: 90 }
             ]
         }).dxDataGrid("instance");
 
@@ -461,6 +481,7 @@
                         data: JSON.stringify({
                             codccu: currentCCU,
                             id_plano_contas: c.id,
+                            ctared: c.ctared,
                             id_usuario_gestor: currentGestor,
                             referencia: currentReferencia
                         })
@@ -474,6 +495,7 @@
                 DevExpress.ui.notify("Vínculo(s) criado(s)!", "success");
             });
         }
+
 
         // ===============================
         // REMOVER

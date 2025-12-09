@@ -464,7 +464,9 @@ class ControladoriaRepository
                     v.id,
                     v.codccu,
                     v.id_plano_contas,
-                    v.id_grupo_contas,    
+                    v.ctared,
+                    v.id_grupo_contas,  
+                    v.referencia,  
                     p.ctared AS conta_codigo,
                     p.descta AS conta_descricao,
                     g.nome AS gestor_nome,
@@ -495,7 +497,7 @@ class ControladoriaRepository
         public function listarPlanoContaAnaliticas()
         {
             $sql = "
-                 SELECT 
+                SELECT 
                     cpc.id, 
                     cpc.parent_id, 
                     cpc.clacta, 
@@ -506,8 +508,8 @@ class ControladoriaRepository
                     cpc.id_pacote_contas,
                     cpc2.nome as dsc_pacote_contas
                 FROM ctr_plano_contas cpc
-                left join ctr_pacote_contas cpc2 on cpc2.id = cpc.id_pacote_contas
-                where anasin = 'A'
+                LEFT JOIN ctr_pacote_contas cpc2 ON cpc2.id = cpc.id_pacote_contas
+                WHERE anasin = 'A'
                 ORDER BY cpc.clacta
                 ";
             $statement = $this->adapter->createStatement($sql);
@@ -520,17 +522,19 @@ class ControladoriaRepository
 
             return $planoContas;
         }
-        public function salvarVinculoContaCcu($codccu, $idPlano, $idGestor, $referencia)
+        public function salvarVinculoContaCcu($codccu, $idPlano, $ctared, $idGestor, $referencia)
         {
             $sql = "
-                INSERT INTO ctr_vinculo_contas_ccu (codccu, id_plano_contas, id_usuario_gestor, id_grupo_contas, referencia)
-                VALUES (:codccu, :id_plano_contas, :id_usuario_gestor,:id_grupo_contas, :referencia)
+                INSERT INTO ctr_vinculo_contas_ccu 
+                    (codccu, id_plano_contas, ctared, id_usuario_gestor, id_grupo_contas, referencia)
+                VALUES 
+                    (:codccu, :id_plano_contas, :ctared, :id_usuario_gestor, :id_grupo_contas, :referencia)
             ";
-
 
             $statement = $this->adapter->createStatement($sql, [
                 'codccu' => $codccu,
                 'id_plano_contas' => $idPlano,
+                'ctared' => $ctared,
                 'id_usuario_gestor' => $idGestor,
                 'id_grupo_contas' => null,
                 'referencia' => $referencia
@@ -573,18 +577,20 @@ class ControladoriaRepository
                 ];
             }
         }
-        public function atualizarGestorCcu($codccu, $idGestor)
+        public function atualizarGestorCcu($codccu, $idGestor, $referencia)
         {
             $sql = "
                 UPDATE ctr_vinculo_contas_ccu
                 SET id_usuario_gestor = :gestor
                 WHERE codccu = :ccu
+                AND referencia = :referencia
             ";
 
             try {
                 $this->adapter->createStatement($sql, [
                     'gestor' => $idGestor,
-                    'ccu'    => $codccu
+                    'ccu'    => $codccu,
+                    'referencia' => $referencia
                 ])->execute();
 
                 return ['success' => true];
@@ -598,9 +604,15 @@ class ControladoriaRepository
         }
         public function excluirVinculoContaCcu($id, $referencia)
         {
-            $sql = "DELETE FROM ctr_vinculo_contas_ccu
-                    WHERE id = :id AND referencia = :referencia";
-            $statement = $this->adapter->createStatement($sql, ['id' => $id, 'referencia' => $referencia]);
+            $sql = "
+                DELETE FROM ctr_vinculo_contas_ccu
+                WHERE id = :id AND referencia = :referencia
+            ";
+
+            $statement = $this->adapter->createStatement($sql, [
+                'id' => $id,
+                'referencia' => $referencia
+            ]);
 
             try {
                 $statement->execute();
@@ -617,7 +629,7 @@ class ControladoriaRepository
                 ];
             }
         }
+    #endregion
 
-    #endRegion
 
 }

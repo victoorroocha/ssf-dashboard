@@ -703,10 +703,14 @@ class ControladoriaController extends BaseController
         public function salvarVinculoContaCcuAction()
         {
             try {
-                // recebe JSON enviado via POST
                 $data = json_decode($this->getRequest()->getContent(), true);
 
-                if (!$data || !isset($data['codccu']) || !isset($data['id_plano_contas']) || !isset($data['id_usuario_gestor'])) {
+                if (!$data || 
+                    !isset($data['codccu']) || 
+                    !isset($data['id_plano_contas']) || 
+                    !isset($data['id_usuario_gestor']) ||
+                    !isset($data['ctared'])) 
+                {
                     return new JsonModel([
                         'success' => false,
                         'message' => 'Parâmetros incompletos.'
@@ -720,37 +724,17 @@ class ControladoriaController extends BaseController
                     ]);
                 }
 
-                $codccu = $data['codccu'];
-                $idPlano = $data['id_plano_contas'];
-
-                // Validações
-                if (empty($codccu)) {
-                    return new JsonModel([
-                        'success' => false,
-                        'message' => 'Código do Centro de Custo não informado.'
-                    ]);
-                }
-
-                if (empty($idPlano)) {
-                    return new JsonModel([
-                        'success' => false,
-                        'message' => 'ID do plano de contas não informado.'
-                    ]);
-                }
-
-                // chama o repository
                 $resp = $this->ControladoriaRepository->salvarVinculoContaCcu(
                     $data['codccu'],
                     $data['id_plano_contas'],
+                    $data['ctared'],
                     $data['id_usuario_gestor'],
                     $data['referencia']
                 );
 
-
                 return new JsonModel($resp);
 
             } catch (\Exception $e) {
-
                 return new JsonModel([
                     'success' => false,
                     'message' => 'Erro ao salvar vínculo: ' . $e->getMessage()
@@ -790,15 +774,15 @@ class ControladoriaController extends BaseController
             try {
                 $data = json_decode($this->getRequest()->getContent(), true);
 
-                if (!$data || !isset($data['codccu']) || !isset($data['id_usuario_gestor'])) {
+                if (!$data || 
+                    !isset($data['codccu']) || 
+                    !isset($data['id_usuario_gestor']) ||
+                    !isset($data['referencia'])) 
+                {
                     return new JsonModel([
                         'success' => false,
                         'message' => 'Parâmetros inválidos.'
                     ]);
-                }
-
-                if (!isset($data['referencia'])) {
-                    return new JsonModel(['success' => false, 'message' => 'Referência não informada.']);
                 }
 
                 $resp = $this->ControladoriaRepository->atualizarGestorCcu(
@@ -816,6 +800,7 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+
         public function excluirVinculoContaCcuAction()
         {
             try {
