@@ -800,7 +800,6 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
-
         public function excluirVinculoContaCcuAction()
         {
             try {
@@ -826,6 +825,113 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+        public function importarValorOrcadoAction()
+        {
+            try {
+                $request = $this->getRequest();
+
+                if (!$request->isPost()) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Método inválido.'
+                    ]);
+                }
+
+                // Dados vindos do FormData
+                $codccu     = $this->params()->fromPost('codccu');
+                $referencia = $this->params()->fromPost('referencia');
+                $gestor     = $this->params()->fromPost('gestor');
+
+                if (!$codccu || !$referencia || !$gestor) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Parâmetros obrigatórios não informados.'
+                    ]);
+                }
+
+                // Arquivo
+                $files = $request->getFiles()->toArray();
+                if (!isset($files['file']) || $files['file']['error'] !== UPLOAD_ERR_OK) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Arquivo não enviado ou inválido.'
+                    ]);
+                }
+
+                $uploaded = $files['file'];
+                $ext = strtolower(pathinfo($uploaded['name'], PATHINFO_EXTENSION));
+
+                if (!in_array($ext, ['csv', 'xlsx'])) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Formato inválido. Utilize CSV ou XLSX.'
+                    ]);
+                }
+
+                // Ler o arquivo
+                $dadosImportados = [];
+
+                if ($ext === 'csv') {
+                    $handle = fopen($uploaded['tmp_name'], 'r');
+                    if (!$handle) {
+                        return new JsonModel([
+                            'success' => false,
+                            'message' => 'Erro ao ler arquivo CSV.'
+                        ]);
+                    }
+
+                    // Pular header
+                    fgetcsv($handle, 0, ';');
+
+                    while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                        if (count($row) < 2) continue;
+
+                        $dadosImportados[] = [
+                            'ctared'       => trim($row[0]),
+                            'valor_orcado' => floatval(str_replace(',', '.', $row[1]))
+                        ];
+                    }
+                    fclose($handle);
+
+                } else {
+                    // XLSX
+                    require_once __DIR__ . '/../../../../vendor/autoload.php';
+                    $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+                    $spreadsheet = $reader->load($uploaded['tmp_name']);
+                    $sheet = $spreadsheet->getSheet(0);
+                    $rows = $sheet->toArray();
+
+                    // Pular header
+                    array_shift($rows);
+
+                    foreach ($rows as $r) {
+                        if (empty($r[0])) continue;
+
+                        $dadosImportados[] = [
+                            'ctared'       => trim($r[0]),
+                            'valor_orcado' => floatval(str_replace(',', '.', $r[1]))
+                        ];
+                    }
+                }
+
+                // Chama REPOSITORY para atualizar
+                $resultado = $this->ControladoriaRepository->importarValorOrcado(
+                    $codccu,
+                    $referencia,
+                    $gestor,
+                    $dadosImportados
+                );
+
+                return new JsonModel($resultado);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro na importação: ' . $e->getMessage()
+                ]);
+            }
+        }
+
 
 
     #endRegion

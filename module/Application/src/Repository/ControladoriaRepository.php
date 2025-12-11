@@ -466,7 +466,8 @@ class ControladoriaRepository
                     v.id_plano_contas,
                     v.ctared,
                     v.id_grupo_contas,  
-                    v.referencia,  
+                    v.referencia,
+                    v.valor_orcado,  
                     p.ctared AS conta_codigo,
                     p.descta AS conta_descricao,
                     g.nome AS gestor_nome,
@@ -629,7 +630,77 @@ class ControladoriaRepository
                 ];
             }
         }
-    #endregion
+        public function importarValorOrcado($codccu, $referencia, $gestor, $dados)
+        {
+            try {
+                $atualizados = 0;
+                $naoEncontrados = [];
+
+                foreach ($dados as $item) {
+
+                    $ctared = $item['ctared'];
+                    $valor  = $item['valor_orcado'];
+
+                    // Busca vínculo pelo CTARED
+                    $sqlBusca = "
+                        SELECT id 
+                        FROM ctr_vinculo_contas_ccu
+                        WHERE codccu = :ccu
+                        AND referencia = :ref
+                        AND ctared = :ctared
+                        LIMIT 1
+                    ";
+
+                    $row = $this->adapter->createStatement($sqlBusca, [
+                        'ccu'     => $codccu,
+                        'ref'     => $referencia,
+                        'ctared'  => $ctared
+                    ])->execute()->current();
+
+                    if (!$row) {
+                        $naoEncontrados[] = $ctared;
+                        continue;
+                    }
+
+                    $idVinculo = $row['id'];
+
+                    // Atualiza valor orçado
+                    $sqlUpdate = "
+                        UPDATE ctr_vinculo_contas_ccu
+                        SET valor_orcado = :valor,
+                            id_usuario_gestor = :gestor
+                        WHERE id = :id
+                    ";
+
+                    $this->adapter->createStatement($sqlUpdate, [
+                        'valor'  => $valor,
+                        'gestor' => $gestor,
+                        'id'     => $idVinculo
+                    ])->execute();
+
+                    $atualizados++;
+                }
+
+                $listaNao = empty($naoEncontrados) 
+                    ? 'Nenhum.' 
+                    : implode(', ', $naoEncontrados);
+
+                return [
+                    'success' => true,
+                    'atualizados' => $atualizados,
+                    'nao_encontrados' => $naoEncontrados,
+                    'mensagem' => "Importação concluída. Atualizados: $atualizados. Não encontrados: $listaNao"
+                ];
+
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Erro ao importar valores: ' . $e->getMessage()
+                ];
+            }
+        }
+
+    #endRegion
 
 
 }
