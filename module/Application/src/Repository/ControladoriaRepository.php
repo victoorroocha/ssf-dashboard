@@ -664,19 +664,21 @@ class ControladoriaRepository
 
                     $idVinculo = $row['id'];
 
-                    // Atualiza valor orçado
                     $sqlUpdate = "
                         UPDATE ctr_vinculo_contas_ccu
                         SET valor_orcado = :valor,
                             id_usuario_gestor = :gestor
                         WHERE id = :id
+                        AND referencia = :ref
                     ";
 
                     $this->adapter->createStatement($sqlUpdate, [
                         'valor'  => $valor,
                         'gestor' => $gestor,
-                        'id'     => $idVinculo
+                        'id'     => $idVinculo,
+                        'ref'    => $referencia
                     ])->execute();
+
 
                     $atualizados++;
                 }
