@@ -36,6 +36,9 @@
                         <div id="btnImportarOrcado" style="margin-left:10px;"></div>
                     </div>
 
+                    <!-- RESULTADO DA IMPORTAÇÃO (fora do popup) -->
+                    <div id="resultadoImportacaoGeral" class="mt-3"></div>
+
                     <!-- Grid principal -->
                     <div id="gridVinculos"></div>
 
@@ -88,12 +91,13 @@
             <div id="orcadoPlaceholder">
                 <i class="fas fa-file-upload fa-2x text-gray-400 mb-2"></i>
                 <p class="text-gray-500 mb-1">Clique ou arraste o arquivo aqui</p>
-                <small class="text-gray-400">Excel (.xlsx) ou CSV</small>
+                <small class="text-gray-400">CSV</small>
             </div>
             <div id="orcadoFileInfo" style="display:none;">
                 <i class="fas fa-file-excel fa-2x text-success mb-2"></i>
                 <p id="orcadoFileName" class="mb-1"></p>
             </div>
+
         </div>
 
         <div class="mt-3 text-end">
@@ -101,8 +105,6 @@
                 <i class="fas fa-upload me-2"></i>Importar Dados
             </button>
         </div>
-
-        <div id="resultadoImportacao" class="mt-3"></div>
     </div>
 </div>
 
@@ -355,8 +357,40 @@
                 { dataField: "grupo_nome", caption: "Grupo Contas", width: 180 },
                 { dataField: "gestor_nome", caption: "Gestor", width: 180 },
                 { dataField: "referencia", caption: "Referência", width: 90 },
-                { dataField: "valor_orcado", caption: "Vlr. Orçado" }
-            ]
+                { 
+                    dataField: "valor_orcado", caption: "Vlr. Orçado", alignment: 'right', 
+                    width: 150, 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                }
+            ],
+            summary: {
+                totalItems: [
+                    {
+                        column: "valor_orcado", 
+                        summaryType: "sum",
+                        displayFormat: "Total: {0}",  
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                    }
+                ],
+                groupItems: [
+                    {
+                        column: 'valor_orcado',
+                        summaryType: 'sum',
+                        valueFormat: 'currency',
+                        displayFormat: 'Total: {0}',
+                        showInGroupFooter: true,
+                        valueFormat: {
+                            type: "currency",  
+                            currency: "BRL" 
+                        },
+                    }
+                ],
+
+            },
         }).dxDataGrid("instance");
 
         // ===============================
@@ -581,6 +615,20 @@
         // ===============================
         let arquivoImport = null;
 
+        function limparArquivo() {
+            arquivoImport = null;
+
+            const place = document.getElementById('orcadoPlaceholder');
+            const info = document.getElementById('orcadoFileInfo');
+            const fileName = document.getElementById('orcadoFileName');
+
+            if (place) place.style.display = 'block';
+            if (info) info.style.display = 'none';
+            if (fileName) fileName.textContent = "";
+
+            $("#resultadoImportacao").html("");
+        }
+
         let popupImportar = $("#popupImportarOrcado").dxPopup({
             visible: false,
             title: "Importar Valores Orçados",
@@ -598,7 +646,7 @@
                 uploader.addEventListener("click", () => {
                     const input = document.createElement("input");
                     input.type = "file";
-                    input.accept = ".csv, .xlsx";
+                    input.accept = ".csv";
                     input.onchange = e => {
                         arquivoImport = e.target.files[0];
                         fileName.textContent = arquivoImport.name;
@@ -625,6 +673,9 @@
                 });
 
                 $("#btnEnviarImportacao").on("click", () => enviarImportacao());
+            },
+            onHidden: () => {
+                limparArquivo();
             }
         }).dxPopup("instance");
 
@@ -675,16 +726,21 @@
                 if (res.success) {
                     DevExpress.ui.notify("Importação concluída!", "success");
 
-                    $("#resultadoImportacao").html(`
+                    // Mostra resultado na tela principal (fora do popup)
+                    $("#resultadoImportacaoGeral").html(`
                         <div class="alert alert-success">
                             ${res.mensagem || "Arquivo importado com sucesso."}
                         </div>
                     `);
 
                     gridVinculos.refresh();
+                    popupImportar.hide();   // agora pode fechar normalmente
+
+
+                    gridVinculos.refresh();
                     popupImportar.hide();
                 } else {
-                    $("#resultadoImportacao").html(`
+                    $("#resultadoImportacaoGeral").html(`
                         <div class="alert alert-danger">
                             ${res.error || "Falha ao importar."}
                         </div>

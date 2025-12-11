@@ -689,7 +689,7 @@ class ControladoriaRepository
                     'success' => true,
                     'atualizados' => $atualizados,
                     'nao_encontrados' => $naoEncontrados,
-                    'mensagem' => "Importação concluída. Atualizados: $atualizados. Não encontrados: $listaNao"
+                    'mensagem' => "Importação concluída. Atualizados: $atualizados. Contas não  encontradas: $listaNao"
                 ];
 
             } catch (\Exception $e) {
