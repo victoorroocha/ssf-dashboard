@@ -962,7 +962,7 @@ class ControladoriaRepository
                     SUM(CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE -RT.VLRRAT END) AS VALOR_REALIZADO
                 FROM SAPIENS.E640RAT RT
                 WHERE RT.SITRAT = 2
-                --AND RT.FILRAT = 7
+                AND RT.FILRAT = 7
                 AND RT.CODEMP = {$codEmpresa}
                 AND RT.DATLCT BETWEEN TO_DATE('{$inicio}', 'YYYY-MM-DD') AND TO_DATE('{$fim}', 'YYYY-MM-DD')
                 GROUP BY RT.CODEMP,RT.CODCCU,RT.CTARED

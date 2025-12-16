@@ -108,27 +108,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Diretor', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -139,8 +148,16 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
+
 
         $this->acl->allow('Diretor', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Diretor', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -346,27 +363,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Gerente', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -377,7 +403,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Gerente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Gerente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -581,27 +614,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Coordenador', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -612,7 +654,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Coordenador', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Coordenador', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -816,27 +865,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Encarregado', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -847,7 +905,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Encarregado', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Encarregado', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -1051,27 +1116,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Analista', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -1082,7 +1156,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Analista', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Analista', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -1286,27 +1367,36 @@ class AccessControl
             'marcarDocumentosEnviados'
         ]);
         $this->acl->allow('Assistente', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -1317,7 +1407,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Assistente', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Assistente', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
@@ -1520,27 +1617,36 @@ class AccessControl
             'fetchPedidosStatusControleDocumentos'
         ]);
         $this->acl->allow('Auxiliar', 'ControladoriaController', [
+
+            // Divergências
             'divergenciasCentrosCustoContas', 
             'listDivergenciasCentrosCustoContas', 
             'getLookupEmpresa', 
             'getLookupFilial', 
+
+            // Estrutura Contas
             'estruturaContas', 
             'listarPlanoConta',
             'inserirPlanoConta',
             'atualizarPlanoConta',
             'excluirPlanoConta',
             'buscarDetalhesClacta',
+
+            // Grupo de Contas
             'cadastroGrupoContas',
             'listarGrupoContas',
             'salvarGrupoContas',
             'excluirGrupoContas',
+            'getLookupGrupoContas',
+
+            // Pacote de Contas
             'cadastroPacoteContas',
             'listarPacoteContas',
             'salvarPacoteContas',
             'excluirPacoteContas',
-            'getLookupGrupoContas',
             'getLookupPacoteContas',
 
+            // Vincular Conta x Centro de Custo
             'vincularContaCentroCusto',
             'listarGestores',
             'listarCentrosCusto',
@@ -1551,7 +1657,14 @@ class AccessControl
             'salvarVinculoContaCcu',
             'salvarGrupoContaCcu',
             'atualizarGestorCcu',
-            'excluirVinculoContaCcu'
+            'excluirVinculoContaCcu',
+            'importarValorOrcado',
+
+            // Painel de Justificativas
+            'painelJustificativasOrcadoRealizado',
+            'listarGestoresPainelJustificativa',
+            'listarPainelJustificativas',
+            'salvarJustificativaOrcadoRealizado'
         ]);
         $this->acl->allow('Auxiliar', 'RecursosHumanosController', ['apuracoesColaboradores', 'listLancamentosApuracoesColaboradores', 'getLookupColaborador', 'getLookupSupervisor', 'getLookupCentroCusto', 'getLookupEscala', 'getLookupFilial', 'getLookupLocal', 'bancoHoras', 'listBancoHoras', 'dashboardTurnover', 'listInfoDashboardTurnover']);
         $this->acl->allow('Auxiliar', 'ComercialController', ['classificacaoClientesSoftsul', 'listClassificacaoClientesSoftsul', 'listPedidosCliente']);
