@@ -85,7 +85,25 @@
     <div class="p-3">
 
         <h6><b>Importar Valores Orçados</b></h6>
-        <p class="text-muted">O CSV deve conter apenas as colunas: <b>CTARED</b> e <b>VALOR_ORCADO</b></p>
+
+        <div class="mb-3 d-flex align-items-center justify-content-between">
+            <p class="text-muted mb-0">
+                O CSV deve conter apenas as colunas:
+                <b>CTARED</b> e <b>VALOR_ORCADO</b>
+            </p>
+
+            <button
+                type="button"
+                id="btnDownloadModeloOrcado"
+                class="btn btn-outline-secondary btn-sm"
+            >
+                <i class="fas fa-download me-1"></i>
+                Modelo
+            </button>
+        </div>
+
+
+
 
         <div id="orcadoUploader" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer">
             <div id="orcadoPlaceholder">
@@ -135,6 +153,24 @@
         let gruposContas      = [];
 
         let carregandoGestor  = false;
+
+        $(document).on("click", "#btnDownloadModeloOrcado", function () {
+            fetch("/controladoria/preparar-download-modelo-importacao-orcado")
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) {
+                        DevExpress.ui.notify(res.message, "error");
+                        return;
+                    }
+
+                    window.location.href = res.url;
+                })
+                .catch(() => {
+                    DevExpress.ui.notify("Erro ao preparar download.", "error");
+                });
+        });
+
+
 
 
         // ===============================
@@ -759,6 +795,8 @@
                 $("#btnEnviarImportacao").prop("disabled", false).html('<i class="fas fa-upload me-2"></i>Importar Dados');
             });
         }
+
+
 
 
     });

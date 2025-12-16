@@ -150,6 +150,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -405,6 +407,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -656,6 +660,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -907,6 +913,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1158,6 +1166,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1409,6 +1419,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1659,6 +1671,8 @@ class AccessControl
             'atualizarGestorCcu',
             'excluirVinculoContaCcu',
             'importarValorOrcado',
+            'prepararDownloadModeloImportacaoOrcado',
+            'downloadModeloImportacaoOrcado',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',

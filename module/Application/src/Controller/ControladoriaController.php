@@ -931,6 +931,44 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+        public function prepararDownloadModeloImportacaoOrcadoAction()
+        {
+            return new JsonModel([
+                'success' => true,
+                'url' => '/controladoria/download-modelo-importacao-orcado'
+            ]);
+        }
+        public function downloadModeloImportacaoOrcadoAction()
+        {
+            $file = getcwd() . '/data/controladoria/modeloImportacaoOrcado.csv';
+
+            if (!file_exists($file)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Arquivo modelo não encontrado',
+                    'debug_path' => $file
+                ]);
+            }
+
+            $response = new \Laminas\Http\Response();
+            $response->setContent(file_get_contents($file));
+
+            $headers = $response->getHeaders();
+            $headers->addHeaderLine('Content-Type', 'text/csv; charset=UTF-8');
+            $headers->addHeaderLine(
+                'Content-Disposition',
+                'attachment; filename="modeloImportacaoOrcado.csv"'
+            );
+            $headers->addHeaderLine('Content-Length', filesize($file));
+
+            return $response;
+        }
+
+
+
+
+
+
     #endRegion
 
     #region Painel de Justificativas
