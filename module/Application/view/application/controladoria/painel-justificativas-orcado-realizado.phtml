@@ -1,0 +1,659 @@
+<style>
+    /* Cabeçalho verde estilo planilha */
+    .dx-datagrid-headers .dx-header-row>td {
+        background-color: #5b8f43 !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 13px !important;
+        border-color: #4a7736 !important;
+    }
+
+    /* Fundo cinza para colunas só de leitura */
+    .col-readonly {
+        background-color: #f3f3f3 !important;
+        color: #444 !important;
+        font-weight: 500 !important;
+    }
+
+    /* Valores positivos (verde) como Excel */
+    .cell-positive {
+        color: #1a8f3a !important;
+        font-weight: bold;
+    }
+
+    /* Valores negativos (vermelho) */
+    .cell-negative {
+        color: #cc0000 !important;
+        font-weight: bold;
+    }
+
+    /* Destaque amarelo claro */
+    .cell-warning {
+        background-color: #fff4d0 !important;
+    }
+
+    /* Formatação do mês igual Excel: 08-Agosto */
+    .mes-formatado {
+        font-weight: bold;
+        color: #3c3c3c !important;
+        text-align: center;
+    }
+
+    .dx-datagrid-group-footer td {
+        font-weight: bold;
+        background-color: #fafafa;
+    }
+
+</style>
+
+
+<?php // echo '<pre>'; print_r($this->usuario); exit; ?>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Controladoria</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+
+                    <p><b>Painel de Justificativas</b></p>
+
+                    <!-- Filtros -->
+                    <div class="form-row" style="display:flex; gap:20px; width:100%; margin-bottom:15px;">
+                        <div style="flex:1;">
+                            <label><b>Gestor:</b></label>
+                            <div id="selectGestor"></div>
+                        </div>
+
+                        <div style="flex:1;">
+                            <label><b>Referência (Mês/Ano):</b></label>
+                            <div id="selectReferencia"></div>
+                        </div>
+                    </div>
+
+                    <!-- Grid principal -->
+                    <div id="gridJustificativas"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="popupJustificar"></div>
+
+
+
+<script>
+    $(document).ready(function () {
+
+        const API_GESTORES       = "/controladoria/listar-gestores-painel-justificativa";
+        const API_LISTAR_PAINEL  = "/controladoria/listar-painel-justificativas";
+        const API_SALVAR_JUST    = "/controladoria/salvar-justificativa-orcado-realizado";
+
+        const USUARIO_ID   = <?php echo (int)$this->usuario['id']; ?>;
+        const USUARIO_DEP  = <?php echo (int)$this->usuario['id_departamento']; ?>;
+        const USUARIO_ROLE = '<?php echo $this->usuario['role']; ?>';
+
+        let currentGestor     = USUARIO_ID;
+        let currentReferencia = moment().format("YYYY-MM"); // aaaa-MM
+
+        let gridJustificativas = null;
+
+        // ===============================
+        // SELECTBOX GESTOR
+        // ===============================
+        let selectGestor = $("#selectGestor").dxSelectBox({
+            dataSource: new DevExpress.data.CustomStore({
+                key: "id",
+                loadMode: "raw",
+                load: () => $.getJSON(API_GESTORES).then(res => res.data)
+            }),
+            width: "100%",
+            displayExpr: "nome",
+            valueExpr: "id",
+            searchEnabled: true,
+            searchExpr: ["nome"],
+            placeholder: "Selecione o Gestor...",
+            value: USUARIO_ID,
+            disabled: (USUARIO_DEP !== 4 && USUARIO_ROLE !== 'Administrador'),
+            onValueChanged: e => {
+                currentGestor = e.value || null;
+                if (gridJustificativas) {
+                    gridJustificativas.refresh();
+                }
+            }
+        }).dxSelectBox("instance");
+
+        // ===============================
+        // REFERÊNCIA (dxDateBox)
+        // ===============================
+        let selectReferencia = $("#selectReferencia").dxDateBox({
+            type: "date",
+            displayFormat: "MM/yyyy",
+            dateSerializationFormat: "yyyy-MM-dd",
+            value: new Date(),
+            placeholder: "Mês/Ano Referência",
+            showClearButton: true,
+            calendarOptions: {
+                zoomLevel: "year",
+                maxZoomLevel: "year",
+                minZoomLevel: "month"
+            },
+            onValueChanged: function (e) {
+                if (e.value) {
+                    currentReferencia = moment(e.value).format("YYYY-MM");
+                } else {
+                    currentReferencia = null;
+                }
+
+                if (gridJustificativas) {
+                    gridJustificativas.refresh();
+                }
+            }
+        }).dxDateBox("instance");
+
+        let popupJustificar = $("#popupJustificar").dxPopup({
+            width: 700,
+            height: "auto",
+            title: "",
+            visible: false,
+            showCloseButton: true,
+            dragEnabled: true,
+            closeOnOutsideClick: true
+        }).dxPopup("instance");
+
+        let formJustificativa = null;
+        let rowSelecionada = null;
+
+
+        // ===============================
+        // GRID PRINCIPAL - JUSTIFICATIVAS
+        // ===============================
+        gridJustificativas = $("#gridJustificativas").dxDataGrid({
+            dataSource: new DevExpress.data.CustomStore({
+                key: "row_key",
+                load: () => {
+                    if (!currentGestor || !currentReferencia) {
+                        return [];
+                    }
+
+                    const url = API_LISTAR_PAINEL +
+                        "?gestor=" + encodeURIComponent(currentGestor) +
+                        "&referencia=" + encodeURIComponent(currentReferencia);
+
+                    return $.getJSON(url).then(r => r.data || []);
+                },
+                update: (key, values) => {
+                    // merge dos valores editados com os valores existentes na linha
+                    const rowData = gridJustificativas.getVisibleRows()
+                        .find(r => r.key === key).data;
+
+                    const updated = { ...rowData, ...values };
+
+                    return salvarJustificativa(updated, true); 
+                }
+            }),
+            showBorders: true,
+            groupPanel: {
+                visible: true,
+            },
+            height: 'auto',
+            headerFilter: {
+                visible: true,
+            },
+            filterRow: {
+                visible: true,
+                applyFilter: 'auto',
+            },
+            searchPanel: {
+                visible: true,
+                width: 240,
+                placeholder: 'Procure...',
+            },
+            pager: {
+                visible: true
+            },
+            paging: {
+                pageSize: 500
+            },
+            columnAutoWidth: true,
+            editing: {
+                mode: "cell",
+                allowUpdating: false
+            },
+            export: {
+                enabled: true,
+                fileName: "Justificativas Contas",
+                allowExportSelectedData: false,
+            },
+            onCellPrepared: function(e) {
+                if (e.rowType !== "data") return;
+
+                // Mantém regra de cor positiva/negativa
+                if (e.column.dataField === "variacao_total") {
+                    if (e.value > 0) e.cellElement.addClass("cell-positive");
+                    if (e.value < 0) e.cellElement.addClass("cell-negative");
+                }
+
+                if (e.column.dataField === "a_justificar") {
+                    if (e.value > 0) {
+                        e.cellElement.addClass("cell-positive");
+                    } else if (e.value < 0) {
+                        e.cellElement.addClass("cell-negative");
+                    }
+                }
+
+                // =============================
+                // NOVO → pinta de amarelo sempre
+                // =============================
+                const amarelas = [
+                    "valor_orcado",
+                    "valor_realizado",
+                    "variacao_total",
+                    "a_justificar"
+                ];
+
+                if (amarelas.includes(e.column.dataField)) {
+                    e.cellElement.addClass("cell-warning");
+                }
+            },
+            columns: [
+                {
+                    caption: "Justificar",
+                    fixed: true,
+                    fixedPosition: "left",
+                    width: 90,
+                    type: "buttons",
+                    buttons: [
+                        {
+                            hint: "Justificar",
+                            icon: "doc",
+                            onClick: function(e) {
+                                abrirPopupJustificativa(e.row.data);
+                            }
+                        }
+                    ]
+                },
+                // ======== COLUNAS FIXAS (CINZA) ========
+                { dataField: "pacote_contas", caption: "Pacote Contas", width: 150, allowEditing: false, fixed: true, cssClass: "col-readonly", sortOrder: 'asc' },
+                { dataField: "ctared", caption: "Conta ID", width: 80, allowEditing: false, fixed: true, cssClass: "col-readonly" },
+                { dataField: "conta_descricao", caption: "Descrição Conta", width: 180, allowEditing: false, fixed: true, cssClass: "col-readonly" },
+                {
+                    dataField: "valor_orcado",
+                    caption: "Orçado",
+                    dataType: "number",
+                    format: { type: "currency", currency: "BRL", precision: 2 },
+                    alignment: "right",
+                    width: 150,
+                    allowEditing: false,
+                    cssClass: "col-readonly"
+                },
+                {
+                    dataField: "valor_realizado",
+                    caption: "Realizado",
+                    dataType: "number",
+                    format: { type: "currency", currency: "BRL", precision: 2 },
+                    alignment: "right",
+                    width: 150,
+                    allowEditing: false,
+                    cssClass: "col-readonly"
+                },
+
+                // ======= CÁLCULOS FEITOS NO FRONTEND ==========
+                {
+                    dataField: "variacao_total",
+                    caption: "Variação Total",
+                    dataType: "number",
+                    allowEditing: false,
+                    width: 150,
+                    alignment: "right",
+                    cssClass: "col-readonly",
+                    calculateCellValue: function (row) {
+                        const orcado = Number(row.valor_orcado) || 0;
+                        const realizado = Number(row.valor_realizado) || 0;
+                        return orcado - realizado;
+                    },
+                    format: { type: "currency", currency: "BRL", precision: 2 }
+                },
+
+                {
+                    dataField: "a_justificar",
+                    caption: "A Justificar",
+                    dataType: "number",
+                    allowEditing: false,
+                    width: 150,
+                    alignment: "right",
+                    cssClass: "col-readonly",
+                    calculateCellValue: function (row) {
+                        const variacao = (Number(row.valor_orcado) || 0) - (Number(row.valor_realizado) || 0);
+                        const pressao = Number(row.valor_pressao) || 0;
+                        const tempo = Number(row.valor_tempo) || 0;
+                        return variacao - (pressao + tempo);
+                    },
+                    format: { type: "currency", currency: "BRL", precision: 2 }
+                },
+
+                // ========= CAMPOS EDITÁVEIS (sempre iniciam em branco se null) =========
+                { 
+                    dataField: 'valor_pressao', 
+                    caption: 'R$ Pressão', 
+                    allowEditing: true, 
+                    alignment: 'right', 
+                    width: 150, 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    calculateCellValue: row => row.valor_pressao ?? null,
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                {
+                    dataField: "justificativa_pressao",
+                    caption: "Justificativa Pressão",
+                    width: 200,
+                    allowEditing: true,
+                    calculateCellValue: row => row.justificativa_pressao ?? null,
+                },
+                { 
+                    dataField: 'valor_tempo', 
+                    caption: 'R$ Tempo', 
+                    allowEditing: true, 
+                    alignment: 'right', 
+                    width: 150, 
+                    dataType: 'number', 
+                    format: { type: 'currency', currency: 'BRL', precision: 2 },
+                    calculateCellValue: row => row.valor_tempo ?? null,
+                    customizeText: function(cellInfo) {
+                        if (cellInfo.value !== undefined && cellInfo.value !== null) {
+                            var numericValue = Number(cellInfo.value);
+                            if (isNaN(numericValue)) {
+                                return cellInfo.value;
+                            }
+                            return numericValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }  
+                },
+                {
+                    dataField: "justificativa_tempo",
+                    caption: "Justificativa Tempo",
+                    width: 200,
+                    allowEditing: true,
+                    calculateCellValue: row => row.justificativa_tempo ?? null
+                },
+                {
+                    dataField: "mes_orcado_realizar",
+                    caption: "Mês Orçado / A Realizar",
+                    width: 150,
+                    allowEditing: true,
+                    dataType: "date",
+                    format: "MM/yyyy",
+                    alignment: 'center',
+
+                    calculateCellValue: function(row) {
+                        if (!row.mes_orcado_realizar) return null;
+
+                        const [yyyy, mm] = row.mes_orcado_realizar.split("-");
+                        return new Date(Number(yyyy), Number(mm) - 1, 1);
+                    },
+
+                    editCellTemplate: function (cellElement, cellInfo) {
+                        $("<div>")
+                            .appendTo(cellElement)
+                            .dxDateBox({
+                                type: "date",
+                                value: cellInfo.value ?? null,
+                                displayFormat: "MM/yyyy",
+                                dateSerializationFormat: "yyyy-MM-dd",
+                                showClearButton: true,
+                                calendarOptions: {
+                                    zoomLevel: "year",
+                                    maxZoomLevel: "year",
+                                    minZoomLevel: "month"
+                                },
+                                onValueChanged: e =>
+                                    cellInfo.setValue(
+                                        e.value
+                                            ? moment(e.value).format("YYYY-MM-01")
+                                            : null
+                                    )
+                            });
+                    }
+                },
+
+                // Ocultos
+                { dataField: "codccu", visible: false },
+                { dataField: "id_plano_contas", visible: false },
+                { dataField: "id_grupo_contas", visible: false },
+                { dataField: "id_usuario_gestor", visible: false },
+                { dataField: "referencia", visible: false },
+                { dataField: "row_key", visible: false }
+
+            ],
+            summary: {
+                totalItems: [
+                    {
+                        column: "valor_orcado",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_realizado",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "a_justificar",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_pressao",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_tempo",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    }
+                ],
+                groupItems: [
+                    {
+                        column: "valor_orcado",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        showInGroupFooter: true,
+                        alignByColumn: true,
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_realizado",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        showInGroupFooter: true,
+                        alignByColumn: true,
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "a_justificar",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        showInGroupFooter: true,
+                        alignByColumn: true,
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_pressao",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        showInGroupFooter: true,
+                        alignByColumn: true,
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    },
+                    {
+                        column: "valor_tempo",
+                        summaryType: "sum",
+                        displayFormat: "{0}",
+                        showInGroupFooter: true,
+                        alignByColumn: true,
+                        valueFormat: { type: "currency", currency: "BRL", precision: 2 }
+                    }
+                ]
+            }
+
+        }).dxDataGrid("instance");
+
+
+        // ===============================
+        // FUNÇÃO: SALVAR JUSTIFICATIVA (AUTO-SAVE)
+        // ===============================
+        function salvarJustificativa(rowData, fromStore = false) {
+
+            if (!currentGestor || !currentReferencia) {
+                DevExpress.ui.notify("Selecione Gestor e Referência.", "warning");
+                return Promise.reject();
+            }
+
+            const payload = {
+                codccu: rowData.codccu,
+                id_plano_contas: rowData.id_plano_contas,
+                id_grupo_contas: rowData.id_grupo_contas,
+                ctared: rowData.ctared,
+                id_usuario_gestor: currentGestor,
+                referencia: currentReferencia,
+
+                valor_orcado: rowData.valor_orcado || 0,
+                valor_realizado: rowData.valor_realizado || 0,
+
+                valor_pressao: rowData.valor_pressao ?? null,
+                justificativa_pressao: rowData.justificativa_pressao ?? null,
+                valor_tempo: rowData.valor_tempo ?? null,
+                justificativa_tempo: rowData.justificativa_tempo ?? null,
+
+                mes_orcado_realizar: rowData.mes_orcado_realizar ? moment(rowData.mes_orcado_realizar) : null
+
+            };
+
+            return $.ajax({
+                url: API_SALVAR_JUST,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            })
+                .done(res => {
+                    if (!fromStore) {
+                        if (!res.success) {
+                            DevExpress.ui.notify(res.message, "error");
+                        } else {
+                            DevExpress.ui.notify("Justificativa salva.", "success");
+                        }
+                    }
+                })
+                .fail(() => {
+                    DevExpress.ui.notify("Falha de comunicação com o servidor.", "error");
+                });
+        }
+
+
+        function abrirPopupJustificativa(rowData) {
+            rowSelecionada = rowData;
+
+            popupJustificar.option("title", rowData.ctared + " - " + rowData.conta_descricao);
+
+
+            popupJustificar.option("contentTemplate", function() {
+                return $("<div>").dxForm({
+                    colCount: 1,
+                    formData: rowData,
+                    items: [
+                        {
+                            dataField: "valor_pressao",
+                            label: { text: "R$ Pressão" },
+                            editorType: "dxNumberBox",
+                            editorOptions: { format: "#,##0.00", showClearButton: true }
+                        },
+                        {
+                            dataField: "justificativa_pressao",
+                            label: { text: "Justificativa da Pressão" },
+                            editorType: "dxTextArea",
+                            editorOptions: { height: 80 }
+                        },
+                        {
+                            dataField: "valor_tempo",
+                            label: { text: "R$ Tempo" },
+                            editorType: "dxNumberBox",
+                            editorOptions: { format: "#,##0.00", showClearButton: true }
+                        },
+                        {
+                            dataField: "justificativa_tempo",
+                            label: { text: "Justificativa do Tempo" },
+                            editorType: "dxTextArea",
+                            editorOptions: { height: 80 }
+                        },
+                        {
+                            dataField: "mes_orcado_realizar",
+                            label: { text: "Mês Orçado / A Realizar" },
+                            editorType: "dxDateBox",
+                            editorOptions: {
+                                type: "date",
+                                displayFormat: "MM/yyyy",
+                                dateSerializationFormat: "yyyy-MM-dd",
+                                showClearButton: true,
+                                calendarOptions: {
+                                    zoomLevel: "year",
+                                    maxZoomLevel: "year",
+                                    minZoomLevel: "month"
+                                }
+                            }
+                        },
+                        {
+                            itemType: "button",
+                            buttonOptions: {
+                                text: "Salvar",
+                                type: "success",
+                                onClick: function() {
+                                    const valores = this.formData = $(".dx-form").dxForm("instance").option("formData");
+                                    salvarJustificativa({ ...rowSelecionada, ...valores });
+                                    popupJustificar.hide();
+                                    gridJustificativas.refresh();
+                                }
+                            }
+                        }
+                    ]
+                });
+            });
+
+            popupJustificar.show();
+        }
+
+
+
+    });
+</script>

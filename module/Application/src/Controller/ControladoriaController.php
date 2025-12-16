@@ -931,9 +931,214 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
-
-
-
     #endRegion
+
+    #region Painel de Justificativas
+        public function painelJustificativasOrcadoRealizadoAction()
+        {
+            $session = new Container('auth');
+            if (!isset($session->user)) {
+                return $this->redirect()->toRoute('login');
+            }
+
+            return new ViewModel([
+                'usuario' => [
+                    'id'              => $session->user['id'],
+                    'nome'            => $session->user['nome'],
+                    'email'           => $session->user['email'],
+                    'role'            => $session->user['role'],
+                    'id_departamento' => $session->user['id_departamento'],
+                ]
+            ]);
+        }
+        public function listarGestoresPainelJustificativaAction()
+        {
+            try {
+                $sql = "
+                    SELECT DISTINCT u.id, u.nome 
+                    FROM ctr_vinculo_contas_ccu cvcc
+                    LEFT JOIN usuario u ON u.id = cvcc.id_usuario_gestor 
+                    WHERE u.id IS NOT NULL
+                    ORDER BY u.nome ASC
+                ";
+
+                $statement = $this->pgAdapter->createStatement($sql);
+                $result = $statement->execute();
+
+                $data = [];
+                foreach ($result as $row) {
+                    $data[] = [
+                        'id'   => (int)$row['id'],
+                        'nome' => $row['nome']
+                    ];
+                }
+
+                return new JsonModel([
+                    'success' => true,
+                    'data'    => $data
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar gestores: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function listarPainelJustificativasAction() 
+        {
+            try {
+                $idGestor   = (int) $this->params()->fromQuery('gestor');
+                $referencia = $this->params()->fromQuery('referencia');
+
+                if (!$idGestor || !$referencia) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Gestor e referência são obrigatórios.'
+                    ]);
+                }
+
+                /**
+                 * =========================================================
+                 * FASE 1 — PAINEL BASE (Postgres)
+                 * Retorna linhas por: CTARED + CCU
+                 * =========================================================
+                 */
+                $painel = $this->ControladoriaRepository->listarPainelJustificativasOrcadoRealizado($idGestor, $referencia);
+
+                /**
+                 * =========================================================
+                 * FASE 2 — REALIZADO (Oracle)
+                 * Retorna por: CTARED + CCU
+                 * =========================================================
+                 */
+                $sqlOracle  = $this->ControladoriaRepository->getRealizadoPorContaCentroCustoQuery(1000, $referencia);
+                $realizados = $this->oracleService->executeQuery($sqlOracle);
+
+                /**
+                 * =========================================================
+                 * FASE 3 — MAPA REALIZADO POR CCU + CTARED
+                 * =========================================================
+                 */
+                $mapRealizado = [];
+                foreach ($realizados as $r) {
+                    $key = $r['CODCCU'] . '|' . $r['CTARED'];
+                    $mapRealizado[$key] = (float)$r['VALOR_REALIZADO'];
+                }
+
+                /**
+                 * =========================================================
+                 * FASE 4 — MERGE (CCU + CTARED)
+                 * =========================================================
+                 */
+                foreach ($painel as &$row) {
+                    $key = $row['codccu'] . '|' . $row['ctared'];
+                    $row['valor_realizado'] = $mapRealizado[$key] ?? 0;
+                }
+                unset($row);
+
+                /**
+                 * =========================================================
+                 * FASE 5 — AGRUPAMENTO FINAL POR CTARED
+                 * =========================================================
+                 */
+                $agrupadoPorConta = [];
+
+                foreach ($painel as $row) {
+                    $ctared = $row['ctared'];
+
+                    if (!isset($agrupadoPorConta[$ctared])) {
+                        $agrupadoPorConta[$ctared] = [
+                            'row_key'               => $ctared . '-' . $row['referencia'],
+                            'id_plano_contas'       => $row['id_plano_contas'],
+                            'id_grupo_contas'       => $row['id_grupo_contas'],
+                            'ctared'                => $row['ctared'],
+                            'referencia'            => $row['referencia'],
+                            'id_usuario_gestor'     => $row['id_usuario_gestor'],
+
+                            'pacote_contas'         => $row['pacote_contas'],
+                            'conta_descricao'       => $row['conta_descricao'],
+
+                            // inicia zerado para somar
+                            'valor_orcado'          => 0,
+                            'valor_realizado'       => 0,
+
+                            // justificativas são da CONTA
+                            'valor_pressao'         => $row['valor_pressao'],
+                            'justificativa_pressao' => $row['justificativa_pressao'],
+                            'valor_tempo'           => $row['valor_tempo'],
+                            'justificativa_tempo'   => $row['justificativa_tempo'],
+                            'mes_orcado_realizar'   => $row['mes_orcado_realizar'],
+                        ];
+                    }
+
+                    // SOMA FINAL IGNORANDO CCU
+                    $agrupadoPorConta[$ctared]['valor_orcado']    += (float)$row['valor_orcado'];
+                    $agrupadoPorConta[$ctared]['valor_realizado'] += (float)$row['valor_realizado'];
+                }
+
+                /**
+                 * =========================================================
+                 * FASE 6 — RETORNO FINAL PARA A TELA
+                 * =========================================================
+                 */
+                return new JsonModel([
+                    'success' => true,
+                    'data'    => array_values($agrupadoPorConta)
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar painel de justificativas: ' . $e->getMessage()
+                ]);
+            }
+        }
+        public function salvarJustificativaOrcadoRealizadoAction() 
+        {
+            try {
+                $request = $this->getRequest();
+                if (!$request->isPost()) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Método inválido.'
+                    ]);
+                }
+
+                $data = json_decode($request->getContent(), true);
+                if (!$data) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Payload inválido.'
+                    ]);
+                }
+
+                $required = ['id_plano_contas','ctared','id_usuario_gestor','referencia'];
+                foreach ($required as $field) {
+                    if (!isset($data[$field])) {
+                        return new JsonModel([
+                            'success' => false,
+                            'message' => "Campo obrigatório não informado: {$field}"
+                        ]);
+                    }
+                }
+
+                $session = new Container('auth');
+                $idUsuarioAlteracao = $session->user['id'] ?? null;
+
+                $resp = $this->ControladoriaRepository->salvarJustificativaOrcadoRealizado($data, $idUsuarioAlteracao);
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao salvar justificativa: ' . $e->getMessage()
+                ]);
+            }
+        }
+    #endRegion
+
+
 
 }

@@ -704,5 +704,274 @@ class ControladoriaRepository
 
     #endRegion
 
+    #region Painel de Justificativas
+        public function listarPainelJustificativasOrcadoRealizado($idGestor, $referencia)
+        {
+            $sql = "
+                SELECT
+                    (v.codccu || '-' || v.id_plano_contas || '-' || v.referencia) AS row_key,
+                    v.codccu,
+                    v.id_plano_contas,
+                    v.id_grupo_contas,
+                    v.ctared,
+                    v.referencia,
+                    v.id_usuario_gestor,
+
+                    pc2.nome AS pacote_contas,
+                    pc.descta AS conta_descricao,
+
+                    v.valor_orcado,
+                    0::numeric(15,2) AS valor_realizado,
+
+                    cj.valor_pressao,
+                    cj.justificativa_pressao,
+                    cj.valor_tempo,
+                    cj.justificativa_tempo,
+                    cj.mes_orcado_realizar
+                FROM ctr_vinculo_contas_ccu v
+                JOIN ctr_plano_contas pc ON pc.id = v.id_plano_contas 
+                LEFT JOIN ctr_pacote_contas pc2 ON pc2.id = pc.id_pacote_contas
+                LEFT JOIN ctr_justificativas_orcado_realizado cj ON cj.id_plano_contas   = v.id_plano_contas AND cj.ctared = v.ctared AND cj.id_usuario_gestor = v.id_usuario_gestor AND cj.referencia = v.referencia
+                WHERE v.id_usuario_gestor = :gestor
+                AND v.referencia = :referencia
+                ORDER BY pc.clacta
+            ";
+
+            $statement = $this->adapter->createStatement($sql, [
+                'gestor'     => $idGestor,
+                'referencia' => $referencia
+            ]);
+
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = [
+                    'row_key'               => $row['row_key'],
+                    'codccu'                => (int)$row['codccu'],
+                    'id_plano_contas'       => (int)$row['id_plano_contas'],
+                    'id_grupo_contas'       => $row['id_grupo_contas'] !== null ? (int)$row['id_grupo_contas'] : null,
+                    'ctared'                => (int)$row['ctared'],
+                    'referencia'            => $row['referencia'],
+                    'id_usuario_gestor'     => (int)$row['id_usuario_gestor'],
+
+                    'pacote_contas'         => $row['pacote_contas'],
+                    'conta_descricao'       => $row['conta_descricao'],
+
+                    'valor_orcado'          => (float)$row['valor_orcado'],
+                    'valor_realizado'       => 0.0,
+
+                    'valor_pressao'         => $row['valor_pressao'],
+                    'justificativa_pressao' => $row['justificativa_pressao'],
+                    'valor_tempo'           => $row['valor_tempo'],
+                    'justificativa_tempo'   => $row['justificativa_tempo'],
+                    'mes_orcado_realizar'   => $row['mes_orcado_realizar'],
+                ];
+            }
+
+            return $data;
+        }
+        public function salvarJustificativaOrcadoRealizado(array $dados, $idUsuarioAlteracao = null)
+        {
+            $idPlano    = (int)$dados['id_plano_contas'];
+            $idGrupo    = $dados['id_grupo_contas'] ?? null;
+            $ctared     = (int)$dados['ctared'];
+            $idGestor   = (int)$dados['id_usuario_gestor'];
+            $referencia = $dados['referencia'];
+
+            // Normalização dos valores
+            $valorPressao = ($dados['valor_pressao'] === "" ? null : $dados['valor_pressao']);
+            $justPressao  = ($dados['justificativa_pressao'] === "" ? null : $dados['justificativa_pressao']);
+            $valorTempo   = ($dados['valor_tempo'] === "" ? null : $dados['valor_tempo']);
+            $justTempo    = ($dados['justificativa_tempo'] === "" ? null : $dados['justificativa_tempo']);
+            $mesReal      = empty($dados['mes_orcado_realizar']) ? null : $dados['mes_orcado_realizar'];
+
+            $valorOrcado     = isset($dados['valor_orcado']) ? (float)$dados['valor_orcado'] : 0;
+            $valorRealizado  = isset($dados['valor_realizado']) ? (float)$dados['valor_realizado'] : 0;
+
+            $valorVariacao   = $valorOrcado - $valorRealizado;
+            $valorAJustificar = $valorVariacao - (
+                ($valorPressao ?? 0) + ($valorTempo ?? 0)
+            );
+
+
+            try {
+
+                /**
+                 * =====================================================
+                 * BUSCA — justificativa por CONTA (SEM CCU)
+                 * =====================================================
+                 */
+                $sqlBusca = "
+                    SELECT id
+                    FROM ctr_justificativas_orcado_realizado
+                    WHERE ctared = :ctared
+                    AND id_plano_contas = :id_plano
+                    AND id_usuario_gestor = :gestor
+                    AND referencia = :referencia
+                    LIMIT 1
+                ";
+
+                $row = $this->adapter->createStatement($sqlBusca, [
+                    'ctared'     => $ctared,
+                    'id_plano'   => $idPlano,
+                    'gestor'     => $idGestor,
+                    'referencia' => $referencia
+                ])->execute()->current();
+
+                /**
+                 * =====================================================
+                 * UPDATE
+                 * =====================================================
+                 */
+                if ($row) {
+
+                    $sqlUpdate = "
+                        UPDATE ctr_justificativas_orcado_realizado
+                        SET
+                            id_grupo_contas       = :id_grupo,
+
+                            valor_orcado          = :valor_orcado,
+                            valor_realizado       = :valor_realizado,
+                            valor_variacao_total  = :valor_variacao,
+                            valor_a_justificar    = :valor_a_justificar,
+
+                            valor_pressao         = :pressao,
+                            justificativa_pressao = :just_pressao,
+                            valor_tempo           = :tempo,
+                            justificativa_tempo   = :just_tempo,
+
+                            mes_orcado_realizar   = :mes_real,
+                            dt_alteracao          = CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo',
+                            id_usuario_alteracao  = :usuario_alt
+                        WHERE id = :id
+                    ";
+
+                    $this->adapter->createStatement($sqlUpdate, [
+                        'id'                 => $row['id'],
+                        'id_grupo'           => $idGrupo,
+
+                        'valor_orcado'       => $valorOrcado,
+                        'valor_realizado'    => $valorRealizado,
+                        'valor_variacao'     => $valorVariacao,
+                        'valor_a_justificar' => $valorAJustificar,
+
+                        'pressao'            => $valorPressao,
+                        'just_pressao'       => $justPressao,
+                        'tempo'              => $valorTempo,
+                        'just_tempo'         => $justTempo,
+                        'mes_real'           => $mesReal,
+                        'usuario_alt'        => $idUsuarioAlteracao
+                    ])->execute();
+
+                /**
+                 * =====================================================
+                 * INSERT
+                 * =====================================================
+                 */
+                } else {
+
+                    $sqlInsert = "
+                        INSERT INTO ctr_justificativas_orcado_realizado (
+                            ctared,
+                            id_plano_contas,
+                            id_grupo_contas,
+                            id_usuario_gestor,
+                            referencia,
+
+                            valor_orcado,
+                            valor_realizado,
+                            valor_variacao_total,
+                            valor_a_justificar,
+
+                            valor_pressao,
+                            justificativa_pressao,
+                            valor_tempo,
+                            justificativa_tempo,
+                            mes_orcado_realizar,
+
+                            dt_criacao,
+                            dt_alteracao,
+                            id_usuario_alteracao
+                        ) VALUES (
+                            :ctared,
+                            :id_plano,
+                            :id_grupo,
+                            :gestor,
+                            :referencia,
+
+                            :valor_orcado,
+                            :valor_realizado,
+                            :valor_variacao,
+                            :valor_a_justificar,
+
+                            :pressao,
+                            :just_pressao,
+                            :tempo,
+                            :just_tempo,
+                            :mes_real,
+
+                            CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo',
+                            CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo',
+                            :usuario_alt
+                        )
+                    ";
+
+                    $this->adapter->createStatement($sqlInsert, [
+                        'ctared'              => $ctared,
+                        'id_plano'            => $idPlano,
+                        'id_grupo'            => $idGrupo,
+                        'gestor'              => $idGestor,
+                        'referencia'          => $referencia,
+
+                        'valor_orcado'        => $valorOrcado,
+                        'valor_realizado'     => $valorRealizado,
+                        'valor_variacao'      => $valorVariacao,
+                        'valor_a_justificar'  => $valorAJustificar,
+
+                        'pressao'             => $valorPressao,
+                        'just_pressao'        => $justPressao,
+                        'tempo'               => $valorTempo,
+                        'just_tempo'          => $justTempo,
+                        'mes_real'            => $mesReal,
+                        'usuario_alt'         => $idUsuarioAlteracao
+                    ])->execute();
+                }
+
+                return [
+                    'success' => true,
+                    'message' => 'Justificativa salva com sucesso.'
+                ];
+
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Erro ao salvar justificativa: ' . $e->getMessage()
+                ];
+            }
+        }
+        public function getRealizadoPorContaCentroCustoQuery(int $codEmpresa, string $referencia)
+        {
+            $inicio = $referencia . '-01';
+            $fim    = date('Y-m-t', strtotime($inicio));
+
+            return "SELECT
+                    RT.CODEMP,
+                    RT.CODCCU,
+                    RT.CTARED,
+                    SUM(CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE -RT.VLRRAT END) AS VALOR_REALIZADO
+                FROM SAPIENS.E640RAT RT
+                WHERE RT.SITRAT = 2
+                --AND RT.FILRAT = 7
+                AND RT.CODEMP = {$codEmpresa}
+                AND RT.DATLCT BETWEEN TO_DATE('{$inicio}', 'YYYY-MM-DD') AND TO_DATE('{$fim}', 'YYYY-MM-DD')
+                GROUP BY RT.CODEMP,RT.CODCCU,RT.CTARED
+            ";
+        }
+
+
+    #endRegion
+
+
 
 }
