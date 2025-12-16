@@ -44,6 +44,57 @@
         background-color: #fafafa;
     }
 
+
+
+    /* Contador Progresso*/
+    .contador-kpi {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .contador-texto {
+        display: flex;
+        gap: 24px;
+        font-size: 14px;
+        color: #2f2f2f;
+    }
+
+    .contador-texto span {
+        white-space: nowrap;
+    }
+
+    .progress {
+        width: 420px;
+        height: 16px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+
+
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        background-color: #2e7d32;
+        border-radius: 10px;
+        transition: width 0.4s ease, background-color 0.3s ease;
+    }
+
+    #progress-label {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: #333;
+    }
+
+
 </style>
 
 
@@ -75,6 +126,23 @@
                         </div>
                     </div>
 
+                    <!-- Contador de Linhas Justificadas -->
+                    <div id="contadorJustificativas" class="contador-kpi">
+                        <div class="contador-texto">
+                            <span><b>Total:</b> <span id="kpi-total">0</span></span>
+                            <span><b>Justificadas:</b> <span id="kpi-justificadas">0</span></span>
+                            <span><b>Pendentes:</b> <span id="kpi-pendentes">0</span></span>
+                        </div>
+
+                        <div class="progress">
+                            <div id="progress-justificadas" class="progress-bar"></div>
+                            <span id="progress-label">0%</span>
+                        </div>
+
+
+                    </div>
+
+
                     <!-- Grid principal -->
                     <div id="gridJustificativas"></div>
 
@@ -104,6 +172,10 @@
         let currentReferencia = moment().format("YYYY-MM"); // aaaa-MM
 
         let gridJustificativas = null;
+
+        let totalLinhasGeral = 0;
+        let dadosOriginais = [];
+
 
         // ===============================
         // SELECTBOX GESTOR
@@ -180,6 +252,8 @@
                 key: "row_key",
                 load: () => {
                     if (!currentGestor || !currentReferencia) {
+                        totalLinhasGeral = 0;
+                        dadosOriginais = [];
                         return [];
                     }
 
@@ -187,10 +261,20 @@
                         "?gestor=" + encodeURIComponent(currentGestor) +
                         "&referencia=" + encodeURIComponent(currentReferencia);
 
-                    return $.getJSON(url).then(r => r.data || []);
+                    return $.getJSON(url).then(r => {
+                        const data = r.data || [];
+
+                        // 🔹 GUARDA O TOTAL REAL (SEM FILTROS)
+                        dadosOriginais = data;
+                        totalLinhasGeral = data.length;
+
+                        // Atualiza contador após load
+                        setTimeout(atualizarContadorJustificativas, 0);
+
+                        return data;
+                    });
                 },
                 update: (key, values) => {
-                    // merge dos valores editados com os valores existentes na linha
                     const rowData = gridJustificativas.getVisibleRows()
                         .find(r => r.key === key).data;
 
@@ -223,6 +307,7 @@
                 pageSize: 500
             },
             columnAutoWidth: true,
+            hoverStateEnabled: true,
             editing: {
                 mode: "cell",
                 allowUpdating: false
@@ -231,6 +316,20 @@
                 enabled: true,
                 fileName: "Justificativas Contas",
                 allowExportSelectedData: false,
+            },
+            onContentReady: function () {
+                atualizarContadorJustificativas();
+            },
+            onOptionChanged: function(e) {
+                const props = [
+                    "filterValue",
+                    "searchPanel.text",
+                    "grouping"
+                ];
+
+                if (props.some(p => e.fullName?.startsWith(p))) {
+                    atualizarContadorJustificativas();
+                }
             },
             onCellPrepared: function(e) {
                 if (e.rowType !== "data") return;
@@ -653,6 +752,54 @@
             popupJustificar.show();
         }
 
+        function atualizarContadorJustificativas() {
+            const total = totalLinhasGeral;
+            let justificadas = 0;
+
+            dadosOriginais.forEach(data => {
+                const temPressao =
+                    data.valor_pressao !== null && data.valor_pressao !== undefined;
+
+                const temJustPressao =
+                    data.justificativa_pressao && data.justificativa_pressao.trim() !== "";
+
+                const temTempo =
+                    data.valor_tempo !== null && data.valor_tempo !== undefined;
+
+                const temJustTempo =
+                    data.justificativa_tempo && data.justificativa_tempo.trim() !== "";
+
+                if (temPressao || temJustPressao || temTempo || temJustTempo) {
+                    justificadas++;
+                }
+            });
+
+            const pendentes = total - justificadas;
+            const percentual = total > 0 ? Math.round((justificadas / total) * 100) : 0;
+
+            // Texto
+            $("#kpi-total").text(total);
+            $("#kpi-justificadas").text(justificadas);
+            $("#kpi-pendentes").text(pendentes);
+
+            // Cor da barra conforme percentual
+            let cor;
+            if (percentual === 100) {
+                cor = "#2e7d32"; // verde
+            } else if (percentual >= 50) {
+                cor = "#f9a825"; // amarelo
+            } else {
+                cor = "#c62828"; // vermelho
+            }
+
+            $("#progress-justificadas").css({
+                    width: percentual + "%",
+                    backgroundColor: cor
+                }).attr("title", percentual + "% justificado");
+
+            $("#progress-label").text(percentual + "%");
+
+        }
 
 
     });
