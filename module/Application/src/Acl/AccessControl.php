@@ -152,6 +152,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -409,6 +412,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -662,6 +668,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -915,6 +924,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1168,6 +1180,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1421,6 +1436,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1673,6 +1691,9 @@ class AccessControl
             'importarValorOrcado',
             'prepararDownloadModeloImportacaoOrcado',
             'downloadModeloImportacaoOrcado',
+            'importarVinculoCompleto',
+            'prepararDownloadModeloImportacaoVinculoCompleto',
+            'downloadModeloImportacaoVinculoCompleto',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',

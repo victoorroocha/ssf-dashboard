@@ -9,7 +9,14 @@
             <div class="card shadow mb-4">
                 <div class="card-body">
 
-                    <p><b>Vincular Conta x Centro de Custo</b></p>
+                    <!-- TÍTULO + BOTÃO NA MESMA LINHA -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <p class="mb-0">
+                            <b>Vincular Conta x Centro de Custo</b>
+                        </p>
+
+                        <div id="btnImportarVinculoCompleto"></div>
+                    </div>
 
                     <!-- ROW: CCU + Referência + Gestor -->
                     <div class="form-row" style="display:flex; gap:20px; width:100%;">
@@ -37,7 +44,41 @@
                     </div>
 
                     <!-- RESULTADO DA IMPORTAÇÃO (fora do popup) -->
-                    <div id="resultadoImportacaoGeral" class="mt-3"></div>
+                    <div id="resultadoImportacaoGeral" class="mt-3" style="display:none;">
+                        <div class="alert alert-info mb-2" id="resultadoResumo"></div>
+
+                        <button
+                            class="btn btn-link p-0"
+                            type="button"
+                            data-toggle="collapse"
+                            data-target="#detalhesErrosImportacao"
+                            aria-expanded="false"
+                            aria-controls="detalhesErrosImportacao"
+                            id="btnToggleErros"
+                            style="display:none;"
+                        >
+                            Ver erros da importação
+                        </button>
+
+
+                        <div class="collapse mt-2" id="detalhesErrosImportacao">
+                            <div class="card card-body p-2">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Centro de Custo</th>
+                                                <th>CTARED</th>
+                                                <th>Motivo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabelaErrosImportacao"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Grid principal -->
                     <div id="gridVinculos"></div>
@@ -79,7 +120,6 @@
 
 <!-- POPUP IMPORTAÇÃO -->
 <div id="popupImportarOrcado"></div>
-
 <!-- TEMPLATE -->
 <div id="popupImportarContent" style="display:none;">
     <div class="p-3">
@@ -102,9 +142,6 @@
             </button>
         </div>
 
-
-
-
         <div id="orcadoUploader" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer">
             <div id="orcadoPlaceholder">
                 <i class="fas fa-file-upload fa-2x text-gray-400 mb-2"></i>
@@ -125,6 +162,52 @@
         </div>
     </div>
 </div>
+
+
+
+<div id="popupImportarVinculoCompleto"></div>
+<div id="popupImportarVinculoCompletoContent" style="display:none;">
+    <div class="p-3">
+        <h6><b>Importar Vínculos Conta x Centro de Custo</b></h6>
+
+        <p class="text-muted">
+            O arquivo deve conter as colunas:
+            <br>
+            <b>CODCCU, CTARED, REFERENCIA, ID_USUARIO_GESTOR, ID_GRUPO_CONTAS, VALOR_ORCADO</b>
+        </p>
+
+        <!-- BOTÃO PARA DOWNLOAD DO MODELO -->
+        <div class="mb-3 d-flex align-items-center justify-content-between">
+            <p class="text-muted mb-0">
+                Clique ao lado para baixar o modelo CSV com as colunas necessárias.
+            </p>
+            <button type="button" id="btnDownloadModeloVinculo" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-download me-1"></i>
+                Modelo CSV
+            </button>
+        </div>
+
+        <div id="vinculoUploader" class="border-2 border-dashed p-4 text-center cursor-pointer">
+            <div id="vinculoPlaceholder">
+                 <i class="fas fa-file-upload fa-2x text-gray-400 mb-2"></i>
+                <p class="text-gray-500 mb-1">Clique ou arraste o arquivo aqui</p>
+                <small class="text-gray-400">CSV</small>
+            </div>
+
+            <div id="vinculoFileInfo" style="display:none;">
+                <i class="fas fa-file-excel fa-2x text-success mb-2"></i>
+                <p id="vinculoFileName" class="mb-1"></p>
+            </div>
+        </div>
+
+        <div class="mt-3 text-end">
+            <button id="btnEnviarVinculoCompleto" class="btn btn-primary">
+                <i class="fas fa-upload me-2"></i>Importar
+            </button>
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -170,7 +253,24 @@
                 });
         });
 
+        // ==========================
+        // BOTÃO PARA DOWNLOAD DO MODELO Vinculos
+        // ==========================
+        $(document).on("click", "#btnDownloadModeloVinculo", function () {
+            fetch("/controladoria/preparar-download-modelo-importacao-vinculo-completo")
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) {
+                        DevExpress.ui.notify(res.message, "error");
+                        return;
+                    }
 
+                    window.location.href = res.url;
+                })
+                .catch(() => {
+                    DevExpress.ui.notify("Erro ao preparar download do modelo.", "error");
+                });
+        });
 
 
         // ===============================
@@ -735,7 +835,6 @@
             }
         });
 
-
         // ===============================
         // ENVIAR ARQUIVO PARA BACKEND
         // ===============================
@@ -760,27 +859,16 @@
             .then(res => {
 
                 if (res.success) {
+
                     DevExpress.ui.notify("Importação concluída!", "success");
 
-                    // Mostra resultado na tela principal (fora do popup)
-                    $("#resultadoImportacaoGeral").html(`
-                        <div class="alert alert-success">
-                            ${res.mensagem || "Arquivo importado com sucesso."}
-                        </div>
-                    `);
+                    exibirResultadoImportacao(res);
 
-                    gridVinculos.refresh();
-                    popupImportar.hide();   // agora pode fechar normalmente
+                    if (gridVinculos) gridVinculos.refresh();
+                    popupImportarVinculoCompleto.hide();
 
-
-                    gridVinculos.refresh();
-                    popupImportar.hide();
                 } else {
-                    $("#resultadoImportacaoGeral").html(`
-                        <div class="alert alert-danger">
-                            ${res.error || "Falha ao importar."}
-                        </div>
-                    `);
+                    DevExpress.ui.notify(res.message || "Erro na importação.", "error");
                 }
 
             })
@@ -797,6 +885,167 @@
         }
 
 
+        $("#btnImportarVinculoCompleto").dxButton({
+            icon: "upload",
+            text: "Importar Vínculos",
+            type: "default",
+            onClick: () => {
+                popupImportarVinculoCompleto.show();
+            }
+        });
+
+        // ===============================
+        // POPUP IMPORTAR VÍNCULO COMPLETO
+        // (PADRÃO IGUAL AO popupImportarOrcado)
+        // ===============================
+        let popupImportarVinculoCompleto = $("#popupImportarVinculoCompleto").dxPopup({
+            visible: false,
+            title: "Importar Vínculos Conta x Centro de Custo",
+            width: 'auto',
+            height: "auto",
+            showCloseButton: true,
+            contentTemplate: container => {
+
+                container.append($("#popupImportarVinculoCompletoContent").html());
+
+                let arquivoVinculo = null;
+
+                const uploader  = document.getElementById('vinculoUploader');
+                const place     = document.getElementById('vinculoPlaceholder');
+                const info      = document.getElementById('vinculoFileInfo');
+                const fileName  = document.getElementById('vinculoFileName');
+
+                // CLICK
+                uploader.addEventListener("click", () => {
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = ".csv";
+
+                    input.onchange = e => {
+                        const f = e.target.files[0];
+                        if (!f) return;
+
+                        arquivoVinculo = f;
+                        fileName.textContent = f.name;
+                        place.style.display = 'none';
+                        info.style.display = 'block';
+                    };
+
+                    input.click();
+                });
+
+                // DRAG
+                uploader.addEventListener("dragover", e => {
+                    e.preventDefault();
+                    uploader.classList.add("dragover");
+                });
+
+                uploader.addEventListener("dragleave", () => {
+                    uploader.classList.remove("dragover");
+                });
+
+                uploader.addEventListener("drop", e => {
+                    e.preventDefault();
+                    uploader.classList.remove("dragover");
+
+                    const f = e.dataTransfer.files[0];
+                    if (!f) return;
+
+                    arquivoVinculo = f;
+                    fileName.textContent = f.name;
+                    place.style.display = 'none';
+                    info.style.display = 'block';
+                });
+
+                // BOTÃO IMPORTAR
+                $("#btnEnviarVinculoCompleto").on("click", () => {
+
+                    if (!arquivoVinculo) {
+                        return DevExpress.ui.notify("Selecione um arquivo CSV.", "warning");
+                    }
+
+                    let formData = new FormData();
+                    formData.append("file", arquivoVinculo);
+
+                    $("#btnEnviarVinculoCompleto")
+                        .prop("disabled", true)
+                        .html("Importando...");
+
+                    fetch("/controladoria/importar-vinculo-completo", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+
+                        if (res.success) {
+
+                            DevExpress.ui.notify("Importação concluída!", "success");
+
+                            exibirResultadoImportacao(res);
+
+                            if (gridVinculos) gridVinculos.refresh();
+                            popupImportarVinculoCompleto.hide();
+
+                        } else {
+                            DevExpress.ui.notify(res.message || "Erro na importação.", "error");
+                        }
+
+                    })
+                    .finally(() => {
+                        $("#btnEnviarVinculoCompleto")
+                            .prop("disabled", false)
+                            .html('<i class="fas fa-upload me-2"></i>Importar');
+                    });
+                });
+            },
+            onHidden: () => {
+                // LIMPA UI AO FECHAR (MESMO PADRÃO DO ORÇADO)
+                $("#vinculoPlaceholder").show();
+                $("#vinculoFileInfo").hide();
+                $("#vinculoFileName").text("");
+            }
+        }).dxPopup("instance");
+
+
+        function exibirResultadoImportacao(res) {
+
+            // Mostra container
+            $("#resultadoImportacaoGeral").show();
+
+            // Mensagem principal
+            $("#resultadoResumo").html(res.mensagem || "Importação finalizada.");
+
+            // Limpa erros anteriores
+            $("#tabelaErrosImportacao").empty();
+            $("#btnToggleErros").hide();
+            $("#detalhesErrosImportacao").collapse('hide');
+
+            if (Array.isArray(res.erros) && res.erros.length > 0) {
+
+                res.erros.forEach(e => {
+                    $("#tabelaErrosImportacao").append(`
+                        <tr>
+                            <td>${e.codccu ?? '-'}</td>
+                            <td>${e.ctared ?? '-'}</td>
+                            <td>${e.motivo ?? 'Erro não informado'}</td>
+                        </tr>
+                    `);
+                });
+
+                $("#btnToggleErros").show();
+
+                // Texto do botão muda ao expandir
+                $('#detalhesErrosImportacao')
+                    .off('shown.bs.collapse hidden.bs.collapse')
+                    .on('shown.bs.collapse', function () {
+                        $("#btnToggleErros").text("▼ Ocultar erros da importação");
+                    })
+                    .on('hidden.bs.collapse', function () {
+                        $("#btnToggleErros").text("▶ Ver erros da importação");
+                    });
+            }
+        }
 
 
     });

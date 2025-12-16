@@ -701,6 +701,154 @@ class ControladoriaRepository
                 ];
             }
         }
+        public function importarVinculoCompleto(array $dados)
+        {
+            $inseridos   = 0;
+            $atualizados = 0;
+            $erros       = [];
+
+            foreach ($dados as $d) {
+
+                /**
+                 * Resolver PLANO DE CONTAS via CTARED
+                 */
+                $sqlPlano = "
+                    SELECT id
+                    FROM ctr_plano_contas
+                    WHERE ctared = :ctared
+                    AND anasin = 'A'
+                    LIMIT 1
+                ";
+
+                $plano = $this->adapter->createStatement($sqlPlano, [
+                    'ctared' => $d['ctared']
+                ])->execute()->current();
+
+                if (!$plano) {
+                    $erros[] = [
+                        'codccu' => $d['codccu'],
+                        'ctared' => $d['ctared'],
+                        'motivo' => 'CTARED não encontrado no plano de contas'
+                    ];
+                    continue;
+                }
+
+                $idPlano = (int)$plano['id'];
+
+                /**
+                 * Verifica existência considerando GESTOR
+                 */
+                $sqlBusca = "
+                    SELECT id
+                    FROM ctr_vinculo_contas_ccu
+                    WHERE codccu = :ccu
+                    AND ctared = :ctared
+                    AND referencia = :ref
+                    AND id_usuario_gestor = :gestor
+                ";
+
+                $row = $this->adapter->createStatement($sqlBusca, [
+                    'ccu'    => $d['codccu'],
+                    'ctared' => $d['ctared'],
+                    'ref'    => $d['referencia'],
+                    'gestor' => $d['gestor']
+                ])->execute()->current();
+
+                if ($row) {
+
+                    /**
+                     * UPDATE (gestor NÃO muda)
+                     */
+                    $sqlUpdate = "
+                        UPDATE ctr_vinculo_contas_ccu
+                        SET
+                            id_plano_contas = :plano,
+                            id_grupo_contas = :grupo,
+                            valor_orcado    = :valor
+                        WHERE id = :id
+                    ";
+
+                    $this->adapter->createStatement($sqlUpdate, [
+                        'plano' => $idPlano,
+                        'grupo' => $d['grupo'],
+                        'valor' => $d['valor'],
+                        'id'    => $row['id']
+                    ])->execute();
+
+                    $atualizados++;
+
+                } else {
+
+                    /**
+                     * Verifica divergência de gestor
+                     */
+                    $sqlOutro = "
+                        SELECT id_usuario_gestor
+                        FROM ctr_vinculo_contas_ccu
+                        WHERE codccu = :ccu
+                        AND ctared = :ctared
+                        AND referencia = :ref
+                        LIMIT 1
+                    ";
+
+                    $outro = $this->adapter->createStatement($sqlOutro, [
+                        'ccu'    => $d['codccu'],
+                        'ctared' => $d['ctared'],
+                        'ref'    => $d['referencia']
+                    ])->execute()->current();
+
+                    if ($outro) {
+                        $erros[] = [
+                            'codccu'     => $d['codccu'],
+                            'ctared'     => $d['ctared'],
+                            'referencia' => $d['referencia'],
+                            'gestor_csv' => $d['gestor'],
+                            'gestor_bd'  => $outro['id_usuario_gestor'],
+                            'motivo'     => 'Gestor divergente'
+                        ];
+                        continue;
+                    }
+
+                    /**
+                     * INSERT
+                     */
+                    $sqlInsert = "
+                        INSERT INTO ctr_vinculo_contas_ccu
+                            (codccu, ctared, referencia, id_plano_contas, id_usuario_gestor, id_grupo_contas, valor_orcado)
+                        VALUES
+                            (:ccu, :ctared, :ref, :plano, :gestor, :grupo, :valor)
+                    ";
+
+                    $this->adapter->createStatement($sqlInsert, [
+                        'ccu'    => $d['codccu'],
+                        'ctared' => $d['ctared'],
+                        'ref'    => $d['referencia'],
+                        'plano'  => $idPlano,
+                        'gestor' => $d['gestor'],
+                        'grupo'  => $d['grupo'],
+                        'valor'  => $d['valor']
+                    ])->execute();
+
+                    $inseridos++;
+                }
+            }
+
+            return [
+                'success'     => true,
+                'inseridos'   => $inseridos,
+                'atualizados' => $atualizados,
+                'erros'       => $erros,
+                'mensagem'    => sprintf(
+                    'Importação concluída. Inseridos: %d | Atualizados: %d | Erros: %d',
+                    $inseridos,
+                    $atualizados,
+                    count($erros)
+                )
+            ];
+        }
+
+
+
 
     #endRegion
 

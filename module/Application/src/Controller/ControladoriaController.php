@@ -539,7 +539,7 @@ class ControladoriaController extends BaseController
                 $sql = "
                     SELECT 
                         id, 
-                        nome 
+                        (id || ' - ' || nome) as dsc 
                     FROM usuario 
                     WHERE ativo = true
                     ORDER BY nome
@@ -552,7 +552,7 @@ class ControladoriaController extends BaseController
                 foreach ($result as $row) {
                     $data[] = [
                         'id'   => (int)$row['id'],
-                        'nome' => $row['nome']
+                        'nome' => $row['dsc']
                     ];
                 }
 
@@ -931,6 +931,50 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+        public function importarVinculoCompletoAction()
+        {
+            try {
+                $request = $this->getRequest();
+
+                if (!$request->isPost()) {
+                    return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+                }
+
+                $files = $request->getFiles()->toArray();
+                if (!isset($files['file']) || $files['file']['error'] !== UPLOAD_ERR_OK) {
+                    return new JsonModel(['success' => false, 'message' => 'Arquivo inválido']);
+                }
+
+                $dados = [];
+
+                $handle = fopen($files['file']['tmp_name'], 'r');
+                fgetcsv($handle, 0, ';'); // header
+
+                while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                    $dados[] = [
+                        'codccu'     => trim($row[0]),
+                        'ctared'     => trim($row[1]),
+                        'referencia' => trim($row[2]),
+                        'gestor'     => (int)$row[3],
+                        'grupo'      => (int)$row[4],
+                        'valor'      => floatval(str_replace(',', '.', $row[5]))
+                    ];
+                }
+                fclose($handle);
+
+                $resp = $this->ControladoriaRepository->importarVinculoCompleto($dados);
+
+                return new JsonModel($resp);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+
+
         public function prepararDownloadModeloImportacaoOrcadoAction()
         {
             return new JsonModel([
@@ -963,9 +1007,38 @@ class ControladoriaController extends BaseController
 
             return $response;
         }
+        public function prepararDownloadModeloImportacaoVinculoCompletoAction()
+        {
+            return new JsonModel([
+                'success' => true,
+                'url' => '/controladoria/download-modelo-importacao-vinculo-completo'
+            ]);
+        }
+        public function downloadModeloImportacaoVinculoCompletoAction()
+        {
+            $file = getcwd() . '/data/controladoria/modeloImportacaoVinculoCompleto.csv';
 
+            if (!file_exists($file)) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Arquivo modelo não encontrado',
+                    'debug_path' => $file
+                ]);
+            }
 
+            $response = new \Laminas\Http\Response();
+            $response->setContent(file_get_contents($file));
 
+            $headers = $response->getHeaders();
+            $headers->addHeaderLine('Content-Type', 'text/csv; charset=UTF-8');
+            $headers->addHeaderLine(
+                'Content-Disposition',
+                'attachment; filename="modeloImportacaoVinculoCompleto.csv"'
+            );
+            $headers->addHeaderLine('Content-Length', filesize($file));
+
+            return $response;
+        }
 
 
 
@@ -993,11 +1066,11 @@ class ControladoriaController extends BaseController
         {
             try {
                 $sql = "
-                    SELECT DISTINCT u.id, u.nome 
+                    SELECT DISTINCT u.id, (u.id || ' - ' || u.nome) as dsc
                     FROM ctr_vinculo_contas_ccu cvcc
                     LEFT JOIN usuario u ON u.id = cvcc.id_usuario_gestor 
                     WHERE u.id IS NOT NULL
-                    ORDER BY u.nome ASC
+                    ORDER BY (u.id || ' - ' || u.nome) ASC
                 ";
 
                 $statement = $this->pgAdapter->createStatement($sql);
@@ -1007,7 +1080,7 @@ class ControladoriaController extends BaseController
                 foreach ($result as $row) {
                     $data[] = [
                         'id'   => (int)$row['id'],
-                        'nome' => $row['nome']
+                        'nome' => $row['dsc']
                     ];
                 }
 
