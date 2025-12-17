@@ -1039,9 +1039,6 @@ class ControladoriaController extends BaseController
 
             return $response;
         }
-
-
-
     #endRegion
 
     #region Painel de Justificativas
@@ -1180,12 +1177,21 @@ class ControladoriaController extends BaseController
                             'valor_tempo'           => $row['valor_tempo'],
                             'justificativa_tempo'   => $row['justificativa_tempo'],
                             'mes_orcado_realizar'   => $row['mes_orcado_realizar'],
+                             
+                            'centro_custos' => []
                         ];
                     }
 
                     // SOMA FINAL IGNORANDO CCU
-                    $agrupadoPorConta[$ctared]['valor_orcado']    += (float)$row['valor_orcado'];
+                    $agrupadoPorConta[$ctared]['valor_orcado'] += (float)$row['valor_orcado'];
                     $agrupadoPorConta[$ctared]['valor_realizado'] += (float)$row['valor_realizado'];
+
+                    // Guarda Centro de Custos para o Master Detail
+                    $agrupadoPorConta[$ctared]['centro_custos'][] = [
+                        'codccu' => (int)$row['codccu'],
+                        'valor_orcado'    => (float)$row['valor_orcado'],
+                        'valor_realizado' => (float)$row['valor_realizado']
+                    ];
                 }
 
                 /**

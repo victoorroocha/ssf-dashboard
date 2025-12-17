@@ -1116,8 +1116,6 @@ class ControladoriaRepository
                 GROUP BY RT.CODEMP,RT.CODCCU,RT.CTARED
             ";
         }
-
-
     #endRegion
 
 

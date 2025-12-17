@@ -326,51 +326,6 @@
                 fileName: "Justificativas Contas",
                 allowExportSelectedData: false,
             },
-            onContentReady: function () {
-                atualizarContadorJustificativas();
-            },
-            onOptionChanged: function(e) {
-                const props = [
-                    "filterValue",
-                    "searchPanel.text",
-                    "grouping"
-                ];
-
-                if (props.some(p => e.fullName?.startsWith(p))) {
-                    atualizarContadorJustificativas();
-                }
-            },
-            onCellPrepared: function(e) {
-                if (e.rowType !== "data") return;
-
-                // Mantém regra de cor positiva/negativa
-                if (e.column.dataField === "variacao_total") {
-                    if (e.value > 0) e.cellElement.addClass("cell-positive");
-                    if (e.value < 0) e.cellElement.addClass("cell-negative");
-                }
-
-                if (e.column.dataField === "a_justificar") {
-                    if (e.value > 0) {
-                        e.cellElement.addClass("cell-positive");
-                    } else if (e.value < 0) {
-                        e.cellElement.addClass("cell-negative");
-                    }
-                }
-
-                // =============================
-                // NOVO → pinta de amarelo sempre
-                // =============================
-                const amarelas = [
-                    "valor_orcado",
-                    "valor_realizado",
-                    "variacao_total",
-                    "a_justificar"
-                ];
-
-                if (amarelas.includes(e.column.dataField)) {
-                    e.cellElement.addClass("cell-warning");
-                }
-            },
             columns: [
                 {
                     caption: "Justificar",
@@ -559,6 +514,67 @@
                 { dataField: "row_key", visible: false }
 
             ],
+            masterDetail: {
+                enabled: true,
+                template: function(container, options) {
+
+                    const ccus = options.data.centro_custos || [];
+
+                    $("<div>")
+                        .dxDataGrid({
+                            dataSource: ccus,
+                            showBorders: true,
+                            columnAutoWidth: true,
+                            paging: { enabled: false },
+                            columns: [
+                                {
+                                    dataField: "codccu",
+                                    caption: "Centro de Custo",
+                                    width: 90,
+                                },
+                                {
+                                    dataField: "valor_orcado",
+                                    caption: "Orçado",
+                                    dataType: "number",
+                                    format: { type: "currency", currency: "BRL", precision: 2 },
+                                    alignment: "right",
+                                    width: 150,
+                                    allowEditing: false,
+                                    cssClass: "col-readonly"
+                                },
+                                {
+                                    dataField: "valor_realizado",
+                                    caption: "Realizado",
+                                    dataType: "number",
+                                    format: { type: "currency", currency: "BRL", precision: 2 },
+                                    alignment: "right",
+                                    width: 150,
+                                    allowEditing: false,
+                                    cssClass: "col-readonly",
+                                    sortOrder: 'desc'
+                                },
+
+                                // ======= CÁLCULOS FEITOS NO FRONTEND ==========
+                                {
+                                    dataField: "variacao_total",
+                                    caption: "Variação Total",
+                                    dataType: "number",
+                                    allowEditing: false,
+                                    width: 150,
+                                    alignment: "right",
+                                    cssClass: "col-readonly",
+                                    calculateCellValue: function (row) {
+                                        const orcado = Number(row.valor_orcado) || 0;
+                                        const realizado = Number(row.valor_realizado) || 0;
+                                        return orcado - realizado;
+                                    },
+                                    format: { type: "currency", currency: "BRL", precision: 2 }
+                                },
+                            ]
+                        })
+                        .appendTo(container);
+                }
+            },
             summary: {
                 totalItems: [
                     {
@@ -634,8 +650,52 @@
                         valueFormat: { type: "currency", currency: "BRL", precision: 2 }
                     }
                 ]
-            }
+            },
+            onContentReady: function () {
+                atualizarContadorJustificativas();
+            },
+            onOptionChanged: function(e) {
+                const props = [
+                    "filterValue",
+                    "searchPanel.text",
+                    "grouping"
+                ];
 
+                if (props.some(p => e.fullName?.startsWith(p))) {
+                    atualizarContadorJustificativas();
+                }
+            },
+            onCellPrepared: function(e) {
+                if (e.rowType !== "data") return;
+
+                // Mantém regra de cor positiva/negativa
+                if (e.column.dataField === "variacao_total") {
+                    if (e.value > 0) e.cellElement.addClass("cell-positive");
+                    if (e.value < 0) e.cellElement.addClass("cell-negative");
+                }
+
+                if (e.column.dataField === "a_justificar") {
+                    if (e.value > 0) {
+                        e.cellElement.addClass("cell-positive");
+                    } else if (e.value < 0) {
+                        e.cellElement.addClass("cell-negative");
+                    }
+                }
+
+                // =============================
+                // NOVO → pinta de amarelo sempre
+                // =============================
+                const amarelas = [
+                    "valor_orcado",
+                    "valor_realizado",
+                    "variacao_total",
+                    "a_justificar"
+                ];
+
+                if (amarelas.includes(e.column.dataField)) {
+                    e.cellElement.addClass("cell-warning");
+                }
+            },
         }).dxDataGrid("instance");
 
 
