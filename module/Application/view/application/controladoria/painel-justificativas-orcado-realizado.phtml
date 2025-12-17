@@ -520,8 +520,7 @@
 
                     const ccus = options.data.centro_custos || [];
 
-                    $("<div>")
-                        .dxDataGrid({
+                    $("<div>").dxDataGrid({
                             dataSource: ccus,
                             showBorders: true,
                             columnAutoWidth: true,
@@ -530,7 +529,8 @@
                                 {
                                     dataField: "codccu",
                                     caption: "Centro de Custo",
-                                    width: 90,
+                                    width: 150,
+                                    alignment: "center",
                                 },
                                 {
                                     dataField: "valor_orcado",
@@ -571,8 +571,8 @@
                                     format: { type: "currency", currency: "BRL", precision: 2 }
                                 },
                             ]
-                        })
-                        .appendTo(container);
+                    }).css({marginLeft: "348px" })
+                    .appendTo(container);
                 }
             },
             summary: {
