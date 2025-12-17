@@ -262,17 +262,26 @@
                         "&referencia=" + encodeURIComponent(currentReferencia);
 
                     return $.getJSON(url).then(r => {
-                        const data = r.data || [];
 
-                        // 🔹 GUARDA O TOTAL REAL (SEM FILTROS)
+                        const limite = Number(currentGestor) === 48 ? 1000 : 500; // Edivaldo só justifica contas com Variação maior que 1000 e menor que -1000, os demais 500 e -500.
+
+                        const data = (r.data || []).filter(row => {
+                            const orcado = Number(row.valor_orcado) || 0;
+                            const realizado = Number(row.valor_realizado) || 0;
+                            const variacao = orcado - realizado;
+
+                            return variacao > limite || variacao < -limite;
+                        });
+
+                        // 🔹 GUARDA O TOTAL APÓS REGRA
                         dadosOriginais = data;
                         totalLinhasGeral = data.length;
 
-                        // Atualiza contador após load
                         setTimeout(atualizarContadorJustificativas, 0);
 
                         return data;
                     });
+
                 },
                 update: (key, values) => {
                     const rowData = gridJustificativas.getVisibleRows()
