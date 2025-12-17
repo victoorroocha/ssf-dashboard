@@ -244,6 +244,13 @@
             },
             columns: [
                 {
+                    dataField: 'id',
+                    caption: 'ID',
+                    width: 90,
+                    allowEditing: false,
+                    sortOrder: 'asc'
+                },
+                {
                     dataField: 'nome',
                     caption: 'Pacote de Contas',
                     validationRules: [{ type: 'required', message: 'Pacote de Contas é obrigatório' }]
