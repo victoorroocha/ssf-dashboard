@@ -12,10 +12,13 @@
                     <!-- TÍTULO + BOTÃO NA MESMA LINHA -->
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <p class="mb-0">
-                            <b>Vincular Conta x Centro de Custo</b>
+                            <b>Vincular Conta x Centro de Custoo</b>
                         </p>
 
-                        <div id="btnImportarVinculoCompleto"></div>
+                        <div class="d-flex gap-2">
+                            <div id="btnImportarVinculoCompleto"></div>
+                            <div id="btnExportarVinculosGestor"></div>
+                        </div>
                     </div>
 
                     <!-- ROW: CCU + Referência + Gestor -->
@@ -163,7 +166,6 @@
 </div>
 
 
-
 <div id="popupImportarVinculoCompleto"></div>
 <div id="popupImportarVinculoCompletoContent" style="display:none;">
     <div class="p-3">
@@ -208,6 +210,32 @@
 </div>
 
 
+<!-- POPUP EXPORTAR VÍNCULOS POR GESTOR -->
+<div id="popupExportarVinculosGestor"></div>
+<div id="popupExportarVinculosGestorContent" style="display:none;">
+    <div class="p-3">
+        <!-- FILTROS -->
+        <div class="form-row mb-3" style="display:flex; gap:15px;">
+
+            <div style="flex:1;">
+                <label><b>Referência</b></label>
+                <div id="selectReferenciaExport"></div>
+            </div>
+
+            <div style="flex:1;">
+                <label><b>Gestor</b></label>
+                <div id="selectGestorExport"></div>
+            </div>
+
+        </div>
+
+        <div id="gridVinculosGestor"></div>
+
+    </div>
+</div>
+
+
+
 
 
 <script>
@@ -223,6 +251,8 @@
         const API_GESTORES       = "/controladoria/listar-gestores";
         const API_GESTOR_BY_CCU  = "/controladoria/buscar-gestor-por-ccu";
         const API_ATUALIZAR_GEST = "/controladoria/atualizar-gestor-ccu";
+        const API_LISTAR_VINC_GESTOR = "/controladoria/listar-vinculos-por-gestor";
+        const API_APENAS_GESTORES       = "/controladoria/listar-gestores-painel-justificativa";
 
         let currentCCU        = null;
         let currentGestor     = null;
@@ -893,6 +923,7 @@
             }
         });
 
+
         // ===============================
         // POPUP IMPORTAR VÍNCULO COMPLETO
         // (PADRÃO IGUAL AO popupImportarOrcado)
@@ -1005,6 +1036,129 @@
                 $("#vinculoFileName").text("");
             }
         }).dxPopup("instance");
+
+
+        let gridVinculosGestorInst = null;
+        let selectGestorExportInst = null;
+        let selectReferenciaExportInst = null;
+        let refExport = null;
+        let gestorExport = null;
+
+        let popupExportarVinculosGestor = $("#popupExportarVinculosGestor").dxPopup({
+            visible: false,
+            title: "Exportar Vínculos por Gestor",
+            width: "90%",
+            height: "90%",
+            showCloseButton: true,
+            deferRendering: false,
+            contentTemplate: container => {
+                container.append($("#popupExportarVinculosGestorContent").html());
+
+                // REFERÊNCIA
+                selectReferenciaExportInst = $("#selectReferenciaExport").dxDateBox({
+                    type: "date",
+                    displayFormat: "MM/yyyy",
+                    dateSerializationFormat: "yyyy-MM-dd",
+                    calendarOptions: {
+                        zoomLevel: "year",
+                        maxZoomLevel: "year",
+                        minZoomLevel: "month"
+                    },
+                    onValueChanged: e => {
+                        refExport = e.value
+                            ? moment(e.value).format("YYYY-MM")
+                            : null;
+                        atualizarGridGestor();
+                    }
+                }).dxDateBox("instance");
+
+                // GESTOR
+                selectGestorExportInst = $("#selectGestorExport").dxSelectBox({
+                    dataSource: new DevExpress.data.CustomStore({
+                        key: "id",
+                        loadMode: "raw",
+                        load: () =>
+                            $.getJSON(API_APENAS_GESTORES).then(r => r.data)
+                    }),
+                    displayExpr: "nome",
+                    valueExpr: "id",
+                    searchEnabled: true,
+                    placeholder: "Selecione o Gestor...",
+                    onValueChanged: e => {
+                        gestorExport = e.value || null;
+                        atualizarGridGestor();
+                    }
+                }).dxSelectBox("instance");
+
+                // GRID
+                gridVinculosGestorInst = $("#gridVinculosGestor").dxDataGrid({
+                    dataSource: [],
+                    height: 600,
+                    scrolling: { mode: "virtual" },
+                    showBorders: true,
+                    export: {
+                        enabled: true,
+                        fileName: "Vinculos_por_Gestor"
+                    },
+                    searchPanel: { visible: true },
+                    filterRow: { visible: true },
+                    groupPanel: { visible: true },
+                    paging: { pageSize: 500 },
+                    columns: [
+                        { dataField: "id_usuario_gestor", caption: "ID Gestor", width: 80 },
+                        { dataField: "nome_gestor", caption: "Gestor", width: 200 },
+                        { dataField: "codccu", caption: "CCU", width: 80 },
+                        { dataField: "ctared", caption: "Conta", width: 90 },
+                        { dataField: "conta_descricao", caption: "Descrição Conta" },
+                        { dataField: "grupo_nome", caption: "Grupo Contas", width: 180 },
+                        { dataField: "referencia", caption: "Referência", width: 90 },
+                        { 
+                            dataField: "valor_orcado", caption: "Vlr. Orçado", alignment: 'right', 
+                            width: 150, 
+                            dataType: 'number', 
+                            format: { type: 'currency', currency: 'BRL', precision: 2 }, 
+                        }
+                    ]
+                }).dxDataGrid("instance");
+            },
+            onHidden: () => {
+
+                refExport = null;
+                gestorExport = null;
+
+                // LIMPA FORM
+                selectReferenciaExportInst.option("value", null);
+                selectGestorExportInst.option("value", null);
+
+                // LIMPA GRID
+                gridVinculosGestorInst.option("dataSource", []);
+            }
+        }).dxPopup("instance");
+
+        function atualizarGridGestor() {
+            if (!refExport || !gestorExport) {
+                gridVinculosGestorInst.option("dataSource", []);
+                return;
+            }
+
+            $.getJSON(
+                API_LISTAR_VINC_GESTOR +
+                "?id_usuario_gestor=" + gestorExport +
+                "&referencia=" + refExport
+            ).done(r => {
+                gridVinculosGestorInst.option("dataSource", r.data || []);
+            });
+        }
+
+
+        $("#btnExportarVinculosGestor").dxButton({
+            icon: "export",
+            text: "Vínculos por Gestor",
+            type: "success",
+            stylingMode: "contained",
+            onClick: () => popupExportarVinculosGestor.show()
+        });
+
 
 
         function exibirResultadoImportacao(res) {

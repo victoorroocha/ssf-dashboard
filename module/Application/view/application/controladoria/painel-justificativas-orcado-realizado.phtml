@@ -826,17 +826,13 @@
             let justificadas = 0;
 
             dadosOriginais.forEach(data => {
-                const temPressao =
-                    data.valor_pressao !== null && data.valor_pressao !== undefined;
+                const temPressao = data.valor_pressao !== null && data.valor_pressao !== undefined && data.valor_pressao > 0;
 
-                const temJustPressao =
-                    data.justificativa_pressao && data.justificativa_pressao.trim() !== "";
+                const temJustPressao = data.justificativa_pressao && data.justificativa_pressao.trim() !== "";
 
-                const temTempo =
-                    data.valor_tempo !== null && data.valor_tempo !== undefined;
+                const temTempo = data.valor_tempo !== null && data.valor_tempo !== undefined && data.valor_tempo > 0;
 
-                const temJustTempo =
-                    data.justificativa_tempo && data.justificativa_tempo.trim() !== "";
+                const temJustTempo = data.justificativa_tempo && data.justificativa_tempo.trim() !== "";
 
                 if (temPressao || temJustPressao || temTempo || temJustTempo) {
                     justificadas++;

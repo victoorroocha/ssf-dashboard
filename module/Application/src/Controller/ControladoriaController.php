@@ -656,6 +656,34 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+        public function listarVinculosPorGestorAction()
+        {
+            try {
+                $idGestor   = $this->params()->fromQuery('id_usuario_gestor', null);
+                $referencia = $this->params()->fromQuery('referencia', null);
+
+                if (!$idGestor || !$referencia) {
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Gestor e Referência são obrigatórios.'
+                    ]);
+                }
+
+                $dados = $this->ControladoriaRepository
+                    ->listarVinculosPorGestor($idGestor, $referencia);
+
+                return new JsonModel([
+                    'success' => true,
+                    'data' => $dados
+                ]);
+
+            } catch (\Exception $e) {
+                return new JsonModel([
+                    'success' => false,
+                    'message' => 'Erro ao listar vínculos do gestor: ' . $e->getMessage()
+                ]);
+            }
+        }
         public function listarPlanoContaAnaliticasAction()
         {
             try {
@@ -937,29 +965,62 @@ class ControladoriaController extends BaseController
                 $request = $this->getRequest();
 
                 if (!$request->isPost()) {
-                    return new JsonModel(['success' => false, 'message' => 'Método inválido']);
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Método inválido'
+                    ]);
                 }
 
                 $files = $request->getFiles()->toArray();
+
                 if (!isset($files['file']) || $files['file']['error'] !== UPLOAD_ERR_OK) {
-                    return new JsonModel(['success' => false, 'message' => 'Arquivo inválido']);
+                    return new JsonModel([
+                        'success' => false,
+                        'message' => 'Arquivo inválido'
+                    ]);
                 }
 
                 $dados = [];
+                $linha = 1;
 
                 $handle = fopen($files['file']['tmp_name'], 'r');
                 fgetcsv($handle, 0, ';'); // header
 
                 while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                    $linha++;
+
+                    // Ignora linha completamente vazia
+                    if (count(array_filter($row, fn($v) => trim($v) !== '')) === 0) {
+                        continue;
+                    }
+
+                    // Valida quantidade mínima de colunas
+                    if (count($row) < 6) {
+                        $dados[] = [
+                            'erro_linha' => $linha,
+                            'motivo'     => 'Quantidade de colunas inválida'
+                        ];
+                        continue;
+                    }
+
+                    $gestor = trim($row[3]) !== '' ? (int)$row[3] : null;
+                    $grupo  = trim($row[4]) !== '' ? (int)$row[4] : null;
+
+                    $valor = trim($row[5]) !== ''
+                        ? (float) str_replace(',', '.', $row[5])
+                        : 0.0;
+
                     $dados[] = [
+                        'linha_csv'  => $linha,
                         'codccu'     => trim($row[0]),
                         'ctared'     => trim($row[1]),
                         'referencia' => trim($row[2]),
-                        'gestor'     => (int)$row[3],
-                        'grupo'      => (int)$row[4],
-                        'valor'      => floatval(str_replace(',', '.', $row[5]))
+                        'gestor'     => $gestor,
+                        'grupo'      => $grupo,
+                        'valor'      => $valor
                     ];
                 }
+
                 fclose($handle);
 
                 $resp = $this->ControladoriaRepository->importarVinculoCompleto($dados);
@@ -973,6 +1034,7 @@ class ControladoriaController extends BaseController
                 ]);
             }
         }
+
 
 
         public function prepararDownloadModeloImportacaoOrcadoAction()
@@ -1063,11 +1125,11 @@ class ControladoriaController extends BaseController
         {
             try {
                 $sql = "
-                    SELECT DISTINCT u.id, (u.id || ' - ' || u.nome) as dsc
+                    SELECT DISTINCT u.id, u.nome, (u.id || ' - ' || u.nome) as dsc
                     FROM ctr_vinculo_contas_ccu cvcc
                     LEFT JOIN usuario u ON u.id = cvcc.id_usuario_gestor 
                     WHERE u.id IS NOT NULL
-                    ORDER BY (u.id || ' - ' || u.nome) ASC
+                    ORDER BY u.nome ASC
                 ";
 
                 $statement = $this->pgAdapter->createStatement($sql);

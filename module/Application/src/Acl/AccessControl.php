@@ -155,6 +155,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -415,6 +416,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -671,6 +673,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -927,6 +930,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1183,6 +1187,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1439,6 +1444,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',
@@ -1694,6 +1700,7 @@ class AccessControl
             'importarVinculoCompleto',
             'prepararDownloadModeloImportacaoVinculoCompleto',
             'downloadModeloImportacaoVinculoCompleto',
+            'listarVinculosPorGestor',
 
             // Painel de Justificativas
             'painelJustificativasOrcadoRealizado',

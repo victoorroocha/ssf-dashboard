@@ -495,6 +495,41 @@ class ControladoriaRepository
 
             return $data;
         }
+        public function listarVinculosPorGestor($idGestor, $referencia)
+        {
+            $sql = "SELECT
+                        v.codccu,
+                        v.ctared,
+                        p.descta                  AS conta_descricao,
+                        gc.nome                   AS grupo_nome,
+                        v.referencia,
+                        v.id_usuario_gestor,
+                        u.nome as nome_gestor,
+                        v.valor_orcado 
+                    FROM ctr_vinculo_contas_ccu v
+                    JOIN ctr_plano_contas p ON p.id = v.id_plano_contas
+                    LEFT JOIN ctr_grupo_contas gc ON gc.id = v.id_grupo_contas
+                    left join usuario u on u.id = v.id_usuario_gestor 
+                    WHERE v.id_usuario_gestor = :gestor
+                    AND v.referencia = :referencia
+                    ORDER BY v.valor_orcado desc
+            ";
+
+            $statement = $this->adapter->createStatement($sql, [
+                'gestor'     => $idGestor,
+                'referencia' => $referencia
+            ]);
+
+            $result = $statement->execute();
+
+            $data = [];
+            foreach ($result as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+
         public function listarPlanoContaAnaliticas()
         {
             $sql = "
@@ -709,6 +744,29 @@ class ControladoriaRepository
 
             foreach ($dados as $d) {
 
+                // Linha inválida vinda do controller
+                if (isset($d['erro_linha'])) {
+                    $erros[] = $d;
+                    continue;
+                }
+
+                // Validação obrigatória
+                if (
+                    empty($d['codccu']) ||
+                    empty($d['ctared']) ||
+                    empty($d['referencia']) ||
+                    $d['gestor'] === null ||
+                    $d['grupo'] === null
+                ) {
+                    $erros[] = [
+                        'linha_csv' => $d['linha_csv'] ?? null,
+                        'codccu'    => $d['codccu'] ?? null,
+                        'ctared'    => $d['ctared'] ?? null,
+                        'motivo'    => 'Campos obrigatórios vazios no CSV'
+                    ];
+                    continue;
+                }
+
                 /**
                  * Resolver PLANO DE CONTAS via CTARED
                  */
@@ -726,14 +784,15 @@ class ControladoriaRepository
 
                 if (!$plano) {
                     $erros[] = [
-                        'codccu' => $d['codccu'],
-                        'ctared' => $d['ctared'],
-                        'motivo' => 'CTARED não encontrado no plano de contas'
+                        'linha_csv' => $d['linha_csv'],
+                        'codccu'    => $d['codccu'],
+                        'ctared'    => $d['ctared'],
+                        'motivo'    => 'CTARED não encontrado no plano de contas'
                     ];
                     continue;
                 }
 
-                $idPlano = (int)$plano['id'];
+                $idPlano = (int) $plano['id'];
 
                 /**
                  * Verifica existência considerando GESTOR
@@ -799,6 +858,7 @@ class ControladoriaRepository
 
                     if ($outro) {
                         $erros[] = [
+                            'linha_csv'  => $d['linha_csv'],
                             'codccu'     => $d['codccu'],
                             'ctared'     => $d['ctared'],
                             'referencia' => $d['referencia'],
@@ -846,6 +906,7 @@ class ControladoriaRepository
                 )
             ];
         }
+
 
 
 
@@ -1100,22 +1161,24 @@ class ControladoriaRepository
         }
         public function getRealizadoPorContaCentroCustoQuery(int $codEmpresa, string $referencia)
         {
-            $inicio = $referencia . '-01';
-            $fim    = date('Y-m-t', strtotime($inicio));
+            $inicio = $referencia . '-01'; // Ex: 2025-11-01
 
             return "SELECT
-                    RT.CODEMP,
-                    RT.CODCCU,
-                    RT.CTARED,
-                    SUM(CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE -RT.VLRRAT END) AS VALOR_REALIZADO
-                FROM SAPIENS.E640RAT RT
-                WHERE RT.SITRAT = 2
-                AND RT.FILRAT in (7,2)
-                AND RT.CODEMP = {$codEmpresa}
-                AND RT.DATLCT BETWEEN TO_DATE('{$inicio}', 'YYYY-MM-DD') AND TO_DATE('{$fim}', 'YYYY-MM-DD')
-                GROUP BY RT.CODEMP,RT.CODCCU,RT.CTARED
+                        RT.CODEMP,
+                        RT.CODCCU,
+                        RT.CTARED,
+                        SUM(CASE WHEN RT.DEBCRE = 'D' THEN RT.VLRRAT ELSE -RT.VLRRAT END) AS VALOR_REALIZADO
+                    FROM SAPIENS.E640RAT RT
+                    LEFT JOIN Sapiens.E640LCT LC    ON RT.CODEMP = LC.CODEMP AND RT.NUMLCT = LC.NUMLCT AND RT.FILRAT = LC.CODFIL   
+                    WHERE Lc.SITLCT = '2'                                        
+                    --AND LC.DATLCT BETWEEN '01/11/2025' AND '30/11/2025'
+                    AND LC.DATLCT >= TO_DATE('{$inicio}', 'YYYY-MM-DD') AND LC.DATLCT <  ADD_MONTHS(TO_DATE('{$inicio}', 'YYYY-MM-DD'), 1) -- Data de Lançamento.
+                    AND LC.CODHPD NOT IN (607, 608)
+                    AND RT.CODEMP in (5,1000) -- Empresas 5 e 1000
+                    GROUP BY RT.CODEMP, RT.CODCCU, RT.CTARED
             ";
         }
+
     #endRegion
 
 
