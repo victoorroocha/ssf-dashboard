@@ -1770,45 +1770,48 @@ class CreditoECobrancaRepository
                             AND parc.VENCIMENTO_PARCELA BETWEEN cast(SYSDATE AS DATE)-1 AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
                         ) AS TOTAL_A_VENCER,
                         (   SELECT 
-                                SUM(A.PRECO_TOTAL_GERMOPLASMA)  
+                                SUM(TOTAL.PRECO_TOTAL_GERMOPLASMA)  
                             FROM (
-                                SELECT  
-                                    P.ID AS ID_PEDIDO
-                                    ,P.CODIGO AS CODIGO_PEDIDO
-                                    ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
-                                    ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
-                                    ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
-                                    ,P.CODIGOSAFRA 
-                                    ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
-                                    ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
-                                    ,CLI.CODIGOCLIFOR AS ID_CLIENTE
-                                    ,CLI.NOME AS NOME_CLIENTE
-                                    ,p.RTV_USER_ID AS VENDEDOR_ID
-                                    ,vend.NAME AS NOME_VENDEDOR
-                                    ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
-                                    ,SUM(IP.QUANT) AS QUANTIDADE
-                                    ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
-                                    ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
-                                FROM web.pedidos_v2 p
-                                LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
-                                LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
-                                LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
-                                LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
-                                LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
-                                LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
-                                LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
-                                LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
-                                LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
-                                LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
-                                LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
-                                WHERE IP.CODIGOCULTIVAR IS NOT NULL
-                                AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
-                                {$ands}
-                                AND GM.CODIGOMODALIDADE = 2 -- PERMUTA SOJA
-                                AND P.CREATED_AT BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
-                                GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
-                                ORDER BY P.CREATED_AT DESC
-                            ) A
+                                select * from (
+                                    SELECT  
+                                        P.ID AS ID_PEDIDO
+                                        ,P.CODIGO AS CODIGO_PEDIDO
+                                        ,pedidoMae.CODIGO AS MAE_PEDIDO_ID 
+                                        ,pedidoOrigem.CODIGO AS ORIGEM_PEDIDO_ID 
+                                        ,TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO
+                                        ,P.CODIGOSAFRA 
+                                        ,EXTRACT(YEAR FROM S.INICIO) ANO_SAFRA
+                                        ,CASE WHEN CLISENIOR.TIPCLI = 'F' THEN 'PF' WHEN CLISENIOR.TIPCLI = 'J' THEN 'PJ' ELSE NULL END AS TIPO_PESSOA
+                                        ,CLI.CODIGOCLIFOR AS ID_CLIENTE
+                                        ,CLI.NOME AS NOME_CLIENTE
+                                        ,p.RTV_USER_ID AS VENDEDOR_ID
+                                        ,vend.NAME AS NOME_VENDEDOR
+                                        ,MAX(CLISENIOR.CODGRE) AS GRUPO_CLIENTE
+                                        ,SUM(IP.QUANT) AS QUANTIDADE
+                                        ,SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA
+                                        ,TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA
+                                        ,MAX(P.VENCIMENTO_GERMOPLASMA) AS VENCIMENTO_GERMOPLASMA_FILTER
+                                    FROM web.pedidos_v2 p
+                                    LEFT JOIN EMPRESA.CLIFOR cli ON cli.CODIGOCLIFOR = p.CODIGOLOCAL
+                                    LEFT JOIN web.itens_pedido_v2 ip ON ip.PEDIDO_ID = p.ID 
+                                    LEFT JOIN ALMOX.SAFRAS s ON s.codigosafra = p.codigosafra
+                                    LEFT JOIN EMPRESA.MODALIDADES GM ON GM.CODIGOMODALIDADE  = P.GERMOPLASMA_CODIGOMODALIDADE 
+                                    LEFT JOIN EMPRESA.MODALIDADES RM ON RM.CODIGOMODALIDADE  = P.ROYALTIES_CODIGOMODALIDADE 
+                                    LEFT JOIN EMPRESA.MODALIDADES TM ON TM.CODIGOMODALIDADE  = P.TSI_CODIGOMODALIDADE 
+                                    LEFT JOIN EMPRESA.MODALIDADES FM ON FM.CODIGOMODALIDADE  = P.FRETE_CODIGOMODALIDADE 
+                                    LEFT JOIN web.pedidos_v2 pedidoMae ON pedidoMae.id = p.MAE_PEDIDO_ID
+                                    LEFT JOIN web.pedidos_v2 pedidoOrigem ON pedidoOrigem.id = p.ORIGEM_PEDIDO_ID
+                                    LEFT JOIN SAPIENS.E085CLI CLISENIOR ON CLISENIOR.CODCLI = CLI.SENIOR_CLIFOR
+                                    LEFT JOIN WEB.USERS vend ON vend.ID = p.RTV_USER_ID
+                                    WHERE IP.CODIGOCULTIVAR IS NOT NULL
+                                    AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
+                                    {$ands}
+                                    AND GM.CODIGOMODALIDADE = 2 -- PERMUTA SOJA
+                                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
+                                    ORDER BY P.CREATED_AT DESC
+                                ) A
+                                WHERE A.VENCIMENTO_GERMOPLASMA_FILTER BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                            ) TOTAL
                         ) AS TOTAL_PERMUTA,
                         (   SELECT sum(a.PRECO_TOTAL) 
                             FROM (
@@ -2369,7 +2372,8 @@ class CreditoECobrancaRepository
                 $ands .= " AND p.CODIGOSAFRA = {$codigoSafra}";
             }
             
-            return "SELECT  
+            return "SELECT * FROM (
+                    SELECT  
                         P.ID AS ID_PEDIDO,
                         P.CODIGO AS CODIGO_PEDIDO,
                         TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD') AS DATA_PEDIDO,
@@ -2386,6 +2390,7 @@ class CreditoECobrancaRepository
                         SUM(IP.QUANT) AS QUANTIDADE,
                         SUM(NVL(IP.PRECO_TOTAL_GERMOPLASMA ,0)) AS PRECO_TOTAL_GERMOPLASMA,
                         TO_CHAR(MAX(P.VENCIMENTO_GERMOPLASMA), 'YYYY-MM-DD') AS VENCIMENTO_GERMOPLASMA,
+                        MAX(P.VENCIMENTO_GERMOPLASMA) AS VENCIMENTO_GERMOPLASMA_FILTER,
                         SUM(NVL(IP.PRECO_TOTAL, 0)) + MAX(NVL(P.PRECO_TOTAL_FRETE ,0)) AS PRECO_TOTAL
                         ,'https://saofrancisco.softsul.agr.br/pedidos-v2/' || P.ID || '?tab=sobre' AS LINK_REDIRECT_SOFTSUL
                     FROM web.pedidos_v2 p
@@ -2404,8 +2409,10 @@ class CreditoECobrancaRepository
                     AND P.TIPO_VENDA_ID NOT IN (4,161,164,162,163,164,201,202)
                     {$ands}
                     AND GM.CODIGOMODALIDADE = 2 -- PERMUTA SOJA
-                    AND P.CREATED_AT BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
-                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME";  
+                    GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME, p.RTV_USER_ID, vend.NAME
+                    ) A
+                    WHERE A.VENCIMENTO_GERMOPLASMA_FILTER BETWEEN TO_DATE('{$apuracao_inicio}', 'YYYY-MM-DD') AND TO_DATE('{$apuracao_fim}', 'YYYY-MM-DD')
+                    ";  
         }
         public function getDetalhesTodosPedidosSafra($apuracao_inicio = null, $apuracao_fim = null, $codigoSafra = null)
         {
