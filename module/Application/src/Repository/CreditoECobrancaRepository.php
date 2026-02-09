@@ -1002,41 +1002,7 @@ class CreditoECobrancaRepository
             if (!empty($idPedido) && !empty($tipoPessoa)) {
                 $sql = "SELECT 
                             count(distinct gp.id_garantia) qtd
-                            ,(select count(distinct id) from crc_garantias garantias where garantias.flg_garantia_obrigatorio = true and garantias.ativo = true AND garantias.tipo_pessoa = 'PF') qtd_total
-                            -- ,(
-                            --     --Considera apenas 1 flg_instrumento_fianca
-                            --     CASE WHEN EXISTS (
-                            --         SELECT 1
-                            --         from garantias 
-                            --         where garantias.ativo = true
-                            --         and garantias.flg_instrumento_fianca = true
-                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
-                            --     ) THEN 1 ELSE 0 end + 
-                            --     --Considera apenas 1 flg_cpr
-                            --     CASE WHEN EXISTS (
-                            --         SELECT 1
-                            --         from garantias 
-                            --         where garantias.ativo = true
-                            --         and garantias.flg_cpr = true
-                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
-                            --     ) THEN 1 ELSE 0 end +
-                            --     --Considera apenas 1 flg_confissao_divida
-                            --     CASE WHEN EXISTS (
-                            --         SELECT 1
-                            --         from garantias 
-                            --         where garantias.ativo = true
-                            --         and garantias.flg_confissao_divida = true
-                            --         and garantias.tipo_pessoa = '{$tipoPessoa}'
-                            --     ) THEN 1 ELSE 0 end +
-                            --      --Considera apenas 1 flg_nota_promissoria
-                            --     CASE WHEN EXISTS (
-                            --         SELECT 1
-                            --         from garantias 
-                            --         where garantias.ativo = true
-                            --         and garantias.flg_nota_promissoria = true
-                            --         and garantias.tipo_pessoa = 'PF'
-                            --     ) THEN 1 ELSE 0 end 
-                            -- ) qtd_total
+                            ,(select count(distinct id) from crc_garantias garantias where garantias.flg_garantia_obrigatorio = true and garantias.ativo = true AND garantias.tipo_pessoa = '{$tipoPessoa}') qtd_total
                         FROM crc_garantias_pedido gp
                         LEFT JOIN crc_garantias g ON g.id = gp.id_garantia 
                         WHERE g.ativo = true 
@@ -1305,7 +1271,7 @@ class CreditoECobrancaRepository
                         GROUP BY P.ID, P.CODIGO, pedidoMae.CODIGO, pedidoOrigem.CODIGO, P.CREATED_AT, P.CODIGOSAFRA, EXTRACT(YEAR FROM S.INICIO), CLISENIOR.TIPCLI, CLI.CODIGOCLIFOR, CLI.NOME,p.RTV_USER_ID,vend.NAME
                         ORDER BY P.CREATED_AT desc
                         ) A
-                        WHERE A.TIPO_PRAZO = 'Prazo Safra'
+                        --WHERE A.TIPO_PRAZO = 'Prazo Safra'
                 ";
             } else {
                 $sql = "";
