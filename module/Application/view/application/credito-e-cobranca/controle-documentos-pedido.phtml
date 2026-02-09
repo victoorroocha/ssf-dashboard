@@ -302,12 +302,12 @@
         
         $("#form-filtro").dxForm({
             formData: {
-                codigosafra: '163',
+                codigosafra: null,
                 emissao_inicio: null,
                 emissao_fim: null
             },
             items: [
-                {
+                                {
                     dataField: "codigosafra",
                     label: { text: "Safra" },
                     editorType: "dxSelectBox",
@@ -341,7 +341,6 @@
                         valueExpr: "codigosafra", 
                         placeholder: "Selecione a safra",
                         searchEnabled: true,
-                        readOnly: true,
                         isRequired: true // Marca como obrigatório
                     },
                     isRequired: true,
@@ -769,7 +768,7 @@
                                             format: { type: 'currency', currency: 'BRL', precision: 2 }, 
                                             allowFiltering: false, allowHeaderFiltering: false 
                                         },
-                                        { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: false, allowHeaderFiltering: false  },
+                                        { dataField: 'TIPO_PRAZO', caption: 'Tipo Prazo', allowEditing: false, width: 'auto', alignment: 'center', allowFiltering: true, allowHeaderFiltering: false  },
                                                                                 
                                         // STATUS ENVIADOS
                                         { dataField: 'STATUS_CPR_ENVIADO', caption: 'Status CPR Envio', allowEditing: false, width: 'auto', alignment: 'center'  },

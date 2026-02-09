@@ -582,7 +582,6 @@ class CreditoECobrancaController extends BaseController
             try {
                 // Consulta no Softsul todos pedidos
                 $sql = $this->creditoECobrancaRepository ? $this->creditoECobrancaRepository->getDadosSoftsulPedidoQuery($codigoSafra, $emissao_inicio, $emissao_fim, $key, $search, $skip, $take, $isLoadingAll, $filterArray) : '';
-                
                 $params = [];
                 if ($codigoSafra) {
                     $params['codigoSafra'] = $codigoSafra;
