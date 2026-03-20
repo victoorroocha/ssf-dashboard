@@ -707,7 +707,7 @@ class PlanejamentoControleManutencaoRepository
             $programacoes = $this->adapter->query($sql, $this->adapter::QUERY_MODE_EXECUTE);
 
             foreach ($programacoes as $prog) {
-                $checkSql = "SELECT COUNT(*) AS total FROM pcm_controle_manutencao WHERE programacao_id = ? AND data_programada = ?";
+                $checkSql = "SELECT COUNT(*) AS total FROM pcm_controle_manutencao WHERE programacao_id = ? and status in ('Em Execução', 'Pendente')"; // removi a data da programação coloquei status para validar e criar apenas se não houver outra os Executando ou Pendente.
                 $check = $this->adapter->query($checkSql, [$prog['id'], $prog['proxima_execucao']])->current();
 
                 if ($check['total'] == 0) {
@@ -878,6 +878,8 @@ class PlanejamentoControleManutencaoRepository
                 // 
                 $sqlValida = "SELECT cm.* FROM pcm_controle_manutencao cm WHERE cm.id = :id";
                 $resultValida = $this->adapter->query($sqlValida, [':id' => $data['id']])->current();
+                $programacao_id = $resultValida['programacao_id'];
+
                 if (!$resultValida) {
                     throw new \InvalidArgumentException('Ordem de serviço não encontrada.');
                 }
@@ -907,6 +909,35 @@ class PlanejamentoControleManutencaoRepository
                     $paramsUpdate = [
                         ':id' => $data['id'],
                     ];
+
+                    // ATUALIZA PROGRAMAÇÃO PREVENTIVA PARA EXECUTAR APÓS FECHAMENTO DA OS.
+                    if (!empty($programacao_id)) {
+                        // Buscar periodicidade
+                        $sqlProg = "SELECT periodicidade_dias 
+                                    FROM pcm_programacao_manutencao_preventiva 
+                                    WHERE id = :programacao_id";
+                        $prog = $this->adapter->query($sqlProg, [':programacao_id' => $programacao_id])->current();
+
+                        if ($prog && !empty($prog['periodicidade_dias'])) {
+                            $periodicidade = (int) $prog['periodicidade_dias'];
+
+                            $sqlUpdateProg = "UPDATE pcm_programacao_manutencao_preventiva 
+                                                SET proxima_execucao = (
+                                                        SELECT MAX(data_fim) 
+                                                        FROM pcm_apontamentos_manutencao am 
+                                                        WHERE am.id_manutencao = :id                    
+                                                    )  + INTERVAL '{$periodicidade} days'   
+                                                WHERE id = :programacao_id
+                            ";
+                            $paramsUpdateProg = [
+                                ':id' => $data['id'],
+                                ':programacao_id' => $programacao_id
+                            ];
+
+                            $this->adapter->createStatement($sqlUpdateProg)->execute($paramsUpdateProg);
+                        }
+                    }
+
                 } else {
                     // Não tem apontamentos: data_final = NOW(), tempo_execucao = NULL
                     $sqlUpdate = "UPDATE pcm_controle_manutencao
@@ -917,6 +948,30 @@ class PlanejamentoControleManutencaoRepository
                     $paramsUpdate = [
                         ':id' => $data['id'],
                     ];
+
+                    // ATUALIZA PROGRAMAÇÃO PREVENTIVA PARA EXECUTAR APÓS FECHAMENTO DA OS.
+                    if (!empty($programacao_id)) {
+                        // Buscar periodicidade
+                        $sqlProg = "SELECT periodicidade_dias 
+                                    FROM pcm_programacao_manutencao_preventiva 
+                                    WHERE id = :programacao_id";
+                        $prog = $this->adapter->query($sqlProg, [':programacao_id' => $programacao_id])->current();
+
+                        if ($prog && !empty($prog['periodicidade_dias'])) {
+                            $periodicidade = (int) $prog['periodicidade_dias'];
+
+                            $sqlUpdateProg = "UPDATE pcm_programacao_manutencao_preventiva 
+                                                SET proxima_execucao = NOW()  + INTERVAL '{$periodicidade} days'   
+                                                WHERE id = :programacao_id
+                            ";
+                            $paramsUpdateProg = [
+                                ':id' => $data['id'],
+                                ':programacao_id' => $programacao_id
+                            ];
+
+                            $this->adapter->createStatement($sqlUpdateProg)->execute($paramsUpdateProg);
+                        }
+                    }
                 }
 
                 $this->adapter->createStatement($sqlUpdate)->execute($paramsUpdate);
