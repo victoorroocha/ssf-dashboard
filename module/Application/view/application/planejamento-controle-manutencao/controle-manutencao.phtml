@@ -621,6 +621,7 @@
                     }
                 },
                 { dataField: 'data_solicitacao', caption: 'Dt. Solicitação', dataType: 'date', alignment: 'center', width: 110 },
+                { dataField: 'data_inclusao', caption: 'Data/Hora Criação OS', dataType: 'datetime', alignment: 'center', width: 'auto', visible: false },
                 {
                     dataField: 'data_programada',
                     caption: 'Data Programada',
@@ -1798,6 +1799,13 @@
                                 </div>
 
                                 <div style="flex: 1; overflow: auto;">
+                                 <div class="section">
+                                        <div class="section-title">Criação OS</div>
+                                        <div class="field-group">
+                                            <div class="field"><span class="label">Data Criação OS:</span><div class="value os-data-criacao"></div></div>
+                                        </div>
+                                    </div>
+
                                     <div class="section">
                                         <div class="section-title">Solicitação</div>
                                         <div class="field-group">
@@ -1878,6 +1886,9 @@
                                 const dados = response.data.ordemServico;
                                 const dadosItens = response.data.itens;
                                 if (!dados) throw new Error("Dados não encontrados");
+
+                                // Criação
+                                $('.os-data-criacao').text(dados?.data_inclusao || '');
 
                                 // Solicitação
                                 $('.numero-os').text(dados?.nr_ordem_servico ? `Nº ${dados.nr_ordem_servico}` : 'Nº 000');

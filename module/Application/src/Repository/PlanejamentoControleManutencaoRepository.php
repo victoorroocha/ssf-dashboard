@@ -1418,6 +1418,7 @@ class PlanejamentoControleManutencaoRepository
             $sql = "SELECT
                         cm.id, 
                         LPAD(cm.id::text, 5, '0') AS nr_ordem_servico,
+                        TO_CHAR(cm.data_inclusao, 'DD/MM/YYYY HH24:MI') AS data_inclusao,
                         TO_CHAR(cm.data_programada, 'DD/MM/YYYY') AS data_programada,
                         TO_CHAR(cm.data_solicitacao, 'DD/MM/YYYY') AS data_solicitacao,
                         TO_CHAR(cm.data_inicio, 'DD/MM/YYYY') AS data_inicio,
