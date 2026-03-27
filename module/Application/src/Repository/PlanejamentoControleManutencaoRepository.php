@@ -708,7 +708,7 @@ class PlanejamentoControleManutencaoRepository
 
             foreach ($programacoes as $prog) {
                 $checkSql = "SELECT COUNT(*) AS total FROM pcm_controle_manutencao WHERE programacao_id = ? and status in ('Em Execução', 'Pendente')"; // removi a data da programação coloquei status para validar e criar apenas se não houver outra os Executando ou Pendente.
-                $check = $this->adapter->query($checkSql, [$prog['id'], $prog['proxima_execucao']])->current();
+                $check = $this->adapter->query($checkSql, [$prog['id']])->current(); // , $prog['proxima_execucao']
 
                 if ($check['total'] == 0) {
                     $insertSql = "INSERT INTO pcm_controle_manutencao 
